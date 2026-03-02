@@ -8,34 +8,17 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import * as todoService from '../services/todo-service';
-
-// Schemas
-const TodoSchema = z.object({
-  id: z.number().int().positive(),
-  title: z.string().min(1).max(200),
-  description: z.string().optional(),
-  status: z.enum(['pending', 'in_progress', 'completed']),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
-const CreateTodoSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().max(1000).optional(),
-});
-
-const UpdateTodoSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().max(1000).optional(),
-  status: z.enum(['pending', 'in_progress', 'completed']).optional(),
-});
+import {
+  TodoSchema,
+  CreateTodoSchema,
+  UpdateTodoSchema,
+} from '@shared/schemas';
 
 const ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
 });
 
-// Define routes
 const listRoute = createRoute({
   method: 'get',
   path: '/todos',
@@ -196,7 +179,6 @@ const deleteRoute = createRoute({
   },
 });
 
-// Register routes using CHAIN SYNTAX for proper Hono RPC type inference
 export const apiRoutes = new OpenAPIHono()
   .openapi(listRoute, async (c) => {
     const todos = await todoService.listTodos();

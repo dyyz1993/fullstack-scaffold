@@ -3,20 +3,16 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { db } from '../../shared/db';
-import { todos } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
 import * as todoService from '../services/todo-service';
+import { sqlite } from '../../shared/db';
 
 describe('Todo Service', () => {
   beforeEach(async () => {
-    // Clean up database before each test
-    await db.delete(todos);
+    sqlite.exec('DELETE FROM todos');
   });
 
   afterEach(async () => {
-    // Clean up after each test
-    await db.delete(todos);
+    sqlite.exec('DELETE FROM todos');
   });
 
   describe('listTodos', () => {
@@ -25,17 +21,19 @@ describe('Todo Service', () => {
       expect(result).toEqual([]);
     });
 
-    it('should return all todos', async () => {
-      // Create test todos
-      await db.insert(todos).values([
-        { title: 'Todo 1', status: 'pending', createdAt: new Date(), updatedAt: new Date() },
-        { title: 'Todo 2', status: 'completed', createdAt: new Date(), updatedAt: new Date() },
-      ]);
+    it('should return all todos ordered by created_at DESC', async () => {
+      const now = Date.now();
+      sqlite.exec(`
+        INSERT INTO todos (title, status, created_at, updated_at)
+        VALUES 
+          ('Todo 1', 'pending', ${now}, ${now}),
+          ('Todo 2', 'completed', ${now + 1000}, ${now + 1000})
+      `);
 
       const result = await todoService.listTodos();
       expect(result).toHaveLength(2);
-      expect(result[0].title).toBe('Todo 1');
-      expect(result[1].title).toBe('Todo 2');
+      expect(result[0].title).toBe('Todo 2');
+      expect(result[1].title).toBe('Todo 1');
     });
   });
 
@@ -45,22 +43,21 @@ describe('Todo Service', () => {
       expect(result).toBeNull();
     });
 
-    it('should return todo by id', async () => {
-      const [newTodo] = await db.insert(todos).values({
-        title: 'Test Todo',
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+    it('should return todo by id with correct fields', async () => {
+      const now = Date.now();
+      sqlite.exec(`INSERT INTO todos (title, status, created_at, updated_at) VALUES ('Test Todo', 'pending', ${now}, ${now})`);
+      const row = sqlite.prepare('SELECT id FROM todos WHERE title = ?').get('Test Todo') as { id: number };
 
-      const result = await todoService.getTodo(newTodo.id);
+      const result = await todoService.getTodo(row.id);
       expect(result).not.toBeNull();
+      expect(result?.id).toBe(row.id);
       expect(result?.title).toBe('Test Todo');
+      expect(result?.status).toBe('pending');
     });
   });
 
   describe('createTodo', () => {
-    it('should create a new todo', async () => {
+    it('should create a new todo with default status', async () => {
       const input = {
         title: 'New Todo',
         description: 'Test description',
@@ -68,7 +65,7 @@ describe('Todo Service', () => {
 
       const result = await todoService.createTodo(input);
 
-      expect(result.id).toBeDefined();
+      expect(result.id).toBeGreaterThan(0);
       expect(result.title).toBe(input.title);
       expect(result.description).toBe(input.description);
       expect(result.status).toBe('pending');
@@ -82,25 +79,22 @@ describe('Todo Service', () => {
       const result = await todoService.createTodo(input);
 
       expect(result.title).toBe(input.title);
-      expect(result.description).toBeNull();
+      expect(result.description).toBeUndefined();
     });
   });
 
   describe('updateTodo', () => {
-    it('should update todo', async () => {
-      const [newTodo] = await db.insert(todos).values({
-        title: 'Original Title',
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+    it('should update todo title and status', async () => {
+      const now = Date.now();
+      sqlite.exec(`INSERT INTO todos (title, status, created_at, updated_at) VALUES ('Original Title', 'pending', ${now}, ${now})`);
+      const row = sqlite.prepare('SELECT id FROM todos WHERE title = ?').get('Original Title') as { id: number };
 
       const updates = {
         title: 'Updated Title',
         status: 'completed' as const,
       };
 
-      const result = await todoService.updateTodo(newTodo.id, updates);
+      const result = await todoService.updateTodo(row.id, updates);
 
       expect(result).not.toBeNull();
       expect(result?.title).toBe(updates.title);
@@ -114,21 +108,17 @@ describe('Todo Service', () => {
   });
 
   describe('deleteTodo', () => {
-    it('should delete todo', async () => {
-      const [newTodo] = await db.insert(todos).values({
-        title: 'To Delete',
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+    it('should delete todo and return true', async () => {
+      const now = Date.now();
+      sqlite.exec(`INSERT INTO todos (title, status, created_at, updated_at) VALUES ('To Delete', 'pending', ${now}, ${now})`);
+      const row = sqlite.prepare('SELECT id FROM todos WHERE title = ?').get('To Delete') as { id: number };
 
-      const result = await todoService.deleteTodo(newTodo.id);
+      const result = await todoService.deleteTodo(row.id);
 
       expect(result).toBe(true);
 
-      // Verify deletion
-      const deleted = await db.select().from(todos).where(eq(todos.id, newTodo.id));
-      expect(deleted).toHaveLength(0);
+      const deleted = sqlite.prepare('SELECT * FROM todos WHERE id = ?').get(row.id);
+      expect(deleted).toBeUndefined();
     });
 
     it('should return false for non-existent todo', async () => {

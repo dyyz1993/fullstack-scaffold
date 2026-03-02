@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useTodoStore } from './stores/todoStore';
 import type { Todo } from '@shared/types';
 
-function App() {
+export const App: React.FC = () => {
   const todos = useTodoStore((state) => state.todos);
   const loading = useTodoStore((state) => state.loading);
   const error = useTodoStore((state) => state.error);
@@ -16,12 +16,10 @@ function App() {
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [newTodoDescription, setNewTodoDescription] = useState('');
 
-  // Load todos on mount
   useEffect(() => {
     fetchTodos();
   }, [fetchTodos]);
 
-  // Handle create todo
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTodoTitle.trim()) return;
@@ -35,28 +33,26 @@ function App() {
     setNewTodoDescription('');
   };
 
-  // Handle status change
   const handleStatusChange = async (todo: Todo, status: Todo['status']) => {
     await updateTodo(todo.id, { status });
   };
 
-  // Handle delete
   const handleDelete = async (id: number) => {
     await deleteTodo(id);
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }} data-testid="app-container">
       <h1>Todo List</h1>
 
-      {/* Create Form */}
-      <form onSubmit={handleCreate} style={{ marginBottom: '2rem' }}>
+      <form onSubmit={handleCreate} style={{ marginBottom: '2rem' }} data-testid="todo-form">
         <div style={{ marginBottom: '1rem' }}>
           <input
             type="text"
             value={newTodoTitle}
             onChange={(e) => setNewTodoTitle(e.target.value)}
             placeholder="Todo title..."
+            data-testid="todo-title-input"
             style={{
               width: '100%',
               padding: '0.5rem',
@@ -70,6 +66,7 @@ function App() {
             value={newTodoDescription}
             onChange={(e) => setNewTodoDescription(e.target.value)}
             placeholder="Description (optional)..."
+            data-testid="todo-description-input"
             style={{
               width: '100%',
               padding: '0.5rem',
@@ -82,6 +79,7 @@ function App() {
         <button
           type="submit"
           disabled={!newTodoTitle.trim() || loading}
+          data-testid="add-todo-button"
           style={{
             padding: '0.5rem 1rem',
             fontSize: '1rem',
@@ -92,21 +90,19 @@ function App() {
         </button>
       </form>
 
-      {/* Error Message */}
       {error && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>
+        <div style={{ color: 'red', marginBottom: '1rem' }} data-testid="error-message">
           {error}
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && <div>Loading...</div>}
+      {loading && <div data-testid="loading-indicator">Loading...</div>}
 
-      {/* Todo List */}
-      <div>
+      <div data-testid="todo-list">
         {todos.map((todo) => (
           <div
             key={todo.id}
+            data-testid={`todo-item-${todo.id}`}
             style={{
               border: '1px solid #ddd',
               borderRadius: '4px',
@@ -122,6 +118,7 @@ function App() {
                 onChange={(e) =>
                   handleStatusChange(todo, e.target.value as Todo['status'])
                 }
+                data-testid={`status-select-${todo.id}`}
                 style={{ marginRight: '1rem' }}
               >
                 <option value="pending">Pending</option>
@@ -130,6 +127,7 @@ function App() {
               </select>
               <button
                 onClick={() => handleDelete(todo.id)}
+                data-testid={`delete-button-${todo.id}`}
                 style={{ padding: '0.25rem 0.5rem' }}
               >
                 Delete
@@ -142,12 +140,9 @@ function App() {
         ))}
       </div>
 
-      {/* Empty State */}
       {!loading && todos.length === 0 && (
-        <p style={{ color: '#666' }}>No todos yet. Add one above!</p>
+        <p style={{ color: '#666' }} data-testid="empty-state">No todos yet. Add one above!</p>
       )}
     </div>
   );
-}
-
-export default App;
+};

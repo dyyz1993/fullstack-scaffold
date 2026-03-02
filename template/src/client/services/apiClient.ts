@@ -5,18 +5,9 @@
 
 import { hc } from 'hono/client';
 import type { AppType } from '@server/index';
+import type { ApiSuccess, ApiError, ApiResponse } from '@shared/schemas';
 
-export interface ApiSuccess<T> {
-  success: true;
-  data: T;
-}
-
-export interface ApiError {
-  success: false;
-  error: string;
-}
-
-export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+export type { ApiSuccess, ApiError, ApiResponse };
 
 export function isSuccess<T>(response: unknown): response is ApiSuccess<T> {
   return (

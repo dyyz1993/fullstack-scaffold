@@ -8,24 +8,32 @@ paths: src/client/services/**/*.ts
 
 ```typescript
 // 1. Imports
-import { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/types';
+import { hc } from 'hono/client';
+import type { AppType } from '@server/index';
+import type { Todo, CreateTodoInput } from '@shared/types';
 
-// 2. Configuration constants
-const API_BASE_URL = "/api";
-
-// 3. Type definitions
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+// 2. Type definitions (discriminated union for type safety)
+export interface ApiSuccess<T> {
+  success: true;
+  data: T;
 }
 
-// 4. Helper functions
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+export interface ApiError {
+  success: false;
+  error: string;
+}
 
-// 5. Named exports
-export const listTodos = async () => { ... };
-export const createTodo = async (input: CreateTodoInput) => { ... };
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+
+// 3. Type guards
+export function isSuccess<T>(response: unknown): response is ApiSuccess<T> { ... }
+export function isError(response: unknown): response is ApiError { ... }
+
+// 4. API client factory
+export const createApiClient = () => { ... };
+
+// 5. Singleton instance
+export const apiClient = createApiClient();
 ```
 
 ## 📦 Import Rules
@@ -34,11 +42,11 @@ export const createTodo = async (input: CreateTodoInput) => { ... };
 // ✅ 共享类型 - 始终使用 @shared 别名
 import { Todo, CreateTodoInput } from '@shared/types';
 
-// ✅ 同目录服务 - 使用相对导入
-import { mockApi } from './mockApi';
+// ✅ 服务端类型 - 使用 @server 别名
+import type { AppType } from '@server/index';
 
-// ✅ 其他目录 - 使用 @client 别名
-import { useAppStore } from '@client/stores/appStore';
+// ✅ 同目录服务 - 使用相对导入
+import { helper } from './helper';
 
 // ❌ 禁止向上多级相对路径
 import { Something } from '../../shared/types';
@@ -46,145 +54,127 @@ import { Something } from '../../shared/types';
 
 ## 🔌 API Client Patterns
 
-### 统一响应格式
+### 类型安全的响应格式
+
+使用 discriminated union 实现类型安全：
 
 ```typescript
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+export interface ApiSuccess<T> {
+  success: true;
+  data: T;
+}
+
+export interface ApiError {
+  success: false;
+  error: string;
+}
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+```
+
+### 类型守卫
+
+```typescript
+export function isSuccess<T>(response: unknown): response is ApiSuccess<T> {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    (response as { success: boolean }).success === true &&
+    'data' in response
+  );
+}
+
+export function isError(response: unknown): response is ApiError {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    (response as { success: boolean }).success === false &&
+    'error' in response
+  );
+}
+
+export function getErrorMessage(response: unknown): string {
+  if (isError(response)) {
+    return response.error;
+  }
+  return 'Unknown error';
 }
 ```
 
-### 函数模板
+### Hono RPC 客户端
 
 ```typescript
-export const listTodos = async (): Promise<ApiResponse<Todo[]>> => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/todos`);
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-    const data = await res.json();
-    return { success: true, data };
-  } catch (e) {
-    return handleError(e);
-  }
+import { hc } from 'hono/client';
+import type { AppType } from '@server/index';
+
+export const createApiClient = () => {
+  const baseUrl = import.meta.env.API_BASE_URL || '';
+  return hc<AppType>(baseUrl);
 };
 
-export const createTodo = async (
-  input: CreateTodoInput
-): Promise<ApiResponse<Todo>> => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/todos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-    const data = await res.json();
-    return { success: true, data };
-  } catch (e) {
-    return handleError(e);
-  }
-};
+export const apiClient = createApiClient();
 ```
 
-### 错误处理
+### 使用示例
 
 ```typescript
-// ✅ 集中错误处理
-const handleError = (error: unknown): ApiResponse<never> => {
-  console.error('[API Error]:', error);
-  const message = error instanceof Error ? error.message : 'Unknown error';
-  return { success: false, error: message };
-};
+import { apiClient, isSuccess, isError } from '@client/services/apiClient';
+import type { Todo } from '@shared/types';
 
-// ✅ Try-catch with logging
-try {
-  const result = await someOperation();
-  return { success: true, data: result };
-} catch (error) {
-  console.error('Operation failed:', error);
-  return handleError(error);
+// GET 请求
+const response = await apiClient.api.todos.$get();
+const result = await response.json();
+
+if (isSuccess<Todo[]>(result)) {
+  // result.data 类型为 Todo[]
+  console.log(result.data);
+} else if (isError(result)) {
+  // result.error 类型为 string
+  console.error(result.error);
+}
+
+// POST 请求
+const createResponse = await apiClient.api.todos.$post({
+  json: { title: 'New Todo' },
+});
+const createResult = await createResponse.json();
+
+if (isSuccess<Todo>(createResult)) {
+  console.log('Created:', createResult.data);
 }
 ```
 
 ## 🎨 导出规范
 
 ```typescript
-// ✅ 函数使用命名导出
-export const listTodos = async () => { ... };
-export const getTodo = async (id: string) => { ... };
-export const createTodo = async (input: CreateTodoInput) => { ... };
-export const updateTodo = async (id: string, input: UpdateTodoInput) => { ... };
-export const deleteTodo = async (id: string) => { ... };
+// ✅ 类型使用命名导出
+export interface ApiSuccess<T> { ... }
+export interface ApiError { ... }
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
-// ✅ 类使用命名导出（保持一致）
-export class EventService {
-  // ...
-}
+// ✅ 函数使用命名导出
+export const createApiClient = () => { ... };
+export function isSuccess<T>(...): response is ApiSuccess<T> { ... }
 
 // ✅ 常量使用命名导出
-export const API_CONFIG = {
-  BASE_URL: '/api',
-  TIMEOUT: 5000,
-};
+export const apiClient = createApiClient();
+export const USE_MOCK_SERVER = false;
 ```
 
 ## ⚡ 异步模式
 
 ```typescript
-// ✅ 始终使用 async/await (不使用 Promise 链)
-export const createTodo = async (
-  input: CreateTodoInput
-): Promise<ApiResponse<Todo>> => {
-  try {
-    const res = await fetch(`${API_BASE_URL}/todos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-    });
-    const data = await res.json();
-    return { success: true, data };
-  } catch (e) {
-    return handleError(e);
-  }
-};
+// ✅ 始终使用 async/await
+const response = await apiClient.api.todos.$get();
+const result = await response.json();
 
-// ❌ 避免 Promise 链
-export const badExample = (): Promise<any> => {
-  return fetch('/api/todos')
-    .then(res => res.json())
-    .then(data => {
-      // ...
-    });
-};
-```
-
-## 🔐 Singleton 模式
-
-```typescript
-// ✅ 静态类用于无状态服务
-export class EventService {
-  private static listeners: Map<string, Set<Function>> = new Map();
-
-  public static on(event: string, callback: Function) {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
-    this.listeners.get(event)!.add(callback);
-  }
-
-  public static off(event: string, callback: Function) {
-    this.listeners.get(event)?.delete(callback);
-  }
-
-  public static emit(event: string, data?: any) {
-    this.listeners.get(event)?.forEach(cb => cb(data));
-  }
+// ✅ 使用类型守卫处理响应
+if (isSuccess<Todo[]>(result)) {
+  return result.data;
+} else {
+  throw new Error(getErrorMessage(result));
 }
 ```
 
@@ -193,27 +183,34 @@ export class EventService {
 | 类型   | 约定             | 示例                                         |
 | ------ | ---------------- | -------------------------------------------- |
 | 文件名 | camelCase.ts     | `apiClient.ts`, `todoService.ts`             |
-| 函数   | camelCase        | `listTodos`, `createTodo`, `updateTodo`      |
-| 类     | PascalCase       | `EventService`, `WebSocketService`           |
-| 常量   | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_RETRY_COUNT`            |
-| 接口   | PascalCase       | `ApiResponse`, `TodoFilter`                  |
+| 函数   | camelCase        | `createApiClient`, `isSuccess`               |
+| 常量   | camelCase        | `apiClient`, `USE_MOCK_SERVER`               |
+| 接口   | PascalCase       | `ApiSuccess`, `ApiError`, `ApiResponse`      |
+| 类型   | PascalCase       | `ApiResponse<T>`                             |
 
 ## 🚫 Anti-Patterns
 
 ```typescript
-// ❌ 不要混合命名导出和默认导出
-class Service { ... }
-export default Service;
-export const helper = ...;
+// ❌ 不要使用宽松的 ApiResponse
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;      // 可选的 data
+  error?: string; // 可选的 error
+}
 
-// ✅ 使用一致的导出风格
-export class Service { ... }
-export const helper = ...;
+// ✅ 使用 discriminated union
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
-// ❌ 不要在服务中直接使用 useState
+// ❌ 不要在服务中直接使用 React hooks
 const [data, setData] = useState();
-// 服务应该是纯函数，不应该有 React 依赖
 
-// ❌ 不要在服务中直接操作 DOM
-document.getElementById('app')?.innerHTML = '...';
+// ✅ 服务应该是纯函数/对象，不依赖 React
+export const apiClient = createApiClient();
+
+// ❌ 不要使用 any
+const result: any = await response.json();
+
+// ✅ 使用类型守卫进行类型收窄
+const result = await response.json();
+if (isSuccess<Todo>(result)) { ... }
 ```

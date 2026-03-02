@@ -1,32 +1,29 @@
 /**
  * Shared types for Todo application
- * Used by both client and server
+ * Re-exports types from schemas.ts for backward compatibility
+ *
+ * Recommended: Import directly from '@shared/schemas' for both types and validation
+ * This file exists for convenience and backward compatibility
  */
 
-export type TodoStatus = 'pending' | 'in_progress' | 'completed';
+export type {
+  TodoStatus,
+  Todo,
+  CreateTodoInput,
+  UpdateTodoInput,
+  ApiSuccess,
+  ApiError,
+  ApiResponse,
+} from './schemas';
 
-export interface Todo {
-  id: number;
-  title: string;
-  description?: string;
-  status: TodoStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateTodoInput {
-  title: string;
-  description?: string;
-}
-
-export interface UpdateTodoInput {
-  title?: string;
-  description?: string;
-  status?: TodoStatus;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+// Re-export schemas for convenience (useful for form validation on client)
+export {
+  TodoStatusSchema,
+  TodoSchema,
+  CreateTodoSchema,
+  UpdateTodoSchema,
+  TodoIdSchema,
+  ApiSuccessSchema,
+  ApiErrorSchema,
+  ApiResponseSchema,
+} from './schemas';

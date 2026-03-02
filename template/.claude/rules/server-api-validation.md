@@ -34,35 +34,131 @@ src/server/
 
 ## 🛡 Validation & Type Safety
 
-- **Schema 位置**: 模块化设计，各模块的 schemas 定义在对应的 routes 文件中
-- **验证器**: 使用 `@hono/zod-validator` 的 `zValidator` 进行验证
-- **类型获取**: 使用 `c.req.valid('json')` 模式获取验证后的数据
-- **类型共享**: 前后端共享类型定义在 `src/shared/types.ts`
+### OpenAPIHono 模式 (推荐)
 
-### 示例
+使用 `@hono/zod-openapi` 实现类型安全的 API：
 
 ```typescript
 // server/module-todos/routes/todos-routes.ts
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
+import { createRoute, z } from '@hono/zod-openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import * as todoService from '../services/todo-service';
 
-// Schema 定义在模块内部
-const createTodoSchema = z.object({
+// Schema 定义
+const TodoSchema = z.object({
+  id: z.number().int().positive(),
+  title: z.string().min(1).max(200),
+  description: z.string().optional(),
+  status: z.enum(['pending', 'in_progress', 'completed']),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+const CreateTodoSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
 });
 
-const updateTodoSchema = z.object({
+const UpdateTodoSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
   status: z.enum(['pending', 'in_progress', 'completed']).optional(),
 });
 
-app.post('/todos', zValidator('json', createTodoSchema), async (c) => {
-  const data = c.req.valid('json');
-  // data 获得完整的类型推断
+// 定义路由
+const listRoute = createRoute({
+  method: 'get',
+  path: '/todos',
+  tags: ['todos'],
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.boolean(),
+            data: z.array(TodoSchema),
+          }),
+        },
+      },
+      description: 'List all todos',
+    },
+  },
 });
+
+const createRouteDef = createRoute({
+  method: 'post',
+  path: '/todos',
+  tags: ['todos'],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: CreateTodoSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.boolean(),
+            data: TodoSchema,
+          }),
+        },
+      },
+      description: 'Create a new todo',
+    },
+    400: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.boolean(),
+            error: z.string(),
+          }),
+        },
+      },
+      description: 'Invalid input',
+    },
+  },
+});
+
+// 注册路由 - 使用 CHAIN SYNTAX
+export const apiRoutes = new OpenAPIHono()
+  .openapi(listRoute, async (c) => {
+    const todos = await todoService.listTodos();
+    return c.json({ success: true, data: todos });
+  })
+  .openapi(createRouteDef, async (c) => {
+    const data = c.req.valid('json');
+    const todo = await todoService.createTodo(data);
+    return c.json({ success: true, data: todo }, 201);
+  })
+  .doc('/docs', {
+    openapi: '3.0.0',
+    info: {
+      version: '1.0.0',
+      title: 'Todo API',
+    },
+  });
+```
+
+### 链式语法 (CHAIN SYNTAX)
+
+**重要**: 使用链式语法确保 Hono RPC 类型推断正确：
+
+```typescript
+// ✅ 正确 - 链式语法
+const app = new Hono()
+  .use('*', cors())
+  .route('/api', apiRoutes)
+  .get('/health', (c) => c.json({ status: 'ok' }));
+
+// ❌ 错误 - 分开定义会丢失类型推断
+const app = new Hono();
+app.use('*', cors());
+app.route('/api', apiRoutes);
 ```
 
 ## 🔒 Security Requirements
@@ -87,22 +183,22 @@ app.post('/todos', zValidator('json', createTodoSchema), async (c) => {
 ### HTTP 状态码
 
 - `200` - 成功
+- `201` - 创建成功
 - `400` - 验证失败或业务逻辑错误
 - `404` - 资源不存在
 - `500` - 服务器错误
 
-### 工具函数
+### 错误处理示例
 
 ```typescript
-// src/server/shared/utils.ts
-
-export function apiResponse<T>(data: T, status = 200) {
-  return Response.json({ success: true, data }, { status });
-}
-
-export function apiError(message: string, status = 500) {
-  return Response.json({ success: false, error: message }, { status });
-}
+.openapi(getRoute, async (c) => {
+  const id = parseInt(c.req.param('id'));
+  const todo = await todoService.getTodo(id);
+  if (!todo) {
+    return c.json({ success: false, error: 'Todo not found' }, 404);
+  }
+  return c.json({ success: true, data: todo });
+})
 ```
 
 ## 📝 Best Practices
@@ -136,24 +232,30 @@ import { Todo } from '../../shared/types';
 
 ```typescript
 // routes/todos-routes.ts
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
+import { createRoute, z } from '@hono/zod-openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { listTodos, createTodo, updateTodo, deleteTodo } from '../services/todo-service';
 
-const app = new Hono();
+// 定义 schemas
+const TodoSchema = z.object({ ... });
+const CreateTodoSchema = z.object({ ... });
 
-app.get('/', async (c) => {
-  const todos = await listTodos();
-  return c.json({ success: true, data: todos });
-});
+// 定义路由
+const listRoute = createRoute({ ... });
+const createRoute = createRoute({ ... });
 
-app.post('/', zValidator('json', createTodoSchema), async (c) => {
-  const input = c.req.valid('json');
-  const todo = await createTodo(input);
-  return c.json({ success: true, data: todo });
-});
-
-export default app;
+// 注册路由
+export const apiRoutes = new OpenAPIHono()
+  .openapi(listRoute, async (c) => {
+    const todos = await listTodos();
+    return c.json({ success: true, data: todos });
+  })
+  .openapi(createRoute, async (c) => {
+    const input = c.req.valid('json');
+    const todo = await createTodo(input);
+    return c.json({ success: true, data: todo }, 201);
+  })
+  .doc('/docs', { ... });
 ```
 
 ```typescript
@@ -178,3 +280,23 @@ export async function createTodo(input: CreateTodoInput): Promise<Todo> {
   // 业务逻辑实现
 }
 ```
+
+## 🔧 OpenAPI 文档
+
+使用 OpenAPIHono 自动生成 API 文档：
+
+```typescript
+export const apiRoutes = new OpenAPIHono()
+  .openapi(listRoute, async (c) => { ... })
+  .openapi(createRoute, async (c) => { ... })
+  .doc('/docs', {
+    openapi: '3.0.0',
+    info: {
+      version: '1.0.0',
+      title: 'Todo API',
+      description: 'A simple Todo API',
+    },
+  });
+```
+
+访问 `/docs` 即可查看 Swagger UI 文档。
