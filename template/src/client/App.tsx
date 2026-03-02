@@ -1,148 +1,98 @@
 /**
- * Todo List Application
- * Main React component with CRUD operations
+ * Main Application with SPA Routing
+ * Demonstrates three example modules: Todo, Notification, WebSocket
  */
 
 import { useState, useEffect } from 'react';
-import { useTodoStore } from './stores/todoStore';
-import type { Todo } from '@shared/types';
+import { CheckCircle, Bell, Plug, Rocket, Github } from 'lucide-react';
+import { TodoPage } from './pages/TodoPage';
+import { NotificationPage } from './pages/NotificationPage';
+import { WebSocketPage } from './pages/WebSocketPage';
+
+type Route = 'todos' | 'notifications' | 'websocket';
+
+const routes: Record<Route, { label: string; icon: React.FC<{ className?: string }>; component: React.FC }> = {
+  todos: { label: 'Todo List', icon: CheckCircle, component: TodoPage },
+  notifications: { label: 'Notifications', icon: Bell, component: NotificationPage },
+  websocket: { label: 'WebSocket', icon: Plug, component: WebSocketPage },
+};
 
 export const App: React.FC = () => {
-  const todos = useTodoStore((state) => state.todos);
-  const loading = useTodoStore((state) => state.loading);
-  const error = useTodoStore((state) => state.error);
-  const { fetchTodos, createTodo, updateTodo, deleteTodo } = useTodoStore();
-
-  const [newTodoTitle, setNewTodoTitle] = useState('');
-  const [newTodoDescription, setNewTodoDescription] = useState('');
+  const [currentRoute, setCurrentRoute] = useState<Route>(() => {
+    const hash = window.location.hash.slice(1) as Route;
+    return hash in routes ? hash : 'todos';
+  });
 
   useEffect(() => {
-    fetchTodos();
-  }, [fetchTodos]);
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1) as Route;
+      if (hash in routes) {
+        setCurrentRoute(hash);
+      }
+    };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTodoTitle.trim()) return;
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
-    await createTodo({
-      title: newTodoTitle,
-      description: newTodoDescription || undefined,
-    });
+  useEffect(() => {
+    window.location.hash = currentRoute;
+  }, [currentRoute]);
 
-    setNewTodoTitle('');
-    setNewTodoDescription('');
-  };
-
-  const handleStatusChange = async (todo: Todo, status: Todo['status']) => {
-    await updateTodo(todo.id, { status });
-  };
-
-  const handleDelete = async (id: number) => {
-    await deleteTodo(id);
-  };
+  const CurrentPage = routes[currentRoute].component;
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }} data-testid="app-container">
-      <h1>Todo List</h1>
-
-      <form onSubmit={handleCreate} style={{ marginBottom: '2rem' }} data-testid="todo-form">
-        <div style={{ marginBottom: '1rem' }}>
-          <input
-            type="text"
-            value={newTodoTitle}
-            onChange={(e) => setNewTodoTitle(e.target.value)}
-            placeholder="Todo title..."
-            data-testid="todo-title-input"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              boxSizing: 'border-box',
-            }}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <textarea
-            value={newTodoDescription}
-            onChange={(e) => setNewTodoDescription(e.target.value)}
-            placeholder="Description (optional)..."
-            data-testid="todo-description-input"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              fontSize: '1rem',
-              boxSizing: 'border-box',
-              minHeight: '80px',
-            }}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={!newTodoTitle.trim() || loading}
-          data-testid="add-todo-button"
-          style={{
-            padding: '0.5rem 1rem',
-            fontSize: '1rem',
-            cursor: 'pointer',
-          }}
-        >
-          Add Todo
-        </button>
-      </form>
-
-      {error && (
-        <div style={{ color: 'red', marginBottom: '1rem' }} data-testid="error-message">
-          {error}
-        </div>
-      )}
-
-      {loading && <div data-testid="loading-indicator">Loading...</div>}
-
-      <div data-testid="todo-list">
-        {todos.map((todo) => (
-          <div
-            key={todo.id}
-            data-testid={`todo-item-${todo.id}`}
-            style={{
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              padding: '1rem',
-              marginBottom: '1rem',
-            }}
-          >
-            <h3>{todo.title}</h3>
-            {todo.description && <p>{todo.description}</p>}
-            <div style={{ marginTop: '0.5rem' }}>
-              <select
-                value={todo.status}
-                onChange={(e) =>
-                  handleStatusChange(todo, e.target.value as Todo['status'])
-                }
-                data-testid={`status-select-${todo.id}`}
-                style={{ marginRight: '1rem' }}
-              >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              <button
-                onClick={() => handleDelete(todo.id)}
-                data-testid={`delete-button-${todo.id}`}
-                style={{ padding: '0.25rem 0.5rem' }}
-              >
-                Delete
-              </button>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Rocket className="w-6 h-6 text-blue-500" />
+              Biomimic App
+            </h1>
+            <div className="flex items-center gap-1">
+              {(Object.keys(routes) as Route[]).map((route) => {
+                const Icon = routes[route].icon;
+                return (
+                  <button
+                    key={route}
+                    onClick={() => setCurrentRoute(route)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentRoute === route
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {routes[route].label}
+                  </button>
+                );
+              })}
             </div>
-            <small>
-              Created: {new Date(todo.createdAt).toLocaleString()}
-            </small>
           </div>
-        ))}
-      </div>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <Github className="w-5 h-5" />
+          </a>
+        </div>
+      </nav>
 
-      {!loading && todos.length === 0 && (
-        <p style={{ color: '#666' }} data-testid="empty-state">No todos yet. Add one above!</p>
-      )}
+      <main className="py-8">
+        <CurrentPage />
+      </main>
+
+      <footer className="py-8 text-center text-gray-500 text-sm border-t border-gray-200 bg-white">
+        <p className="flex items-center justify-center gap-2">
+          Built with <span className="font-medium text-gray-700">Hono RPC</span> + <span className="font-medium text-gray-700">React</span> + <span className="font-medium text-gray-700">TypeScript</span>
+        </p>
+        <p className="mt-2 text-xs text-gray-400">
+          Demonstrates: CRUD Operations | SSE (Server-Sent Events) | WebSocket
+        </p>
+      </footer>
     </div>
   );
 };

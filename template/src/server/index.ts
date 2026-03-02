@@ -9,42 +9,45 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { Hono } from 'hono';
 import { apiRoutes } from './module-todos/routes/todos-routes';
+import { notificationRoutes } from './module-notifications/routes/notification-routes';
+import { websocketRoutes } from './module-websocket/routes/websocket-routes';
 
-// Note: @hono/zod-openapi is installed but openAPI helper is not used in this simple setup
-// If you need OpenAPI docs, you can add: import { openAPI } from '@hono/zod-openapi';
-
-// Create Hono app with CHAIN SYNTAX for type inference
 const app = new Hono()
-  // Global middleware
   .use('*', logger())
   .use('*', cors({
     origin: ['http://localhost:3010', 'http://localhost:5173'],
     credentials: true,
   }))
-  // API routes
   .route('/api', apiRoutes)
-  // Health check
+  .route('/api', notificationRoutes)
+  .route('/api', websocketRoutes)
   .get('/health', (c) => {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
   })
-  // Root endpoint
   .get('/', (c) => {
     return c.html(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Todo API</title>
+          <title>Todo & Notification API</title>
         </head>
         <body>
-          <h1>Todo API Server</h1>
+          <h1>API Server</h1>
           <p>Server is running on port 3010</p>
           <p><a href="/docs">API Documentation</a></p>
+          <h2>Available Endpoints</h2>
+          <ul>
+            <li><code>GET /api/todos</code> - List todos</li>
+            <li><code>POST /api/todos</code> - Create todo</li>
+            <li><code>GET /api/notifications</code> - List notifications</li>
+            <li><code>GET /api/notifications/stream</code> - SSE stream</li>
+            <li><code>GET /api/websocket/ws</code> - WebSocket endpoint</li>
+          </ul>
         </body>
       </html>
     `);
   });
 
-// Error handler (must be set separately, not in chain)
 app.onError((err, c) => {
   console.error('Server error:', err);
   return c.json({
@@ -53,7 +56,6 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// 404 handler (must be set separately, not in chain)
 app.notFound((c) => {
   return c.json({
     success: false,
@@ -63,8 +65,4 @@ app.notFound((c) => {
 
 export default app;
 
-/**
- * Export for Hono RPC type inference
- * @see src/client/services/apiClient.ts
- */
 export type AppType = typeof app;

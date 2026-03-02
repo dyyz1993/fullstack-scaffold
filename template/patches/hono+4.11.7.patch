@@ -14,3 +14,19 @@ index c4cf659..ebe05c0 100644
  }
 -export declare const streamSSE: (c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response;
 +export declare const streamSSE: <T = unknown>(c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response & TypedResponse<T>;
+diff --git a/node_modules/hono/dist/types/helper/websocket/index.d.ts b/node_modules/hono/dist/types/helper/websocket/index.d.ts
+index 0d7ebbb..b189ce4 100644
+--- a/node_modules/hono/dist/types/helper/websocket/index.d.ts
++++ b/node_modules/hono/dist/types/helper/websocket/index.d.ts
+@@ -19,9 +19,10 @@ export interface WSEvents<T = unknown> {
+  */
+ export interface UpgradeWebSocket<T = unknown, U = any, _WSEvents = WSEvents<T>> {
+     (createEvents: (c: Context) => _WSEvents | Promise<_WSEvents>, options?: U): MiddlewareHandler<any, string, {
++        output: T;
+         outputFormat: 'ws';
+     }>;
+-    (c: Context, events: _WSEvents, options?: U): Promise<Response & TypedResponse<{}, StatusCode, 'ws'>>;
++    (c: Context, events: _WSEvents, options?: U): Promise<Response & TypedResponse<T, StatusCode, 'ws'>>;
+ }
+ /**
+  * ReadyState for WebSocket

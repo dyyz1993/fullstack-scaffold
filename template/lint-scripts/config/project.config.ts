@@ -25,7 +25,7 @@ export const todosConfig: TodosConfig = {
   ignoreDirs: ['node_modules', 'dist', '__tests__', '.git', 'coverage'],
 
   // 检查的目录
-  checkDirs: ['src', 'scripts'],
+  checkDirs: ['src', 'lint-scripts'],
 };
 
 // ============================================
@@ -70,7 +70,7 @@ export const sensitiveConfig: SensitiveConfig = {
     {
       pattern: /console\.(log|debug)\(/,
       message: 'console.log detected (remove in production)',
-      excludePattern: /\/\/.*console\.|logger\.|scripts\/(validate|test)/,
+      excludePattern: /\/\/.*console\.|logger\.|lint-scripts\/(validate|test)/,
     },
     // .env 文件引用
     {
@@ -88,14 +88,14 @@ export const sensitiveConfig: SensitiveConfig = {
     /coverage/,
     /\.env\.example$/,
     /__tests__/,
-    /scripts\/(validate|config)/,
+    /lint-scripts\/(validate|config)/,
   ],
 
   // 检查的文件扩展名
   fileExtensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.md'],
 
   // 检查的目录
-  checkDirs: ['src', 'scripts'],
+  checkDirs: ['src', 'lint-scripts'],
 };
 
 // ============================================

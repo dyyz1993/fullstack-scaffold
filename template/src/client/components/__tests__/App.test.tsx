@@ -5,8 +5,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { App } from '../../App';
+import type { Todo } from '@shared/types';
 
-const mockStore = {
+interface MockStore {
+  todos: Todo[];
+  loading: boolean;
+  error: string | null;
+  fetchTodos: ReturnType<typeof vi.fn>;
+  createTodo: ReturnType<typeof vi.fn>;
+  updateTodo: ReturnType<typeof vi.fn>;
+  deleteTodo: ReturnType<typeof vi.fn>;
+}
+
+const mockStore: MockStore = {
   todos: [],
   loading: false,
   error: null,
