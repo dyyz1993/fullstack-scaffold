@@ -19,8 +19,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": false,
-
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
@@ -29,5 +27,5 @@
       "@server/*": ["src/server/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src","e2e"]
 }
