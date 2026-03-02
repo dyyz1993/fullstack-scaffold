@@ -20,7 +20,7 @@ const app = new Hono()
   }))
   .route('/api', apiRoutes)
   .route('/api', notificationRoutes)
-  .route('/api', websocketRoutes)
+  .route('/api/ws', websocketRoutes)
   .get('/health', (c) => {
     return c.json({ status: 'ok', timestamp: new Date().toISOString() });
   })
@@ -41,7 +41,8 @@ const app = new Hono()
             <li><code>POST /api/todos</code> - Create todo</li>
             <li><code>GET /api/notifications</code> - List notifications</li>
             <li><code>GET /api/notifications/stream</code> - SSE stream</li>
-            <li><code>GET /api/websocket/ws</code> - WebSocket endpoint</li>
+            <li><code>GET /api/ws</code> - WebSocket endpoint</li>
+            <li><code>GET /api/ws/status</code> - WebSocket status</li>
           </ul>
         </body>
       </html>

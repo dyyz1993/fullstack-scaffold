@@ -3,13 +3,13 @@
  * Handles WebSocket message processing
  */
 
-import type { WSMessage } from '@shared/schemas';
+import type { WSMessage, WSRpcRequest } from '@shared/schemas';
 
 type SendFunction = (message: string) => void;
 type ReadyStateFunction = () => number;
 type CloseFunction = () => void;
 
-interface WSClient {
+export interface WSClient {
   send: SendFunction;
   readyState: ReadyStateFunction;
   close: CloseFunction;
@@ -24,7 +24,7 @@ export function handleMessage(
   close: CloseFunction
 ) {
   const client: WSClient = { send, readyState, close };
-  
+
   let message: WSMessage;
   try {
     message = JSON.parse(data);
@@ -33,13 +33,50 @@ export function handleMessage(
     return;
   }
 
+  // RPC 请求格式: { id, method, params }
+  if ('id' in message && 'method' in message && 'params' in message) {
+    handleRpcRequest(message as WSRpcRequest, send);
+    return;
+  }
+
+  // 事件格式: { type, payload }
+  if ('type' in message) {
+    handleEvent(message, client);
+    return;
+  }
+
+  send(JSON.stringify({ type: 'error', payload: 'Unknown message format', timestamp: Date.now() }));
+}
+
+function handleRpcRequest(request: WSRpcRequest, send: SendFunction) {
+  const { id, method, params } = request;
+
+  switch (method) {
+    case 'echo': {
+      const p = params as { message: string };
+      send(JSON.stringify({
+        id,
+        result: { message: p.message, timestamp: Date.now() },
+      }));
+      break;
+    }
+    case 'ping': {
+      send(JSON.stringify({
+        id,
+        result: { pong: true, timestamp: Date.now() },
+      }));
+      break;
+    }
+    default:
+      send(JSON.stringify({
+        id,
+        error: `Unknown RPC method: ${method}`,
+      }));
+  }
+}
+
+function handleEvent(message: WSMessage, client: WSClient) {
   switch (message.type) {
-    case 'ping':
-      handlePing(client, message);
-      break;
-    case 'echo':
-      handleEcho(client, message);
-      break;
     case 'broadcast':
       handleBroadcast(client, message);
       break;
@@ -47,29 +84,11 @@ export function handleMessage(
       handleNotification(client, message);
       break;
     default:
-      send(JSON.stringify({ type: 'error', payload: 'Unknown message type', timestamp: Date.now() }));
+      client.send(JSON.stringify({ type: 'error', payload: `Unknown event type: ${message.type}`, timestamp: Date.now() }));
   }
 }
 
-function handlePing(client: WSClient, message: WSMessage) {
-  client.send(JSON.stringify({
-    type: 'pong',
-    payload: message.payload,
-    timestamp: Date.now(),
-  }));
-}
-
-function handleEcho(client: WSClient, message: WSMessage) {
-  client.send(JSON.stringify({
-    type: 'echo',
-    payload: message.payload,
-    timestamp: Date.now(),
-  }));
-}
-
-function handleBroadcast(client: WSClient, message: WSMessage) {
-  connectedClients.add(client);
-
+function handleBroadcast(_client: WSClient, message: WSMessage) {
   const broadcastMessage = JSON.stringify({
     type: 'broadcast',
     payload: message.payload,

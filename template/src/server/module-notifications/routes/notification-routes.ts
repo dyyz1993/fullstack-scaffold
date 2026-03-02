@@ -11,7 +11,6 @@ import {
   NotificationSchema,
   CreateNotificationSchema,
 } from '@shared/schemas';
-import type { AppNotification } from '@shared/schemas';
 
 const NotificationListResponseSchema = z.object({
   success: z.boolean(),
@@ -36,6 +35,22 @@ const MarkAllReadResponseSchema = z.object({
 const ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
+});
+
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  tags: ['notifications'],
+  responses: {
+    200: {
+      content: {
+        'text/event-stream': {
+          schema: NotificationSchema,
+        },
+      },
+      description: 'SSE stream for real-time notifications',
+    },
+  },
 });
 
 const listRoute = createRoute({
@@ -228,6 +243,40 @@ const unreadCountRoute = createRoute({
 });
 
 export const notificationRoutes = new OpenAPIHono()
+  .openapi(streamRoute, async (c) => {
+    return streamSSE(c, async (stream) => {
+      let clientId: string | undefined;
+
+      stream.onAbort(() => {
+        if (clientId) {
+          notificationService.unregisterSSEClient(clientId);
+        }
+      });
+
+      const readable = new ReadableStream({
+        start(controller) {
+          clientId = notificationService.registerSSEClient(controller);
+        },
+        cancel() {
+          if (clientId) {
+            notificationService.unregisterSSEClient(clientId);
+          }
+        },
+      });
+
+      const reader = readable.getReader();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          await stream.write(new TextDecoder().decode(value));
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    });
+  })
   .openapi(listRoute, async (c) => {
     const query = c.req.valid('query');
     const result = notificationService.listNotifications({
@@ -273,38 +322,4 @@ export const notificationRoutes = new OpenAPIHono()
   .openapi(unreadCountRoute, async (c) => {
     const count = notificationService.getUnreadCount();
     return c.json({ success: true, data: { count } });
-  })
-  .get('/notifications/stream', async (c) => {
-    return streamSSE<AppNotification>(c, async (stream) => {
-      let clientId: string | undefined;
-
-      stream.onAbort(() => {
-        if (clientId) {
-          notificationService.unregisterSSEClient(clientId);
-        }
-      });
-
-      const readable = new ReadableStream({
-        start(controller) {
-          clientId = notificationService.registerSSEClient(controller);
-        },
-        cancel() {
-          if (clientId) {
-            notificationService.unregisterSSEClient(clientId);
-          }
-        },
-      });
-
-      const reader = readable.getReader();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          await stream.write(new TextDecoder().decode(value));
-        }
-      } finally {
-        reader.releaseLock();
-      }
-    });
   });

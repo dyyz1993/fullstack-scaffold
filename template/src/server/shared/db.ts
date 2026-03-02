@@ -4,7 +4,6 @@
  */
 
 import { DatabaseSync } from 'node:sqlite';
-import * as schema from './schema';
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 

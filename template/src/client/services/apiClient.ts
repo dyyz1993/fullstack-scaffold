@@ -43,8 +43,7 @@ export function getErrorMessage(response: unknown): string {
  *        const response = await client.api.todos.$get();
  */
 export const createApiClient = () => {
-  // @ts-ignore
-  const baseUrl = import.meta.env.API_BASE_URL || '';
+  const baseUrl = import.meta.env.API_BASE_URL || window.location.origin;
   return hc<AppType>(baseUrl);
 };
 /**

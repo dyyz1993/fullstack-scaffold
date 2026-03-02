@@ -156,12 +156,21 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         signal: sseAbortController.signal,
       });
 
-      for await (const notification of consumeStream(responsePromise)) {
-        // notification 类型自动推导为 AppNotification
-        set((state) => ({
-          notifications: [notification, ...state.notifications],
-          unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
-        }));
+      for await (const data of consumeStream(responsePromise)) {
+        // 过滤掉 ping/connected 等非 notification 事件（它们没有 type 字段）
+        if (data && typeof data === 'object' && 'type' in data && 'id' in data) {
+          const notification = data;
+          set((state) => {
+            // 防止重复添加
+            if (state.notifications.some(n => n.id === notification.id)) {
+              return state;
+            }
+            return {
+              notifications: [notification, ...state.notifications],
+              unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
+            };
+          });
+        }
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {

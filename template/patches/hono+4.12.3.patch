@@ -1,5 +1,5 @@
 diff --git a/node_modules/hono/dist/types/helper/streaming/sse.d.ts b/node_modules/hono/dist/types/helper/streaming/sse.d.ts
-index c4cf659..ebe05c0 100644
+index c4cf659..7327dcb 100644
 --- a/node_modules/hono/dist/types/helper/streaming/sse.d.ts
 +++ b/node_modules/hono/dist/types/helper/streaming/sse.d.ts
 @@ -1,4 +1,5 @@
@@ -13,7 +13,7 @@ index c4cf659..ebe05c0 100644
      writeSSE(message: SSEMessage): Promise<void>;
  }
 -export declare const streamSSE: (c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response;
-+export declare const streamSSE: <T = unknown>(c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response & TypedResponse<T>;
++export declare const streamSSE: <T = unknown>(c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response & TypedResponse<T, 200, 'sse'>;
 diff --git a/node_modules/hono/dist/types/helper/websocket/index.d.ts b/node_modules/hono/dist/types/helper/websocket/index.d.ts
 index 0d7ebbb..b189ce4 100644
 --- a/node_modules/hono/dist/types/helper/websocket/index.d.ts

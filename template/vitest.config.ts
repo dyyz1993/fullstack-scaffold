@@ -8,8 +8,13 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/client/test/setup.ts'],
-    include: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/integration/**'],
+    include: [
+      '**/__tests__/**/*.test.ts', 
+      '**/__tests__/**/*.test.tsx',
+      '**/integration/**/*.test.ts',
+    ],
+    exclude: ['**/node_modules/**', '**/dist/**'],
+    testTimeout: 30000,
   },
   resolve: {
     alias: {

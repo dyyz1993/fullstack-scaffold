@@ -70,3 +70,17 @@ export {
   type WSEchoPayload,
   type WSNotificationPayload,
 } from './websocket';
+
+// WebSocket protocol (for GhostWSClient type inference)
+export {
+  AppWSProtocolSchema,
+  WSRpcRequestSchema,
+  WSRpcResponseSchema,
+  WSEventMessageSchema,
+  WSMessageSchema as WSProtocolMessageSchema,
+  type AppWSProtocol,
+  type WSRpcRequest,
+  type WSRpcResponse,
+  type WSEventMessage,
+  type WSMessage as WSProtocolMessage,
+} from './ws-protocol';

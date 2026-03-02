@@ -164,7 +164,7 @@ export const NotificationPage: React.FC = () => {
 
       <div className="space-y-4">
         {notifications.map((notification) => {
-          const config = typeConfig[notification.type];
+          const config = typeConfig[notification.type] ?? typeConfig.info;
           const TypeIcon = config.icon;
           return (
             <div

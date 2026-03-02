@@ -1,0 +1,13 @@
+diff --git a/node_modules/@hono/zod-openapi/dist/index.d.ts b/node_modules/@hono/zod-openapi/dist/index.d.ts
+index 7355946..7b7900d 100644
+--- a/node_modules/@hono/zod-openapi/dist/index.d.ts
++++ b/node_modules/@hono/zod-openapi/dist/index.d.ts
+@@ -23,7 +23,7 @@ type RequestTypes = {
+ };
+ type IsJson<T$1> = T$1 extends string ? T$1 extends `application/${infer Start}json${infer _End}` ? Start extends "" | `${string}+` | `vnd.${string}+` ? "json" : never : never : never;
+ type IsForm<T$1> = T$1 extends string ? T$1 extends `multipart/form-data${infer _Rest}` | `application/x-www-form-urlencoded${infer _Rest}` ? "form" : never : never;
+-type ReturnJsonOrTextOrResponse<ContentType, Content$1, Status$1 extends keyof StatusCodeRangeDefinitions | StatusCode> = ContentType extends string ? ContentType extends `application/${infer Start}json${infer _End}` ? Start extends "" | `${string}+` | `vnd.${string}+` ? TypedResponse<JSONParsed<Content$1>, ExtractStatusCode<Status$1>, "json"> : never : ContentType extends `text/plain${infer _Rest}` ? TypedResponse<Content$1, ExtractStatusCode<Status$1>, "text"> : Response : never;
++type ReturnJsonOrTextOrResponse<ContentType, Content$1, Status$1 extends keyof StatusCodeRangeDefinitions | StatusCode> = ContentType extends string ? ContentType extends `application/${infer Start}json${infer _End}` ? Start extends "" | `${string}+` | `vnd.${string}+` ? TypedResponse<JSONParsed<Content$1>, ExtractStatusCode<Status$1>, "json"> : never : ContentType extends `text/plain${infer _Rest}` ? TypedResponse<Content$1, ExtractStatusCode<Status$1>, "text"> : ContentType extends `text/event-stream` ? TypedResponse<Content$1, ExtractStatusCode<Status$1>, "sse"> : ContentType extends `websocket` ? TypedResponse<Content$1, ExtractStatusCode<Status$1>, "ws"> : Response : never;
+ type RequestPart<R$1 extends RouteConfig, Part extends string> = Part extends keyof R$1["request"] ? R$1["request"][Part] : {};
+ type HasUndefined<T$1> = undefined extends T$1 ? true : false;
+ type InputTypeBase<R$1 extends RouteConfig, Part extends string, Type extends keyof ValidationTargets> = R$1["request"] extends RequestTypes ? RequestPart<R$1, Part> extends ZodType ? {
