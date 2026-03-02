@@ -43,8 +43,7 @@ template/
 │   │
 │   └── shared/                     # Shared Types
 │       ├── types.ts               # TypeScript interfaces
-│       ├── schemas.ts             # Zod validation schemas
-│       └── rpc-server.ts          # Hono RPC client factory
+│       └── schemas.ts             # Zod validation schemas
 │
 ├── scripts/
 │   └── validate-all.ts            # Pre-commit validation

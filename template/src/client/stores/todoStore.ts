@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import { rpcClient } from '@shared/rpc-server';
+import { apiClient, isSuccess, isError } from '@client/services/apiClient';
 import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/types';
 
 interface TodoState {
@@ -19,17 +19,6 @@ interface TodoState {
   setError: (error: string | null) => void;
 }
 
-// Type guard for API responses
-function isSuccess<T>(response: unknown): response is { success: true; data: T } {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'success' in response &&
-    (response as { success: boolean }).success === true &&
-    'data' in response
-  );
-}
-
 export const useTodoStore = create<TodoState>((set) => ({
   todos: [],
   loading: false,
@@ -38,12 +27,12 @@ export const useTodoStore = create<TodoState>((set) => ({
   fetchTodos: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await rpcClient.api.todos.$get();
+      const response = await apiClient.api.todos.$get();
       const result = await response.json();
       if (isSuccess<Todo[]>(result)) {
         set({ todos: result.data, loading: false });
       } else {
-        set({ error: (result as { error?: string }).error || 'Failed to fetch todos', loading: false });
+        set({ error: isError(result) ? result.error : 'Failed to fetch todos', loading: false });
       }
     } catch (error) {
       set({
@@ -56,7 +45,7 @@ export const useTodoStore = create<TodoState>((set) => ({
   createTodo: async (input: CreateTodoInput) => {
     set({ loading: true, error: null });
     try {
-      const response = await rpcClient.api.todos.$post({
+      const response = await apiClient.api.todos.$post({
         json: input,
       });
       const result = await response.json();
@@ -66,7 +55,7 @@ export const useTodoStore = create<TodoState>((set) => ({
           loading: false,
         }));
       } else {
-        set({ error: (result as { error?: string }).error || 'Failed to create todo', loading: false });
+        set({ error: isError(result) ? result.error : 'Failed to create todo', loading: false });
       }
     } catch (error) {
       set({
@@ -79,7 +68,7 @@ export const useTodoStore = create<TodoState>((set) => ({
   updateTodo: async (id: number, input: UpdateTodoInput) => {
     set({ loading: true, error: null });
     try {
-      const response = await rpcClient.api.todos[':id'].$put({
+      const response = await apiClient.api.todos[':id'].$put({
         param: { id: id.toString() },
         json: input,
       });
@@ -92,7 +81,7 @@ export const useTodoStore = create<TodoState>((set) => ({
           loading: false,
         }));
       } else {
-        set({ error: (result as { error?: string }).error || 'Failed to update todo', loading: false });
+        set({ error: isError(result) ? result.error : 'Failed to update todo', loading: false });
       }
     } catch (error) {
       set({
@@ -105,7 +94,7 @@ export const useTodoStore = create<TodoState>((set) => ({
   deleteTodo: async (id: number) => {
     set({ loading: true, error: null });
     try {
-      const response = await rpcClient.api.todos[':id'].$delete({
+      const response = await apiClient.api.todos[':id'].$delete({
         param: { id: id.toString() },
       });
       const result = await response.json();
@@ -115,7 +104,7 @@ export const useTodoStore = create<TodoState>((set) => ({
           loading: false,
         }));
       } else {
-        set({ error: (result as { error?: string }).error || 'Failed to delete todo', loading: false });
+        set({ error: isError(result) ? result.error : 'Failed to delete todo', loading: false });
       }
     } catch (error) {
       set({

@@ -6,9 +6,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useTodoStore } from '../todoStore';
 
-// Mock the RPC client
-vi.mock('@shared/rpc-server', () => ({
-  rpcClient: {
+// Mock the API client
+vi.mock('@client/services/apiClient', () => ({
+  apiClient: {
     api: {
       todos: {
         $get: vi.fn(),

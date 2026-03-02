@@ -32,7 +32,6 @@ src/
 │   └── index.ts
 └── shared/          # Shared types
     ├── types.ts
-    ├── rpc-server.ts
     └── schemas.ts
 ```
 
@@ -88,9 +87,9 @@ Uses `@hono/vite-dev-server` to run both frontend and backend on port 3010.
 Provides type-safe API calls from frontend to backend:
 
 ```typescript
-import { rpcClient } from '@shared/rpc-server';
+import { apiClient } from '@client/services/apiClient';
 
-const response = await rpcClient.api.todos.$get();
+const response = await apiClient.api.todos.$get();
 const result = await response.json();
 ```
 

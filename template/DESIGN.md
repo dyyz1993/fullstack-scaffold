@@ -85,7 +85,7 @@ app.route('/api', userRoutes);
 
 1. Define routes in server (`src/server/index.ts`)
 2. Export `AppType` from server
-3. Import in RPC client (`src/shared/rpc-server.ts`)
+3. Import in API client (`src/client/services/apiClient.ts`)
 4. Use in frontend with full type safety
 
 ## Database Schema

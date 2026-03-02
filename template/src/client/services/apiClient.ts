@@ -6,6 +6,45 @@
 import { hc } from 'hono/client';
 import type { AppType } from '@server/index';
 
+export interface ApiSuccess<T> {
+  success: true;
+  data: T;
+}
+
+export interface ApiError {
+  success: false;
+  error: string;
+}
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+
+export function isSuccess<T>(response: unknown): response is ApiSuccess<T> {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    (response as { success: boolean }).success === true &&
+    'data' in response
+  );
+}
+
+export function isError(response: unknown): response is ApiError {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    (response as { success: boolean }).success === false &&
+    'error' in response
+  );
+}
+
+export function getErrorMessage(response: unknown): string {
+  if (isError(response)) {
+    return response.error;
+  }
+  return 'Unknown error';
+}
+
 /**
  * Create a type-safe API client
  * Usage: const client = createApiClient();

@@ -65,6 +65,6 @@ export default app;
 
 /**
  * Export for Hono RPC type inference
- * @see src/shared/rpc-server.ts
+ * @see src/client/services/apiClient.ts
  */
 export type AppType = typeof app;

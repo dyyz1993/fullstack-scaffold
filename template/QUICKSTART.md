@@ -134,12 +134,12 @@ app.route('/api', featureRoutes);
 `src/client/stores/featureStore.ts`:
 ```typescript
 import { create } from 'zustand';
-import { rpcClient } from '@shared/rpc-server';
+import { apiClient } from '@client/services/apiClient';
 
 export const useFeatureStore = create((set) => ({
   features: [],
   fetchFeatures: async () => {
-    const response = await rpcClient.api.features.$get();
+    const response = await apiClient.api.features.$get();
     const result = await response.json();
     set({ features: result.data });
   },
