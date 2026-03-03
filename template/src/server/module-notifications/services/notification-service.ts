@@ -1,8 +1,3 @@
-/**
- * Notification service
- * In-memory notification storage with SSE broadcasting
- */
-
 import type {
   AppNotification,
   CreateNotificationInput,
@@ -11,10 +6,11 @@ import { generateUUID } from '../../utils/uuid';
 
 const notifications: AppNotification[] = [];
 
-const sseClients = new Set<{
-  id: string;
-  controller: ReadableStreamDefaultController;
-}>();
+interface SSEClient {
+  enqueue: (data: Uint8Array) => void;
+}
+
+const sseClients = new Map<string, SSEClient>();
 
 export function listNotifications(options: {
   unreadOnly?: boolean;
@@ -98,47 +94,27 @@ export function getUnreadCount(): number {
   return notifications.filter((n) => !n.read).length;
 }
 
-export function registerSSEClient(
-  controller: ReadableStreamDefaultController
-): string {
+export function registerSSEClient(client: SSEClient): string {
   const id = generateUUID();
-  sseClients.add({ id, controller });
-
-  sendSSEEvent(controller, 'connected', { timestamp: Date.now() });
-
+  sseClients.set(id, client);
   return id;
 }
 
 export function unregisterSSEClient(id: string): void {
-  for (const client of sseClients) {
-    if (client.id === id) {
-      sseClients.delete(client);
-      break;
-    }
-  }
+  sseClients.delete(id);
 }
 
-function sendSSEEvent(
-  controller: ReadableStreamDefaultController,
-  event: string,
-  data: unknown
-): void {
+function sendSSEEvent(client: SSEClient, event: string, data: unknown): void {
   const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  controller.enqueue(new TextEncoder().encode(message));
+  client.enqueue(new TextEncoder().encode(message));
 }
 
 function broadcastToSSEClients(event: string, data: unknown): void {
-  for (const client of sseClients) {
+  for (const [id, client] of sseClients) {
     try {
-      sendSSEEvent(client.controller, event, data);
+      sendSSEEvent(client, event, data);
     } catch {
-      sseClients.delete(client);
+      sseClients.delete(id);
     }
   }
-}
-
-export function startSSEPingInterval(): ReturnType<typeof setInterval> {
-  return setInterval(() => {
-    broadcastToSSEClients('ping', { timestamp: Date.now() });
-  }, 30000);
 }
