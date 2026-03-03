@@ -4,15 +4,12 @@
  */
 
 import { afterEach } from 'vitest';
-import { cleanup } from './cleanup';
 import '@testing-library/jest-dom';
 
-// Cleanup after each test
 afterEach(() => {
-  cleanup();
+  
 });
 
-// Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
@@ -27,7 +24,6 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
