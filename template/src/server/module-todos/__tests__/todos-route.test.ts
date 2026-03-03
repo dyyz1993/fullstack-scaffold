@@ -1,32 +1,25 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import app from '../../index';
 import { getRawClient, getDb } from '../../db';
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup';
 
 describe('Todo Routes', () => {
   beforeAll(async () => {
+    await setupTestDatabase();
     const db = await getDb();
     expect(db).toBeDefined();
   });
 
   afterAll(async () => {
-    const client = await getRawClient();
-    if (client && 'execute' in client) {
-      await client.execute('DELETE FROM todos');
-    }
+    await cleanupTestDatabase();
   });
 
   beforeEach(async () => {
-    const client = await getRawClient();
-    if (client && 'execute' in client) {
-      await client.execute('DELETE FROM todos');
-    }
+    await cleanupTestDatabase();
   });
 
   afterEach(async () => {
-    const client = await getRawClient();
-    if (client && 'execute' in client) {
-      await client.execute('DELETE FROM todos');
-    }
+    await cleanupTestDatabase();
   });
 
   describe('GET /api/todos', () => {

@@ -10,8 +10,7 @@ export default defineConfig({
     exclude: ['node_modules/**', 'dist/**'],
     env: {
       NODE_ENV: 'test',
-      // 使用 SQLite 作为集成测试数据库
-      DB_PATH: ':memory:', // 内存数据库，每次测试后自动清空
+      SQLITE_PATH: ':memory:',
     },
   },
   resolve: {

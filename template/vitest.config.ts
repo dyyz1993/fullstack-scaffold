@@ -17,6 +17,7 @@ export default defineConfig({
     testTimeout: 30000,
     env: {
       NODE_ENV: 'test',
+      SQLITE_PATH: ':memory:',
     },
   },
   resolve: {

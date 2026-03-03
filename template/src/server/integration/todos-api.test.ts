@@ -1,32 +1,25 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import app from '../index';
-import { getRawClient, getDb } from '../db';
+import { getDb } from '../db';
+import { setupTestDatabase, cleanupTestDatabase } from '../db/test-setup';
 
 describe('Integration: Todos API (Real Database)', () => {
   beforeAll(async () => {
+    await setupTestDatabase();
     const db = await getDb();
     expect(db).toBeDefined();
   });
 
   afterAll(async () => {
-    const rawClient = await getRawClient();
-    if (rawClient && 'execute' in rawClient) {
-      await rawClient.execute('DELETE FROM todos');
-    }
+    await cleanupTestDatabase();
   });
 
   beforeEach(async () => {
-    const rawClient = await getRawClient();
-    if (rawClient && 'execute' in rawClient) {
-      await rawClient.execute('DELETE FROM todos');
-    }
+    await cleanupTestDatabase();
   });
 
   afterEach(async () => {
-    const rawClient = await getRawClient();
-    if (rawClient && 'execute' in rawClient) {
-      await rawClient.execute('DELETE FROM todos');
-    }
+    await cleanupTestDatabase();
   });
 
   describe('Full CRUD Flow', () => {

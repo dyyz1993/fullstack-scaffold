@@ -42,14 +42,16 @@ function createSqliteDb(config: DatabaseConfig): { db: LibSQLDb; client: Client 
   }
   
   const dbPath = config.sqlitePath || './data/app.db';
-  const dbDir = dirname(dbPath);
   
-  if (!existsSync(dbDir)) {
-    mkdirSync(dbDir, { recursive: true });
-    log.debug({ dir: dbDir }, 'Created database directory');
+  if (dbPath !== ':memory:') {
+    const dbDir = dirname(dbPath);
+    if (!existsSync(dbDir)) {
+      mkdirSync(dbDir, { recursive: true });
+      log.debug({ dir: dbDir }, 'Created database directory');
+    }
   }
   
-  const client = createClient({ url: `file:${dbPath}` });
+  const client = createClient({ url: dbPath === ':memory:' ? ':memory:' : `file:${dbPath}` });
   const db = drizzleLibsql(client, { schema });
   
   log.debug({ path: dbPath }, 'SQLite database created');
