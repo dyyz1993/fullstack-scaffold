@@ -3,6 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import * as wsService from '../services/websocket-service';
 import { logger } from '../../lib/logger';
 import { isCloudflare, createCloudflareWSHandler } from '../../utils/ws-helper';
+import { generateUUID } from '../../utils/uuid';
 
 const log = logger.ws();
 
@@ -63,9 +64,10 @@ if (!isCloudflare) {
   const wss = new WebSocketServer({ noServer: true });
 
   wss.on('connection', (ws) => {
+    const clientId = generateUUID();
     const client: wsService.WSClient = {
-      send: (msg) => ws.send(msg),
-      readyState: () => ws.readyState,
+      id: clientId,
+      send: (data) => ws.send(JSON.stringify(data)),
       close: () => ws.close(),
     };
 
