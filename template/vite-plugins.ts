@@ -22,13 +22,16 @@ export function dbPlugin(): Plugin {
     configureServer(server) {
       server.httpServer?.once('listening', async () => {
         const { getDb, runMigrations } = await import('./src/server/db');
+        const { logger } = await import('./src/server/lib/logger');
+        const log = logger.bootstrap();
+        
         try {
-          console.log('[DB] Initializing...');
+          log.info('Initializing database...');
           await getDb();
           await runMigrations();
-          console.log('[DB] Ready');
+          log.info('Database ready');
         } catch (err) {
-          console.error('[DB] Initialization failed:', err);
+          log.error({ err }, 'Database initialization failed');
         }
       });
     },

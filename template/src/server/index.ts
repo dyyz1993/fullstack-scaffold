@@ -3,11 +3,11 @@ import './config';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
 import { Hono } from 'hono';
 import { resolve } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { getAppConfig } from './config';
+import { logger } from './lib/logger';
 import { apiRoutes } from './module-todos/routes/todos-routes';
 import { notificationRoutes } from './module-notifications/routes/notification-routes';
 import { websocketRoutes, handleWSUpgrade } from './module-websocket/routes/websocket-routes';
@@ -20,8 +20,15 @@ const indexHtml = hasDist
   ? readFileSync(resolve(distPath, 'index.html'), 'utf-8')
   : null;
 
+const log = logger.api();
+
 const app = new Hono()
-  .use('*', logger())
+  .use('*', async (c, next) => {
+    const start = Date.now();
+    await next();
+    const ms = Date.now() - start;
+    log.info({ method: c.req.method, path: c.req.path, status: c.res.status, ms }, 'request');
+  })
   .use('*', cors({
     origin: ['*'],
     credentials: true,
@@ -76,10 +83,13 @@ app
     return c.redirect(config.enableDocs ? '/docs' : '/health');
   })
   .onError((err, c) => {
-    console.error('Server error:', err);
+    log.error({ err, path: c.req.path }, 'server error');
     return c.json({ success: false, error: err.message || 'Internal server error' }, 500);
   })
-  .notFound((c) => c.json({ success: false, error: 'Not found' }, 404));
+  .notFound((c) => {
+    log.warn({ path: c.req.path }, 'not found');
+    return c.json({ success: false, error: 'Not found' }, 404);
+  });
 
 export default app;
 export { handleWSUpgrade };
@@ -103,25 +113,27 @@ export async function createServer() {
 }
 
 export async function startServer() {
-  console.log('[Bootstrap] Initializing database...');
+  const bootstrapLog = logger.bootstrap();
+  
+  bootstrapLog.info('Initializing database...');
   try {
     await getDb();
     await runMigrations();
-    console.log('[Bootstrap] Database ready');
+    bootstrapLog.info('Database ready');
   } catch (err) {
-    console.error('[Bootstrap] Database initialization failed:', err);
+    bootstrapLog.error({ err }, 'Database initialization failed');
     process.exit(1);
   }
 
   const { server, port } = await createServer();
 
-  console.log(`[Server] Running on http://localhost:${port}`);
+  bootstrapLog.info({ port }, 'Server running');
   if (config.enableDocs) {
-    console.log(`[Server] API docs: http://localhost:${port}/docs`);
+    bootstrapLog.info({ url: `http://localhost:${port}/docs` }, 'API docs available');
   }
 
   const shutdown = async () => {
-    console.log('\n[Server] Shutting down...');
+    bootstrapLog.info('Shutting down...');
     server.close();
     process.exit(0);
   };

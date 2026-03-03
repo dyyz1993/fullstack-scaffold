@@ -3,16 +3,21 @@ import * as schema from './schema';
 import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
 import { createClient, type Client } from '@libsql/client';
+import { logger } from '../lib/logger';
 
 type Db = LibSQLDatabase<typeof schema>;
 
 let _db: Db | null = null;
 let _client: Client | null = null;
 
+const log = logger.db();
+
 export async function getDb(): Promise<Db> {
   if (_db) return _db;
   
   const config = getDatabaseConfig();
+  
+  log.debug({ driver: config.driver }, 'Creating database connection');
   
   if (config.driver === 'd1') {
     _db = createD1Db(config);
@@ -22,6 +27,7 @@ export async function getDb(): Promise<Db> {
     _client = result.client;
   }
   
+  log.info({ driver: config.driver }, 'Database connected');
   return _db;
 }
 
@@ -34,11 +40,13 @@ async function createSqliteDb(config: DatabaseConfig): Promise<{ db: Db; client:
   
   if (!existsSync(dbDir)) {
     mkdirSync(dbDir, { recursive: true });
+    log.debug({ dir: dbDir }, 'Created database directory');
   }
   
   const client = createClient({ url: `file:${dbPath}` });
   const db = drizzleLibsql(client, { schema });
   
+  log.debug({ path: dbPath }, 'SQLite database created');
   return { db, client };
 }
 
@@ -76,6 +84,7 @@ export async function closeDb(): Promise<void> {
     _client.close();
     _client = null;
     _db = null;
+    log.info('Database connection closed');
   }
 }
 
@@ -89,6 +98,9 @@ export async function runMigrations(): Promise<void> {
     if (existsSync(migrationsFolder)) {
       const { migrate } = await import('drizzle-orm/libsql/migrator');
       await migrate(_db, { migrationsFolder });
+      log.info({ folder: migrationsFolder }, 'Migrations applied');
+    } else {
+      log.warn({ folder: migrationsFolder }, 'No migrations folder found');
     }
   }
 }

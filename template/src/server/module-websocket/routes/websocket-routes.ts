@@ -1,14 +1,9 @@
-/**
- * WebSocket API routes using Hono
- * Demonstrates WebSocket support with type inference
- * 
- * Note: Hono doesn't have a Node.js WebSocket adapter.
- * We use the 'ws' library directly with manual upgrade handling.
- */
-
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import * as wsService from '../services/websocket-service';
+import { logger } from '../../lib/logger';
+
+const log = logger.ws();
 
 const WSStatusResponseSchema = z.object({
   success: z.boolean(),
@@ -72,7 +67,6 @@ wss.on('connection', (ws: WebSocket) => {
   };
 
   wsService.addClient(client);
-  console.log('[WS] Client connected, total:', wsService.getConnectedClientsCount());
 
   ws.on('message', (data) => {
     wsService.handleMessage(
@@ -85,10 +79,9 @@ wss.on('connection', (ws: WebSocket) => {
 
   ws.on('close', () => {
     wsService.removeClient(client);
-    console.log('[WS] Client disconnected, total:', wsService.getConnectedClientsCount());
   });
 
-  ws.on('error', (e) => console.error('[WS] Error:', e));
+  ws.on('error', (e) => log.error({ err: e }, 'WebSocket error'));
 
   ws.send(JSON.stringify({
     type: 'connected',

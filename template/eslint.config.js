@@ -1,15 +1,10 @@
-/**
- * ESLint configuration for React + Hono + TypeScript
- * Flat config format (ESLint 9+)
- */
-
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  { ignores: ['dist', '.pi', 'lint-scripts'] },
   {
     extends: [
       eslint.configs.recommended,
@@ -39,6 +34,25 @@ export default tseslint.config(
         { argsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+  {
+    files: ['src/server/**/*.ts'],
+    rules: {
+      'no-console': 'error',
+    },
+  },
+  {
+    files: ['src/client/**/*.ts', 'src/client/**/*.tsx'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   }
 );

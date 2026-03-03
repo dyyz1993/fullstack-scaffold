@@ -1,9 +1,7 @@
-/**
- * WebSocket service
- * Handles WebSocket message processing
- */
-
 import type { WSMessage, WSRpcRequest } from '@shared/schemas';
+import { logger } from '../../lib/logger';
+
+const log = logger.ws();
 
 type SendFunction = (message: string) => void;
 type ReadyStateFunction = () => number;
@@ -29,27 +27,28 @@ export function handleMessage(
   try {
     message = JSON.parse(data);
   } catch {
+    log.warn({ data: data.slice(0, 100) }, 'Invalid JSON received');
     send(JSON.stringify({ type: 'error', payload: 'Invalid JSON', timestamp: Date.now() }));
     return;
   }
 
-  // RPC 请求格式: { id, method, params }
   if ('id' in message && 'method' in message && 'params' in message) {
     handleRpcRequest(message as WSRpcRequest, send);
     return;
   }
 
-  // 事件格式: { type, payload }
   if ('type' in message) {
     handleEvent(message, client);
     return;
   }
 
+  log.warn({ message }, 'Unknown message format');
   send(JSON.stringify({ type: 'error', payload: 'Unknown message format', timestamp: Date.now() }));
 }
 
 function handleRpcRequest(request: WSRpcRequest, send: SendFunction) {
   const { id, method, params } = request;
+  log.debug({ id, method }, 'RPC request received');
 
   switch (method) {
     case 'echo': {
@@ -68,6 +67,7 @@ function handleRpcRequest(request: WSRpcRequest, send: SendFunction) {
       break;
     }
     default:
+      log.warn({ id, method }, 'Unknown RPC method');
       send(JSON.stringify({
         id,
         error: `Unknown RPC method: ${method}`,
@@ -76,6 +76,8 @@ function handleRpcRequest(request: WSRpcRequest, send: SendFunction) {
 }
 
 function handleEvent(message: WSMessage, client: WSClient) {
+  log.debug({ type: message.type }, 'Event received');
+  
   switch (message.type) {
     case 'broadcast':
       handleBroadcast(client, message);
@@ -84,11 +86,14 @@ function handleEvent(message: WSMessage, client: WSClient) {
       handleNotification(client, message);
       break;
     default:
+      log.warn({ type: message.type }, 'Unknown event type');
       client.send(JSON.stringify({ type: 'error', payload: `Unknown event type: ${message.type}`, timestamp: Date.now() }));
   }
 }
 
 function handleBroadcast(_client: WSClient, message: WSMessage) {
+  log.debug({ clients: connectedClients.size }, 'Broadcasting message');
+  
   const broadcastMessage = JSON.stringify({
     type: 'broadcast',
     payload: message.payload,
@@ -116,10 +121,12 @@ function handleNotification(client: WSClient, message: WSMessage) {
 
 export function addClient(client: WSClient) {
   connectedClients.add(client);
+  log.info({ count: connectedClients.size }, 'Client connected');
 }
 
 export function removeClient(client: WSClient) {
   connectedClients.delete(client);
+  log.info({ count: connectedClients.size }, 'Client disconnected');
 }
 
 export function getConnectedClientsCount(): number {
