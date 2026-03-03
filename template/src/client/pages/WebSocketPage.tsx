@@ -36,7 +36,8 @@ export const WebSocketPage: React.FC = () => {
   const typeConfig: Record<string, { color: string; bg: string; icon: React.FC<{ className?: string }> }> = {
     ping: { color: 'text-cyan-500', bg: 'bg-cyan-500', icon: Activity },
     pong: { color: 'text-cyan-500', bg: 'bg-cyan-500', icon: Activity },
-    echo: { color: 'text-purple-500', bg: 'bg-purple-500', icon: MessageSquare },
+    echo_request: { color: 'text-purple-400', bg: 'bg-purple-400', icon: Send },
+    echo_response: { color: 'text-purple-600', bg: 'bg-purple-600', icon: MessageSquare },
     broadcast: { color: 'text-orange-500', bg: 'bg-orange-500', icon: Radio },
     notification: { color: 'text-green-500', bg: 'bg-green-500', icon: Bell },
     connected: { color: 'text-blue-500', bg: 'bg-blue-500', icon: Wifi },
@@ -160,12 +161,12 @@ export const WebSocketPage: React.FC = () => {
               <div
                 key={index}
                 className="p-4 bg-white rounded-lg border-l-4 shadow-sm"
-                style={{ borderLeftColor: msg.type === 'ping' || msg.type === 'pong' ? '#06b6d4' : msg.type === 'echo' ? '#a855f7' : msg.type === 'broadcast' ? '#f97316' : msg.type === 'connected' ? '#3b82f6' : '#22c55e' }}
+                style={{ borderLeftColor: msg.type === 'ping' || msg.type === 'pong' ? '#06b6d4' : msg.type === 'echo_request' ? '#a78bfa' : msg.type === 'echo_response' ? '#9333ea' : msg.type === 'broadcast' ? '#f97316' : msg.type === 'connected' ? '#3b82f6' : '#22c55e' }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white ${config.bg}`}>
                     <TypeIcon className="w-3 h-3" />
-                    {msg.type.toUpperCase()}
+                    {msg.type === 'echo_request' ? 'ECHO REQ' : msg.type === 'echo_response' ? 'ECHO RES' : msg.type.toUpperCase()}
                   </span>
                   <span className="text-xs text-gray-400">
                     {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}

@@ -7,6 +7,7 @@ import { hc } from 'hono/client';
 import type { AppType } from '@server/index';
 import type { ApiSuccess, ApiError, ApiResponse } from '@shared/schemas';
 import type { ClientResponse } from 'hono/client';
+import { WSClient, type AppWSProtocol } from './wsClient';
 
 export type { ApiSuccess, ApiError, ApiResponse };
 
@@ -37,12 +38,43 @@ export function getErrorMessage(response: unknown): string {
   return 'Unknown error';
 }
 
-export const createApiClient = () => {
-  const baseUrl = import.meta.env.API_BASE_URL || window.location.origin;
-  return hc<AppType>(baseUrl);
+const wsClientInstances = new Map<string, WSClient<AppWSProtocol>>();
+
+export const createWSClient = (url: string | URL): WSClient<AppWSProtocol> => {
+  const wsUrl = typeof url === 'string' ? url : url.toString();
+  
+  if (!wsClientInstances.has(wsUrl)) {
+    wsClientInstances.set(wsUrl, new WSClient<AppWSProtocol>(() => new WebSocket(wsUrl)));
+  }
+  
+  return wsClientInstances.get(wsUrl)!;
 };
 
-export const apiClient = createApiClient();
+const baseUrl = import.meta.env.API_BASE_URL || window.location.origin;
+
+export const apiClient = hc<AppType>(baseUrl, {
+  webSocket: (url: string | URL) => {
+    const client = createWSClient(url);
+    return client.getSocket()!;
+  }
+});
+
+export type WSRoute = {
+  $url: (options?: { query?: Record<string, string> }) => URL;
+};
+
+export const extendWSRoute = <T extends WSRoute>(route: T) => ({
+  ...route,
+  $ws: (options?: { query?: Record<string, string> }): WSClient<AppWSProtocol> => {
+    const httpUrl = route.$url(options);
+    const wsUrl = httpUrl.href.replace(/^http/, 'ws');
+    return createWSClient(wsUrl);
+  }
+});
+
+export function getWSClient(url: string): WSClient<AppWSProtocol> | undefined {
+  return wsClientInstances.get(url);
+}
 
 export async function* consumeStream<T>(
   responsePromise: Promise<ClientResponse<T>>

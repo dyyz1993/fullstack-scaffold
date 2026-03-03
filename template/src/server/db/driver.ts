@@ -1,9 +1,8 @@
-import { getDatabaseConfig, type DatabaseConfig } from './config';
+import { getDatabaseConfig, type DatabaseConfig } from '../config';
 import * as schema from './schema';
 import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
 import { createClient, type Client } from '@libsql/client';
-import { migrate } from 'drizzle-orm/libsql/migrator';
 
 type Db = LibSQLDatabase<typeof schema>;
 
@@ -88,19 +87,8 @@ export async function runMigrations(): Promise<void> {
     const migrationsFolder = './drizzle';
     
     if (existsSync(migrationsFolder)) {
+      const { migrate } = await import('drizzle-orm/libsql/migrator');
       await migrate(_db, { migrationsFolder });
-    } else {
-      console.warn('No migrations folder found. Run `npm run db:generate` first.');
     }
   }
 }
-
-process.on('SIGINT', async () => {
-  await closeDb();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  await closeDb();
-  process.exit(0);
-});

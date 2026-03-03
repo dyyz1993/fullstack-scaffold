@@ -1,8 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import * as todoService from '../services/todo-service';
-import { getRawClient } from '../../db';
+import { getRawClient, getDb } from '../../db';
 
 describe('Todo Service', () => {
+  beforeAll(async () => {
+    const db = await getDb();
+    expect(db).toBeDefined();
+  });
+
+  afterAll(async () => {
+    const client = await getRawClient();
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM todos');
+    }
+  });
+
   beforeEach(async () => {
     const client = await getRawClient();
     if (client && 'execute' in client) {

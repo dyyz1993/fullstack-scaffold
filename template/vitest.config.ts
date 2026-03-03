@@ -15,6 +15,9 @@ export default defineConfig({
     ],
     exclude: ['**/node_modules/**', '**/dist/**'],
     testTimeout: 30000,
+    env: {
+      NODE_ENV: 'test',
+    },
   },
   resolve: {
     alias: {
