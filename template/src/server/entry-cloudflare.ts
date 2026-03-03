@@ -4,7 +4,7 @@ import { cors } from 'hono/cors';
 import { apiRoutes } from './module-todos/routes/todos-routes';
 import { notificationRoutes } from './module-notifications/routes/notification-routes';
 import { getDb } from './db/driver-cloudflare';
-import { NotificationDurableObject } from './services/realtime/cloudflare-do';
+import { NotificationDurableObject } from './durable-objects/NotificationDO';
 
 export interface AppBindings {
   DB: D1Database;
@@ -21,6 +21,11 @@ app
     await next();
   })
   .get('/api/ws', async (c) => {
+    const id = c.env.NOTIFICATION_DO.idFromName('global');
+    const stub = c.env.NOTIFICATION_DO.get(id);
+    return stub.fetch(c.req.raw);
+  })
+  .get('/api/notifications/stream', async (c) => {
     const id = c.env.NOTIFICATION_DO.idFromName('global');
     const stub = c.env.NOTIFICATION_DO.get(id);
     return stub.fetch(c.req.raw);

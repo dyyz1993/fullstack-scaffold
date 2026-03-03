@@ -6,12 +6,6 @@ import { generateUUID } from '../../utils/uuid';
 
 const notifications: AppNotification[] = [];
 
-interface SSEClient {
-  enqueue: (data: Uint8Array) => void;
-}
-
-const sseClients = new Map<string, SSEClient>();
-
 export function listNotifications(options: {
   unreadOnly?: boolean;
   limit?: number;
@@ -57,8 +51,6 @@ export function createNotification(input: CreateNotificationInput): AppNotificat
 
   notifications.unshift(notification);
 
-  broadcastToSSEClients('notification', notification);
-
   return notification;
 }
 
@@ -92,29 +84,4 @@ export function deleteNotification(id: string): boolean {
 
 export function getUnreadCount(): number {
   return notifications.filter((n) => !n.read).length;
-}
-
-export function registerSSEClient(client: SSEClient): string {
-  const id = generateUUID();
-  sseClients.set(id, client);
-  return id;
-}
-
-export function unregisterSSEClient(id: string): void {
-  sseClients.delete(id);
-}
-
-function sendSSEEvent(client: SSEClient, event: string, data: unknown): void {
-  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  client.enqueue(new TextEncoder().encode(message));
-}
-
-function broadcastToSSEClients(event: string, data: unknown): void {
-  for (const [id, client] of sseClients) {
-    try {
-      sendSSEEvent(client, event, data);
-    } catch {
-      sseClients.delete(id);
-    }
-  }
 }

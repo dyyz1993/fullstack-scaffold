@@ -1,55 +1,58 @@
-import type { WSServer, WSMessageHandler, WSConnectionHandler, WSDisconnectHandler } from './types';
-import { isCloudflare } from '../../utils/env';
+import type { AppNotification } from '@shared/schemas';
 
-export type { WSServer, WSClient, WSMessageHandler, WSConnectionHandler, WSDisconnectHandler } from './types';
+export interface BroadcastMessage {
+  event: string;
+  data: unknown;
+}
 
-let _wss: WSServer | null = null;
+export interface RealtimeService {
+  broadcast(event: string, data: unknown): Promise<void>;
+  broadcastNotification(notification: AppNotification): Promise<void>;
+}
 
-export function initWSServer(env?: { NOTIFICATION_DO?: DurableObjectNamespace }): WSServer {
-  if (_wss) return _wss;
+let _realtimeService: RealtimeService | null = null;
 
-  if (isCloudflare && env?.NOTIFICATION_DO) {
-    const { CloudflareWSServer } = require('./cloudflare-do');
-    _wss = new CloudflareWSServer(env as { NOTIFICATION_DO: DurableObjectNamespace });
+export function initRealtimeService(env?: { NOTIFICATION_DO?: DurableObjectNamespace }): RealtimeService {
+  if (_realtimeService) return _realtimeService;
+
+  if (env?.NOTIFICATION_DO) {
+    _realtimeService = {
+      async broadcast(event: string, data: unknown): Promise<void> {
+        const id = env.NOTIFICATION_DO!.idFromName('global');
+        const stub = env.NOTIFICATION_DO!.get(id);
+        await stub.fetch(new Request('https://internal/broadcast', {
+          method: 'POST',
+          body: JSON.stringify({ event, data }),
+        }));
+      },
+      async broadcastNotification(notification: AppNotification): Promise<void> {
+        await this.broadcast('notification', notification);
+      },
+    };
   } else {
-    const { getNodeWSServer } = require('./node-ws');
-    _wss = getNodeWSServer();
+    _realtimeService = {
+      async broadcast(_event: string, _data: unknown): Promise<void> {
+        // Node.js implementation would use WebSocket server
+      },
+      async broadcastNotification(_notification: AppNotification): Promise<void> {
+        // Node.js implementation would use WebSocket server
+      },
+    };
   }
 
-  return _wss!;
+  return _realtimeService;
 }
 
-export function getWSServer(): WSServer {
-  if (!_wss) {
-    return initWSServer();
+export function getRealtimeService(): RealtimeService {
+  if (!_realtimeService) {
+    return initRealtimeService();
   }
-  return _wss;
+  return _realtimeService;
 }
 
-export const wss: WSServer = new Proxy({} as WSServer, {
+export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
   get(_target, prop) {
-    const server = getWSServer();
-    return Reflect.get(server, prop, server);
+    const service = getRealtimeService();
+    return Reflect.get(service, prop, service);
   },
 });
-
-export function onMessage(handler: WSMessageHandler): void {
-  const server = getWSServer();
-  if ('onMessage' in server && typeof (server as any).onMessage === 'function') {
-    (server as any).onMessage(handler);
-  }
-}
-
-export function onConnection(handler: WSConnectionHandler): void {
-  const server = getWSServer();
-  if ('onConnection' in server && typeof (server as any).onConnection === 'function') {
-    (server as any).onConnection(handler);
-  }
-}
-
-export function onDisconnect(handler: WSDisconnectHandler): void {
-  const server = getWSServer();
-  if ('onDisconnect' in server && typeof (server as any).onDisconnect === 'function') {
-    (server as any).onDisconnect(handler);
-  }
-}

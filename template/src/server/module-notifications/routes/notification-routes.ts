@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { streamSSE } from 'hono/streaming';
 import * as notificationService from '../services/notification-service';
+import { initRealtimeService } from '../../services/realtime';
 import {
   NotificationSchema,
   CreateNotificationSchema,
@@ -30,22 +30,6 @@ const MarkAllReadResponseSchema = z.object({
 const ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
-});
-
-const streamRoute = createRoute({
-  method: 'get',
-  path: '/notifications/stream',
-  tags: ['notifications'],
-  responses: {
-    200: {
-      content: {
-        'text/event-stream': {
-          schema: NotificationSchema,
-        },
-      },
-      description: 'SSE stream for real-time notifications',
-    },
-  },
 });
 
 const listRoute = createRoute({
@@ -238,33 +222,6 @@ const unreadCountRoute = createRoute({
 });
 
 export const notificationRoutes = new OpenAPIHono()
-  .openapi(streamRoute, async (c) => {
-    return streamSSE(c, async (stream) => {
-      const clientId = notificationService.registerSSEClient({
-        enqueue: (data: Uint8Array) => {
-          stream.write(new TextDecoder().decode(data));
-        },
-      });
-
-      stream.onAbort(() => {
-        notificationService.unregisterSSEClient(clientId);
-      });
-
-      await stream.writeSSE({
-        event: 'connected',
-        data: JSON.stringify({ timestamp: Date.now() }),
-      });
-
-      let counter = 0;
-      while (true) {
-        await stream.sleep(30000);
-        await stream.writeSSE({
-          event: 'ping',
-          data: JSON.stringify({ timestamp: Date.now(), counter: counter++ }),
-        });
-      }
-    });
-  })
   .openapi(listRoute, async (c) => {
     const query = c.req.valid('query');
     const result = notificationService.listNotifications({
@@ -285,6 +242,12 @@ export const notificationRoutes = new OpenAPIHono()
   .openapi(createRouteDef, async (c) => {
     const data = c.req.valid('json');
     const notification = notificationService.createNotification(data);
+    
+    // 通过统一抽象层广播
+    const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace };
+    const realtime = initRealtimeService(env);
+    await realtime.broadcastNotification(notification);
+    
     return c.json({ success: true, data: notification }, 201);
   })
   .openapi(markReadRoute, async (c) => {
