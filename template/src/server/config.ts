@@ -1,4 +1,4 @@
-import { isCloudflare } from './utils/ws-helper';
+import { isCloudflare } from './utils/env';
 
 export type DatabaseDriver = 'sqlite' | 'mysql' | 'd1';
 

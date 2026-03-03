@@ -1,5 +1,5 @@
 import type { Logger, LoggerOptions } from 'pino';
-import { isCloudflare } from '../utils/ws-helper';
+import { isCloudflare } from '../utils/env';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 

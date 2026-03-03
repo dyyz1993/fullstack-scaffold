@@ -1,11 +1,7 @@
 import type { Context } from 'hono';
+import { isCloudflare } from './env';
 
-declare global {
-  var isCloudflare: boolean | undefined;
-}
-
-export const isCloudflare = typeof globalThis !== 'undefined' && 
-  (globalThis.isCloudflare === true || 'WebSocketPair' in globalThis);
+export { isCloudflare };
 
 export function createCloudflareWSHandler(
   onMessage: (data: string, send: (msg: string) => void, close: () => void) => void,

@@ -7,16 +7,7 @@ import type {
   AppNotification,
   CreateNotificationInput,
 } from '@shared/schemas';
-
-function generateUUID(): string {
-  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.randomUUID) {
-    return globalThis.crypto.randomUUID();
-  }
-  // Node.js fallback - only executed in Node.js
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { randomUUID } = require('crypto');
-  return randomUUID();
-}
+import { generateUUID } from '../../utils/uuid';
 
 const notifications: AppNotification[] = [];
 
