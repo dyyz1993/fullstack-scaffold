@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { upgradeWebSocket } from 'hono/cloudflare-workers';
 import { apiRoutes } from './module-todos/routes/todos-routes';
 import { notificationRoutes } from './module-notifications/routes/notification-routes';
 import { getDb } from './db/driver-cloudflare';
-import * as wsService from './module-websocket/services/websocket-service';
+import { NotificationDurableObject } from './services/realtime/cloudflare-do';
 
 export interface AppBindings {
   DB: D1Database;
   ASSETS?: { fetch: (request: Request) => Promise<Response> };
+  NOTIFICATION_DO: DurableObjectNamespace;
   ENVIRONMENT?: string;
 }
 
@@ -20,27 +20,11 @@ app
     (globalThis as any).DB = c.env.DB;
     await next();
   })
-  .get('/api/ws', upgradeWebSocket(() => ({
-    onMessage(event: MessageEvent) {
-      const ws = event.target as WebSocket;
-      wsService.handleMessage(
-        event.data as string,
-        (msg) => ws.send(msg),
-        () => 1,
-        () => ws.close()
-      );
-    },
-    onClose() {
-      console.log('Client disconnected');
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onOpen(_event: any, ws: any) {
-      ws.send(JSON.stringify({
-        type: 'connected',
-        payload: { timestamp: Date.now() },
-      }));
-    },
-  })))
+  .get('/api/ws', async (c) => {
+    const id = c.env.NOTIFICATION_DO.idFromName('global');
+    const stub = c.env.NOTIFICATION_DO.get(id);
+    return stub.fetch(c.req.raw);
+  })
   .use('*', cors({
     origin: ['*'],
     credentials: true,
@@ -84,4 +68,5 @@ export default {
   },
 };
 
+export { NotificationDurableObject };
 export type AppType = typeof app;

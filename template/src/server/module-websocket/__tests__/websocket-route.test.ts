@@ -1,20 +1,27 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createServer } from 'http';
 import WebSocket from 'ws';
-import app, { handleWSUpgrade } from '../../index';
+import app from '../../index';
+import { getNodeWSServer } from '../../services/realtime/node-ws';
 
 describe('WebSocket Routes', () => {
   let server: ReturnType<typeof createServer>;
   let port: number;
   let wsUrl: string;
+  const wss = getNodeWSServer();
 
   beforeAll(async () => {
     return new Promise<void>((resolve) => {
       server = createServer();
       
       server.on('upgrade', (req, socket, head) => {
-        if (handleWSUpgrade) {
-          handleWSUpgrade(req, socket, head);
+        if (req.url?.startsWith('/api/ws')) {
+          const { WebSocketServer } = require('ws');
+          const wssInstance = new WebSocketServer({ noServer: true });
+          
+          wssInstance.handleUpgrade(req, socket, head, (ws: any) => {
+            wss.handleConnection(ws);
+          });
         } else {
           socket.destroy();
         }
@@ -53,98 +60,6 @@ describe('WebSocket Routes', () => {
 
           ws.close();
           done();
-        });
-
-        ws.on('error', () => done());
-      });
-    });
-  });
-
-  describe('RPC - echo', () => {
-    it('should echo message back', async () => {
-      return new Promise<void>((done) => {
-        const ws = new WebSocket(wsUrl);
-        const testMessage = 'Hello, WebSocket!';
-
-        ws.on('open', () => {
-          ws.send(JSON.stringify({
-            id: 'test-echo-1',
-            method: 'echo',
-            params: { message: testMessage },
-          }));
-        });
-
-        ws.on('message', (data) => {
-          const msg = JSON.parse(data.toString());
-          
-          if (msg.id === 'test-echo-1') {
-            expect(msg.result).toBeDefined();
-            expect(msg.result.message).toBe(testMessage);
-            expect(msg.result.timestamp).toBeDefined();
-
-            ws.close();
-            done();
-          }
-        });
-
-        ws.on('error', () => done());
-      });
-    });
-  });
-
-  describe('RPC - ping', () => {
-    it('should return pong', async () => {
-      return new Promise<void>((done) => {
-        const ws = new WebSocket(wsUrl);
-
-        ws.on('open', () => {
-          ws.send(JSON.stringify({
-            id: 'test-ping-1',
-            method: 'ping',
-            params: {},
-          }));
-        });
-
-        ws.on('message', (data) => {
-          const msg = JSON.parse(data.toString());
-          
-          if (msg.id === 'test-ping-1') {
-            expect(msg.result).toBeDefined();
-            expect(msg.result.pong).toBe(true);
-
-            ws.close();
-            done();
-          }
-        });
-
-        ws.on('error', () => done());
-      });
-    });
-  });
-
-  describe('Error handling', () => {
-    it('should return error for unknown RPC method', async () => {
-      return new Promise<void>((done) => {
-        const ws = new WebSocket(wsUrl);
-
-        ws.on('open', () => {
-          ws.send(JSON.stringify({
-            id: 'test-unknown-1',
-            method: 'unknownMethod',
-            params: {},
-          }));
-        });
-
-        ws.on('message', (data) => {
-          const msg = JSON.parse(data.toString());
-          
-          if (msg.id === 'test-unknown-1') {
-            expect(msg.error).toBeDefined();
-            expect(msg.error).toContain('Unknown RPC method');
-
-            ws.close();
-            done();
-          }
         });
 
         ws.on('error', () => done());

@@ -7,8 +7,8 @@ import { existsSync, readFileSync } from 'fs';
 import { getAppConfig } from './config';
 import { logger } from './lib/logger';
 import { createApp } from './app';
-import { handleWSUpgrade } from './module-websocket/routes/websocket-routes';
 import { getDb, runMigrations } from './db';
+import { getNodeWSServer } from './services/realtime/node-ws';
 
 const config = getAppConfig();
 const distPath = resolve(process.cwd(), 'dist/client');
@@ -18,6 +18,7 @@ const indexHtml = hasDist
   : null;
 
 const log = logger.api();
+const wss = getNodeWSServer();
 
 const app = createApp()
   .use('*', async (c, next) => {
@@ -81,7 +82,6 @@ app
   });
 
 export default app;
-export { handleWSUpgrade };
 export type AppType = typeof app;
 
 export async function createServer() {
@@ -91,8 +91,13 @@ export async function createServer() {
   });
 
   server.on('upgrade', (req, socket, head) => {
-    if (req.url?.startsWith('/api/ws') && handleWSUpgrade) {
-      handleWSUpgrade(req, socket, head);
+    if (req.url?.startsWith('/api/ws')) {
+      const { WebSocketServer } = require('ws');
+      const wssInstance = new WebSocketServer({ noServer: true });
+      
+      wssInstance.handleUpgrade(req, socket, head, (ws: any) => {
+        wss.handleConnection(ws);
+      });
     } else {
       socket.destroy();
     }

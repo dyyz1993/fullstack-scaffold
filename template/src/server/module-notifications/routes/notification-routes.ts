@@ -1,8 +1,3 @@
-/**
- * Notification API routes using Hono OpenAPI RPC
- * Includes SSE (Server-Sent Events) endpoint for real-time notifications
- */
-
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { streamSSE } from 'hono/streaming';
@@ -245,35 +240,28 @@ const unreadCountRoute = createRoute({
 export const notificationRoutes = new OpenAPIHono()
   .openapi(streamRoute, async (c) => {
     return streamSSE(c, async (stream) => {
-      let clientId: string | undefined;
+      const clientId = notificationService.registerSSEClient({
+        enqueue: (data: Uint8Array) => {
+          stream.write(new TextDecoder().decode(data));
+        },
+      });
 
       stream.onAbort(() => {
-        if (clientId) {
-          notificationService.unregisterSSEClient(clientId);
-        }
+        notificationService.unregisterSSEClient(clientId);
       });
 
-      const readable = new ReadableStream({
-        start(controller) {
-          clientId = notificationService.registerSSEClient(controller);
-        },
-        cancel() {
-          if (clientId) {
-            notificationService.unregisterSSEClient(clientId);
-          }
-        },
+      await stream.writeSSE({
+        event: 'connected',
+        data: JSON.stringify({ timestamp: Date.now() }),
       });
 
-      const reader = readable.getReader();
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          await stream.write(new TextDecoder().decode(value));
-        }
-      } finally {
-        reader.releaseLock();
+      let counter = 0;
+      while (true) {
+        await stream.sleep(30000);
+        await stream.writeSSE({
+          event: 'ping',
+          data: JSON.stringify({ timestamp: Date.now(), counter: counter++ }),
+        });
       }
     });
   })
