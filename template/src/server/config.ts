@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+import { resolve } from 'path';
+import { existsSync } from 'fs';
 import { isCloudflare } from './utils/env';
 
 export type DatabaseDriver = 'sqlite' | 'mysql' | 'd1';
@@ -23,31 +26,20 @@ export interface AppConfig {
 function loadEnvFileSync(): void {
   if (isCloudflare) return;
   
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { config } = require('dotenv');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { resolve } = require('path');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { existsSync } = require('fs');
-    
-    const nodeEnv = process.env.NODE_ENV || 'development';
-    
-    const envFiles: Record<string, string> = {
-      test: '.env.test',
-      development: '.env.local',
-      production: '.env.production',
-    };
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  
+  const envFiles: Record<string, string> = {
+    test: '.env.test',
+    development: '.env.local',
+    production: '.env.production',
+  };
 
-    const envFile = envFiles[nodeEnv];
-    if (envFile) {
-      const envPath = resolve(process.cwd(), envFile);
-      if (existsSync(envPath)) {
-        config({ path: envPath });
-      }
+  const envFile = envFiles[nodeEnv];
+  if (envFile) {
+    const envPath = resolve(process.cwd(), envFile);
+    if (existsSync(envPath)) {
+      config({ path: envPath });
     }
-  } catch {
-    // In Cloudflare, dotenv is not available, ignore
   }
 }
 

@@ -1,4 +1,8 @@
 import type { Logger, LoggerOptions } from 'pino';
+import pino from 'pino';
+import { resolve } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { getAppConfig } from '../config';
 import { isCloudflare } from '../utils/env';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
@@ -54,17 +58,7 @@ function createConsoleLogger(module: string, level: LogLevel = 'info'): SimpleLo
   };
 }
 
-function createNodeLoggerSync(module: string, level?: LogLevel): Logger | SimpleLogger {
-  // These requires are only executed in Node.js environment
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const pino = require('pino');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { resolve } = require('path');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { existsSync, mkdirSync } = require('fs');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { getAppConfig } = require('../config');
-  
+function createNodeLogger(module: string, level?: LogLevel): Logger {
   const config = getAppConfig();
   const logLevel = level || (config.nodeEnv === 'production' ? 'info' : 'debug');
   const isDev = config.nodeEnv === 'development';
@@ -88,8 +82,7 @@ function createNodeLoggerSync(module: string, level?: LogLevel): Logger | Simple
   }
   const logPath = resolve(logDir, `${module}.log`);
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const streamEntries: any[] = [];
+  const streamEntries: pino.StreamEntry[] = [];
 
   if (isDev) {
     streamEntries.push({
@@ -114,8 +107,7 @@ function createNodeLoggerSync(module: string, level?: LogLevel): Logger | Simple
     }),
   });
 
-  const logger = pino({ level: logLevel }, pino.multistream(streamEntries)).child({ module });
-  return logger;
+  return pino({ level: logLevel }, pino.multistream(streamEntries)).child({ module });
 }
 
 export function createModuleLoggerSync(module: string, level?: LogLevel): Logger | SimpleLogger {
@@ -127,8 +119,8 @@ export function createModuleLoggerSync(module: string, level?: LogLevel): Logger
     return _loggers.get(module)!;
   }
 
-  const logger = createNodeLoggerSync(module, level);
-  _loggers.set(module, logger as Logger);
+  const logger = createNodeLogger(module, level);
+  _loggers.set(module, logger);
   return logger;
 }
 

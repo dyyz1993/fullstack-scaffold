@@ -1,12 +1,16 @@
+import { existsSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 import { getDatabaseConfig, type DatabaseConfig } from '../config';
 import * as schema from './schema';
-import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
+import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
 import { createClient, type Client } from '@libsql/client';
 import { logger } from '../lib/logger';
 import { isCloudflare } from '../utils/env';
 
-type Db = LibSQLDatabase<typeof schema>;
+type LibSQLDb = ReturnType<typeof drizzleLibsql<typeof schema>>;
+type D1Db = ReturnType<typeof drizzleD1<typeof schema>>;
+type Db = LibSQLDb | D1Db;
 
 let _db: Db | null = null;
 let _client: Client | null = null;
@@ -23,7 +27,7 @@ export async function getDb(): Promise<Db> {
   if (config.driver === 'd1') {
     _db = createD1Db(config);
   } else {
-    const result = await createSqliteDb(config);
+    const result = createSqliteDb(config);
     _db = result.db;
     _client = result.client;
   }
@@ -32,16 +36,10 @@ export async function getDb(): Promise<Db> {
   return _db;
 }
 
-async function createSqliteDb(config: DatabaseConfig): Promise<{ db: Db; client: Client }> {
+function createSqliteDb(config: DatabaseConfig): { db: LibSQLDb; client: Client } {
   if (isCloudflare) {
     throw new Error('SQLite is not supported in Cloudflare Workers. Use D1 instead.');
   }
-  
-  // Node.js only - these requires will not be executed in Cloudflare
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { existsSync, mkdirSync } = require('node:fs');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { dirname } = require('node:path');
   
   const dbPath = config.sqlitePath || './data/app.db';
   const dbDir = dirname(dbPath);
@@ -58,13 +56,11 @@ async function createSqliteDb(config: DatabaseConfig): Promise<{ db: Db; client:
   return { db, client };
 }
 
-function createD1Db(config: DatabaseConfig): Db {
+function createD1Db(config: DatabaseConfig): D1Db {
   if (!config.d1Database) {
     throw new Error('D1 database binding not found. Make sure D1 is configured in wrangler.toml');
   }
   
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { drizzle: drizzleD1 } = require('drizzle-orm/d1');
   return drizzleD1(config.d1Database, { schema });
 }
 
@@ -105,14 +101,11 @@ export async function runMigrations(): Promise<void> {
   const config = getDatabaseConfig();
   
   if (config.driver === 'sqlite' && _db) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { existsSync } = require('node:fs');
     const migrationsFolder = './drizzle';
     
     if (existsSync(migrationsFolder)) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { migrate } = require('drizzle-orm/libsql/migrator');
-      await migrate(_db, { migrationsFolder });
+      const { migrate } = await import('drizzle-orm/libsql/migrator');
+      await migrate(_db as LibSQLDb, { migrationsFolder });
       log.info({ folder: migrationsFolder }, 'Migrations applied');
     } else {
       log.warn({ folder: migrationsFolder }, 'No migrations folder found');
