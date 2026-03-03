@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+import { upgradeWebSocket } from 'hono/cloudflare-workers';
 import { isCloudflare } from './env';
 
 export { isCloudflare };
@@ -8,37 +9,23 @@ export function createCloudflareWSHandler(
   _onOpen?: () => void,
   onClose?: () => void
 ) {
-  return async (c: Context) => {
-    const WebSocketPair = (globalThis as any).WebSocketPair;
-    
-    if (!WebSocketPair) {
-      return c.json({ error: 'WebSocket not supported' }, 500);
-    }
-
-    const pair = new WebSocketPair();
-    const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
-
-    server.accept();
-
-    const send = (msg: string) => server.send(msg);
-    const close = () => server.close();
-
-    server.addEventListener('message', (event: MessageEvent) => {
-      onMessage(event.data as string, send, close);
-    });
-
-    if (onClose) {
-      server.addEventListener('close', onClose);
-    }
-
-    send(JSON.stringify({
-      type: 'connected',
-      payload: { timestamp: Date.now() },
-    }));
-
-    return new Response(null, { 
-      status: 101, 
-      webSocket: client 
-    });
-  };
+  return upgradeWebSocket((c: Context) => ({
+    onMessage(event: MessageEvent) {
+      const ws = event.target as WebSocket;
+      onMessage(
+        event.data as string,
+        (msg) => ws.send(msg),
+        () => ws.close()
+      );
+    },
+    onClose() {
+      onClose?.();
+    },
+    onOpen(_event: Event, ws: WebSocket) {
+      ws.send(JSON.stringify({
+        type: 'connected',
+        payload: { timestamp: Date.now() },
+      }));
+    },
+  }));
 }

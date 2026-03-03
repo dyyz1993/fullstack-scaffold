@@ -1,20 +1,30 @@
-import { createApp, type AppBindings } from './app';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { apiRoutes } from './module-todos/routes/todos-routes';
+import { notificationRoutes } from './module-notifications/routes/notification-routes';
+import { websocketRoutes } from './module-websocket/routes/websocket-routes';
 import { cloudflareWSHandler } from './module-websocket/routes/websocket-routes';
 import { getDb } from './db/driver-cloudflare';
 
-interface CloudflareBindings extends AppBindings {
+export interface AppBindings {
   DB: D1Database;
   ASSETS?: { fetch: (request: Request) => Promise<Response> };
-  ENVIRONMENT: string;
+  ENVIRONMENT?: string;
 }
 
-const app = createApp<CloudflareBindings>()
+const app = new Hono<{ Bindings: AppBindings }>()
+  .use('*', cors({
+    origin: ['*'],
+    credentials: true,
+  }))
   .use('*', async (c, next) => {
     (globalThis as any).DB = c.env.DB;
     await next();
   })
+  .route('/api', apiRoutes)
+  .route('/api', notificationRoutes)
+  .route('/api/ws', websocketRoutes)
   .get('/api/ws', cloudflareWSHandler!)
-  .get('/api/ws/connect', cloudflareWSHandler!)
   .get('/health', async (c) => {
     try {
       await getDb();
