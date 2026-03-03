@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { Logger, LoggerOptions } from 'pino';
 import pino from 'pino';
 import { resolve } from 'path';
