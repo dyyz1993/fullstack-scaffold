@@ -1,35 +1,21 @@
-/**
- * API Helper functions
- * Convenience functions for common API operations
- */
+import { apiClient } from '@client/services/apiClient';
 
-import { apiClient, isSuccess, isError, getErrorMessage } from '@client/services/apiClient';
-import type { ApiSuccess, ApiError } from '@shared/schemas';
-import type { Todo } from '@shared/types';
+export interface ApiTodo {
+  id: number;
+  title: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+  description?: string;
+}
 
-/**
- * Fetch all todos from the API
- * @returns Promise that resolves to an array of todos
- * @throws Error if the request fails
- */
-export async function fetchTodos(): Promise<Todo[]> {
-  try {
-    const response = await apiClient.api.todos.$get();
-    const result = await response.json();
+export async function fetchTodos(): Promise<ApiTodo[]> {
+  const response = await apiClient.api.todos.$get();
+  const result = await response.json();
 
-    if (isSuccess<Todo[]>(result)) {
-      return result.data;
-    }
-
-    if (isError(result)) {
-      throw new Error(result.error);
-    }
-
-    throw new Error('Unexpected response format');
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
+  if (!result.success) {
     throw new Error('Failed to fetch todos');
   }
+
+  return result.data;
 }
