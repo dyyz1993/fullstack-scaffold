@@ -62,7 +62,7 @@ export class NotificationDurableObject {
 
     server.send(JSON.stringify({
       type: 'connected',
-      payload: { clientId, timestamp: Date.now() },
+      payload: { timestamp: Date.now() },
     }));
 
     return new Response(null, { status: 101, webSocket: client });
@@ -103,19 +103,57 @@ export class NotificationDurableObject {
     });
   }
 
-  // 处理客户端消息
+  // 处理客户端消息 - 支持 RPC 和事件两种模式
   private handleMessage(clientId: string, data: unknown): void {
+    // RPC 模式: { id, method, params }
+    if (typeof data === 'object' && data !== null && 'method' in data && 'id' in data) {
+      const rpc = data as { id: string; method: string; params: unknown };
+      this.handleRpc(clientId, rpc);
+      return;
+    }
+
+    // 事件模式: { type, payload }
     if (typeof data === 'object' && data !== null && 'type' in data) {
       const msg = data as { type: string; payload?: unknown };
-      
-      switch (msg.type) {
-        case 'ping':
-          this.sendToWSClient(clientId, { type: 'pong', timestamp: Date.now() });
-          break;
-        case 'broadcast':
-          this.broadcast(msg.payload, [clientId]);
-          break;
+      this.handleEvent(clientId, msg);
+    }
+  }
+
+  // 处理 RPC 请求
+  private handleRpc(clientId: string, rpc: { id: string; method: string; params: unknown }): void {
+    const client = this.wsClients.get(clientId);
+    if (!client) return;
+
+    switch (rpc.method) {
+      case 'echo': {
+        const params = rpc.params as { message: string };
+        client.send(JSON.stringify({
+          id: rpc.id,
+          result: { message: params.message, timestamp: Date.now() },
+        }));
+        break;
       }
+      case 'ping': {
+        client.send(JSON.stringify({
+          id: rpc.id,
+          result: { pong: true, timestamp: Date.now() },
+        }));
+        break;
+      }
+      default:
+        client.send(JSON.stringify({
+          id: rpc.id,
+          error: `Unknown method: ${rpc.method}`,
+        }));
+    }
+  }
+
+  // 处理事件消息
+  private handleEvent(clientId: string, msg: { type: string; payload?: unknown }): void {
+    switch (msg.type) {
+      case 'broadcast':
+        this.broadcast(msg.payload, [clientId]);
+        break;
     }
   }
 
