@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createServer } from 'http';
-import WebSocket from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import app from '../../index';
 import { getNodeWSServer } from '../../services/realtime/node-ws';
 
@@ -16,10 +16,9 @@ describe('WebSocket Routes', () => {
       
       server.on('upgrade', (req, socket, head) => {
         if (req.url?.startsWith('/api/ws')) {
-          const { WebSocketServer } = require('ws');
           const wssInstance = new WebSocketServer({ noServer: true });
           
-          wssInstance.handleUpgrade(req, socket, head, (ws: any) => {
+          wssInstance.handleUpgrade(req, socket, head, (ws) => {
             wss.handleConnection(ws);
           });
         } else {

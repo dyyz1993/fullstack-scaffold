@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { resolve } from 'path';
 import { existsSync, readFileSync } from 'fs';
+import { WebSocketServer } from 'ws';
 import { getAppConfig } from './config';
 import { logger } from './lib/logger';
 import { createApp } from './app';
@@ -92,10 +93,9 @@ export async function createServer() {
 
   server.on('upgrade', (req, socket, head) => {
     if (req.url?.startsWith('/api/ws')) {
-      const { WebSocketServer } = require('ws');
       const wssInstance = new WebSocketServer({ noServer: true });
       
-      wssInstance.handleUpgrade(req, socket, head, (ws: any) => {
+      wssInstance.handleUpgrade(req, socket, head, (ws) => {
         wss.handleConnection(ws);
       });
     } else {
