@@ -4,6 +4,7 @@ import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
 import { createClient, type Client } from '@libsql/client';
 import { logger } from '../lib/logger';
+import { isCloudflare } from '../utils/ws-helper';
 
 type Db = LibSQLDatabase<typeof schema>;
 
@@ -32,8 +33,15 @@ export async function getDb(): Promise<Db> {
 }
 
 async function createSqliteDb(config: DatabaseConfig): Promise<{ db: Db; client: Client }> {
-  const { existsSync, mkdirSync } = await import('node:fs');
-  const { dirname } = await import('node:path');
+  if (isCloudflare) {
+    throw new Error('SQLite is not supported in Cloudflare Workers. Use D1 instead.');
+  }
+  
+  // Node.js only - these requires will not be executed in Cloudflare
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { existsSync, mkdirSync } = require('node:fs');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { dirname } = require('node:path');
   
   const dbPath = config.sqlitePath || './data/app.db';
   const dbDir = dirname(dbPath);
@@ -55,7 +63,7 @@ function createD1Db(config: DatabaseConfig): Db {
     throw new Error('D1 database binding not found. Make sure D1 is configured in wrangler.toml');
   }
   
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { drizzle: drizzleD1 } = require('drizzle-orm/d1');
   return drizzleD1(config.d1Database, { schema });
 }
@@ -89,14 +97,21 @@ export async function closeDb(): Promise<void> {
 }
 
 export async function runMigrations(): Promise<void> {
+  if (isCloudflare) {
+    log.info('Migrations skipped in Cloudflare Workers');
+    return;
+  }
+  
   const config = getDatabaseConfig();
   
   if (config.driver === 'sqlite' && _db) {
-    const { existsSync } = await import('node:fs');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { existsSync } = require('node:fs');
     const migrationsFolder = './drizzle';
     
     if (existsSync(migrationsFolder)) {
-      const { migrate } = await import('drizzle-orm/libsql/migrator');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { migrate } = require('drizzle-orm/libsql/migrator');
       await migrate(_db, { migrationsFolder });
       log.info({ folder: migrationsFolder }, 'Migrations applied');
     } else {

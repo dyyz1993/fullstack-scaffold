@@ -26,6 +26,8 @@ export default defineConfig({
     dbPlugin(),
   ],
   build: {
+    outDir: 'dist/client',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),

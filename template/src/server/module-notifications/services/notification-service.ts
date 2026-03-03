@@ -3,16 +3,23 @@
  * In-memory notification storage with SSE broadcasting
  */
 
-import { randomUUID } from 'crypto';
 import type {
   AppNotification,
   CreateNotificationInput,
 } from '@shared/schemas';
 
-// In-memory storage (replace with database in production)
+function generateUUID(): string {
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+  // Node.js fallback - only executed in Node.js
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { randomUUID } = require('crypto');
+  return randomUUID();
+}
+
 const notifications: AppNotification[] = [];
 
-// SSE clients registry
 const sseClients = new Set<{
   id: string;
   controller: ReadableStreamDefaultController;
@@ -53,7 +60,7 @@ export function getNotification(id: string): AppNotification | undefined {
 
 export function createNotification(input: CreateNotificationInput): AppNotification {
   const notification: AppNotification = {
-    id: randomUUID(),
+    id: generateUUID(),
     type: input.type,
     title: input.title,
     message: input.message,
@@ -100,11 +107,10 @@ export function getUnreadCount(): number {
   return notifications.filter((n) => !n.read).length;
 }
 
-// SSE helpers
 export function registerSSEClient(
   controller: ReadableStreamDefaultController
 ): string {
-  const id = randomUUID();
+  const id = generateUUID();
   sseClients.add({ id, controller });
 
   sendSSEEvent(controller, 'connected', { timestamp: Date.now() });
@@ -140,7 +146,7 @@ function broadcastToSSEClients(event: string, data: unknown): void {
   }
 }
 
-export function startSSEPingInterval(): NodeJS.Timeout {
+export function startSSEPingInterval(): ReturnType<typeof setInterval> {
   return setInterval(() => {
     broadcastToSSEClients('ping', { timestamp: Date.now() });
   }, 30000);

@@ -35,6 +35,13 @@ export default tseslint.config(
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['error', { allow: ['warn', 'error'] }],
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'fetch',
+          message: '请使用 AI client 代替 fetch。参考: src/client/lib/ai-client.ts',
+        },
+      ],
     },
   },
   {
@@ -53,6 +60,7 @@ export default tseslint.config(
     files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
     rules: {
       'no-console': 'off',
+      'no-restricted-globals': 'off',
     },
   }
 );

@@ -13,7 +13,11 @@ describe('WebSocket Routes', () => {
       server = createServer();
       
       server.on('upgrade', (req, socket, head) => {
-        handleWSUpgrade(req, socket, head);
+        if (handleWSUpgrade) {
+          handleWSUpgrade(req, socket, head);
+        } else {
+          socket.destroy();
+        }
       });
 
       server.on('request', app.fetch);

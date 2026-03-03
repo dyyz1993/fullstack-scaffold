@@ -1,26 +1,48 @@
-import type { Context } from 'hono'
-import type { UpgradeWebSocket } from 'hono/ws'
+import type { Context } from 'hono';
 
-/**
- * 💡 WebSocket 适配器获取助手
- *
- * 它可以从 Hono Context 或 Environment 中获取升级 WebSocket 的实现。
- * 在不同的运行环境（Node.js, Cloudflare, Bun, Deno）下，Hono 会注入不同的实现。
- *
- * @param c Hono 上下文
- * @returns WebSocket 升级函数 or undefined
- */
-export const getWSAdapter = <T = unknown>(c: Context): UpgradeWebSocket<T> | undefined => {
-  // 1. 优先从 Context 获取 (某些适配器会注入到这里)
-  const fromContext = c.get('upgradeWebSocket')
-  if (fromContext) return fromContext as UpgradeWebSocket<T>
+declare global {
+  var isCloudflare: boolean | undefined;
+}
 
-  // 2. 尝试从 Env 获取 (Cloudflare Workers 等环境)
-  const fromEnv = (c.env as any)?.upgradeWebSocket
-  if (fromEnv) return fromEnv as UpgradeWebSocket<T>
+export const isCloudflare = typeof globalThis !== 'undefined' && 
+  (globalThis.isCloudflare === true || 'WebSocketPair' in globalThis);
 
-  // 3. 开发环境补丁: 如果在 Vite/Node 环境下缺失，可以尝试手动注入
-  // 注意：在 Vite dev server 中，通常需要通过 configureServer 钩子来处理 upgrade 事件
+export function createCloudflareWSHandler(
+  onMessage: (data: string, send: (msg: string) => void, close: () => void) => void,
+  _onOpen?: () => void,
+  onClose?: () => void
+) {
+  return async (c: Context) => {
+    const WebSocketPair = (globalThis as any).WebSocketPair;
+    
+    if (!WebSocketPair) {
+      return c.json({ error: 'WebSocket not supported' }, 500);
+    }
 
-  return undefined
+    const pair = new WebSocketPair();
+    const [client, server] = pair;
+
+    server.accept();
+
+    const send = (msg: string) => server.send(msg);
+    const close = () => server.close();
+
+    server.addEventListener('message', (event: MessageEvent) => {
+      onMessage(event.data as string, send, close);
+    });
+
+    if (onClose) {
+      server.addEventListener('close', onClose);
+    }
+
+    send(JSON.stringify({
+      type: 'connected',
+      payload: { timestamp: Date.now() },
+    }));
+
+    return new Response(null, { 
+      status: 101, 
+      webSocket: client 
+    } as any);
+  };
 }

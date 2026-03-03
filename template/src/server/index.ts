@@ -2,15 +2,12 @@ import './config';
 
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { cors } from 'hono/cors';
-import { Hono } from 'hono';
 import { resolve } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { getAppConfig } from './config';
 import { logger } from './lib/logger';
-import { apiRoutes } from './module-todos/routes/todos-routes';
-import { notificationRoutes } from './module-notifications/routes/notification-routes';
-import { websocketRoutes, handleWSUpgrade } from './module-websocket/routes/websocket-routes';
+import { createApp } from './app';
+import { handleWSUpgrade } from './module-websocket/routes/websocket-routes';
 import { getDb, runMigrations } from './db';
 
 const config = getAppConfig();
@@ -22,21 +19,13 @@ const indexHtml = hasDist
 
 const log = logger.api();
 
-const app = new Hono()
+const app = createApp()
   .use('*', async (c, next) => {
     const start = Date.now();
     await next();
     const ms = Date.now() - start;
     log.info({ method: c.req.method, path: c.req.path, status: c.res.status, ms }, 'request');
-  })
-  .use('*', cors({
-    origin: ['*'],
-    credentials: true,
-  }))
-  .route('/api', apiRoutes)
-  .route('/api', notificationRoutes)
-  .route('/api/ws', websocketRoutes)
-  .get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
+  });
 
 if (config.enableDocs) {
   app.get('/docs', (c) => c.html(`
@@ -102,7 +91,7 @@ export async function createServer() {
   });
 
   server.on('upgrade', (req, socket, head) => {
-    if (req.url?.startsWith('/api/ws')) {
+    if (req.url?.startsWith('/api/ws') && handleWSUpgrade) {
       handleWSUpgrade(req, socket, head);
     } else {
       socket.destroy();

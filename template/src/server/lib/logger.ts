@@ -1,77 +1,88 @@
-import pino, { type Logger, type LoggerOptions } from 'pino';
-import { resolve } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-import { getAppConfig } from '../config';
+import type { Logger, LoggerOptions } from 'pino';
+import { isCloudflare } from '../utils/ws-helper';
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 const _loggers: Map<string, Logger> = new Map();
 
-function ensureLogDir(dir: string): void {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+interface SimpleLogger {
+  trace: (msg: string, ...args: unknown[]) => void;
+  debug: (msg: string, ...args: unknown[]) => void;
+  info: (msg: string, ...args: unknown[]) => void;
+  warn: (msg: string, ...args: unknown[]) => void;
+  error: (msg: string, ...args: unknown[]) => void;
+  fatal: (msg: string, ...args: unknown[]) => void;
+  child: (bindings: Record<string, unknown>) => SimpleLogger;
 }
 
-function createLoggerOptions(level: LogLevel = 'info'): LoggerOptions {
-  const config = getAppConfig();
-  const isDev = config.nodeEnv === 'development';
-  const isTest = config.nodeEnv === 'test';
+function createConsoleLogger(module: string, level: LogLevel = 'info'): SimpleLogger {
+  const levels: LogLevel[] = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
+  const minLevel = levels.indexOf(level);
+
+  const log = (lvl: LogLevel, msg: string, ...args: unknown[]) => {
+    if (levels.indexOf(lvl) >= minLevel) {
+      const timestamp = new Date().toISOString();
+      const prefix = `[${timestamp}] ${lvl.toUpperCase()}: [${module}]`;
+      const formatted = args.length > 0 ? `${prefix} ${msg} ${JSON.stringify(args)}` : `${prefix} ${msg}`;
+      
+      switch (lvl) {
+        case 'error':
+        case 'fatal':
+          console.error(formatted);
+          break;
+        case 'warn':
+          console.warn(formatted);
+          break;
+        default:
+          console.log(formatted);
+      }
+    }
+  };
 
   return {
-    level,
-    timestamp: pino.stdTimeFunctions.isoTime,
-    formatters: {
-      level: (label) => ({ level: label }),
-      bindings: () => ({}),
-    },
-    transport: isDev && !isTest
-      ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'SYS:standard',
-            ignore: 'pid,hostname',
-            messageFormat: '[{module}] {msg}',
-          },
-        }
-      : undefined,
+    trace: (msg, ...args) => log('trace', msg, ...args),
+    debug: (msg, ...args) => log('debug', msg, ...args),
+    info: (msg, ...args) => log('info', msg, ...args),
+    warn: (msg, ...args) => log('warn', msg, ...args),
+    error: (msg, ...args) => log('error', msg, ...args),
+    fatal: (msg, ...args) => log('fatal', msg, ...args),
+    child: () => createConsoleLogger(module, level),
   };
 }
 
-export function createLogger(module: string, level?: LogLevel): Logger {
-  const config = getAppConfig();
+function createNodeLoggerSync(module: string, level?: LogLevel): Logger | SimpleLogger {
+  // These requires are only executed in Node.js environment
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const pino = require('pino');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { resolve } = require('path');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { existsSync, mkdirSync } = require('fs');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getAppConfig } = require('../config');
   
-  if (_loggers.has(module)) {
-    return _loggers.get(module)!;
-  }
-
-  const options = createLoggerOptions(level || (config.nodeEnv === 'production' ? 'info' : 'debug'));
-  const logger = pino(options).child({ module });
-
-  _loggers.set(module, logger);
-  return logger;
-}
-
-export function createModuleLogger(module: string, level?: LogLevel): Logger {
   const config = getAppConfig();
+  const logLevel = level || (config.nodeEnv === 'production' ? 'info' : 'debug');
+  const isDev = config.nodeEnv === 'development';
   const isTest = config.nodeEnv === 'test';
-  
-  if (isTest) {
-    return createLogger(module, level);
-  }
 
-  if (_loggers.has(module)) {
-    return _loggers.get(module)!;
+  if (isTest) {
+    const options: LoggerOptions = {
+      level: logLevel,
+      timestamp: pino.stdTimeFunctions.isoTime,
+      formatters: {
+        level: (label: string) => ({ level: label }),
+        bindings: () => ({}),
+      },
+    };
+    return pino(options).child({ module });
   }
 
   const logDir = resolve(process.cwd(), 'logs');
+  if (!existsSync(logDir)) {
+    mkdirSync(logDir, { recursive: true });
+  }
   const logPath = resolve(logDir, `${module}.log`);
-  
-  ensureLogDir(logDir);
-
-  const logLevel = level || (config.nodeEnv === 'production' ? 'info' : 'debug');
-  const isDev = config.nodeEnv === 'development';
 
   const streams: pino.StreamEntry[] = [];
 
@@ -99,18 +110,30 @@ export function createModuleLogger(module: string, level?: LogLevel): Logger {
   });
 
   const logger = pino({ level: logLevel }, pino.multistream(streams)).child({ module });
-  _loggers.set(module, logger);
+  return logger;
+}
+
+export function createModuleLoggerSync(module: string, level?: LogLevel): Logger | SimpleLogger {
+  if (isCloudflare) {
+    return createConsoleLogger(module, level || 'info');
+  }
   
+  if (_loggers.has(module)) {
+    return _loggers.get(module)!;
+  }
+
+  const logger = createNodeLoggerSync(module, level);
+  _loggers.set(module, logger as Logger);
   return logger;
 }
 
 export const logger = {
-  app: () => createModuleLogger('app'),
-  db: () => createModuleLogger('db'),
-  api: () => createModuleLogger('api'),
-  ws: () => createModuleLogger('ws'),
-  bootstrap: () => createModuleLogger('bootstrap'),
-  module: (name: string) => createModuleLogger(name),
+  app: () => createModuleLoggerSync('app'),
+  db: () => createModuleLoggerSync('db'),
+  api: () => createModuleLoggerSync('api'),
+  ws: () => createModuleLoggerSync('ws'),
+  bootstrap: () => createModuleLoggerSync('bootstrap'),
+  module: (name: string) => createModuleLoggerSync(name),
 };
 
 export type { Logger };

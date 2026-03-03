@@ -1,0 +1,21 @@
+name = "biomimic-todo-app"
+main = "dist/cloudflare/entry-cloudflare.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "biomimic-todo-db"
+database_id = "e4253b7e-be6b-4ca7-bf19-7c3725f8e32c"
+
+[assets]
+directory = "./dist/client"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[dev]
+port = 8787
+local_protocol = "http"
