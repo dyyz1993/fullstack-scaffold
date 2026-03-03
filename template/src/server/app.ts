@@ -4,8 +4,14 @@ import { apiRoutes } from './module-todos/routes/todos-routes';
 import { notificationRoutes } from './module-notifications/routes/notification-routes';
 import { websocketRoutes } from './module-websocket/routes/websocket-routes';
 
-export function createApp() {
-  return new Hono()
+export interface AppBindings {
+  DB?: D1Database;
+  ASSETS?: { fetch: (request: Request) => Promise<Response> };
+  ENVIRONMENT?: string;
+}
+
+export function createApp<T extends AppBindings = AppBindings>() {
+  return new Hono<{ Bindings: T }>()
     .use('*', cors({
       origin: ['*'],
       credentials: true,

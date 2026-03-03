@@ -11,7 +11,7 @@ import { handleWSUpgrade } from './module-websocket/routes/websocket-routes';
 import { getDb, runMigrations } from './db';
 
 const config = getAppConfig();
-const distPath = resolve(process.cwd(), 'dist');
+const distPath = resolve(process.cwd(), 'dist/client');
 const hasDist = existsSync(distPath);
 const indexHtml = hasDist 
   ? readFileSync(resolve(distPath, 'index.html'), 'utf-8')
