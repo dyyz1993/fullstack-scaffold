@@ -1,6 +1,5 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { streamSSE } from 'hono/streaming';
 import * as notificationService from '../services/notification-service';
 import { initRealtimeService } from '../../services/realtime';
 import {
@@ -31,22 +30,6 @@ const MarkAllReadResponseSchema = z.object({
 const ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
-});
-
-const streamRoute = createRoute({
-  method: 'get',
-  path: '/notifications/stream',
-  tags: ['notifications'],
-  responses: {
-    200: {
-      content: {
-        'text/event-stream': {
-          schema: NotificationSchema,
-        },
-      },
-      description: 'SSE stream for real-time notifications',
-    },
-  },
 });
 
 const listRoute = createRoute({
@@ -239,22 +222,6 @@ const unreadCountRoute = createRoute({
 });
 
 export const notificationRoutes = new OpenAPIHono()
-  .openapi(streamRoute, async (c) => {
-    return streamSSE(c, async (stream) => {
-      await stream.writeSSE({
-        event: 'connected',
-        data: JSON.stringify({ timestamp: Date.now() }),
-      });
-
-      while (true) {
-        await stream.sleep(30000);
-        await stream.writeSSE({
-          event: 'ping',
-          data: JSON.stringify({ timestamp: Date.now() }),
-        });
-      }
-    });
-  })
   .openapi(listRoute, async (c) => {
     const query = c.req.valid('query');
     const result = notificationService.listNotifications({

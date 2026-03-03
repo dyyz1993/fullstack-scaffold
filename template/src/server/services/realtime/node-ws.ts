@@ -1,5 +1,5 @@
 import type { WebSocket } from 'ws';
-import type { WSServer, WSClient, WSMessageHandler, WSConnectionHandler, WSDisconnectHandler } from './types';
+import { createRealtimeCore, type RealtimeCore, type WSClient } from './core';
 import { generateUUID } from '../../utils/uuid';
 
 class NodeWSClient implements WSClient {
@@ -26,13 +26,15 @@ class NodeWSClient implements WSClient {
   }
 }
 
-export class NodeWSServer implements WSServer {
-  private _clients: Map<string, WSClient> = new Map();
-  private messageHandler?: WSMessageHandler;
-  private connectionHandler?: WSConnectionHandler;
-  private disconnectHandler?: WSDisconnectHandler;
+export class NodeWSServer {
+  private core: RealtimeCore;
+  private _clients: Map<string, NodeWSClient> = new Map();
 
-  get clients(): Map<string, WSClient> {
+  constructor() {
+    this.core = createRealtimeCore();
+  }
+
+  get clients(): Map<string, NodeWSClient> {
     return this._clients;
   }
 
@@ -40,12 +42,8 @@ export class NodeWSServer implements WSServer {
     return this._clients.size;
   }
 
-  broadcast(data: unknown, exclude: string[] = []): void {
-    for (const [id, client] of this._clients) {
-      if (!exclude.includes(id) && client.readyState === 1) {
-        client.send(data);
-      }
-    }
+  broadcast(data: unknown, exclude: string[] = [], event: string = 'notification'): void {
+    this.core.broadcast(data, exclude, event);
   }
 
   send(clientId: string, data: unknown): boolean {
@@ -64,37 +62,30 @@ export class NodeWSServer implements WSServer {
     }
   }
 
-  onMessage(handler: WSMessageHandler): void {
-    this.messageHandler = handler;
-  }
-
-  onConnection(handler: WSConnectionHandler): void {
-    this.connectionHandler = handler;
-  }
-
-  onDisconnect(handler: WSDisconnectHandler): void {
-    this.disconnectHandler = handler;
-  }
-
-  handleConnection(ws: WebSocket): WSClient {
+  handleConnection(ws: WebSocket): NodeWSClient {
     const client = new NodeWSClient(ws);
 
     ws.on('message', (data) => {
       try {
         const parsed = JSON.parse(data.toString());
-        this.messageHandler?.(parsed, client, this);
+        this.core.handleWSMessage(client.id, parsed);
       } catch {
-        this.messageHandler?.(data.toString(), client, this);
+        // Ignore invalid messages
       }
     });
 
     ws.on('close', () => {
       this._clients.delete(client.id);
-      this.disconnectHandler?.(client, this);
+      this.core.wsClients.delete(client.id);
     });
 
     this._clients.set(client.id, client);
-    this.connectionHandler?.(client, this);
+    this.core.wsClients.set(client.id, client);
+
+    client.send({
+      type: 'connected',
+      payload: { timestamp: Date.now() },
+    });
 
     return client;
   }

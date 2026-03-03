@@ -1,4 +1,5 @@
 import type { AppNotification } from '@shared/schemas';
+import { isCloudflare } from '../../utils/env';
 
 export interface BroadcastMessage {
   event: string;
@@ -15,7 +16,7 @@ let _realtimeService: RealtimeService | null = null;
 export function initRealtimeService(env?: { NOTIFICATION_DO?: DurableObjectNamespace }): RealtimeService {
   if (_realtimeService) return _realtimeService;
 
-  if (env?.NOTIFICATION_DO) {
+  if (isCloudflare && env?.NOTIFICATION_DO) {
     _realtimeService = {
       async broadcast(event: string, data: unknown): Promise<void> {
         const id = env.NOTIFICATION_DO!.idFromName('global');
@@ -31,11 +32,13 @@ export function initRealtimeService(env?: { NOTIFICATION_DO?: DurableObjectNames
     };
   } else {
     _realtimeService = {
-      async broadcast(_event: string, _data: unknown): Promise<void> {
-        // Node.js implementation would use WebSocket server
+      async broadcast(event: string, data: unknown): Promise<void> {
+        const { getNodeWSServer } = await import('./node-ws');
+        const wss = getNodeWSServer();
+        wss.broadcast(data, [], event);
       },
-      async broadcastNotification(_notification: AppNotification): Promise<void> {
-        // Node.js implementation would use WebSocket server
+      async broadcastNotification(notification: AppNotification): Promise<void> {
+        await this.broadcast('notification', notification);
       },
     };
   }
