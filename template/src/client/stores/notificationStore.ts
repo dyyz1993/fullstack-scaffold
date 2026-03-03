@@ -1,5 +1,10 @@
+/**
+ * Notification store using Zustand
+ * Demonstrates SSE consumption via Hono RPC with type inference
+ */
+
 import { create } from 'zustand';
-import { apiClient } from '@client/services/apiClient';
+import { apiClient, consumeStream } from '@client/services/apiClient';
 import type { AppNotification, CreateNotificationInput } from '@shared/schemas';
 
 interface NotificationState {
@@ -21,30 +26,6 @@ interface NotificationState {
 
 let sseAbortController: AbortController | null = null;
 
-function parseSSEMessage(message: string): { event: string; data: unknown } | null {
-  const lines = message.split('\n');
-  let event = '';
-  let data = '';
-
-  for (const line of lines) {
-    if (line.startsWith('event:')) {
-      event = line.slice(6).trim();
-    } else if (line.startsWith('data:')) {
-      data = line.slice(5).trim();
-    }
-  }
-
-  if (event && data) {
-    try {
-      return { event, data: JSON.parse(data) };
-    } catch {
-      return { event, data };
-    }
-  }
-
-  return null;
-}
-
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
@@ -60,7 +41,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       });
       const result = await response.json();
       if (result.success && 'data' in result) {
-        set({ notifications: result.data as AppNotification[], loading: false });
+        set({ notifications: result.data, loading: false });
       } else {
         set({ error: 'Failed to fetch', loading: false });
       }
@@ -81,7 +62,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const result = await response.json();
       if (result.success && 'data' in result) {
         set((state) => ({
-          notifications: [result.data as AppNotification, ...state.notifications],
+          notifications: [result.data, ...state.notifications],
           loading: false,
         }));
       } else {
@@ -156,7 +137,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const response = await apiClient.api.notifications['unread-count'].$get();
       const result = await response.json();
       if (result.success && 'data' in result) {
-        set({ unreadCount: (result.data as { count: number }).count });
+        set({ unreadCount: result.data.count });
       }
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
@@ -170,48 +151,25 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     set({ sseConnected: true });
 
     try {
-      const apiBase = import.meta.env.VITE_API_BASE || '';
-      const response = await fetch(`${apiBase}/api/notifications/stream`, {
+      // 💡 重点：这里不再需要手动指定类型，T 会自动从 streamSSE<AppNotification> 推导
+      const responsePromise = apiClient.api.notifications.stream.$get({
         signal: sseAbortController.signal,
-        headers: {
-          Accept: 'text/event-stream',
-        },
       });
 
-      if (!response.ok) {
-        throw new Error(`SSE connection failed: ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const messages = buffer.split('\n\n');
-        buffer = messages.pop() || '';
-
-        for (const message of messages) {
-          const parsed = parseSSEMessage(message);
-          if (parsed?.event === 'notification') {
-            const notification = parsed.data as AppNotification;
-            set((state) => {
-              if (state.notifications.some(n => n.id === notification.id)) {
-                return state;
-              }
-              return {
-                notifications: [notification, ...state.notifications],
-                unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
-              };
-            });
-          }
+      for await (const data of consumeStream(responsePromise)) {
+        // 过滤掉 ping/connected 等非 notification 事件（它们没有 type 字段）
+        if (data && typeof data === 'object' && 'type' in data && 'id' in data) {
+          const notification = data;
+          set((state) => {
+            // 防止重复添加
+            if (state.notifications.some(n => n.id === notification.id)) {
+              return state;
+            }
+            return {
+              notifications: [notification, ...state.notifications],
+              unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
+            };
+          });
         }
       }
     } catch (error) {

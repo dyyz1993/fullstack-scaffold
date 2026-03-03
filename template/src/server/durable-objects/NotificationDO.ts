@@ -13,7 +13,7 @@ export class NotificationDurableObject {
     }
 
     // SSE 连接
-    if (url.pathname === '/sse' || url.pathname === '/api/notifications/stream') {
+    if (url.pathname === '/sse' || url.pathname === '/api/notifications/stream' || url.pathname === '/notifications/stream') {
       return this.handleSSE();
     }
 
