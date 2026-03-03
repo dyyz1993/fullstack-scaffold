@@ -108,16 +108,14 @@ if (!isCloudflare) {
 
 export { handleWSUpgrade };
 
-export const cloudflareWSHandler = isCloudflare 
-  ? createCloudflareWSHandler(
-      (data, send, close) => {
-        wsService.handleMessage(data, send, () => 1, close);
-      },
-      undefined,
-      () => {
-        log.info({}, 'Client disconnected');
-      }
-    )
-  : undefined;
+export const cloudflareWSHandler = createCloudflareWSHandler(
+  (data, send, close) => {
+    wsService.handleMessage(data, send, () => 1, close);
+  },
+  undefined,
+  () => {
+    log.info({}, 'Client disconnected');
+  }
+);
 
 export type { AppWSProtocol } from '@shared/schemas/ws-protocol';

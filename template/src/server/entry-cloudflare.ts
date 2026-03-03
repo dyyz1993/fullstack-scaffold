@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { upgradeWebSocket } from 'hono/cloudflare-workers';
 import { apiRoutes } from './module-todos/routes/todos-routes';
 import { notificationRoutes } from './module-notifications/routes/notification-routes';
-import { websocketRoutes } from './module-websocket/routes/websocket-routes';
-import { cloudflareWSHandler } from './module-websocket/routes/websocket-routes';
 import { getDb } from './db/driver-cloudflare';
+import * as wsService from './module-websocket/services/websocket-service';
 
 export interface AppBindings {
   DB: D1Database;
@@ -12,19 +12,38 @@ export interface AppBindings {
   ENVIRONMENT?: string;
 }
 
-const app = new Hono<{ Bindings: AppBindings }>()
-  .use('*', cors({
-    origin: ['*'],
-    credentials: true,
-  }))
+const app = new Hono<{ Bindings: AppBindings }>();
+
+app
   .use('*', async (c, next) => {
     (globalThis as any).DB = c.env.DB;
     await next();
   })
+  .get('/api/ws', upgradeWebSocket(() => ({
+    onMessage(event, ws) {
+      wsService.handleMessage(
+        event.data as string,
+        (msg) => ws.send(msg),
+        () => 1,
+        () => ws.close()
+      );
+    },
+    onClose() {
+      console.log('Client disconnected');
+    },
+    onOpen(_event, ws) {
+      ws.send(JSON.stringify({
+        type: 'connected',
+        payload: { timestamp: Date.now() },
+      }));
+    },
+  })))
+  .use('*', cors({
+    origin: ['*'],
+    credentials: true,
+  }))
   .route('/api', apiRoutes)
   .route('/api', notificationRoutes)
-  .route('/api/ws', websocketRoutes)
-  .get('/api/ws', cloudflareWSHandler!)
   .get('/health', async (c) => {
     try {
       await getDb();
@@ -43,5 +62,26 @@ const app = new Hono<{ Bindings: AppBindings }>()
     return c.json({ success: false, error: err.message || 'Internal server error' }, 500);
   });
 
-export default app;
+export default {
+  fetch: async (request: Request, env: AppBindings, ctx: ExecutionContext) => {
+    const url = new URL(request.url);
+    
+    // API routes should be handled by the worker
+    if (url.pathname.startsWith('/api/') || url.pathname === '/health') {
+      return app.fetch(request, env, ctx);
+    }
+    
+    // For other routes, try static assets first
+    if (env.ASSETS) {
+      const assetResponse = await env.ASSETS.fetch(request);
+      if (assetResponse.status !== 404) {
+        return assetResponse;
+      }
+    }
+    
+    // Fallback to worker for SPA routing
+    return app.fetch(request, env, ctx);
+  },
+};
+
 export type AppType = typeof app;
