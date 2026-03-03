@@ -13,6 +13,7 @@ const app = createApp<CloudflareBindings>()
     (globalThis as any).DB = c.env.DB;
     await next();
   })
+  .get('/api/ws', cloudflareWSHandler!)
   .get('/api/ws/connect', cloudflareWSHandler!)
   .get('/health', async (c) => {
     try {

@@ -16,7 +16,7 @@ export function createCloudflareWSHandler(
     }
 
     const pair = new WebSocketPair();
-    const [client, server] = pair;
+    const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
 
     server.accept();
 
@@ -39,6 +39,6 @@ export function createCloudflareWSHandler(
     return new Response(null, { 
       status: 101, 
       webSocket: client 
-    } as any);
+    });
   };
 }
