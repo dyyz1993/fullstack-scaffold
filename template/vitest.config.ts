@@ -19,6 +19,25 @@ export default defineConfig({
       NODE_ENV: 'test',
       SQLITE_PATH: ':memory:',
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/test-setup.ts',
+        'src/client/main.tsx',
+        'src/server/main.ts',
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
   },
   resolve: {
     alias: {

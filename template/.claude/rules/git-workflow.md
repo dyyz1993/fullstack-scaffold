@@ -129,24 +129,26 @@ git push origin feat/new-feature
 
 当前配置的 hooks (`.husky/pre-commit`):
 
-1. **npx lint-staged** - 使用 lint-staged 对暂存文件运行格式化和检查
-2. **npm test -- --run** - 运行所有测试（单次运行模式）
-3. **node --import tsx/esm scripts/validate-all.ts** - 运行验证器检查
+1. **npm run typecheck** - TypeScript 类型检查
+2. **npx lint-staged** - 对暂存文件运行格式化和检查
+3. **npm run test:smart:staged** - 智能测试（只测试相关文件）
 
 ### Hooks 检查内容
 
 ```bash
-# 1. lint-staged - 对暂存文件运行格式化和检查
+# 1. TypeScript 类型检查
+npm run typecheck
+
+# 2. lint-staged - 对暂存文件运行格式化和检查
 npx lint-staged
 
-# 2. 测试运行
-npm test -- --run
-
-# 3. 验证器检查
-node --import tsx/esm scripts/validate-all.ts
+# 3. 智能测试 - 只测试与改动相关的文件
+npm run test:smart:staged
 ```
 
-**注意**: lint-staged 的具体配置在 `package.json` 中定义。
+**注意**: 
+- lint-staged 的具体配置在 `package.json` 中定义
+- 智能测试会分析文件依赖，只运行相关的测试，提升效率
 
 ## 📋 检查清单
 

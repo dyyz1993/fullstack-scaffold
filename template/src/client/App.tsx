@@ -42,11 +42,11 @@ export const App: React.FC = () => {
   const CurrentPage = routes[currentRoute].component;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-50" data-testid="app-container">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50" data-testid="app-nav">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2" data-testid="app-title">
               <Rocket className="w-6 h-6 text-blue-500" />
               Biomimic App
             </h1>
@@ -57,6 +57,7 @@ export const App: React.FC = () => {
                   <button
                     key={route}
                     onClick={() => setCurrentRoute(route)}
+                    data-testid={`nav-${route}-button`}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       currentRoute === route
                         ? 'bg-blue-50 text-blue-600'
@@ -74,6 +75,7 @@ export const App: React.FC = () => {
             href="https://github.com"
             target="_blank"
             rel="noopener noreferrer"
+            data-testid="github-link"
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <Github className="w-5 h-5" />
@@ -81,11 +83,11 @@ export const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="py-8">
+      <main className="py-8" data-testid="app-main">
         <CurrentPage />
       </main>
 
-      <footer className="py-8 text-center text-gray-500 text-sm border-t border-gray-200 bg-white">
+      <footer className="py-8 text-center text-gray-500 text-sm border-t border-gray-200 bg-white" data-testid="app-footer">
         <p className="flex items-center justify-center gap-2">
           Built with <span className="font-medium text-gray-700">Hono RPC</span> + <span className="font-medium text-gray-700">React</span> + <span className="font-medium text-gray-700">TypeScript</span>
         </p>

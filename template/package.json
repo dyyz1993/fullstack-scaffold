@@ -20,6 +20,7 @@
     "test:smart:staged": "node --import tsx/esm scripts/smart-test.ts --staged",
     "test:infrastructure": "node --import tsx/esm scripts/smart-test.ts --infrastructure",
     "test:all": "node --import tsx/esm scripts/smart-test.ts --all",
+    "test:coverage": "vitest --coverage",
     "test:integration": "vitest --config vitest.integration.config.ts",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",

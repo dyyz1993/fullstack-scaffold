@@ -5,14 +5,23 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, CheckCircle, Circle, Clock, Loader2 } from 'lucide-react';
+import { shallow } from 'zustand/shallow';
 import { useTodoStore } from '../stores/todoStore';
 import type { Todo } from '@shared/schemas';
 
 export const TodoPage: React.FC = () => {
-  const todos = useTodoStore((state) => state.todos);
-  const loading = useTodoStore((state) => state.loading);
-  const error = useTodoStore((state) => state.error);
-  const { fetchTodos, createTodo, updateTodo, deleteTodo } = useTodoStore();
+  const { todos, loading, error, fetchTodos, createTodo, updateTodo, deleteTodo } = useTodoStore(
+    (state) => ({
+      todos: state.todos,
+      loading: state.loading,
+      error: state.error,
+      fetchTodos: state.fetchTodos,
+      createTodo: state.createTodo,
+      updateTodo: state.updateTodo,
+      deleteTodo: state.deleteTodo,
+    }),
+    shallow
+  );
 
   const [newTodoTitle, setNewTodoTitle] = useState('');
   const [newTodoDescription, setNewTodoDescription] = useState('');
@@ -49,9 +58,9 @@ export const TodoPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6" data-testid="todo-page">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2" data-testid="todo-title">
           <CheckCircle className="w-8 h-8 text-blue-500" />
           Todo List
         </h1>
@@ -60,13 +69,14 @@ export const TodoPage: React.FC = () => {
         </p>
       </div>
 
-      <form onSubmit={handleCreate} className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+      <form onSubmit={handleCreate} className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200" data-testid="todo-form">
         <div className="mb-4">
           <input
             type="text"
             value={newTodoTitle}
             onChange={(e) => setNewTodoTitle(e.target.value)}
             placeholder="Todo title..."
+            data-testid="todo-title-input"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           />
         </div>
@@ -75,12 +85,14 @@ export const TodoPage: React.FC = () => {
             value={newTodoDescription}
             onChange={(e) => setNewTodoDescription(e.target.value)}
             placeholder="Description (optional)..."
+            data-testid="todo-description-input"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none min-h-[100px]"
           />
         </div>
         <button
           type="submit"
           disabled={!newTodoTitle.trim() || loading}
+          data-testid="add-todo-button"
           className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
@@ -89,23 +101,24 @@ export const TodoPage: React.FC = () => {
       </form>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg" data-testid="error-message">
           {error}
         </div>
       )}
 
       {loading && todos.length === 0 && (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-12" data-testid="loading-indicator">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="todo-list">
         {todos.map((todo) => {
           const StatusIcon = statusConfig[todo.status].icon;
           return (
             <div
               key={todo.id}
+              data-testid={`todo-item-${todo.id}`}
               className={`p-5 rounded-xl border transition-all ${
                 todo.status === 'completed'
                   ? 'bg-green-50 border-green-200'
@@ -128,6 +141,7 @@ export const TodoPage: React.FC = () => {
                     <select
                       value={todo.status}
                       onChange={(e) => handleStatusChange(todo, e.target.value as Todo['status'])}
+                      data-testid={`todo-status-select-${todo.id}`}
                       className={`px-3 py-1.5 text-sm rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none ${
                         statusConfig[todo.status].bg
                       }`}
@@ -145,6 +159,7 @@ export const TodoPage: React.FC = () => {
                   <StatusIcon className={`w-6 h-6 ${statusConfig[todo.status].color}`} />
                   <button
                     onClick={() => handleDelete(todo.id)}
+                    data-testid={`delete-todo-button-${todo.id}`}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -157,7 +172,7 @@ export const TodoPage: React.FC = () => {
       </div>
 
       {!loading && todos.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500" data-testid="empty-state">
           <Circle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
           <p>No todos yet. Add one above!</p>
         </div>
