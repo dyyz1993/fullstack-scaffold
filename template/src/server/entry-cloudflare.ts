@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { apiRoutes } from './module-todos/routes/todos-routes';
@@ -17,7 +16,7 @@ const app = new Hono<{ Bindings: AppBindings }>();
 
 app
   .use('*', async (c, next) => {
-    (globalThis as any).DB = c.env.DB;
+    (globalThis as unknown as { DB: D1Database }).DB = c.env.DB;
     await next();
   })
   .get('/api/ws', async (c) => {
