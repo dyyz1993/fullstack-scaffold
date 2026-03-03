@@ -5,13 +5,17 @@ export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 const _loggers: Map<string, Logger> = new Map();
 
+interface LogFnFields {
+  [key: string]: unknown;
+}
+
 interface SimpleLogger {
-  trace: (msg: string, ...args: unknown[]) => void;
-  debug: (msg: string, ...args: unknown[]) => void;
-  info: (msg: string, ...args: unknown[]) => void;
-  warn: (msg: string, ...args: unknown[]) => void;
-  error: (msg: string, ...args: unknown[]) => void;
-  fatal: (msg: string, ...args: unknown[]) => void;
+  trace: (obj: LogFnFields, msg: string) => void;
+  debug: (obj: LogFnFields, msg: string) => void;
+  info: (obj: LogFnFields, msg: string) => void;
+  warn: (obj: LogFnFields, msg: string) => void;
+  error: (obj: LogFnFields, msg: string) => void;
+  fatal: (obj: LogFnFields, msg: string) => void;
   child: (bindings: Record<string, unknown>) => SimpleLogger;
 }
 
@@ -19,11 +23,11 @@ function createConsoleLogger(module: string, level: LogLevel = 'info'): SimpleLo
   const levels: LogLevel[] = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
   const minLevel = levels.indexOf(level);
 
-  const log = (lvl: LogLevel, msg: string, ...args: unknown[]) => {
+  const log = (lvl: LogLevel, obj: LogFnFields, msg: string) => {
     if (levels.indexOf(lvl) >= minLevel) {
       const timestamp = new Date().toISOString();
       const prefix = `[${timestamp}] ${lvl.toUpperCase()}: [${module}]`;
-      const formatted = args.length > 0 ? `${prefix} ${msg} ${JSON.stringify(args)}` : `${prefix} ${msg}`;
+      const formatted = `${prefix} ${msg} ${JSON.stringify(obj)}`;
       
       switch (lvl) {
         case 'error':
@@ -40,12 +44,12 @@ function createConsoleLogger(module: string, level: LogLevel = 'info'): SimpleLo
   };
 
   return {
-    trace: (msg, ...args) => log('trace', msg, ...args),
-    debug: (msg, ...args) => log('debug', msg, ...args),
-    info: (msg, ...args) => log('info', msg, ...args),
-    warn: (msg, ...args) => log('warn', msg, ...args),
-    error: (msg, ...args) => log('error', msg, ...args),
-    fatal: (msg, ...args) => log('fatal', msg, ...args),
+    trace: (obj, msg) => log('trace', obj, msg),
+    debug: (obj, msg) => log('debug', obj, msg),
+    info: (obj, msg) => log('info', obj, msg),
+    warn: (obj, msg) => log('warn', obj, msg),
+    error: (obj, msg) => log('error', obj, msg),
+    fatal: (obj, msg) => log('fatal', obj, msg),
     child: () => createConsoleLogger(module, level),
   };
 }
@@ -84,10 +88,11 @@ function createNodeLoggerSync(module: string, level?: LogLevel): Logger | Simple
   }
   const logPath = resolve(logDir, `${module}.log`);
 
-  const streams: pino.StreamEntry[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const streamEntries: any[] = [];
 
   if (isDev) {
-    streams.push({
+    streamEntries.push({
       level: logLevel,
       stream: pino.transport({
         target: 'pino-pretty',
@@ -101,7 +106,7 @@ function createNodeLoggerSync(module: string, level?: LogLevel): Logger | Simple
     });
   }
 
-  streams.push({
+  streamEntries.push({
     level: logLevel,
     stream: pino.transport({
       target: 'pino/file',
@@ -109,7 +114,7 @@ function createNodeLoggerSync(module: string, level?: LogLevel): Logger | Simple
     }),
   });
 
-  const logger = pino({ level: logLevel }, pino.multistream(streams)).child({ module });
+  const logger = pino({ level: logLevel }, pino.multistream(streamEntries)).child({ module });
   return logger;
 }
 

@@ -92,13 +92,13 @@ export async function closeDb(): Promise<void> {
     _client.close();
     _client = null;
     _db = null;
-    log.info('Database connection closed');
+    log.info({}, 'Database connection closed');
   }
 }
 
 export async function runMigrations(): Promise<void> {
   if (isCloudflare) {
-    log.info('Migrations skipped in Cloudflare Workers');
+    log.info({}, 'Migrations skipped in Cloudflare Workers');
     return;
   }
   

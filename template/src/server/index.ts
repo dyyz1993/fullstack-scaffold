@@ -104,11 +104,11 @@ export async function createServer() {
 export async function startServer() {
   const bootstrapLog = logger.bootstrap();
   
-  bootstrapLog.info('Initializing database...');
+  bootstrapLog.info({}, 'Initializing database...');
   try {
     await getDb();
     await runMigrations();
-    bootstrapLog.info('Database ready');
+    bootstrapLog.info({}, 'Database ready');
   } catch (err) {
     bootstrapLog.error({ err }, 'Database initialization failed');
     process.exit(1);
@@ -122,7 +122,7 @@ export async function startServer() {
   }
 
   const shutdown = async () => {
-    bootstrapLog.info('Shutting down...');
+    bootstrapLog.info({}, 'Shutting down...');
     server.close();
     process.exit(0);
   };

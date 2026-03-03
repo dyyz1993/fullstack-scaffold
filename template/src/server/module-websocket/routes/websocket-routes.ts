@@ -115,7 +115,7 @@ export const cloudflareWSHandler = isCloudflare
       },
       undefined,
       () => {
-        log.info('Client disconnected');
+        log.info({}, 'Client disconnected');
       }
     )
   : undefined;

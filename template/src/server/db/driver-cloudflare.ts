@@ -1,4 +1,3 @@
-import type { DatabaseConfig } from '../config';
 import * as schema from './schema';
 import { drizzle } from 'drizzle-orm/d1';
 import { logger } from '../lib/logger';
@@ -33,14 +32,19 @@ export async function getRawClient(): Promise<D1Database | null> {
 
 export async function closeDb(): Promise<void> {
   _db = null;
-  log.info('Database connection closed');
+  log.info({}, 'Database connection closed');
 }
 
 export async function runMigrations(): Promise<void> {
-  log.info('Migrations skipped in Cloudflare Workers');
+  log.info({}, 'Migrations skipped in Cloudflare Workers');
 }
 
-function getDatabaseConfig(): DatabaseConfig {
+interface D1DatabaseConfig {
+  driver: 'd1';
+  d1Database?: D1Database;
+}
+
+function getDatabaseConfig(): D1DatabaseConfig {
   const DB = (globalThis as unknown as { DB?: D1Database }).DB;
   return {
     driver: 'd1',
