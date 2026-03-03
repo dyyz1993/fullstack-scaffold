@@ -9,7 +9,7 @@ export function websocketPlugin(): Plugin {
       server.httpServer?.on('upgrade', async (req: IncomingMessage, socket: Duplex, head: Buffer) => {
         if (req.url?.startsWith('/api/ws')) {
           const { handleWSUpgrade } = await import('./src/server/module-websocket/routes/websocket-routes');
-          handleWSUpgrade(req, socket, head);
+          handleWSUpgrade?.(req, socket, head);
         }
       });
     },
@@ -26,10 +26,10 @@ export function dbPlugin(): Plugin {
         const log = logger.bootstrap();
         
         try {
-          log.info('Initializing database...');
+          log.info({}, 'Initializing database...');
           await getDb();
           await runMigrations();
-          log.info('Database ready');
+          log.info({}, 'Database ready');
         } catch (err) {
           log.error({ err }, 'Database initialization failed');
         }

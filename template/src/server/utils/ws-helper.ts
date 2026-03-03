@@ -1,4 +1,3 @@
-import type { Context } from 'hono';
 import { upgradeWebSocket } from 'hono/cloudflare-workers';
 import { isCloudflare } from './env';
 
@@ -9,7 +8,7 @@ export function createCloudflareWSHandler(
   _onOpen?: () => void,
   onClose?: () => void
 ) {
-  return upgradeWebSocket((c: Context) => ({
+  return upgradeWebSocket(() => ({
     onMessage(event: MessageEvent) {
       const ws = event.target as WebSocket;
       onMessage(

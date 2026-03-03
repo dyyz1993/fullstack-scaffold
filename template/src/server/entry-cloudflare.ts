@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { upgradeWebSocket } from 'hono/cloudflare-workers';
@@ -20,7 +21,8 @@ app
     await next();
   })
   .get('/api/ws', upgradeWebSocket(() => ({
-    onMessage(event, ws) {
+    onMessage(event: MessageEvent) {
+      const ws = event.target as WebSocket;
       wsService.handleMessage(
         event.data as string,
         (msg) => ws.send(msg),
@@ -31,7 +33,8 @@ app
     onClose() {
       console.log('Client disconnected');
     },
-    onOpen(_event, ws) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onOpen(_event: any, ws: any) {
       ws.send(JSON.stringify({
         type: 'connected',
         payload: { timestamp: Date.now() },
@@ -66,12 +69,10 @@ export default {
   fetch: async (request: Request, env: AppBindings, ctx: ExecutionContext) => {
     const url = new URL(request.url);
     
-    // API routes should be handled by the worker
     if (url.pathname.startsWith('/api/') || url.pathname === '/health') {
       return app.fetch(request, env, ctx);
     }
     
-    // For other routes, try static assets first
     if (env.ASSETS) {
       const assetResponse = await env.ASSETS.fetch(request);
       if (assetResponse.status !== 404) {
@@ -79,7 +80,6 @@ export default {
       }
     }
     
-    // Fallback to worker for SPA routing
     return app.fetch(request, env, ctx);
   },
 };
