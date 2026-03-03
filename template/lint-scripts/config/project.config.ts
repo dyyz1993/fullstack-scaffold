@@ -88,7 +88,7 @@ export const sensitiveConfig: SensitiveConfig = {
     /coverage/,
     /\.env\.example$/,
     /__tests__/,
-    /lint-scripts\/(validate|config)/,
+    /lint-scripts\/(validate|config|watch-validator)/,
   ],
 
   // 检查的文件扩展名

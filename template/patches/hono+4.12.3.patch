@@ -1,3 +1,20 @@
+diff --git a/node_modules/hono/dist/types/client/types.d.ts b/node_modules/hono/dist/types/client/types.d.ts
+index 6af21ca..191dc05 100644
+--- a/node_modules/hono/dist/types/client/types.d.ts
++++ b/node_modules/hono/dist/types/client/types.d.ts
+@@ -92,10 +92,11 @@ export type ClientRequest<Prefix extends string, Path extends string, S extends
+     } : {} : {}) | undefined = undefined>(arg?: Arg) => BuildPath<Path, Arg>;
+ } & (S['$get'] extends {
+     outputFormat: 'ws';
++    output: infer O;
+ } ? S['$get'] extends {
+     input: infer I;
+ } ? {
+-    $ws: (args?: I) => WebSocket;
++    $ws: (args?: I) => O;
+ } : {} : {});
+ type ClientResponseOfEndpoint<T extends Endpoint = Endpoint> = T extends {
+     output: infer O;
 diff --git a/node_modules/hono/dist/types/helper/streaming/sse.d.ts b/node_modules/hono/dist/types/helper/streaming/sse.d.ts
 index c4cf659..7327dcb 100644
 --- a/node_modules/hono/dist/types/helper/streaming/sse.d.ts

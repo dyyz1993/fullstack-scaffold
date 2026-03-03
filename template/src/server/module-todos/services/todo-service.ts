@@ -1,116 +1,101 @@
-/**
- * Todo service layer
- * Business logic for todo operations
- * Using Node.js native 'node:sqlite'
- */
-
+import { eq, desc } from 'drizzle-orm';
 import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/types';
-import { sqlite } from '../../shared/db';
+import { getDb } from '../../db';
+import { todos, type TodoTable } from '../../db/schema';
 
-/**
- * List all todos
- */
 export async function listTodos(): Promise<Todo[]> {
-  const stmt = sqlite.prepare('SELECT * FROM todos ORDER BY created_at DESC');
-  const rows = stmt.all() as any[];
-  return rows.map((row: any) => ({
+  const db = await getDb();
+  const rows = await db.select().from(todos).orderBy(desc(todos.createdAt));
+  return rows.map((row: TodoTable) => ({
     id: row.id,
     title: row.title,
-    description: row.description || undefined,
+    description: row.description ?? undefined,
     status: row.status,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   }));
 }
 
-/**
- * Get a todo by ID
- */
 export async function getTodo(id: number): Promise<Todo | null> {
-  const stmt = sqlite.prepare('SELECT * FROM todos WHERE id = :id');
-  const row = stmt.get({ id }) as any;
+  const db = await getDb();
+  const rows = await db.select().from(todos).where(eq(todos.id, id));
+  const row = rows[0];
 
   if (!row) return null;
 
   return {
     id: row.id,
     title: row.title,
-    description: row.description || undefined,
+    description: row.description ?? undefined,
     status: row.status,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
-/**
- * Create a new todo
- */
 export async function createTodo(input: CreateTodoInput): Promise<Todo> {
-  const now = Date.now();
-  const stmt = sqlite.prepare(`
-    INSERT INTO todos (title, description, status, created_at, updated_at)
-    VALUES (:title, :description, :status, :created_at, :updated_at)
-  `);
-
-  stmt.run({
+  const db = await getDb();
+  const now = new Date();
+  const result = await db.insert(todos).values({
     title: input.title,
-    description: input.description || null,
+    description: input.description ?? null,
     status: 'pending',
-    created_at: now,
-    updated_at: now,
-  });
+    createdAt: now,
+    updatedAt: now,
+  }).returning();
 
-  // Get the inserted todo
-  const lastId = sqlite.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
-  return getTodo(lastId.id) as Promise<Todo>;
+  const row = result[0];
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? undefined,
+    status: row.status,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
-/**
- * Update a todo
- */
 export async function updateTodo(
   id: number,
   input: UpdateTodoInput
 ): Promise<Todo | null> {
-  const now = Date.now();
-
-  // Build update query dynamically
-  const updates: string[] = [];
-  const params: any = { id, updated_at: now };
+  const db = await getDb();
+  const now = new Date();
+  const updateData: Partial<TodoTable> = {
+    updatedAt: now,
+  };
 
   if (input.title !== undefined) {
-    updates.push('title = :title');
-    params.title = input.title;
+    updateData.title = input.title;
   }
   if (input.description !== undefined) {
-    updates.push('description = :description');
-    params.description = input.description;
+    updateData.description = input.description;
   }
   if (input.status !== undefined) {
-    updates.push('status = :status');
-    params.status = input.status;
+    updateData.status = input.status;
   }
 
-  if (updates.length === 0) return getTodo(id);
+  const result = await db
+    .update(todos)
+    .set(updateData)
+    .where(eq(todos.id, id))
+    .returning();
 
-  updates.push('updated_at = :updated_at');
+  if (result.length === 0) return null;
 
-  const stmt = sqlite.prepare(`
-    UPDATE todos
-    SET ${updates.join(', ')}
-    WHERE id = :id
-  `);
-
-  stmt.run(params);
-
-  return getTodo(id);
+  const row = result[0];
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? undefined,
+    status: row.status,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
-/**
- * Delete a todo
- */
 export async function deleteTodo(id: number): Promise<boolean> {
-  const stmt = sqlite.prepare('DELETE FROM todos WHERE id = :id');
-  const result = stmt.run({ id });
-  return result.changes > 0;
+  const db = await getDb();
+  const result = await db.delete(todos).where(eq(todos.id, id)).returning();
+  return result.length > 0;
 }

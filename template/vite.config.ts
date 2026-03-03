@@ -89,6 +89,7 @@ export default defineConfig({
         /^\/(@[a-zA-Z0-9_-]+|src|node_modules|__inspect)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
+      injectClient: false,
     }),
     {
       name: 'websocket-proxy',
@@ -96,6 +97,22 @@ export default defineConfig({
         server.httpServer?.on('upgrade', (req, socket, head) => {
           if (req.url?.startsWith('/api/ws')) {
             handleWSUpgrade(req, socket, head);
+          }
+        });
+      },
+    },
+    {
+      name: 'db-bootstrap',
+      configureServer(server) {
+        server.httpServer?.once('listening', async () => {
+          const { getDb, runMigrations } = await import('./src/server/db');
+          try {
+            console.log('[DB] Initializing...');
+            await getDb();
+            await runMigrations();
+            console.log('[DB] Ready');
+          } catch (err) {
+            console.error('[DB] Initialization failed:', err);
           }
         });
       },

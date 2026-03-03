@@ -1,33 +1,30 @@
-/**
- * Integration tests for Todo API endpoints
- */
-
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { serve } from '@hono/node-server';
 import { hc } from 'hono/client';
 import app, { type AppType } from '../index';
-import { sqlite } from '../shared/db';
+import { getRawClient } from '../db';
 
-/**
- * Type guard for success responses
- */
-function isSuccess<T>(response: any): response is { success: true; data: T } {
-  return response.success === true && response.data !== undefined;
+function isSuccess<T>(response: unknown): response is { success: true; data: T } {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'success' in response &&
+    response.success === true &&
+    'data' in response
+  );
 }
 
 describe('Todo API Integration Tests', () => {
   let server: ReturnType<typeof serve>;
-  let client: ReturnType<typeof hc<typeof app>>;
+  let clientApi: ReturnType<typeof hc<typeof app>>;
 
   beforeAll(async () => {
-    // Start test server
     server = serve({
       fetch: app.fetch,
       port: 3011,
     });
 
-    // Create API client
-    client = hc<AppType>('http://localhost:3011');
+    clientApi = hc<AppType>('http://localhost:3011');
   });
 
   afterAll(() => {
@@ -35,13 +32,15 @@ describe('Todo API Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    // Clean up database before each test
-    sqlite.exec('DELETE FROM todos');
+    const client = await getRawClient();
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM todos');
+    }
   });
 
   describe('GET /api/todos', () => {
     it('should return empty array when no todos exist', async () => {
-      const response = await client.api.todos.$get();
+      const response = await clientApi.api.todos.$get();
       const result = await response.json();
 
       expect(response.status).toBe(200);
@@ -51,16 +50,21 @@ describe('Todo API Integration Tests', () => {
     });
 
     it('should return all todos', async () => {
-      // Create test todos
       const now = Date.now();
-      const stmt = sqlite.prepare(`
-        INSERT INTO todos (title, status, created_at, updated_at)
-        VALUES (:title, :status, :created_at, :updated_at)
-      `);
-      stmt.run({ title: 'Todo 1', status: 'pending', created_at: now, updated_at: now });
-      stmt.run({ title: 'Todo 2', status: 'completed', created_at: now, updated_at: now });
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Todo 1', 'pending', now, now],
+        });
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Todo 2', 'completed', now, now],
+        });
+      }
 
-      const response = await client.api.todos.$get();
+      const response = await clientApi.api.todos.$get();
       const result = await response.json();
 
       expect(response.status).toBe(200);
@@ -72,7 +76,7 @@ describe('Todo API Integration Tests', () => {
 
   describe('GET /api/todos/:id', () => {
     it('should return 404 for non-existent todo', async () => {
-      const response = await client.api.todos[':id'].$get({
+      const response = await clientApi.api.todos[':id'].$get({
         param: { id: '999' },
       });
 
@@ -81,23 +85,26 @@ describe('Todo API Integration Tests', () => {
 
     it('should return todo by id', async () => {
       const now = Date.now();
-      const stmt = sqlite.prepare(`
-        INSERT INTO todos (title, status, created_at, updated_at)
-        VALUES (:title, :status, :created_at, :updated_at)
-      `);
-      stmt.run({ title: 'Test Todo', status: 'pending', created_at: now, updated_at: now });
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Test Todo', 'pending', now, now],
+        });
 
-      const newTodo = sqlite.prepare('SELECT id FROM todos WHERE title = :title').get({ title: 'Test Todo' }) as { id: number };
+        const newTodo = await client.execute('SELECT id FROM todos WHERE title = ?', ['Test Todo']);
+        const row = newTodo.rows[0] as unknown as { id: number };
 
-      const response = await client.api.todos[':id'].$get({
-        param: { id: newTodo.id.toString() },
-      });
-      const result = await response.json();
+        const response = await clientApi.api.todos[':id'].$get({
+          param: { id: row.id.toString() },
+        });
+        const result = await response.json();
 
-      expect(response.status).toBe(200);
-      if (isSuccess(result)) {
-        // @ts-expect-error - Type narrowing issue with Hono RPC response
-        expect(result.data.title).toBe('Test Todo');
+        expect(response.status).toBe(200);
+        if (isSuccess(result)) {
+          expect((result.data as { title: string }).title).toBe('Test Todo');
+        }
       }
     });
   });
@@ -109,22 +116,20 @@ describe('Todo API Integration Tests', () => {
         description: 'Test description',
       };
 
-      const response = await client.api.todos.$post({
+      const response = await clientApi.api.todos.$post({
         json: input,
       });
       const result = await response.json();
 
       expect(response.status).toBe(201);
       if (isSuccess(result)) {
-        // @ts-expect-error - Type narrowing issue with Hono RPC response
-        expect(result.data.title).toBe(input.title);
-        // @ts-expect-error - Type narrowing issue with Hono RPC response
-        expect(result.data.description).toBe(input.description);
+        expect((result.data as { title: string }).title).toBe(input.title);
+        expect((result.data as { description: string }).description).toBe(input.description);
       }
     });
 
     it('should return 400 for invalid input', async () => {
-      const response = await client.api.todos.$post({
+      const response = await clientApi.api.todos.$post({
         json: { title: '' },
       });
 
@@ -135,36 +140,38 @@ describe('Todo API Integration Tests', () => {
   describe('PUT /api/todos/:id', () => {
     it('should update todo', async () => {
       const now = Date.now();
-      const stmt = sqlite.prepare(`
-        INSERT INTO todos (title, status, created_at, updated_at)
-        VALUES (:title, :status, :created_at, :updated_at)
-      `);
-      stmt.run({ title: 'Original Title', status: 'pending', created_at: now, updated_at: now });
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Original Title', 'pending', now, now],
+        });
 
-      const newTodo = sqlite.prepare('SELECT id FROM todos WHERE title = :title').get({ title: 'Original Title' }) as { id: number };
+        const newTodo = await client.execute('SELECT id FROM todos WHERE title = ?', ['Original Title']);
+        const row = newTodo.rows[0] as unknown as { id: number };
 
-      const updates = {
-        title: 'Updated Title',
-        status: 'completed' as const,
-      };
+        const updates = {
+          title: 'Updated Title',
+          status: 'completed' as const,
+        };
 
-      const response = await client.api.todos[':id'].$put({
-        param: { id: newTodo.id.toString() },
-        json: updates,
-      });
-      const result = await response.json();
+        const response = await clientApi.api.todos[':id'].$put({
+          param: { id: row.id.toString() },
+          json: updates,
+        });
+        const result = await response.json();
 
-      expect(response.status).toBe(200);
-      if (isSuccess(result)) {
-        // @ts-expect-error - Type narrowing issue with Hono RPC response
-        expect(result.data.title).toBe(updates.title);
-        // @ts-expect-error - Type narrowing issue with Hono RPC response
-        expect(result.data.status).toBe(updates.status);
+        expect(response.status).toBe(200);
+        if (isSuccess(result)) {
+          expect((result.data as { title: string }).title).toBe(updates.title);
+          expect((result.data as { status: string }).status).toBe(updates.status);
+        }
       }
     });
 
     it('should return 404 for non-existent todo', async () => {
-      const response = await client.api.todos[':id'].$put({
+      const response = await clientApi.api.todos[':id'].$put({
         param: { id: '999' },
         json: { title: 'Updated' },
       });
@@ -176,28 +183,31 @@ describe('Todo API Integration Tests', () => {
   describe('DELETE /api/todos/:id', () => {
     it('should delete todo', async () => {
       const now = Date.now();
-      const stmt = sqlite.prepare(`
-        INSERT INTO todos (title, status, created_at, updated_at)
-        VALUES (:title, :status, :created_at, :updated_at)
-      `);
-      stmt.run({ title: 'To Delete', status: 'pending', created_at: now, updated_at: now });
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['To Delete', 'pending', now, now],
+        });
 
-      const newTodo = sqlite.prepare('SELECT id FROM todos WHERE title = :title').get({ title: 'To Delete' }) as { id: number };
+        const newTodo = await client.execute('SELECT id FROM todos WHERE title = ?', ['To Delete']);
+        const row = newTodo.rows[0] as unknown as { id: number };
 
-      const response = await client.api.todos[':id'].$delete({
-        param: { id: newTodo.id.toString() },
-      });
-      const result = await response.json();
+        const response = await clientApi.api.todos[':id'].$delete({
+          param: { id: row.id.toString() },
+        });
+        const result = await response.json();
 
-      expect(response.status).toBe(200);
-      if (isSuccess(result)) {
-        // @ts-expect-error - Type narrowing issue with Hono RPC response
-        expect(result.data.id).toBe(newTodo.id);
+        expect(response.status).toBe(200);
+        if (isSuccess(result)) {
+          expect((result.data as { id: number }).id).toBe(row.id);
+        }
       }
     });
 
     it('should return 404 for non-existent todo', async () => {
-      const response = await client.api.todos[':id'].$delete({
+      const response = await clientApi.api.todos[':id'].$delete({
         param: { id: '999' },
       });
 

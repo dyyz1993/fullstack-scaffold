@@ -10,8 +10,7 @@ import type {
 } from '@shared/schemas';
 
 // In-memory storage (replace with database in production)
-let notifications: AppNotification[] = [];
-let notificationId = 1;
+const notifications: AppNotification[] = [];
 
 // SSE clients registry
 const sseClients = new Set<{
@@ -63,7 +62,6 @@ export function createNotification(input: CreateNotificationInput): AppNotificat
   };
 
   notifications.unshift(notification);
-  notificationId++;
 
   broadcastToSSEClients('notification', notification);
 

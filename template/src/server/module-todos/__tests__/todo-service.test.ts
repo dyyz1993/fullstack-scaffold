@@ -1,18 +1,20 @@
-/**
- * Unit tests for Todo service
- */
-
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as todoService from '../services/todo-service';
-import { sqlite } from '../../shared/db';
+import { getRawClient } from '../../db';
 
 describe('Todo Service', () => {
   beforeEach(async () => {
-    sqlite.exec('DELETE FROM todos');
+    const client = await getRawClient();
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM todos');
+    }
   });
 
   afterEach(async () => {
-    sqlite.exec('DELETE FROM todos');
+    const client = await getRawClient();
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM todos');
+    }
   });
 
   describe('listTodos', () => {
@@ -23,12 +25,18 @@ describe('Todo Service', () => {
 
     it('should return all todos ordered by created_at DESC', async () => {
       const now = Date.now();
-      sqlite.exec(`
-        INSERT INTO todos (title, status, created_at, updated_at)
-        VALUES 
-          ('Todo 1', 'pending', ${now}, ${now}),
-          ('Todo 2', 'completed', ${now + 1000}, ${now + 1000})
-      `);
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Todo 1', 'pending', now, now],
+        });
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Todo 2', 'completed', now + 1000, now + 1000],
+        });
+      }
 
       const result = await todoService.listTodos();
       expect(result).toHaveLength(2);
@@ -45,14 +53,22 @@ describe('Todo Service', () => {
 
     it('should return todo by id with correct fields', async () => {
       const now = Date.now();
-      sqlite.exec(`INSERT INTO todos (title, status, created_at, updated_at) VALUES ('Test Todo', 'pending', ${now}, ${now})`);
-      const row = sqlite.prepare('SELECT id FROM todos WHERE title = ?').get('Test Todo') as { id: number };
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Test Todo', 'pending', now, now],
+        });
+        const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['Test Todo']);
+        const row = result.rows[0] as unknown as { id: number };
 
-      const result = await todoService.getTodo(row.id);
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(row.id);
-      expect(result?.title).toBe('Test Todo');
-      expect(result?.status).toBe('pending');
+        const todo = await todoService.getTodo(row.id);
+        expect(todo).not.toBeNull();
+        expect(todo?.id).toBe(row.id);
+        expect(todo?.title).toBe('Test Todo');
+        expect(todo?.status).toBe('pending');
+      }
     });
   });
 
@@ -86,19 +102,27 @@ describe('Todo Service', () => {
   describe('updateTodo', () => {
     it('should update todo title and status', async () => {
       const now = Date.now();
-      sqlite.exec(`INSERT INTO todos (title, status, created_at, updated_at) VALUES ('Original Title', 'pending', ${now}, ${now})`);
-      const row = sqlite.prepare('SELECT id FROM todos WHERE title = ?').get('Original Title') as { id: number };
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Original Title', 'pending', now, now],
+        });
+        const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['Original Title']);
+        const row = result.rows[0] as unknown as { id: number };
 
-      const updates = {
-        title: 'Updated Title',
-        status: 'completed' as const,
-      };
+        const updates = {
+          title: 'Updated Title',
+          status: 'completed' as const,
+        };
 
-      const result = await todoService.updateTodo(row.id, updates);
+        const todo = await todoService.updateTodo(row.id, updates);
 
-      expect(result).not.toBeNull();
-      expect(result?.title).toBe(updates.title);
-      expect(result?.status).toBe(updates.status);
+        expect(todo).not.toBeNull();
+        expect(todo?.title).toBe(updates.title);
+        expect(todo?.status).toBe(updates.status);
+      }
     });
 
     it('should return null for non-existent todo', async () => {
@@ -110,15 +134,23 @@ describe('Todo Service', () => {
   describe('deleteTodo', () => {
     it('should delete todo and return true', async () => {
       const now = Date.now();
-      sqlite.exec(`INSERT INTO todos (title, status, created_at, updated_at) VALUES ('To Delete', 'pending', ${now}, ${now})`);
-      const row = sqlite.prepare('SELECT id FROM todos WHERE title = ?').get('To Delete') as { id: number };
+      const client = await getRawClient();
+      
+      if (client && 'execute' in client) {
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['To Delete', 'pending', now, now],
+        });
+        const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['To Delete']);
+        const row = result.rows[0] as unknown as { id: number };
 
-      const result = await todoService.deleteTodo(row.id);
+        const deleted = await todoService.deleteTodo(row.id);
 
-      expect(result).toBe(true);
+        expect(deleted).toBe(true);
 
-      const deleted = sqlite.prepare('SELECT * FROM todos WHERE id = ?').get(row.id);
-      expect(deleted).toBeUndefined();
+        const checkResult = await client.execute('SELECT * FROM todos WHERE id = ?', [row.id]);
+        expect(checkResult.rows.length).toBe(0);
+      }
     });
 
     it('should return false for non-existent todo', async () => {

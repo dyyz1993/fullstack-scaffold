@@ -1,7 +1,7 @@
 import { AppWSProtocol, type WSProtocolMessage, type WSRpcResponse, type WSEventMessage } from '@shared/schemas'
 import type { InferResponseType } from 'hono/client'
 
-type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
+export type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
 
 type PendingRequest = {
   resolve: (val: unknown) => void
@@ -17,7 +17,7 @@ export class WSClient<P extends AppWSProtocol> {
   private messageBuffer: string[] = []
   private _status: WSStatus = 'closed'
 
-  constructor(private getSocket: () => WebSocket) {
+  constructor(private createSocket: () => WebSocket) {
     this.connect()
   }
 
@@ -25,10 +25,14 @@ export class WSClient<P extends AppWSProtocol> {
     return this._status
   }
 
+  public getSocket() {
+    return this.socket
+  }
+
   private connect() {
     this._status = 'connecting'
     try {
-      this.socket = this.getSocket()
+      this.socket = this.createSocket()
       this.socket.onopen = () => this.handleOpen()
       this.socket.onmessage = msg => this.handleMessage(msg)
       this.socket.onclose = () => this.handleClose()
@@ -143,18 +147,19 @@ interface CreateWSOptions {
   token?: string
 }
 
-export function createWS<R extends { $get: unknown }>(
-  _route: R,
+interface RouteWithURL {
+  $get: unknown
+  $url: (options?: { query?: Record<string, string> }) => URL
+}
+
+export function createWS<R extends RouteWithURL>(
+  route: R,
   options?: CreateWSOptions
 ) {
   return new WSClient<InferWSProtocol<R>>(() => {
-    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    let url = `${protocol}//${host}/api/ws`
-    if (options?.token) {
-      url += `?token=${options.token}`
-    }
-    return new WebSocket(url)
+    const httpUrl = route.$url({ query: options?.token ? { token: options.token } : undefined })
+    const wsUrl = httpUrl.href.replace(/^http/, 'ws')
+    return new WebSocket(wsUrl)
   })
 }
 

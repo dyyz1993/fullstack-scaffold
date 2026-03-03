@@ -37,42 +37,13 @@ export function getErrorMessage(response: unknown): string {
   return 'Unknown error';
 }
 
-/**
- * Create a type-safe API client
- * Usage: const client = createApiClient();
- *        const response = await client.api.todos.$get();
- */
 export const createApiClient = () => {
   const baseUrl = import.meta.env.API_BASE_URL || window.location.origin;
   return hc<AppType>(baseUrl);
 };
-/**
- * Singleton API client instance
- */
+
 export const apiClient = createApiClient();
 
-
-/**
- * 💡 客户端流解析工具
- * 自动从类型安全的响应中提取泛型 T
- * 
- * 服务端: streamSSE<T>(c, async (stream) => {...})
- * 客户端: for await (const data of consumeStream(response)) { ... }
- * 
- * @example
- * // 服务端
- * .get('/:id/run', async c => {
- *   return streamSSE<SSEEvent>(c, async stream => {
- *     await stream.writeSSE({ data: JSON.stringify(event), event: 'message' })
- *   })
- * })
- * 
- * // 客户端 - T 会自动推导为 SSEEvent
- * const response = apiClient.api.workflows[':id'].run.$get({ param: { id } })
- * for await (const event of consumeStream(response)) {
- *   // event 类型自动推导
- * }
- */
 export async function* consumeStream<T>(
   responsePromise: Promise<ClientResponse<T>>
 ): AsyncIterable<T> {
@@ -105,9 +76,4 @@ export async function* consumeStream<T>(
   }
 }
 
-
-/**
- * Mock mode flag for testing
- * Set to true to use mock data instead of real API
- */
 export const USE_MOCK_SERVER = false;

@@ -9,18 +9,12 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import * as wsService from '../services/websocket-service';
-import { AppWSProtocolSchema } from '@shared/schemas/ws-protocol';
 
 const WSStatusResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     connectedClients: z.number(),
   }),
-});
-
-const WSErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.string(),
 });
 
 const statusRoute = createRoute({
@@ -46,27 +40,11 @@ const wsRoute = createRoute({
   responses: {
     200: {
       content: {
-        websocket: {
-          schema: AppWSProtocolSchema,
-        },
-      },
-      description: 'WebSocket protocol definition (for type inference)',
-    },
-    400: {
-      content: {
         'application/json': {
-          schema: WSErrorResponseSchema,
+          schema: z.object({}).passthrough(),
         },
       },
-      description: 'WebSocket upgrade required',
-    },
-    426: {
-      content: {
-        'application/json': {
-          schema: WSErrorResponseSchema,
-        },
-      },
-      description: 'Use WebSocket client to connect',
+      description: 'WebSocket endpoint - returns protocol info for type inference',
     },
   },
 });
@@ -77,11 +55,7 @@ export const websocketRoutes = new OpenAPIHono()
     return c.json({ success: true, data: { connectedClients: count } });
   })
   .openapi(wsRoute, async (c) => {
-    const upgrade = c.req.header('Upgrade');
-    if (upgrade?.toLowerCase() !== 'websocket') {
-      return c.json({ success: false as const, error: 'WebSocket upgrade required' }, 400);
-    }
-    return c.json({ success: false as const, error: 'Use WebSocket client to connect' }, 426);
+    return c.json({ protocol: 'AppWSProtocol' as const });
   });
 
 import { IncomingMessage } from 'http';

@@ -1,91 +1,37 @@
 /**
  * WebSocket Page
- * Demonstrates WebSocket with type inference using GhostWSClient
+ * Demonstrates WebSocket with type inference using useChatWSStore
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { Plug, Wifi, WifiOff, Send, Trash2, MessageSquare, Radio, Bell, Activity, Loader2 } from 'lucide-react';
-import { apiClient } from '../services/apiClient';
-import { createWS, WSClient, type AppWSProtocol } from '../services/wsClient';
-
-type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting';
-
-interface Message {
-  type: string;
-  payload: unknown;
-  timestamp?: number;
-}
+import { useChatWSStore } from '@client/stores/chatWSStore';
+import type { WSStatus } from '@client/services/wsClient';
 
 export const WebSocketPage: React.FC = () => {
-  const [status, setStatus] = useState<WSStatus>('closed');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { status, messages, connect, disconnect, echo, ping, broadcast, notification, clearMessages } = useChatWSStore();
   const [inputMessage, setInputMessage] = useState('');
   const [messageType, setMessageType] = useState<'echo' | 'notification' | 'broadcast' | 'ping'>('echo');
-  const wsClientRef = useRef<WSClient<AppWSProtocol> | null>(null);
 
-  const connect = useCallback(() => {
-    if (wsClientRef.current) return;
-    const client = createWS(apiClient.api.ws);
-    wsClientRef.current = client;
+  const handleSend = async () => {
+    if (!inputMessage.trim() && messageType !== 'ping') return;
 
-    client.onStatusChange((newStatus: WSStatus) => {
-      setStatus(newStatus);
-    });
-
-    client.on('notification', (payload) => {
-      setMessages((prev) => [...prev, { type: 'notification', payload, timestamp: payload.timestamp }]);
-    });
-
-    client.on('broadcast', (payload) => {
-      setMessages((prev) => [...prev, { type: 'broadcast', payload, timestamp: payload.timestamp }]);
-    });
-
-    client.on('connected', (payload) => {
-      setMessages((prev) => [...prev, { type: 'connected', payload, timestamp: payload.timestamp }]);
-    });
-  }, []);
-
-  const disconnect = useCallback(() => {
-    if (wsClientRef.current) {
-      wsClientRef.current.close();
-      wsClientRef.current = null;
-      setStatus('closed');
+    switch (messageType) {
+      case 'echo':
+        await echo({ message: inputMessage });
+        break;
+      case 'ping':
+        await ping();
+        break;
+      case 'broadcast':
+        broadcast({ message: inputMessage, timestamp: Date.now() });
+        break;
+      case 'notification':
+        notification({ title: 'User Notification', body: inputMessage, timestamp: Date.now() });
+        break;
     }
-  }, []);
-
-  const sendMessage = useCallback(async () => {
-    if (!wsClientRef.current || status !== 'open') return;
-    if (!inputMessage.trim()) return;
-
-    try {
-      if (messageType === 'echo') {
-        const result = await wsClientRef.current.call('echo', { message: inputMessage });
-        setMessages((prev) => [...prev, { type: 'echo', payload: result, timestamp: result.timestamp }]);
-      } else if (messageType === 'ping') {
-        const result = await wsClientRef.current.call('ping', {});
-        setMessages((prev) => [...prev, { type: 'pong', payload: result, timestamp: result.timestamp }]);
-      } else if (messageType === 'broadcast') {
-        wsClientRef.current.emit('broadcast', { message: inputMessage, timestamp: Date.now() });
-      } else if (messageType === 'notification') {
-        wsClientRef.current.emit('notification', { title: 'User Notification', body: inputMessage, timestamp: Date.now() });
-      }
-      setInputMessage('');
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    }
-  }, [inputMessage, messageType, status]);
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (wsClientRef.current) {
-        wsClientRef.current.close();
-      }
-    };
-  }, []);
+    setInputMessage('');
+  };
 
   const typeConfig: Record<string, { color: string; bg: string; icon: React.FC<{ className?: string }> }> = {
     ping: { color: 'text-cyan-500', bg: 'bg-cyan-500', icon: Activity },
@@ -113,7 +59,7 @@ export const WebSocketPage: React.FC = () => {
           WebSocket Demo
         </h1>
         <p className="text-gray-500 mt-2">
-          Demonstrates WebSocket with type inference using GhostWSClient
+          Demonstrates WebSocket with type inference using useWSStore
         </p>
       </div>
 
@@ -169,13 +115,13 @@ export const WebSocketPage: React.FC = () => {
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder={messageType === 'ping' ? 'No message needed for ping' : 'Type a message...'}
             disabled={status !== 'open' || messageType === 'ping'}
             className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
           <button
-            onClick={sendMessage}
+            onClick={handleSend}
             disabled={status !== 'open' || (messageType !== 'ping' && !inputMessage.trim())}
             className={`flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg transition-colors ${
               status !== 'open' || (messageType !== 'ping' && !inputMessage.trim())
