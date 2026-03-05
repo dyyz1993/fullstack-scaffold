@@ -55,11 +55,11 @@
     "node": ">=18.0.0"
   },
   "lint-staged": {
-    "src/**/*.ts": [
+    "**/*.{ts,tsx}": [
       "prettier --write",
       "eslint --fix"
     ],
-    "template/src/**/*.{ts,tsx}": [
+    "*.{json,md,css}": [
       "prettier --write"
     ]
   }
