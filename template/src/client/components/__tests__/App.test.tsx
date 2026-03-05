@@ -52,9 +52,9 @@ describe('App Component', () => {
   describe('Initial Render', () => {
     it('should render title with correct text', () => {
       render(<App />)
-      const titleElement = screen.getByText('Todo List')
+      const titleElement = screen.getByTestId('app-title')
       expect(titleElement).toBeInTheDocument()
-      expect(titleElement.tagName).toBe('H1')
+      expect(titleElement).toHaveTextContent('Biomimic App')
     })
 
     it('should render create form with all inputs', () => {
