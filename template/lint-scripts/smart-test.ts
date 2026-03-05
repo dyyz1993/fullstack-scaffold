@@ -178,7 +178,7 @@ function findRelatedTests(
   for (const changedFile of allChanged) {
     const absolutePath = resolve(PROJECT_ROOT, changedFile)
 
-    for (const [testFile, dependencies] of dependencyGraph.entries()) {
+    for (const [testFile, dependencies] of Array.from(dependencyGraph.entries())) {
       if (dependencies.has(absolutePath) || testFile.includes(changedFile)) {
         relatedTests.add(testFile)
       }
