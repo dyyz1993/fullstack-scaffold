@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "command": "bash .claude/scripts/pre-tool-use-check.sh"
+      }
+    ],
+    "afterToolUse": [
+      {
+        "type": "command",
+        "command": "bash .claude/scripts/post-edit-check.sh"
+      }
+    ]
+  }
+}
