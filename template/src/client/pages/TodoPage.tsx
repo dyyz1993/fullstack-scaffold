@@ -3,64 +3,61 @@
  * Demonstrates CRUD operations with Hono RPC
  */
 
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle, Circle, Clock, Loader2 } from 'lucide-react';
-import { shallow } from 'zustand/shallow';
-import { useTodoStore } from '../stores/todoStore';
-import type { Todo } from '@shared/schemas';
+import { useState, useEffect } from 'react'
+import { Plus, Trash2, CheckCircle, Circle, Clock, Loader2 } from 'lucide-react'
+import { useTodoStore } from '../stores/todoStore'
+import type { Todo } from '@shared/schemas'
 
 export const TodoPage: React.FC = () => {
-  const { todos, loading, error, fetchTodos, createTodo, updateTodo, deleteTodo } = useTodoStore(
-    (state) => ({
-      todos: state.todos,
-      loading: state.loading,
-      error: state.error,
-      fetchTodos: state.fetchTodos,
-      createTodo: state.createTodo,
-      updateTodo: state.updateTodo,
-      deleteTodo: state.deleteTodo,
-    }),
-    shallow
-  );
+  const todos = useTodoStore(state => state.todos)
+  const loading = useTodoStore(state => state.loading)
+  const error = useTodoStore(state => state.error)
+  const fetchTodos = useTodoStore(state => state.fetchTodos)
+  const createTodo = useTodoStore(state => state.createTodo)
+  const updateTodo = useTodoStore(state => state.updateTodo)
+  const deleteTodo = useTodoStore(state => state.deleteTodo)
 
-  const [newTodoTitle, setNewTodoTitle] = useState('');
-  const [newTodoDescription, setNewTodoDescription] = useState('');
+  const [newTodoTitle, setNewTodoTitle] = useState('')
+  const [newTodoDescription, setNewTodoDescription] = useState('')
 
   useEffect(() => {
-    fetchTodos();
-  }, [fetchTodos]);
+    fetchTodos()
+  }, [fetchTodos])
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTodoTitle.trim()) return;
+    e.preventDefault()
+    if (!newTodoTitle.trim()) return
 
     await createTodo({
       title: newTodoTitle,
       description: newTodoDescription || undefined,
-    });
+    })
 
-    setNewTodoTitle('');
-    setNewTodoDescription('');
-  };
+    setNewTodoTitle('')
+    setNewTodoDescription('')
+  }
 
   const handleStatusChange = async (todo: Todo, status: Todo['status']) => {
-    await updateTodo(todo.id, { status });
-  };
+    await updateTodo(todo.id, { status })
+  }
 
   const handleDelete = async (id: number) => {
-    await deleteTodo(id);
-  };
+    await deleteTodo(id)
+  }
 
   const statusConfig = {
     pending: { icon: Circle, color: 'text-gray-400', bg: 'bg-gray-100' },
     in_progress: { icon: Clock, color: 'text-blue-500', bg: 'bg-blue-50' },
     completed: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50' },
-  };
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6" data-testid="todo-page">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2" data-testid="todo-title">
+        <h1
+          className="text-3xl font-bold text-gray-900 flex items-center gap-2"
+          data-testid="todo-title"
+        >
           <CheckCircle className="w-8 h-8 text-blue-500" />
           Todo List
         </h1>
@@ -69,12 +66,16 @@ export const TodoPage: React.FC = () => {
         </p>
       </div>
 
-      <form onSubmit={handleCreate} className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200" data-testid="todo-form">
+      <form
+        onSubmit={handleCreate}
+        className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200"
+        data-testid="todo-form"
+      >
         <div className="mb-4">
           <input
             type="text"
             value={newTodoTitle}
-            onChange={(e) => setNewTodoTitle(e.target.value)}
+            onChange={e => setNewTodoTitle(e.target.value)}
             placeholder="Todo title..."
             data-testid="todo-title-input"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
@@ -83,7 +84,7 @@ export const TodoPage: React.FC = () => {
         <div className="mb-4">
           <textarea
             value={newTodoDescription}
-            onChange={(e) => setNewTodoDescription(e.target.value)}
+            onChange={e => setNewTodoDescription(e.target.value)}
             placeholder="Description (optional)..."
             data-testid="todo-description-input"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none min-h-[100px]"
@@ -101,7 +102,10 @@ export const TodoPage: React.FC = () => {
       </form>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg" data-testid="error-message">
+        <div
+          className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg"
+          data-testid="error-message"
+        >
           {error}
         </div>
       )}
@@ -113,8 +117,8 @@ export const TodoPage: React.FC = () => {
       )}
 
       <div className="space-y-4" data-testid="todo-list">
-        {todos.map((todo) => {
-          const StatusIcon = statusConfig[todo.status].icon;
+        {todos.map(todo => {
+          const StatusIcon = statusConfig[todo.status].icon
           return (
             <div
               key={todo.id}
@@ -140,7 +144,7 @@ export const TodoPage: React.FC = () => {
                   <div className="mt-3 flex items-center gap-3">
                     <select
                       value={todo.status}
-                      onChange={(e) => handleStatusChange(todo, e.target.value as Todo['status'])}
+                      onChange={e => handleStatusChange(todo, e.target.value as Todo['status'])}
                       data-testid={`todo-status-select-${todo.id}`}
                       className={`px-3 py-1.5 text-sm rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none ${
                         statusConfig[todo.status].bg
@@ -167,7 +171,7 @@ export const TodoPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
@@ -178,5 +182,5 @@ export const TodoPage: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}

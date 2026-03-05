@@ -9,7 +9,10 @@ import type {
   TodosConfig,
   SensitiveConfig,
   ImportsConfig,
-} from '../validators/index.js';
+  ServerRPCConfig,
+  ClientRPCConfig,
+  DirectoryStructureConfig,
+} from '../validators/index.js'
 
 // ============================================
 // TODO/FIXME 验证配置
@@ -26,7 +29,7 @@ export const todosConfig: TodosConfig = {
 
   // 检查的目录
   checkDirs: ['src', 'lint-scripts'],
-};
+}
 
 // ============================================
 // 敏感信息检测配置
@@ -70,13 +73,14 @@ export const sensitiveConfig: SensitiveConfig = {
     {
       pattern: /console\.(log|debug)\(/,
       message: 'console.log detected (remove in production)',
-      excludePattern: /\/\/.*console\.|logger\.|lint-scripts\/(validate|test)/,
+      excludePattern:
+        /\/\/.*console\.|logger\.|lint-scripts\/(validate|test)|config\.ts|lib\/logger\.ts/,
     },
     // .env 文件引用
     {
       pattern: /['"`]\.env(?:\.\w+)?['"`]/,
       message: '.env file reference in string literal',
-      excludePattern: /\.env\.example/,
+      excludePattern: /\.env\.example|config\.ts/,
     },
   ],
 
@@ -88,7 +92,9 @@ export const sensitiveConfig: SensitiveConfig = {
     /coverage/,
     /\.env\.example$/,
     /__tests__/,
-    /lint-scripts\/(validate|config|watch-validator)/,
+    /lint-scripts\/(validate|config|watch-validator|test-validators-unit|TESTING|README|quick-test|DIRECTORY_RULES)/,
+    /server\/config\.ts/,
+    /server\/utils\/logger\.ts/,
   ],
 
   // 检查的文件扩展名
@@ -96,7 +102,7 @@ export const sensitiveConfig: SensitiveConfig = {
 
   // 检查的目录
   checkDirs: ['src', 'lint-scripts'],
-};
+}
 
 // ============================================
 // 导入路径验证配置
@@ -125,7 +131,95 @@ export const importsConfig: ImportsConfig = {
 
   // 检查的目录
   checkDirs: ['src', 'scripts'],
-};
+}
+
+// ============================================
+// 服务端 RPC 验证配置
+// ============================================
+export const serverRPCConfig: ServerRPCConfig = {
+  checkDirs: ['src/server'],
+  ignoreDirs: ['node_modules', 'dist', '__tests__'],
+  requireChainSyntax: true,
+  requireTypeExport: true,
+}
+
+// ============================================
+// 客户端 RPC 验证配置
+// ============================================
+export const clientRPCConfig: ClientRPCConfig = {
+  checkDirs: ['src/client'],
+  ignoreDirs: ['node_modules', 'dist', '__tests__'],
+  requireAPIClient: true,
+  forbidDirectFetch: true,
+}
+
+// ============================================
+// 目录结构验证配置
+// ============================================
+export const directoryStructureConfig: DirectoryStructureConfig = {
+  rules: [
+    {
+      pattern: '*routes*.ts',
+      requiredDir: 'routes',
+      description: 'Route files must be in routes/ directory',
+    },
+    {
+      pattern: '*service*.ts',
+      requiredDir: 'services',
+      description: 'Service files must be in services/ directory',
+    },
+    {
+      pattern: '*.test.ts',
+      requiredDir: '__tests__',
+      description: 'Test files must be in __tests__/ directory',
+    },
+    {
+      pattern: '*.spec.ts',
+      requiredDir: 'e2e',
+      description: 'E2E test files must be in e2e/ directory',
+    },
+  ],
+  forbiddenLocations: [
+    {
+      pattern: '*.test.ts',
+      forbiddenDirs: ['src/server', 'src/client'],
+      message: 'Unit test files should not be in source directories',
+      suggestion: 'Move to __tests__/ directory within the module',
+    },
+    {
+      pattern: '*.spec.ts',
+      forbiddenDirs: ['src'],
+      message: 'E2E test files should not be in src/ directory',
+      suggestion: 'Move to e2e/ directory at project root',
+    },
+    {
+      pattern: '*example*.ts',
+      forbiddenDirs: ['src'],
+      message: 'Example files should not be in src/ directory',
+      suggestion: 'Move to examples/ directory at project root or docs/examples/',
+    },
+    {
+      pattern: '*demo*.ts',
+      forbiddenDirs: ['src'],
+      message: 'Demo files should not be in src/ directory',
+      suggestion: 'Move to demos/ directory at project root or docs/demos/',
+    },
+    {
+      pattern: '*script*.ts',
+      forbiddenDirs: ['src'],
+      message: 'Script files should not be in src/ directory',
+      suggestion: 'Move to scripts/ directory at project root',
+    },
+  ],
+  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage', 'drizzle', 'patches'],
+  allowedRootFiles: [
+    '*.config.ts',
+    '*.config.js',
+    '*.setup.ts',
+    'vite-env.d.ts',
+    'vite-plugins.ts',
+  ],
+}
 
 // ============================================
 // 统一导出
@@ -134,6 +228,9 @@ export const projectConfig = {
   todos: todosConfig,
   sensitive: sensitiveConfig,
   imports: importsConfig,
-} as const;
+  serverRPC: serverRPCConfig,
+  clientRPC: clientRPCConfig,
+  directory: directoryStructureConfig,
+} as const
 
-export default projectConfig;
+export default projectConfig

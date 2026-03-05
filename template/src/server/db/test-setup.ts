@@ -1,12 +1,10 @@
-import { getRawClient, getDb } from './index';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { getRawClient } from './index'
 
 export async function setupTestDatabase(): Promise<void> {
-  const client = await getRawClient();
-  
+  const client = await getRawClient()
+
   if (!client || !('execute' in client)) {
-    throw new Error('Test database client not available');
+    throw new Error('Test database client not available')
   }
 
   const migrationSQL = `
@@ -27,22 +25,22 @@ export async function setupTestDatabase(): Promise<void> {
       read INTEGER DEFAULT false NOT NULL,
       created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
     );
-  `;
+  `
 
-  const statements = migrationSQL.split(';').filter(s => s.trim());
-  
+  const statements = migrationSQL.split(';').filter(s => s.trim())
+
   for (const statement of statements) {
     if (statement.trim()) {
-      await client.execute(statement);
+      await client.execute(statement)
     }
   }
 }
 
 export async function cleanupTestDatabase(): Promise<void> {
-  const client = await getRawClient();
-  
+  const client = await getRawClient()
+
   if (client && 'execute' in client) {
-    await client.execute('DELETE FROM todos');
-    await client.execute('DELETE FROM notifications');
+    await client.execute('DELETE FROM todos')
+    await client.execute('DELETE FROM notifications')
   }
 }
