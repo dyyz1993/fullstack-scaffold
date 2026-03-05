@@ -14,13 +14,17 @@ paths: src/**/*.test.ts, src/**/*.test.tsx
   - `src/client/stores/todoStore.ts` → `src/client/stores/__tests__/todoStore.test.ts`
   - `src/client/services/apiClient.ts` → `src/client/services/__tests__/apiClient.test.ts`
 
-- **服务端**: `server/**/*.ts` → `server/**/__tests__/*.test.ts`
-  - `server/routes/todos.ts` → `server/routes/__tests__/todos.test.ts`
-  - `server/services/todoService.ts` → `server/services/__tests__/todoService.test.ts`
+- **服务端**: `src/server/module-{feature}/**/*.ts` → `src/server/module-{feature}/__tests__/*.test.ts`
+  - `src/server/module-todos/routes/todos-routes.ts` → `src/server/module-todos/__tests__/todos-route.test.ts`
+  - `src/server/module-todos/services/todo-service.ts` → `src/server/module-todos/__tests__/todo-service.test.ts`
+- **集成测试**: `src/server/__tests__/integration/*.test.ts`
+- **E2E 测试**: `e2e/*.spec.ts` (Playwright)
 
 ### 目录结构示例
 
 ```
+e2e/
+  todo.spec.ts
 src/
   client/
     stores/
@@ -32,6 +36,9 @@ src/
       __tests__/
         apiClient.test.ts
   server/
+    __tests__/
+      integration/
+        todos-api.test.ts
     module-todos/
       routes/
         todos-routes.ts
@@ -81,6 +88,8 @@ expect(todo.status).toBe('completed');
 ### ✅ 断言数量要求
 
 **每个测试必须包含 2-3 个具体数值的断言**
+
+**覆盖率目标：>80%**
 
 ```typescript
 // ✅ 正确 - 验证多个具体字段

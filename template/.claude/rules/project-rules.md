@@ -39,10 +39,12 @@ module-{feature}/
 
 ## Testing
 
-- Unit tests: `__tests__/*.test.ts`
-- Integration tests: `src/server/integration/*.test.ts`
-- Always test services and routes
-- Aim for >80% coverage
+详细测试规范请参考 [testing-standards.md](./testing-standards.md)
+
+快速参考：
+- 单元测试: `__tests__/*.test.ts`
+- 集成测试: `src/server/__tests__/integration/*.test.ts`
+- 覆盖率目标: >80%
 
 ## Code Style
 
