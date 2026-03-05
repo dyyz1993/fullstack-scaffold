@@ -15,6 +15,7 @@ const config = getAppConfig()
 const distPath = resolve(process.cwd(), 'dist/client')
 const hasDist = existsSync(distPath)
 const indexHtml = hasDist ? readFileSync(resolve(distPath, 'index.html'), 'utf-8') : null
+const devIndexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
 
 const log = logger.api()
 const wss = getNodeWSServer()
@@ -70,7 +71,7 @@ app
     if (indexHtml) {
       return c.html(indexHtml)
     }
-    return c.redirect(config.enableDocs ? '/docs' : '/health')
+    return c.html(devIndexHtml)
   })
   .onError((err, c) => {
     log.error({ err, path: c.req.path }, 'server error')

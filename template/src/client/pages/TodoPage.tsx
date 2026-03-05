@@ -9,6 +9,8 @@ import { useTodoStore } from '../stores/todoStore'
 import { LoadingSpinner, EmptyState } from '@client/components'
 import type { Todo } from '@shared/schemas'
 
+type FilterType = 'all' | 'pending' | 'in_progress' | 'completed'
+
 export const TodoPage: React.FC = () => {
   const todos = useTodoStore(state => state.todos)
   const loading = useTodoStore(state => state.loading)
@@ -20,6 +22,7 @@ export const TodoPage: React.FC = () => {
 
   const [newTodoTitle, setNewTodoTitle] = useState('')
   const [newTodoDescription, setNewTodoDescription] = useState('')
+  const [filter, setFilter] = useState<FilterType>('all')
 
   useEffect(() => {
     fetchTodos()
@@ -45,6 +48,11 @@ export const TodoPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     await deleteTodo(id)
   }
+
+  const filteredTodos = todos.filter(todo => {
+    if (filter === 'all') return true
+    return todo.status === filter
+  })
 
   const statusConfig = {
     pending: { icon: Circle, color: 'text-gray-400', bg: 'bg-gray-100' },
@@ -117,13 +125,68 @@ export const TodoPage: React.FC = () => {
         </div>
       )}
 
+      {todos.length > 0 && (
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2" data-testid="todo-count">
+            <span className="text-sm text-gray-500">Total:</span>
+            <span className="text-sm font-medium text-gray-900">{todos.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              data-testid="filter-all"
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                filter === 'all'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('pending')}
+              data-testid="filter-pending"
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                filter === 'pending'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Pending
+            </button>
+            <button
+              onClick={() => setFilter('in_progress')}
+              data-testid="filter-in-progress"
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                filter === 'in_progress'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              In Progress
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              data-testid="filter-completed"
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                filter === 'completed'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Completed
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4" data-testid="todo-list">
-        {todos.map(todo => {
+        {filteredTodos.map(todo => {
           const StatusIcon = statusConfig[todo.status].icon
           return (
             <div
               key={todo.id}
-              data-testid={`todo-item-${todo.id}`}
+              data-testid="todo-item"
               className={`p-5 rounded-xl border transition-all ${
                 todo.status === 'completed'
                   ? 'bg-green-50 border-green-200'
@@ -136,17 +199,20 @@ export const TodoPage: React.FC = () => {
                     className={`text-lg font-medium ${
                       todo.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-900'
                     }`}
+                    data-testid="todo-item-title"
                   >
                     {todo.title}
                   </h3>
                   {todo.description && (
-                    <p className="mt-1 text-gray-500 text-sm">{todo.description}</p>
+                    <p className="mt-1 text-gray-500 text-sm" data-testid="todo-item-description">
+                      {todo.description}
+                    </p>
                   )}
                   <div className="mt-3 flex items-center gap-3">
                     <select
                       value={todo.status}
                       onChange={e => handleStatusChange(todo, e.target.value as Todo['status'])}
-                      data-testid={`todo-status-select-${todo.id}`}
+                      data-testid="todo-status"
                       className={`px-3 py-1.5 text-sm rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none ${
                         statusConfig[todo.status].bg
                       }`}
@@ -164,7 +230,7 @@ export const TodoPage: React.FC = () => {
                   <StatusIcon className={`w-6 h-6 ${statusConfig[todo.status].color}`} />
                   <button
                     onClick={() => handleDelete(todo.id)}
-                    data-testid={`delete-todo-button-${todo.id}`}
+                    data-testid="delete-button"
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -176,7 +242,7 @@ export const TodoPage: React.FC = () => {
         })}
       </div>
 
-      {!loading && todos.length === 0 && (
+      {!loading && filteredTodos.length === 0 && (
         <EmptyState icon={Circle} title="No todos yet. Add one above!" className="py-12" />
       )}
     </div>
