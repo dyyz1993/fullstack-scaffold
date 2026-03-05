@@ -7,6 +7,17 @@ import ora from "ora";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function parseGitignore(content: string): string[] {
+  return content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#") && !line.startsWith("!"))
+    .map((pattern) => pattern.replace(/\/$/, ""))
+    .map((pattern) => pattern.replace(/^\*\./, ""))
+    .map((pattern) => pattern.replace(/^\/+/, ""))
+    .filter((pattern) => !pattern.includes("*"));
+}
+
 export async function createProject(
   projectName: string,
   useCurrentDir: boolean = false,
@@ -32,10 +43,18 @@ export async function createProject(
     }
 
     const spinner = ora("Copying template files...").start();
+    const gitignorePath = path.join(templateDir, ".gitignore");
+    let ignorePatterns: string[] = [];
+    if (await fs.pathExists(gitignorePath)) {
+      const gitignoreContent = await fs.readFile(gitignorePath, "utf-8");
+      ignorePatterns = parseGitignore(gitignoreContent);
+    }
+    ignorePatterns.push("node_modules", ".wrangler", ".trae");
     await fs.copy(templateDir, targetDir, {
       filter: (src: string) => {
         const relative = path.relative(templateDir, src);
-        return !relative.startsWith("node_modules");
+        if (relative === "") return true;
+        return !ignorePatterns.some((pattern) => relative.startsWith(pattern));
       },
     });
     spinner.succeed(chalk.green("Template files copied"));
