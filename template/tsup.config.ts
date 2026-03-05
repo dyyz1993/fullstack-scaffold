@@ -1,8 +1,8 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsup'
 
 export default defineConfig([
   {
-    entry: ['src/server/main.ts'],
+    entry: ['src/server/entries/node.ts'],
     outDir: 'dist/server',
     format: 'esm',
     platform: 'node',
@@ -27,7 +27,7 @@ export default defineConfig([
     dts: false,
   },
   {
-    entry: ['src/server/entry-cloudflare.ts'],
+    entry: ['src/server/entries/cloudflare.ts'],
     outDir: 'dist/cloudflare',
     format: 'esm',
     platform: 'neutral',
@@ -70,4 +70,4 @@ export default defineConfig([
       'process.env.NODE_ENV': '"production"',
     },
   },
-]);
+])

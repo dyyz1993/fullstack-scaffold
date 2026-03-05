@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: [
-      '**/__tests__/**/*.test.ts', 
+      '**/__tests__/**/*.test.ts',
       '**/__tests__/**/*.test.tsx',
       '**/integration/**/*.test.ts',
     ],
@@ -29,7 +29,7 @@ export default defineConfig({
         '**/*.config.*',
         '**/test-setup.ts',
         'src/client/main.tsx',
-        'src/server/main.ts',
+        'src/server/entries/node.ts',
       ],
       thresholds: {
         lines: 80,
@@ -46,4 +46,4 @@ export default defineConfig({
       '@server': resolve(__dirname, 'src/server'),
     },
   },
-});
+})
