@@ -4,6 +4,9 @@
 echo "Running TypeScript type check..."
 npm run typecheck
 
+echo "Running all validators..."
+npm run validate:all
+
 npx lint-staged
 
 echo "Running smart tests for changed files..."
