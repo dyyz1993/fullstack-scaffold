@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 /**
  * Playwright E2E Test Configuration
@@ -36,9 +41,13 @@ export default defineConfig({
   // 并发限制：最多同时创建3个浏览器实例，避免资源占用过高
   workers: 3,
 
+  // Global setup/teardown for dynamic port allocation
+  globalSetup: join(__dirname, 'e2e', 'global-setup.ts'),
+  globalTeardown: join(__dirname, 'e2e', 'global-teardown.ts'),
+
   // Reporter to use
   reporter: [
-    ['html', { outputFolder: 'playwright-report/html' }],
+    ['html', { outputFolder: 'playwright-report/html', open: 'never' }],
     ['json', { outputFile: 'playwright-report/results.json' }],
     ['list'],
   ],
@@ -87,33 +96,24 @@ export default defineConfig({
         },
       },
     },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
     /* Test against mobile viewports */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: {
+        ...devices['Pixel 5'],
+        launchOptions: {
+          executablePath: '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        },
+      },
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      use: {
+        ...devices['iPhone 12'],
+        launchOptions: {
+          executablePath: '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        },
+      },
     },
   ],
-
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'npm run dev',
-    port: 0,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
 })

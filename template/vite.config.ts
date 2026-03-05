@@ -6,7 +6,7 @@ import { websocketPlugin, dbPlugin } from './vite-plugins'
 
 export default defineConfig({
   server: {
-    port: 0,
+    port: 3010,
     host: '0.0.0.0',
     hmr: {
       overlay: true,
