@@ -1,8 +1,8 @@
-import path from 'path';
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import devServer from '@hono/vite-dev-server';
-import { websocketPlugin, dbPlugin } from './vite-plugins';
+import path from 'path'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import devServer from '@hono/vite-dev-server'
+import { websocketPlugin, dbPlugin } from './vite-plugins'
 
 export default defineConfig({
   server: {
@@ -17,7 +17,8 @@ export default defineConfig({
     devServer({
       entry: 'src/server/index.ts',
       exclude: [
-        /^\/$/,
+        /^\/api/,
+        /^\/health/,
         /^\/(@[a-zA-Z0-9_-]+|src|node_modules|__inspect)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
@@ -41,4 +42,4 @@ export default defineConfig({
       '@server': path.resolve(__dirname, 'src/server'),
     },
   },
-});
+})

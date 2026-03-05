@@ -92,7 +92,7 @@ export const sensitiveConfig: SensitiveConfig = {
     /coverage/,
     /\.env\.example$/,
     /__tests__/,
-    /lint-scripts\/(validate|config|watch-validator|test-validators-unit|TESTING|README|quick-test|DIRECTORY_RULES)/,
+    /lint-scripts\/(validate|config|watch-validator|test-validators-unit|test-tracker|test-history|post-commit-track|TESTING|README|quick-test|DIRECTORY_RULES)/,
     /server\/config\.ts/,
     /server\/utils\/logger\.ts/,
   ],

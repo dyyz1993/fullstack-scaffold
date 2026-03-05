@@ -76,10 +76,6 @@ app
     log.error({ err, path: c.req.path }, 'server error')
     return c.json({ success: false, error: err.message || 'Internal server error' }, 500)
   })
-  .notFound(c => {
-    log.warn({ path: c.req.path }, 'not found')
-    return c.json({ success: false, error: 'Not found' }, 404)
-  })
 
 export default app
 export type AppType = typeof app
@@ -133,4 +129,11 @@ export async function startServer() {
 
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
+}
+
+if (process.env.NODE_ENV === 'production') {
+  startServer().catch(err => {
+    console.error('Failed to start server:', err)
+    process.exit(1)
+  })
 }
