@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
 /**
  * Playwright E2E Test Configuration
@@ -53,9 +53,6 @@ export default defineConfig({
 
   // Shared settings for all tests
   use: {
-    // Base URL for tests - use in page.goto('/')
-    baseURL: 'http://localhost:3010',
-
     // Collect trace when retrying the failed test
     // Trace files stored in: playwright-artifacts/traces/
     trace: 'on-first-retry',
@@ -115,8 +112,8 @@ export default defineConfig({
   // Run your local dev server before starting the tests
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3010',
+    port: 0,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
-});
+})
