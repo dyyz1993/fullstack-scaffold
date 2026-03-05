@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import app from '../index';
-import { getDb } from '../db';
-import { setupTestDatabase, cleanupTestDatabase } from '../db/test-setup';
+import app from '../../index';
+import { getDb } from '../../db';
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup';
 
 describe('Integration: Todos API (Real Database)', () => {
   beforeAll(async () => {

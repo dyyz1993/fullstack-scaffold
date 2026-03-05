@@ -1,6 +1,6 @@
 import type { WSMessage, WSRpcRequest } from '@shared/schemas';
-import { logger } from '../../lib/logger';
-import { createRealtimeCore, type RealtimeCore, type WSClient as CoreWSClient } from '../../services/realtime/core';
+import { logger } from '../../utils/logger';
+import { createRealtimeCore, type RealtimeCore, type WSClient as CoreWSClient } from '../../module-realtime/services/realtime/core';
 
 const log = logger.ws();
 

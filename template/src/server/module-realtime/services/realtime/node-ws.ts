@@ -1,6 +1,6 @@
 import type { WebSocket } from 'ws';
 import { createRealtimeCore, type RealtimeCore, type WSClient } from './core';
-import { generateUUID } from '../../utils/uuid';
+import { generateUUID } from '../../../utils/uuid';
 
 class NodeWSClient implements WSClient {
   readonly id: string;

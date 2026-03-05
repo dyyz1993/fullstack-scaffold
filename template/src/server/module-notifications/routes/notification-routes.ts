@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import * as notificationService from '../services/notification-service';
-import { initRealtimeService } from '../../services/realtime';
+import { initRealtimeService } from '../../module-realtime/services/realtime';
 import {
   NotificationSchema,
   CreateNotificationSchema,

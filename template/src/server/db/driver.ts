@@ -5,7 +5,7 @@ import * as schema from './schema';
 import { drizzle as drizzleLibsql } from 'drizzle-orm/libsql';
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
 import { createClient, type Client } from '@libsql/client';
-import { logger } from '../lib/logger';
+import { logger } from '../utils/logger';
 import { isCloudflare } from '../utils/env';
 
 type LibSQLDb = ReturnType<typeof drizzleLibsql<typeof schema>>;

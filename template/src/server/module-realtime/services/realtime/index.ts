@@ -1,5 +1,5 @@
 import type { AppNotification } from '@shared/schemas';
-import { isCloudflare } from '../../utils/env';
+import { isCloudflare } from '../../../utils/env';
 
 export interface BroadcastMessage {
   event: string;

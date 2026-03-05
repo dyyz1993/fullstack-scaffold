@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import * as wsService from '../services/websocket-service';
-import { logger } from '../../lib/logger';
+import { logger } from '../../utils/logger';
 import { isCloudflare, createCloudflareWSHandler } from '../../utils/ws-helper';
 import { generateUUID } from '../../utils/uuid';
 

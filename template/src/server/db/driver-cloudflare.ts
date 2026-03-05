@@ -1,6 +1,6 @@
 import * as schema from './schema';
 import { drizzle } from 'drizzle-orm/d1';
-import { logger } from '../lib/logger';
+import { logger } from '../utils/logger';
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 

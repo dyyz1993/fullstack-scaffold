@@ -1,4 +1,4 @@
-import { createRealtimeCore, type RealtimeCore } from '../services/realtime/core';
+import { createRealtimeCore, type RealtimeCore } from '../module-realtime/services/realtime/core';
 
 export class NotificationDurableObject {
   private core: RealtimeCore;

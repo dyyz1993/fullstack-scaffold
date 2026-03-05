@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createServer } from 'http';
 import WebSocket, { WebSocketServer } from 'ws';
 import app from '../../index';
-import { getNodeWSServer } from '../../services/realtime/node-ws';
+import { getNodeWSServer } from '../../module-realtime/services/realtime/node-ws';
 
 describe('WebSocket Routes', () => {
   let server: ReturnType<typeof createServer>;

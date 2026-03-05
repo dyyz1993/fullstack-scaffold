@@ -2,7 +2,7 @@ import { cors } from 'hono/cors';
 import { Hono } from 'hono';
 import { apiRoutes } from './module-todos/routes/todos-routes';
 import { notificationRoutes } from './module-notifications/routes/notification-routes';
-import { createRealtimeRoutes } from './routes/realtime-routes';
+import { createRealtimeRoutes } from './module-realtime/routes/realtime-routes';
 import type { AppBindings, CreateAppOptions } from './types/bindings';
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings';
@@ -32,4 +32,3 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 }
 
 export { apiRoutes, notificationRoutes };
-export type AppType = ReturnType<typeof createApp>;
