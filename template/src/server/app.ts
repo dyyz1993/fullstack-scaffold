@@ -18,9 +18,9 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         credentials: true,
       })
     )
-    .route('/api', apiRoutes)
-    .route('/api', notificationRoutes)
     .route('/api', realtimeRoutes)
+    .route('/api', notificationRoutes)
+    .route('/api', apiRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')

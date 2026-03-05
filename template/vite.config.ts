@@ -1,25 +1,22 @@
 import path from 'path'
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+// import react from '@vitejs/plugin-react'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
 
 export default defineConfig({
   server: {
-    port: 3010,
+    port: 0,
     host: '0.0.0.0',
     hmr: {
       overlay: true,
     },
   },
   plugins: [
-    react(),
     devServer({
       entry: 'src/server/index.ts',
       exclude: [
-        /^\/api/,
-        /^\/health/,
-        /^\/(@[a-zA-Z0-9_-]+|src|node_modules|__inspect)/,
+        /^\/(@[a-zA-Z0-9_-]+|src|node_modules|__inspect|index\.html)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
     }),
