@@ -3,54 +3,84 @@
  * Demonstrates WebSocket with type inference using useChatWSStore
  */
 
-import { useState } from 'react';
-import { Plug, Wifi, WifiOff, Send, Trash2, MessageSquare, Radio, Bell, Activity, Loader2 } from 'lucide-react';
-import { useChatWSStore } from '@client/stores/chatWSStore';
-import type { WSStatus } from '@client/services/wsClient';
+import { useState } from 'react'
+import {
+  Plug,
+  Wifi,
+  WifiOff,
+  Send,
+  Trash2,
+  MessageSquare,
+  Radio,
+  Bell,
+  Activity,
+} from 'lucide-react'
+import { useChatWSStore } from '@client/stores/chatWSStore'
+import { LoadingSpinner, EmptyState, MessageCard } from '@client/components'
+import type { WSStatus } from '@client/services/wsClient'
 
 export const WebSocketPage: React.FC = () => {
-  const { status, messages, connect, disconnect, echo, ping, broadcast, notification, clearMessages } = useChatWSStore();
-  const [inputMessage, setInputMessage] = useState('');
-  const [messageType, setMessageType] = useState<'echo' | 'notification' | 'broadcast' | 'ping'>('echo');
+  const {
+    status,
+    messages,
+    connect,
+    disconnect,
+    echo,
+    ping,
+    broadcast,
+    notification,
+    clearMessages,
+  } = useChatWSStore()
+  const [inputMessage, setInputMessage] = useState('')
+  const [messageType, setMessageType] = useState<'echo' | 'notification' | 'broadcast' | 'ping'>(
+    'echo'
+  )
 
   const handleSend = async () => {
-    if (!inputMessage.trim() && messageType !== 'ping') return;
+    if (!inputMessage.trim() && messageType !== 'ping') return
 
     switch (messageType) {
       case 'echo':
-        await echo({ message: inputMessage });
-        break;
+        await echo({ message: inputMessage })
+        break
       case 'ping':
-        await ping();
-        break;
+        await ping()
+        break
       case 'broadcast':
-        broadcast({ message: inputMessage, timestamp: Date.now() });
-        break;
+        broadcast({ message: inputMessage, timestamp: Date.now() })
+        break
       case 'notification':
-        notification({ title: 'User Notification', body: inputMessage, timestamp: Date.now() });
-        break;
+        notification({ title: 'User Notification', body: inputMessage, timestamp: Date.now() })
+        break
     }
-    setInputMessage('');
-  };
+    setInputMessage('')
+  }
 
-  const typeConfig: Record<string, { color: string; bg: string; icon: React.FC<{ className?: string }> }> = {
-    ping: { color: 'text-cyan-500', bg: 'bg-cyan-500', icon: Activity },
-    pong: { color: 'text-cyan-500', bg: 'bg-cyan-500', icon: Activity },
-    echo_request: { color: 'text-purple-400', bg: 'bg-purple-400', icon: Send },
-    echo_response: { color: 'text-purple-600', bg: 'bg-purple-600', icon: MessageSquare },
-    broadcast: { color: 'text-orange-500', bg: 'bg-orange-500', icon: Radio },
-    notification: { color: 'text-green-500', bg: 'bg-green-500', icon: Bell },
-    connected: { color: 'text-blue-500', bg: 'bg-blue-500', icon: Wifi },
-  };
+  const typeConfig: Record<
+    string,
+    {
+      colorScheme: 'cyan' | 'purple' | 'orange' | 'green' | 'blue'
+      icon: React.FC<{ className?: string }>
+      borderColor: string
+    }
+  > = {
+    ping: { colorScheme: 'cyan', icon: Activity, borderColor: '#06b6d4' },
+    pong: { colorScheme: 'cyan', icon: Activity, borderColor: '#06b6d4' },
+    echo_request: { colorScheme: 'purple', icon: Send, borderColor: '#a78bfa' },
+    echo_response: { colorScheme: 'purple', icon: MessageSquare, borderColor: '#9333ea' },
+    broadcast: { colorScheme: 'orange', icon: Radio, borderColor: '#f97316' },
+    notification: { colorScheme: 'green', icon: Bell, borderColor: '#22c55e' },
+    connected: { colorScheme: 'blue', icon: Wifi, borderColor: '#3b82f6' },
+  }
 
   const statusColors: Record<WSStatus, string> = {
     connecting: 'text-yellow-500',
     open: 'text-green-600',
     closed: 'text-red-500',
     reconnecting: 'text-orange-500',
-  };
+  }
 
-  const isLoading = status === 'connecting' || status === 'reconnecting';
+  const isLoading = status === 'connecting' || status === 'reconnecting'
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -68,7 +98,13 @@ export const WebSocketPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <span className="font-medium text-gray-700">Status:</span>
           <span className={`flex items-center gap-1 ${statusColors[status]}`}>
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : status === 'open' ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
+            {isLoading ? (
+              <LoadingSpinner size="sm" color={statusColors[status]} />
+            ) : status === 'open' ? (
+              <Wifi className="w-4 h-4" />
+            ) : (
+              <WifiOff className="w-4 h-4" />
+            )}
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         </div>
@@ -104,7 +140,7 @@ export const WebSocketPage: React.FC = () => {
         <div className="flex gap-4">
           <select
             value={messageType}
-            onChange={(e) => setMessageType(e.target.value as typeof messageType)}
+            onChange={e => setMessageType(e.target.value as typeof messageType)}
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="echo">Echo (RPC)</option>
@@ -115,9 +151,11 @@ export const WebSocketPage: React.FC = () => {
           <input
             type="text"
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={messageType === 'ping' ? 'No message needed for ping' : 'Type a message...'}
+            onChange={e => setInputMessage(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            placeholder={
+              messageType === 'ping' ? 'No message needed for ping' : 'Type a message...'
+            }
             disabled={status !== 'open' || messageType === 'ping'}
             className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
@@ -149,37 +187,28 @@ export const WebSocketPage: React.FC = () => {
 
       <div className="border border-gray-200 rounded-xl bg-gray-50 h-[400px] overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <MessageSquare className="w-16 h-16 mb-4 text-gray-300" />
-            <p>No messages yet. Connect and send a message!</p>
-          </div>
+          <EmptyState icon={MessageSquare} title="No messages yet. Connect and send a message!" />
         ) : (
           messages.map((msg, index) => {
-            const config = typeConfig[msg.type] || { color: 'text-gray-500', bg: 'bg-gray-500', icon: MessageSquare };
-            const TypeIcon = config.icon;
+            const config = typeConfig[msg.type] || {
+              colorScheme: 'gray' as const,
+              icon: MessageSquare,
+              borderColor: '#6b7280',
+            }
             return (
-              <div
+              <MessageCard
                 key={index}
-                className="p-4 bg-white rounded-lg border-l-4 shadow-sm"
-                style={{ borderLeftColor: msg.type === 'ping' || msg.type === 'pong' ? '#06b6d4' : msg.type === 'echo_request' ? '#a78bfa' : msg.type === 'echo_response' ? '#9333ea' : msg.type === 'broadcast' ? '#f97316' : msg.type === 'connected' ? '#3b82f6' : '#22c55e' }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white ${config.bg}`}>
-                    <TypeIcon className="w-3 h-3" />
-                    {msg.type === 'echo_request' ? 'ECHO REQ' : msg.type === 'echo_response' ? 'ECHO RES' : msg.type.toUpperCase()}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
-                  </span>
-                </div>
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap break-words font-mono">
-                  {JSON.stringify(msg.payload, null, 2)}
-                </pre>
-              </div>
-            );
+                type={msg.type}
+                payload={msg.payload}
+                timestamp={msg.timestamp}
+                icon={config.icon}
+                colorScheme={config.colorScheme}
+                borderColor={config.borderColor}
+              />
+            )
           })
         )}
       </div>
     </div>
-  );
-};
+  )
+}

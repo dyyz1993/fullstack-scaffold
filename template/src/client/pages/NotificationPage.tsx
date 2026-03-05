@@ -3,50 +3,82 @@
  * Demonstrates SSE (Server-Sent Events) with Hono RPC
  */
 
-import { useState, useEffect } from 'react';
-import { Bell, Wifi, WifiOff, CheckCheck, Trash2, Loader2, Send, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { useNotificationStore } from '../stores/notificationStore';
-import type { NotificationType } from '@shared/schemas';
+import { useState, useEffect } from 'react'
+import {
+  Bell,
+  Wifi,
+  WifiOff,
+  CheckCheck,
+  Trash2,
+  Send,
+  Info,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react'
+import { useNotificationStore } from '../stores/notificationStore'
+import { LoadingSpinner, EmptyState, StatusBadge } from '@client/components'
+import type { NotificationType } from '@shared/schemas'
 
 export const NotificationPage: React.FC = () => {
-  const notifications = useNotificationStore((state) => state.notifications);
-  const unreadCount = useNotificationStore((state) => state.unreadCount);
-  const sseConnected = useNotificationStore((state) => state.sseConnected);
-  const loading = useNotificationStore((state) => state.loading);
-  const error = useNotificationStore((state) => state.error);
-  const { 
-    fetchNotifications, 
-    createNotification, 
-    markAsRead, 
-    markAllAsRead, 
+  const notifications = useNotificationStore(state => state.notifications)
+  const unreadCount = useNotificationStore(state => state.unreadCount)
+  const sseConnected = useNotificationStore(state => state.sseConnected)
+  const loading = useNotificationStore(state => state.loading)
+  const error = useNotificationStore(state => state.error)
+  const {
+    fetchNotifications,
+    createNotification,
+    markAsRead,
+    markAllAsRead,
     deleteNotification,
     connectSSE,
     disconnectSSE,
-  } = useNotificationStore();
+  } = useNotificationStore()
 
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [type, setType] = useState<NotificationType>('info');
+  const [title, setTitle] = useState('')
+  const [message, setMessage] = useState('')
+  const [type, setType] = useState<NotificationType>('info')
 
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    fetchNotifications()
+  }, [fetchNotifications])
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !message.trim()) return;
+    e.preventDefault()
+    if (!title.trim() || !message.trim()) return
 
-    await createNotification({ type, title, message });
-    setTitle('');
-    setMessage('');
-  };
+    await createNotification({ type, title, message })
+    setTitle('')
+    setMessage('')
+  }
 
   const typeConfig = {
-    info: { icon: Info, color: 'text-blue-500', bg: 'bg-blue-500', border: 'border-blue-400', lightBg: 'bg-blue-50' },
-    warning: { icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-500', border: 'border-yellow-400', lightBg: 'bg-yellow-50' },
-    success: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500', border: 'border-green-400', lightBg: 'bg-green-50' },
-    error: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500', border: 'border-red-400', lightBg: 'bg-red-50' },
-  };
+    info: {
+      icon: Info,
+      colorScheme: 'blue' as const,
+      border: 'border-blue-400',
+      lightBg: 'bg-blue-50',
+    },
+    warning: {
+      icon: AlertTriangle,
+      colorScheme: 'yellow' as const,
+      border: 'border-yellow-400',
+      lightBg: 'bg-yellow-50',
+    },
+    success: {
+      icon: CheckCircle,
+      colorScheme: 'green' as const,
+      border: 'border-green-400',
+      lightBg: 'bg-green-50',
+    },
+    error: {
+      icon: XCircle,
+      colorScheme: 'red' as const,
+      border: 'border-red-400',
+      lightBg: 'bg-red-50',
+    },
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -118,11 +150,14 @@ export const NotificationPage: React.FC = () => {
         </div>
       </div>
 
-      <form onSubmit={handleCreate} className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+      <form
+        onSubmit={handleCreate}
+        className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-gray-200"
+      >
         <div className="flex gap-4 mb-4">
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as NotificationType)}
+            onChange={e => setType(e.target.value as NotificationType)}
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
           >
             <option value="info">Info</option>
@@ -133,7 +168,7 @@ export const NotificationPage: React.FC = () => {
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={e => setTitle(e.target.value)}
             placeholder="Title..."
             className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
           />
@@ -141,7 +176,7 @@ export const NotificationPage: React.FC = () => {
         <div className="mb-4">
           <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={e => setMessage(e.target.value)}
             placeholder="Message..."
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none min-h-[100px]"
           />
@@ -151,7 +186,7 @@ export const NotificationPage: React.FC = () => {
           disabled={!title.trim() || !message.trim() || loading}
           className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          {loading ? <LoadingSpinner size="sm" color="text-white" /> : <Send className="w-5 h-5" />}
           Create Notification
         </button>
       </form>
@@ -163,9 +198,9 @@ export const NotificationPage: React.FC = () => {
       )}
 
       <div className="space-y-4">
-        {notifications.map((notification) => {
-          const config = typeConfig[notification.type] ?? typeConfig.info;
-          const TypeIcon = config.icon;
+        {notifications.map(notification => {
+          const config = typeConfig[notification.type] ?? typeConfig.info
+          const TypeIcon = config.icon
           return (
             <div
               key={notification.id}
@@ -178,10 +213,11 @@ export const NotificationPage: React.FC = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white ${config.bg}`}>
-                      <TypeIcon className="w-3 h-3" />
-                      {notification.type.toUpperCase()}
-                    </span>
+                    <StatusBadge
+                      label={notification.type.toUpperCase()}
+                      icon={TypeIcon}
+                      colorScheme={config.colorScheme}
+                    />
                     <span className="font-medium text-gray-900">{notification.title}</span>
                   </div>
                   <p className="text-gray-600 text-sm">{notification.message}</p>
@@ -208,16 +244,13 @@ export const NotificationPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
 
       {!loading && notifications.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          <Bell className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <p>No notifications yet. Create one above!</p>
-        </div>
+        <EmptyState icon={Bell} title="No notifications yet. Create one above!" className="py-12" />
       )}
     </div>
-  );
-};
+  )
+}

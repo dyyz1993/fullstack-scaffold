@@ -4,8 +4,9 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, CheckCircle, Circle, Clock, Loader2 } from 'lucide-react'
+import { Plus, Trash2, CheckCircle, Circle, Clock } from 'lucide-react'
 import { useTodoStore } from '../stores/todoStore'
+import { LoadingSpinner, EmptyState } from '@client/components'
 import type { Todo } from '@shared/schemas'
 
 export const TodoPage: React.FC = () => {
@@ -96,7 +97,7 @@ export const TodoPage: React.FC = () => {
           data-testid="add-todo-button"
           className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+          {loading ? <LoadingSpinner size="sm" color="text-white" /> : <Plus className="w-5 h-5" />}
           Add Todo
         </button>
       </form>
@@ -112,7 +113,7 @@ export const TodoPage: React.FC = () => {
 
       {loading && todos.length === 0 && (
         <div className="flex items-center justify-center py-12" data-testid="loading-indicator">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <LoadingSpinner size="lg" />
         </div>
       )}
 
@@ -176,10 +177,7 @@ export const TodoPage: React.FC = () => {
       </div>
 
       {!loading && todos.length === 0 && (
-        <div className="text-center py-12 text-gray-500" data-testid="empty-state">
-          <Circle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <p>No todos yet. Add one above!</p>
-        </div>
+        <EmptyState icon={Circle} title="No todos yet. Add one above!" className="py-12" />
       )}
     </div>
   )
