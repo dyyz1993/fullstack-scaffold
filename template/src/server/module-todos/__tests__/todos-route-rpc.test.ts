@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
-import { testClient } from 'hono/testing'
-import app from '../../entries/node'
+import { createTestClient } from '../../test-utils/test-client'
 import { getRawClient, getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
-import { isSuccess } from '@shared/utils/type-guards'
-import type { Todo } from '@shared/schemas'
 
 describe('Todo Routes with Type-Safe Test Client', () => {
   beforeAll(async () => {
@@ -27,7 +24,7 @@ describe('Todo Routes with Type-Safe Test Client', () => {
 
   describe('GET /api/todos', () => {
     it('should return empty array', async () => {
-      const client = testClient(app)
+      const client = createTestClient()
 
       const res = await client.api.todos.$get()
       expect(res.status).toBe(200)
@@ -46,13 +43,13 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         })
       }
 
-      const testClientApp = testClient(app)
+      const testClientApp = createTestClient()
       const res = await testClientApp.api.todos.$get()
       expect(res.status).toBe(200)
 
       const data = await res.json()
-      if (isSuccess<Todo[]>(data)) {
-        expect(data.success).toBe(true)
+      expect(data.success).toBe(true)
+      if (data.success && 'data' in data) {
         expect(data.data).toHaveLength(1)
         expect(data.data[0].title).toBe('Test Todo')
       }
@@ -61,7 +58,7 @@ describe('Todo Routes with Type-Safe Test Client', () => {
 
   describe('POST /api/todos', () => {
     it('should create a todo with type safety', async () => {
-      const client = testClient(app)
+      const client = createTestClient()
 
       const res = await client.api.todos.$post({
         json: {
@@ -73,15 +70,15 @@ describe('Todo Routes with Type-Safe Test Client', () => {
       expect(res.status).toBe(201)
 
       const data = await res.json()
-      if (isSuccess<Todo>(data)) {
-        expect(data.success).toBe(true)
+      expect(data.success).toBe(true)
+      if (data.success && 'data' in data) {
         expect(data.data.title).toBe('New Todo')
         expect(data.data.description).toBe('Test')
       }
     })
 
     it('should reject empty title', async () => {
-      const client = testClient(app)
+      const client = createTestClient()
 
       const res = await client.api.todos.$post({
         json: {
@@ -95,7 +92,7 @@ describe('Todo Routes with Type-Safe Test Client', () => {
 
   describe('GET /api/todos/:id', () => {
     it('should return 404 for non-existent todo', async () => {
-      const client = testClient(app)
+      const client = createTestClient()
 
       const res = await client.api.todos[':id'].$get({
         param: { id: '999' },
@@ -114,15 +111,15 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['Find Me'])
         const row = result.rows[0] as unknown as { id: number }
 
-        const testClientApp = testClient(app)
+        const testClientApp = createTestClient()
         const res = await testClientApp.api.todos[':id'].$get({
           param: { id: String(row.id) },
         })
         expect(res.status).toBe(200)
 
         const data = await res.json()
-        if (isSuccess<Todo>(data)) {
-          expect(data.success).toBe(true)
+        expect(data.success).toBe(true)
+        if (data.success && 'data' in data) {
           expect(data.data.title).toBe('Find Me')
         }
       }
@@ -141,7 +138,7 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['Original'])
         const row = result.rows[0] as unknown as { id: number }
 
-        const testClientApp = testClient(app)
+        const testClientApp = createTestClient()
         const res = await testClientApp.api.todos[':id'].$put({
           param: { id: String(row.id) },
           json: {
@@ -153,8 +150,8 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         expect(res.status).toBe(200)
 
         const data = await res.json()
-        if (isSuccess<Todo>(data)) {
-          expect(data.success).toBe(true)
+        expect(data.success).toBe(true)
+        if (data.success && 'data' in data) {
           expect(data.data.title).toBe('Updated')
           expect(data.data.status).toBe('completed')
         }
@@ -174,15 +171,15 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['To Delete'])
         const row = result.rows[0] as unknown as { id: number }
 
-        const testClientApp = testClient(app)
+        const testClientApp = createTestClient()
         const res = await testClientApp.api.todos[':id'].$delete({
           param: { id: String(row.id) },
         })
         expect(res.status).toBe(200)
 
         const data = await res.json()
-        if (isSuccess<{ id: number }>(data)) {
-          expect(data.success).toBe(true)
+        expect(data.success).toBe(true)
+        if (data.success && 'data' in data) {
           expect(data.data.id).toBe(row.id)
         }
       }
