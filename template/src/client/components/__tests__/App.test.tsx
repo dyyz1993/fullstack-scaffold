@@ -107,14 +107,15 @@ describe('App Component', () => {
 
   describe('Todo List', () => {
     it('should render todos when available', () => {
+      const now = new Date().toISOString()
       mockStore.todos = [
-        { id: 1, title: 'Todo 1', status: 'pending', createdAt: new Date(), updatedAt: new Date() },
+        { id: 1, title: 'Todo 1', status: 'pending', createdAt: now, updatedAt: now },
         {
           id: 2,
           title: 'Todo 2',
           status: 'completed',
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: now,
+          updatedAt: now,
         },
       ]
       render(<App />)

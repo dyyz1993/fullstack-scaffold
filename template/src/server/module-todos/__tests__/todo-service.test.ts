@@ -88,7 +88,8 @@ describe('Todo Service', () => {
         expect(todo?.id).toBe(row.id)
         expect(todo?.title).toBe('Test Todo')
         expect(todo?.status).toBe('pending')
-        expect(todo?.createdAt).toBeInstanceOf(Date)
+        expect(typeof todo?.createdAt).toBe('string')
+        expect(typeof todo?.updatedAt).toBe('string')
       }
     })
   })
@@ -106,8 +107,8 @@ describe('Todo Service', () => {
       expect(result.title).toBe(input.title)
       expect(result.description).toBe(input.description)
       expect(result.status).toBe('pending')
-      expect(result.createdAt).toBeInstanceOf(Date)
-      expect(result.updatedAt).toBeInstanceOf(Date)
+      expect(typeof result.createdAt).toBe('string')
+      expect(typeof result.updatedAt).toBe('string')
     })
 
     it('should create todo without description', async () => {
@@ -150,7 +151,7 @@ describe('Todo Service', () => {
         expect(todo?.id).toBe(row.id)
         expect(todo?.title).toBe(updates.title)
         expect(todo?.status).toBe(updates.status)
-        expect(todo?.updatedAt).toBeInstanceOf(Date)
+        expect(typeof todo?.updatedAt).toBe('string')
       }
     })
 

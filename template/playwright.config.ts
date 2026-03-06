@@ -19,7 +19,7 @@ const __dirname = dirname(__filename)
  */
 export default defineConfig({
   // Test directory
-  testDir: './e2e',
+  testDir: './tests/e2e',
 
   // Test files pattern
   testMatch: '**/*.spec.ts',
@@ -42,8 +42,8 @@ export default defineConfig({
   workers: 3,
 
   // Global setup/teardown for dynamic port allocation
-  globalSetup: join(__dirname, 'e2e', 'global-setup.ts'),
-  globalTeardown: join(__dirname, 'e2e', 'global-teardown.ts'),
+  globalSetup: join(__dirname, 'tests', 'e2e', 'global-setup.ts'),
+  globalTeardown: join(__dirname, 'tests', 'e2e', 'global-teardown.ts'),
 
   // Reporter to use
   reporter: [
