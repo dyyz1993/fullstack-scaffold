@@ -1,12 +1,11 @@
 import { useSSE } from '@client/hooks'
 import { apiClient } from '@client/services/apiClient'
-import type { AppNotification } from '@shared/schemas'
 
 export function NotificationListener() {
-  const { isConnected, connect, disconnect } = useSSE<AppNotification>(
+  const { isConnected, connect, disconnect } = useSSE(
     signal => apiClient.api.notifications.stream.$get({ signal }),
     {
-      onMessage: _notification => {
+      onNotification: _notification => {
         // Handle new notification
       },
       onError: _error => {

@@ -25,7 +25,7 @@ interface NotificationState {
   disconnectSSE: () => void
 }
 
-let sseConnection: SSEConnection<AppNotification> | null = null
+let sseConnection: SSEConnection | null = null
 
 export const useNotificationStore = create<NotificationState>(set => ({
   notifications: [],
@@ -145,20 +145,12 @@ export const useNotificationStore = create<NotificationState>(set => ({
   connectSSE: () => {
     if (sseConnection?.connected) return
 
-    sseConnection = new SSEConnection<AppNotification>(
+    sseConnection = new SSEConnection(
       signal => apiClient.api.notifications.stream.$get({ signal }),
       {
         onConnect: () => set({ sseConnected: true }),
         onDisconnect: () => set({ sseConnected: false }),
-        onMessage: notification => {
-          if (
-            !notification ||
-            typeof notification !== 'object' ||
-            !('type' in notification) ||
-            !('id' in notification)
-          ) {
-            return
-          }
+        onNotification: notification => {
           set(state => {
             if (state.notifications.some(n => n.id === notification.id)) {
               return state

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { SSEConnection } from '@client/services/sseConnection'
 import type { ClientResponse } from 'hono/client'
 import type { SSEConnectionOptions } from '@client/services/sseConnection'
+import type { SSEEvent } from '@shared/schemas'
 
 export type { SSEConnectionOptions } from '@client/services/sseConnection'
 
@@ -11,12 +12,12 @@ export interface SSEReturn {
   disconnect: () => void
 }
 
-export function useSSE<T>(
-  streamFactory: (signal: AbortSignal) => Promise<ClientResponse<T>>,
-  options: SSEConnectionOptions<T> = {}
+export function useSSE(
+  streamFactory: (signal: AbortSignal) => Promise<ClientResponse<SSEEvent>>,
+  options: SSEConnectionOptions = {}
 ): SSEReturn {
   const [isConnected, setIsConnected] = useState(false)
-  const connectionRef = useRef<SSEConnection<T> | null>(null)
+  const connectionRef = useRef<SSEConnection | null>(null)
 
   const connect = useCallback(() => {
     if (connectionRef.current?.connected) return
