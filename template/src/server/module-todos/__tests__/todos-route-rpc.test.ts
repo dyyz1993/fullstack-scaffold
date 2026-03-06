@@ -3,6 +3,7 @@ import { testClient } from 'hono/testing'
 import app from '../../entries/node'
 import { getRawClient, getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { isSuccess } from '@shared/utils/type-guards'
 import type { Todo } from '@shared/schemas'
 
 describe('Todo Routes with Type-Safe Test Client', () => {
@@ -49,10 +50,12 @@ describe('Todo Routes with Type-Safe Test Client', () => {
       const res = await testClientApp.api.todos.$get()
       expect(res.status).toBe(200)
 
-      const data = (await res.json()) as { success: boolean; data: Todo[] }
-      expect(data.success).toBe(true)
-      expect(data.data).toHaveLength(1)
-      expect(data.data[0].title).toBe('Test Todo')
+      const data = await res.json()
+      if (isSuccess<Todo[]>(data)) {
+        expect(data.success).toBe(true)
+        expect(data.data).toHaveLength(1)
+        expect(data.data[0].title).toBe('Test Todo')
+      }
     })
   })
 
@@ -69,10 +72,12 @@ describe('Todo Routes with Type-Safe Test Client', () => {
 
       expect(res.status).toBe(201)
 
-      const data = (await res.json()) as { success: boolean; data: Todo }
-      expect(data.success).toBe(true)
-      expect(data.data.title).toBe('New Todo')
-      expect(data.data.description).toBe('Test')
+      const data = await res.json()
+      if (isSuccess<Todo>(data)) {
+        expect(data.success).toBe(true)
+        expect(data.data.title).toBe('New Todo')
+        expect(data.data.description).toBe('Test')
+      }
     })
 
     it('should reject empty title', async () => {
@@ -115,9 +120,11 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         })
         expect(res.status).toBe(200)
 
-        const data = (await res.json()) as { success: boolean; data: Todo }
-        expect(data.success).toBe(true)
-        expect(data.data.title).toBe('Find Me')
+        const data = await res.json()
+        if (isSuccess<Todo>(data)) {
+          expect(data.success).toBe(true)
+          expect(data.data.title).toBe('Find Me')
+        }
       }
     })
   })
@@ -145,10 +152,12 @@ describe('Todo Routes with Type-Safe Test Client', () => {
 
         expect(res.status).toBe(200)
 
-        const data = (await res.json()) as { success: boolean; data: Todo }
-        expect(data.success).toBe(true)
-        expect(data.data.title).toBe('Updated')
-        expect(data.data.status).toBe('completed')
+        const data = await res.json()
+        if (isSuccess<Todo>(data)) {
+          expect(data.success).toBe(true)
+          expect(data.data.title).toBe('Updated')
+          expect(data.data.status).toBe('completed')
+        }
       }
     })
   })
@@ -171,9 +180,11 @@ describe('Todo Routes with Type-Safe Test Client', () => {
         })
         expect(res.status).toBe(200)
 
-        const data = (await res.json()) as { success: boolean; data: { id: number } }
-        expect(data.success).toBe(true)
-        expect(data.data.id).toBe(row.id)
+        const data = await res.json()
+        if (isSuccess<{ id: number }>(data)) {
+          expect(data.success).toBe(true)
+          expect(data.data.id).toBe(row.id)
+        }
       }
     })
   })

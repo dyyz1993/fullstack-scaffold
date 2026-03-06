@@ -1,5 +1,5 @@
 import { cors } from 'hono/cors'
-import { Hono } from 'hono'
+import { OpenAPIHono } from '@hono/zod-openapi'
 import { apiRoutes } from './module-todos/routes/todos-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { createRealtimeRoutes } from './module-realtime/routes/realtime-routes'
@@ -10,7 +10,7 @@ export { type AppBindings, type CreateAppOptions } from './types/bindings'
 export function createApp<T extends AppBindings = AppBindings>(_options: CreateAppOptions = {}) {
   const realtimeRoutes = createRealtimeRoutes()
 
-  const app = new Hono<{ Bindings: T }>()
+  const app = new OpenAPIHono<{ Bindings: T }>()
     .use(
       '*',
       cors({
