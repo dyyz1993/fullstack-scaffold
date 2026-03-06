@@ -1,36 +1,33 @@
-import { createRoute, z } from '@hono/zod-openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import * as notificationService from '../services/notification-service';
-import { initRealtimeService } from '../../module-realtime/services/realtime';
-import {
-  NotificationSchema,
-  CreateNotificationSchema,
-} from '@shared/schemas';
+import { createRoute, z } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+import * as notificationService from '../services/notification-service'
+import { initRealtimeService } from '../../module-realtime/services/realtime'
+import { NotificationSchema, CreateNotificationSchema } from '@shared/schemas'
 
 const NotificationListResponseSchema = z.object({
   success: z.boolean(),
   data: z.array(NotificationSchema),
   nextCursor: z.string().optional(),
-});
+})
 
 const UnreadCountResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     count: z.number(),
   }),
-});
+})
 
 const MarkAllReadResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     count: z.number(),
   }),
-});
+})
 
 const ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
-});
+})
 
 const listRoute = createRoute({
   method: 'get',
@@ -53,7 +50,23 @@ const listRoute = createRoute({
       description: 'List notifications',
     },
   },
-});
+})
+
+const unreadCountRoute = createRoute({
+  method: 'get',
+  path: '/notifications/unread-count',
+  tags: ['notifications'],
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: UnreadCountResponseSchema,
+        },
+      },
+      description: 'Get unread count',
+    },
+  },
+})
 
 const getRoute = createRoute({
   method: 'get',
@@ -85,7 +98,7 @@ const getRoute = createRoute({
       description: 'Notification not found',
     },
   },
-});
+})
 
 const createRouteDef = createRoute({
   method: 'post',
@@ -121,7 +134,23 @@ const createRouteDef = createRoute({
       description: 'Invalid input',
     },
   },
-});
+})
+
+const markAllReadRoute = createRoute({
+  method: 'patch',
+  path: '/notifications/read-all',
+  tags: ['notifications'],
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: MarkAllReadResponseSchema,
+        },
+      },
+      description: 'Mark all as read',
+    },
+  },
+})
 
 const markReadRoute = createRoute({
   method: 'patch',
@@ -153,23 +182,7 @@ const markReadRoute = createRoute({
       description: 'Notification not found',
     },
   },
-});
-
-const markAllReadRoute = createRoute({
-  method: 'patch',
-  path: '/notifications/read-all',
-  tags: ['notifications'],
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: MarkAllReadResponseSchema,
-        },
-      },
-      description: 'Mark all as read',
-    },
-  },
-});
+})
 
 const deleteRoute = createRoute({
   method: 'delete',
@@ -203,73 +216,57 @@ const deleteRoute = createRoute({
       description: 'Notification not found',
     },
   },
-});
-
-const unreadCountRoute = createRoute({
-  method: 'get',
-  path: '/notifications/unread-count',
-  tags: ['notifications'],
-  responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UnreadCountResponseSchema,
-        },
-      },
-      description: 'Get unread count',
-    },
-  },
-});
+})
 
 export const notificationRoutes = new OpenAPIHono()
-  .openapi(listRoute, async (c) => {
-    const query = c.req.valid('query');
+  .openapi(listRoute, async c => {
+    const query = c.req.valid('query')
     const result = notificationService.listNotifications({
       unreadOnly: query.unreadOnly === 'true',
       limit: query.limit ? parseInt(query.limit) : 20,
       cursor: query.cursor,
-    });
-    return c.json({ success: true, data: result.data, nextCursor: result.nextCursor });
+    })
+    return c.json({ success: true, data: result.data, nextCursor: result.nextCursor })
   })
-  .openapi(getRoute, async (c) => {
-    const { id } = c.req.valid('param');
-    const notification = notificationService.getNotification(id);
+  .openapi(unreadCountRoute, async c => {
+    const count = notificationService.getUnreadCount()
+    return c.json({ success: true, data: { count } })
+  })
+  .openapi(getRoute, async c => {
+    const { id } = c.req.valid('param')
+    const notification = notificationService.getNotification(id)
     if (!notification) {
-      return c.json({ success: false, error: 'Notification not found' }, 404);
+      return c.json({ success: false, error: 'Notification not found' }, 404)
     }
-    return c.json({ success: true, data: notification });
+    return c.json({ success: true, data: notification })
   })
-  .openapi(createRouteDef, async (c) => {
-    const data = c.req.valid('json');
-    const notification = notificationService.createNotification(data);
-    
-    const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace };
-    const realtime = initRealtimeService(env);
-    await realtime.broadcastNotification(notification);
-    
-    return c.json({ success: true, data: notification }, 201);
+  .openapi(createRouteDef, async c => {
+    const data = c.req.valid('json')
+    const notification = notificationService.createNotification(data)
+
+    const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace }
+    const realtime = initRealtimeService(env)
+    await realtime.broadcastNotification(notification)
+
+    return c.json({ success: true, data: notification }, 201)
   })
-  .openapi(markReadRoute, async (c) => {
-    const { id } = c.req.valid('param');
-    const notification = notificationService.markAsRead(id);
+  .openapi(markAllReadRoute, async c => {
+    const count = notificationService.markAllAsRead()
+    return c.json({ success: true, data: { count } })
+  })
+  .openapi(markReadRoute, async c => {
+    const { id } = c.req.valid('param')
+    const notification = notificationService.markAsRead(id)
     if (!notification) {
-      return c.json({ success: false, error: 'Notification not found' }, 404);
+      return c.json({ success: false, error: 'Notification not found' }, 404)
     }
-    return c.json({ success: true, data: notification });
+    return c.json({ success: true, data: notification })
   })
-  .openapi(markAllReadRoute, async (c) => {
-    const count = notificationService.markAllAsRead();
-    return c.json({ success: true, data: { count } });
-  })
-  .openapi(deleteRoute, async (c) => {
-    const { id } = c.req.valid('param');
-    const deleted = notificationService.deleteNotification(id);
+  .openapi(deleteRoute, async c => {
+    const { id } = c.req.valid('param')
+    const deleted = notificationService.deleteNotification(id)
     if (!deleted) {
-      return c.json({ success: false, error: 'Notification not found' }, 404);
+      return c.json({ success: false, error: 'Notification not found' }, 404)
     }
-    return c.json({ success: true, data: { id } });
+    return c.json({ success: true, data: { id } })
   })
-  .openapi(unreadCountRoute, async (c) => {
-    const count = notificationService.getUnreadCount();
-    return c.json({ success: true, data: { count } });
-  });
