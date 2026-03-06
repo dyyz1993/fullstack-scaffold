@@ -3,30 +3,31 @@
  * Demonstrates SSE consumption via Hono RPC with type inference
  */
 
-import { create } from 'zustand';
-import { apiClient, consumeStream } from '@client/services/apiClient';
-import type { AppNotification, CreateNotificationInput } from '@shared/schemas';
+import { create } from 'zustand'
+import { apiClient } from '@client/services/apiClient'
+import { SSEConnection } from '@client/services/sseConnection'
+import type { AppNotification, CreateNotificationInput } from '@shared/schemas'
 
 interface NotificationState {
-  notifications: AppNotification[];
-  unreadCount: number;
-  loading: boolean;
-  error: string | null;
-  sseConnected: boolean;
+  notifications: AppNotification[]
+  unreadCount: number
+  loading: boolean
+  error: string | null
+  sseConnected: boolean
 
-  fetchNotifications: (unreadOnly?: boolean) => Promise<void>;
-  createNotification: (input: CreateNotificationInput) => Promise<void>;
-  markAsRead: (id: string) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  deleteNotification: (id: string) => Promise<void>;
-  fetchUnreadCount: () => Promise<void>;
-  connectSSE: () => Promise<void>;
-  disconnectSSE: () => void;
+  fetchNotifications: (unreadOnly?: boolean) => Promise<void>
+  createNotification: (input: CreateNotificationInput) => Promise<void>
+  markAsRead: (id: string) => Promise<void>
+  markAllAsRead: () => Promise<void>
+  deleteNotification: (id: string) => Promise<void>
+  fetchUnreadCount: () => Promise<void>
+  connectSSE: () => void
+  disconnectSSE: () => void
 }
 
-let sseAbortController: AbortController | null = null;
+let sseConnection: SSEConnection<AppNotification> | null = null
 
-export const useNotificationStore = create<NotificationState>((set, get) => ({
+export const useNotificationStore = create<NotificationState>(set => ({
   notifications: [],
   unreadCount: 0,
   loading: false,
@@ -34,45 +35,45 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   sseConnected: false,
 
   fetchNotifications: async (unreadOnly = false) => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null })
     try {
       const response = await apiClient.api.notifications.$get({
         query: { unreadOnly: String(unreadOnly) },
-      });
-      const result = await response.json();
+      })
+      const result = await response.json()
       if (result.success && 'data' in result) {
-        set({ notifications: result.data, loading: false });
+        set({ notifications: result.data, loading: false })
       } else {
-        set({ error: 'Failed to fetch', loading: false });
+        set({ error: 'Failed to fetch', loading: false })
       }
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
         loading: false,
-      });
+      })
     }
   },
 
-  createNotification: async (input) => {
-    set({ loading: true, error: null });
+  createNotification: async input => {
+    set({ loading: true, error: null })
     try {
       const response = await apiClient.api.notifications.$post({
         json: input,
-      });
-      const result = await response.json();
+      })
+      const result = await response.json()
       if (result.success && 'data' in result) {
-        set((state) => ({
+        set(state => ({
           notifications: [result.data, ...state.notifications],
           loading: false,
-        }));
+        }))
       } else {
-        set({ error: 'Failed to create', loading: false });
+        set({ error: 'Failed to create', loading: false })
       }
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Unknown error',
         loading: false,
-      });
+      })
     }
   },
 
@@ -80,33 +81,31 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     try {
       const response = await apiClient.api.notifications[':id'].read.$patch({
         param: { id },
-      });
-      const result = await response.json();
+      })
+      const result = await response.json()
       if (result.success && 'data' in result) {
-        set((state) => ({
-          notifications: state.notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
-          ),
+        set(state => ({
+          notifications: state.notifications.map(n => (n.id === id ? { ...n, read: true } : n)),
           unreadCount: Math.max(0, state.unreadCount - 1),
-        }));
+        }))
       }
     } catch (error) {
-      console.error('Failed to mark as read:', error);
+      console.error('Failed to mark as read:', error)
     }
   },
 
   markAllAsRead: async () => {
     try {
-      const response = await apiClient.api.notifications['read-all'].$patch();
-      const result = await response.json();
+      const response = await apiClient.api.notifications['read-all'].$patch()
+      const result = await response.json()
       if (result.success) {
-        set((state) => ({
-          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        set(state => ({
+          notifications: state.notifications.map(n => ({ ...n, read: true })),
           unreadCount: 0,
-        }));
+        }))
       }
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      console.error('Failed to mark all as read:', error)
     }
   },
 
@@ -114,86 +113,75 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     try {
       const response = await apiClient.api.notifications[':id'].$delete({
         param: { id },
-      });
-      const result = await response.json();
+      })
+      const result = await response.json()
       if (result.success) {
-        set((state) => {
-          const notification = state.notifications.find((n) => n.id === id);
+        set(state => {
+          const notification = state.notifications.find(n => n.id === id)
           return {
-            notifications: state.notifications.filter((n) => n.id !== id),
-            unreadCount: notification && !notification.read
-              ? state.unreadCount - 1
-              : state.unreadCount,
-          };
-        });
+            notifications: state.notifications.filter(n => n.id !== id),
+            unreadCount:
+              notification && !notification.read ? state.unreadCount - 1 : state.unreadCount,
+          }
+        })
       }
     } catch (error) {
-      console.error('Failed to delete:', error);
+      console.error('Failed to delete:', error)
     }
   },
 
   fetchUnreadCount: async () => {
     try {
-      const response = await apiClient.api.notifications['unread-count'].$get();
-      const result = await response.json();
+      const response = await apiClient.api.notifications['unread-count'].$get()
+      const result = await response.json()
       if (result.success && 'data' in result) {
-        set({ unreadCount: result.data.count });
+        set({ unreadCount: result.data.count })
       }
     } catch (error) {
-      console.error('Failed to fetch unread count:', error);
+      console.error('Failed to fetch unread count:', error)
     }
   },
 
-  connectSSE: async () => {
-    if (sseAbortController) return;
+  connectSSE: () => {
+    if (sseConnection?.connected) return
 
-    sseAbortController = new AbortController();
-    set({ sseConnected: true });
-
-    try {
-      // 💡 重点：这里不再需要手动指定类型，T 会自动从 streamSSE<AppNotification> 推导
-      const responsePromise = apiClient.api.notifications.stream.$get({
-        signal: sseAbortController.signal,
-      });
-
-      for await (const data of consumeStream(responsePromise)) {
-        // 过滤掉 ping/connected 等非 notification 事件（它们没有 type 字段）
-        if (data && typeof data === 'object' && 'type' in data && 'id' in data) {
-          const notification = data;
-          set((state) => {
-            // 防止重复添加
+    sseConnection = new SSEConnection<AppNotification>(
+      signal => apiClient.api.notifications.stream.$get({ signal }),
+      {
+        onConnect: () => set({ sseConnected: true }),
+        onDisconnect: () => set({ sseConnected: false }),
+        onMessage: notification => {
+          if (
+            !notification ||
+            typeof notification !== 'object' ||
+            !('type' in notification) ||
+            !('id' in notification)
+          ) {
+            return
+          }
+          set(state => {
             if (state.notifications.some(n => n.id === notification.id)) {
-              return state;
+              return state
             }
             return {
               notifications: [notification, ...state.notifications],
               unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
-            };
-          });
-        }
+            }
+          })
+        },
+        onError: error => {
+          console.error('SSE error:', error)
+        },
       }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return;
-      }
-      console.error('SSE error:', error);
-      set({ sseConnected: false });
-      
-      setTimeout(() => {
-        sseAbortController = null;
-        get().connectSSE();
-      }, 5000);
-    } finally {
-      sseAbortController = null;
-      set({ sseConnected: false });
-    }
+    )
+
+    sseConnection.connect()
   },
 
   disconnectSSE: () => {
-    if (sseAbortController) {
-      sseAbortController.abort();
-      sseAbortController = null;
-      set({ sseConnected: false });
+    if (sseConnection) {
+      sseConnection.disconnect()
+      sseConnection = null
     }
   },
-}));
+}))
