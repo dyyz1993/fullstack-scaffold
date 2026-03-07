@@ -48,7 +48,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
           signal => client.api.notifications.stream.$get({ signal }),
           controller.signal
         )) {
-          events.push(data)
+          events.push(data as { event: string; data: unknown })
           if (events.length >= 1) break
         }
       })()

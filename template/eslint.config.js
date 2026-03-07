@@ -2,6 +2,8 @@ import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax.js'
+import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
 
 export default tseslint.config(
   { ignores: ['dist', '.pi', 'lint-scripts', 'e2e'] },
@@ -37,8 +39,16 @@ export default tseslint.config(
   },
   {
     files: ['src/server/**/*.ts'],
+    plugins: {
+      'local-rules': {
+        rules: {
+          'require-hono-chain-syntax': requireHonoChainSyntax,
+        },
+      },
+    },
     rules: {
       'no-console': 'error',
+      'local-rules/require-hono-chain-syntax': 'error',
     },
   },
   {
@@ -49,9 +59,17 @@ export default tseslint.config(
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
+    plugins: {
+      'local-rules': {
+        rules: {
+          'require-type-safe-test-client': requireTypeSafeTestClient,
+        },
+      },
+    },
     rules: {
       'no-console': 'off',
       'no-restricted-globals': 'off',
+      'local-rules/require-type-safe-test-client': 'error',
     },
   }
 )

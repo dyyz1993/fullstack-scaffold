@@ -9,7 +9,7 @@ import { getAppConfig } from '../config'
 import { logger } from '../utils/logger'
 import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
-import { getNodeWSServer } from '../module-realtime/services/realtime/node-ws'
+import { getNodeWSServer } from '../realtime/services/realtime/node-ws'
 
 const config = getAppConfig()
 const distPath = resolve(process.cwd(), 'dist/client')

@@ -2,13 +2,13 @@ import { cors } from 'hono/cors'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { apiRoutes } from './module-todos/routes/todos-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
-import { createRealtimeRoutes } from './module-realtime/routes/realtime-routes'
+import { createWSRoutes } from './realtime/routes/ws-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 
 export function createApp<T extends AppBindings = AppBindings>(_options: CreateAppOptions = {}) {
-  const realtimeRoutes = createRealtimeRoutes()
+  const wsRoutes = createWSRoutes()
 
   const app = new OpenAPIHono<{ Bindings: T }>()
     .use(
@@ -18,8 +18,8 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         credentials: true,
       })
     )
-    .route('/api', realtimeRoutes)
     .route('/api', notificationRoutes)
+    .route('/api', wsRoutes)
     .route('/api', apiRoutes)
     .get('/health', async c => {
       try {

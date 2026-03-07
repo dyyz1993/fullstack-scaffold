@@ -1,8 +1,9 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
-import { initRealtimeService } from '../../module-realtime/services/realtime'
-import { NotificationSchema, CreateNotificationSchema } from '@shared/schemas'
+import { realtime, setRealtimeEnv } from '../../realtime/services/realtime'
+import { NotificationSchema, CreateNotificationSchema, SSEEventSchema } from '@shared/schemas'
+import { handleSSERequest } from '../../realtime/handlers'
 
 const NotificationListResponseSchema = z.object({
   success: z.boolean(),
@@ -27,6 +28,22 @@ const MarkAllReadResponseSchema = z.object({
 const ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
+})
+
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  tags: ['notifications'],
+  responses: {
+    200: {
+      content: {
+        'text/event-stream': {
+          schema: SSEEventSchema,
+        },
+      },
+      description: 'SSE stream for notifications',
+    },
+  },
 })
 
 const listRoute = createRoute({
@@ -219,6 +236,9 @@ const deleteRoute = createRoute({
 })
 
 export const notificationRoutes = new OpenAPIHono()
+  .openapi(streamRoute, async c => {
+    return handleSSERequest(c)
+  })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')
     const result = notificationService.listNotifications({
@@ -245,7 +265,7 @@ export const notificationRoutes = new OpenAPIHono()
     const notification = notificationService.createNotification(data)
 
     const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace }
-    const realtime = initRealtimeService(env)
+    setRealtimeEnv(env)
     await realtime.broadcastNotification(notification)
 
     return c.json({ success: true, data: notification }, 201)

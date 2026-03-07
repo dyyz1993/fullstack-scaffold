@@ -11,16 +11,20 @@ export interface RealtimeService {
   broadcastNotification(notification: AppNotification): Promise<void>;
 }
 
+let _env: { NOTIFICATION_DO?: DurableObjectNamespace } | null = null;
 let _realtimeService: RealtimeService | null = null;
 
-export function initRealtimeService(env?: { NOTIFICATION_DO?: DurableObjectNamespace }): RealtimeService {
-  if (_realtimeService) return _realtimeService;
+export function setRealtimeEnv(env: { NOTIFICATION_DO?: DurableObjectNamespace }): void {
+  _env = env;
+  _realtimeService = null;
+}
 
-  if (isCloudflare && env?.NOTIFICATION_DO) {
-    _realtimeService = {
+function createRealtimeService(): RealtimeService {
+  if (isCloudflare && _env?.NOTIFICATION_DO) {
+    return {
       async broadcast(event: string, data: unknown): Promise<void> {
-        const id = env.NOTIFICATION_DO!.idFromName('global');
-        const stub = env.NOTIFICATION_DO!.get(id);
+        const id = _env!.NOTIFICATION_DO!.idFromName('global');
+        const stub = _env!.NOTIFICATION_DO!.get(id);
         await stub.fetch(new Request('https://internal/broadcast', {
           method: 'POST',
           body: JSON.stringify({ event, data }),
@@ -30,25 +34,23 @@ export function initRealtimeService(env?: { NOTIFICATION_DO?: DurableObjectNames
         await this.broadcast('notification', notification);
       },
     };
-  } else {
-    _realtimeService = {
-      async broadcast(event: string, data: unknown): Promise<void> {
-        const { getNodeWSServer } = await import('./node-ws');
-        const wss = getNodeWSServer();
-        wss.broadcast(data, [], event);
-      },
-      async broadcastNotification(notification: AppNotification): Promise<void> {
-        await this.broadcast('notification', notification);
-      },
-    };
   }
 
-  return _realtimeService;
+  return {
+    async broadcast(event: string, data: unknown): Promise<void> {
+      const { getNodeWSServer } = await import('./node-ws');
+      const wss = getNodeWSServer();
+      wss.broadcast(data, [], event);
+    },
+    async broadcastNotification(notification: AppNotification): Promise<void> {
+      await this.broadcast('notification', notification);
+    },
+  };
 }
 
-export function getRealtimeService(): RealtimeService {
+function getRealtimeService(): RealtimeService {
   if (!_realtimeService) {
-    return initRealtimeService();
+    _realtimeService = createRealtimeService();
   }
   return _realtimeService;
 }
@@ -59,3 +61,5 @@ export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
     return Reflect.get(service, prop, service);
   },
 });
+
+export { getRealtimeService };

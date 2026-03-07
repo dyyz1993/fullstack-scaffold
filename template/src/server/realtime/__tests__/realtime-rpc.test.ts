@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createServer } from 'http'
 import WebSocket, { WebSocketServer } from 'ws'
 import app from '../../entries/node'
-import { getNodeWSServer } from '../../module-realtime/services/realtime/node-ws'
+import { getNodeWSServer } from '../services/realtime/node-ws'
 import { createTestClient } from '../../test-utils/test-client'
 
 describe('Realtime Routes with Type-Safe Test Client', () => {
