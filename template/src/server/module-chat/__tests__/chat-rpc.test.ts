@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createServer } from 'http'
-import WebSocket, { WebSocketServer } from 'ws'
+import { WebSocketServer } from 'ws'
 import app from '../../entries/node'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import { initChatHandlers } from '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
+import { createTestWSClient } from '../../test-utils/test-ws'
 
 initChatHandlers()
 
@@ -64,132 +65,125 @@ describe('Chat Routes with Type-Safe Test Client', () => {
   })
 
   describe('WebSocket RPC Methods', () => {
-    it('should handle echo RPC call', async () => {
-      await new Promise<void>((resolve, reject) => {
-        const ws = new WebSocket(wsUrl)
-        const timeout = setTimeout(() => {
-          ws.close()
-          reject(new Error('Test timeout'))
-        }, 5000)
+    it('should handle echo RPC call with type-safe client', async () => {
+      const wsClient = createTestWSClient(wsUrl)
 
-        ws.on('open', () => {
-          ws.send(
-            JSON.stringify({
-              id: 'test-echo-1',
-              method: 'echo',
-              params: { message: 'hello world' },
-            })
-          )
-        })
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Test timeout'))
+          }, 5000)
 
-        ws.on('message', data => {
-          try {
-            const msg = JSON.parse(data.toString())
-            if (msg.id === 'test-echo-1') {
-              expect(msg.result.message).toBe('hello world')
-              expect(msg.result.timestamp).toBeDefined()
-              expect(typeof msg.result.timestamp).toBe('number')
+          wsClient.onStatusChange(status => {
+            if (status === 'open') {
               clearTimeout(timeout)
-              ws.close()
               resolve()
             }
-          } catch (error) {
-            clearTimeout(timeout)
-            ws.close()
-            reject(error)
-          }
+          })
         })
 
-        ws.on('error', error => {
-          clearTimeout(timeout)
-          reject(error)
-        })
-      })
+        const result = await wsClient.call('echo', { message: 'hello world' })
+
+        expect(result.message).toBe('hello world')
+        expect(result.timestamp).toBeDefined()
+        expect(typeof result.timestamp).toBe('number')
+      } finally {
+        wsClient.close()
+      }
     })
 
-    it('should handle ping RPC call', async () => {
-      await new Promise<void>((resolve, reject) => {
-        const ws = new WebSocket(wsUrl)
-        const timeout = setTimeout(() => {
-          ws.close()
-          reject(new Error('Test timeout'))
-        }, 5000)
+    it('should handle ping RPC call with type-safe client', async () => {
+      const wsClient = createTestWSClient(wsUrl)
 
-        ws.on('open', () => {
-          ws.send(
-            JSON.stringify({
-              id: 'test-ping-1',
-              method: 'ping',
-              params: {},
-            })
-          )
-        })
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Test timeout'))
+          }, 5000)
 
-        ws.on('message', data => {
-          try {
-            const msg = JSON.parse(data.toString())
-            if (msg.id === 'test-ping-1') {
-              expect(msg.result.pong).toBe(true)
-              expect(msg.result.timestamp).toBeDefined()
-              expect(typeof msg.result.timestamp).toBe('number')
+          wsClient.onStatusChange(status => {
+            if (status === 'open') {
               clearTimeout(timeout)
-              ws.close()
               resolve()
             }
-          } catch (error) {
-            clearTimeout(timeout)
-            ws.close()
-            reject(error)
-          }
+          })
         })
 
-        ws.on('error', error => {
-          clearTimeout(timeout)
-          reject(error)
-        })
-      })
+        const result = await wsClient.call('ping', {})
+
+        expect(result.pong).toBe(true)
+        expect(result.timestamp).toBeDefined()
+        expect(typeof result.timestamp).toBe('number')
+      } finally {
+        wsClient.close()
+      }
     })
 
-    it('should handle unknown method error', async () => {
-      await new Promise<void>((resolve, reject) => {
-        const ws = new WebSocket(wsUrl)
-        const timeout = setTimeout(() => {
-          ws.close()
-          reject(new Error('Test timeout'))
-        }, 5000)
+    it('should handle unknown method error with type-safe client', async () => {
+      const wsClient = createTestWSClient(wsUrl)
 
-        ws.on('open', () => {
-          ws.send(
-            JSON.stringify({
-              id: 'test-unknown-1',
-              method: 'unknownMethod',
-              params: {},
-            })
-          )
-        })
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Test timeout'))
+          }, 5000)
 
-        ws.on('message', data => {
-          try {
-            const msg = JSON.parse(data.toString())
-            if (msg.id === 'test-unknown-1') {
-              expect(msg.error).toBeDefined()
-              expect(msg.error).toContain('Unknown method')
+          wsClient.onStatusChange(status => {
+            if (status === 'open') {
               clearTimeout(timeout)
-              ws.close()
               resolve()
             }
-          } catch (error) {
-            clearTimeout(timeout)
-            ws.close()
-            reject(error)
-          }
+          })
         })
 
-        ws.on('error', error => {
-          clearTimeout(timeout)
-          reject(error)
+        await expect(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (wsClient as any).call('unknownMethod', {})
+        ).rejects.toThrow('Unknown method')
+      } finally {
+        wsClient.close()
+      }
+    })
+
+    it('should handle events with type-safe client', async () => {
+      const wsClient = createTestWSClient(wsUrl)
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Test timeout'))
+          }, 5000)
+
+          wsClient.onStatusChange(status => {
+            if (status === 'open') {
+              clearTimeout(timeout)
+              resolve()
+            }
+          })
         })
-      })
+
+        const eventPromise = new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Event timeout'))
+          }, 5000)
+
+          wsClient.on('broadcast', payload => {
+            expect(payload.message).toBe('test broadcast')
+            expect(payload.timestamp).toBeDefined()
+            clearTimeout(timeout)
+            resolve()
+          })
+        })
+
+        wsClient.emit('broadcast', {
+          message: 'test broadcast',
+          timestamp: Date.now(),
+        })
+
+        await eventPromise
+      } finally {
+        wsClient.close()
+      }
     })
   })
 })
