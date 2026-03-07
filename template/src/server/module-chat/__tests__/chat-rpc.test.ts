@@ -2,8 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import app from '../../entries/node'
 import { initChatHandlers } from '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
-import { createTestWSClient } from '../../test-utils/test-ws'
-import { createTestServer } from '../../test-utils/test-server'
+import { createTestServer, createTestWSClient } from '../../test-utils/test-server'
 
 initChatHandlers()
 
