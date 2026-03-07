@@ -3,12 +3,10 @@
  * Configures jsdom environment and global mocks
  */
 
-import { afterEach } from 'vitest';
-import '@testing-library/jest-dom';
+import { afterEach } from 'vitest'
+import '@testing-library/jest-dom'
 
-afterEach(() => {
-  
-});
+afterEach(() => {})
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -22,14 +20,17 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: () => {},
     dispatchEvent: () => {},
   }),
-});
+})
 
 global.IntersectionObserver = class IntersectionObserver {
   constructor() {}
   disconnect() {}
   observe() {}
   takeRecords(): IntersectionObserverEntry[] {
-    return [];
+    return []
   }
   unobserve() {}
-} as typeof IntersectionObserver;
+  root = null
+  rootMargin = ''
+  thresholds = []
+} as unknown as typeof IntersectionObserver

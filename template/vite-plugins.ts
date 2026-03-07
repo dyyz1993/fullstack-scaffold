@@ -10,13 +10,12 @@ export function websocketPlugin(): Plugin {
         'upgrade',
         async (req: IncomingMessage, socket: Duplex, head: Buffer) => {
           if (req.url?.startsWith('/api/ws')) {
-            const { getNodeWSServer } =
-              await import('./src/server/realtime/services/realtime/node-ws')
+            const { getNodeRuntimeAdapter } = await import('./src/server/core/runtime-node')
             const { WebSocketServer } = await import('ws')
-            const wss = getNodeWSServer()
+            const nodeRuntime = getNodeRuntimeAdapter()
             const wssInstance = new WebSocketServer({ noServer: true })
             wssInstance.handleUpgrade(req, socket, head, ws => {
-              wss.handleConnection(ws)
+              nodeRuntime.handleConnection(ws)
             })
           }
         }
