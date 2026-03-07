@@ -1,4 +1,3 @@
-import type { AppNotification } from '@shared/schemas'
 import { isCloudflare } from '../utils/env'
 import { getNodeWSServer } from './node-ws'
 
@@ -9,7 +8,6 @@ export interface BroadcastMessage {
 
 export interface RealtimeService {
   broadcast(event: string, data: unknown): Promise<void>
-  broadcastNotification(notification: AppNotification): Promise<void>
 }
 
 let _env: { NOTIFICATION_DO?: DurableObjectNamespace } | null = null
@@ -33,9 +31,6 @@ function createRealtimeService(): RealtimeService {
           })
         )
       },
-      async broadcastNotification(notification: AppNotification): Promise<void> {
-        await this.broadcast('notification', notification)
-      },
     }
   }
 
@@ -43,9 +38,6 @@ function createRealtimeService(): RealtimeService {
     async broadcast(event: string, data: unknown): Promise<void> {
       const wss = getNodeWSServer()
       wss.broadcast(data, [], event)
-    },
-    async broadcastNotification(notification: AppNotification): Promise<void> {
-      await this.broadcast('notification', notification)
     },
   }
 }

@@ -266,7 +266,7 @@ export const notificationRoutes = new OpenAPIHono()
 
     const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace }
     setRealtimeEnv(env)
-    await realtime.broadcastNotification(notification)
+    await realtime.broadcast('notification', notification)
 
     return c.json({ success: true, data: notification }, 201)
   })
