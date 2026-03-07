@@ -2,17 +2,13 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppBindings } from '../../types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
+import { AppWSProtocolSchema } from '@shared/schemas'
 
 const WSStatusResponseSchema = z.object({
   success: z.boolean(),
   data: z.object({
     connectedClients: z.number(),
   }),
-})
-
-const WSRouteResponseSchema = z.object({
-  protocol: z.literal('AppWSProtocol'),
-  message: z.string(),
 })
 
 const statusRoute = createRoute({
@@ -38,8 +34,8 @@ const wsRoute = createRoute({
   responses: {
     200: {
       content: {
-        'application/json': {
-          schema: WSRouteResponseSchema,
+        websocket: {
+          schema: AppWSProtocolSchema,
         },
       },
       description: 'WebSocket endpoint for chat',

@@ -70,7 +70,7 @@ describe('Chat Routes with Type-Safe Test Client', () => {
       const res = await client.api.chat.ws.$get()
       expect(res.status).toBe(200)
 
-      const data = await res.json()
+      const data = (await res.json()) as { protocol: string; message: string }
       expect(data.protocol).toBe('AppWSProtocol')
       expect(data.message).toBeDefined()
     })
