@@ -4,6 +4,7 @@ import { apiRoutes } from './module-todos/routes/todos-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
+import { autoRegisterRealtime } from './core/realtime-scanner'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 
@@ -28,6 +29,9 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
       }
     })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  autoRegisterRealtime(app as any)
 
   return app
 }

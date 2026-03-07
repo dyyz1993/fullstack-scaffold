@@ -1,38 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { WSStatus } from '@client/services/wsClient'
-import type { AppWSProtocol } from '@shared/schemas'
-import { apiClient } from '@client/services/apiClient'
+import type { WSClient, WSProtocol, WSStatus } from '@client/services/wsClient'
 
-interface UseWebSocketReturn {
+interface UseWebSocketReturn<T extends WSProtocol> {
   status: WSStatus
-  connect: () => void
+  connect: () => Promise<void>
   disconnect: () => void
-  call: <K extends keyof AppWSProtocol['rpc']>(
-    method: K,
-    params: AppWSProtocol['rpc'][K] extends { in: infer I } ? I : never
-  ) => Promise<AppWSProtocol['rpc'][K] extends { out: infer O } ? O : never>
-  emit: <K extends keyof AppWSProtocol['events']>(
-    type: K,
-    payload: AppWSProtocol['events'][K]
-  ) => void
-  on: <K extends keyof AppWSProtocol['events']>(
-    type: K,
-    handler: (payload: AppWSProtocol['events'][K]) => void
-  ) => () => void
+  call: WSClient<T>['call']
+  emit: WSClient<T>['emit']
+  on: WSClient<T>['on']
+  client: WSClient<T> | null
 }
 
-export function useWebSocket(): UseWebSocketReturn {
+export function useWebSocket<T extends WSProtocol>(route: {
+  $ws: () => Promise<WSClient<T>>
+}): UseWebSocketReturn<T> {
   const [status, setStatus] = useState<WSStatus>('closed')
-  const clientRef = useRef<Awaited<ReturnType<typeof apiClient.api.chat.ws.$ws>> | null>(null)
+  const clientRef = useRef<WSClient<T> | null>(null)
 
   const connect = useCallback(async () => {
     if (clientRef.current) return
 
-    const client = await apiClient.api.chat.ws.$ws()
+    const client = await route.$ws()
     clientRef.current = client
 
     client.onStatusChange(setStatus)
-  }, [])
+  }, [route])
 
   const disconnect = useCallback(() => {
     if (clientRef.current) {
@@ -42,22 +34,19 @@ export function useWebSocket(): UseWebSocketReturn {
     }
   }, [])
 
-  const call = useCallback(async (method: keyof AppWSProtocol['rpc'], params: unknown) => {
+  const call = useCallback(async (method: keyof T['rpc'], params: unknown) => {
     if (!clientRef.current) throw new Error('WebSocket not connected')
-    return clientRef.current.call(method, params as never)
-  }, []) as UseWebSocketReturn['call']
+    return clientRef.current.call(method as never, params as never)
+  }, []) as WSClient<T>['call']
 
-  const emit = useCallback((type: keyof AppWSProtocol['events'], payload: unknown) => {
-    clientRef.current?.emit(type, payload as never)
-  }, []) as UseWebSocketReturn['emit']
+  const emit = useCallback((type: keyof T['events'], payload: unknown) => {
+    clientRef.current?.emit(type as never, payload as never)
+  }, []) as WSClient<T>['emit']
 
-  const on = useCallback(
-    (type: keyof AppWSProtocol['events'], handler: (payload: unknown) => void) => {
-      if (!clientRef.current) return () => {}
-      return clientRef.current.on(type, handler as never)
-    },
-    []
-  ) as UseWebSocketReturn['on']
+  const on = useCallback((type: keyof T['events'], handler: (payload: unknown) => void) => {
+    if (!clientRef.current) return () => {}
+    return clientRef.current.on(type as never, handler as never)
+  }, []) as WSClient<T>['on']
 
   useEffect(() => {
     return () => {
@@ -65,5 +54,13 @@ export function useWebSocket(): UseWebSocketReturn {
     }
   }, [disconnect])
 
-  return { status, connect, disconnect, call, emit, on }
+  return {
+    status,
+    connect,
+    disconnect,
+    call,
+    emit,
+    on,
+    client: clientRef.current,
+  }
 }

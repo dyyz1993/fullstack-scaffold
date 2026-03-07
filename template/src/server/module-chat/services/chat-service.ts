@@ -1,8 +1,6 @@
 import { runtime } from '@server/core/runtime'
 
 export function initChatHandlers(): void {
-  runtime.handleWS('/api/chat/ws')
-
   runtime.registerRPC('echo', (params: unknown) => {
     const { message } = params as { message: string }
     return { message, timestamp: Date.now() }
