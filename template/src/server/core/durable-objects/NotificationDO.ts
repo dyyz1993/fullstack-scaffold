@@ -1,4 +1,4 @@
-import { createRealtimeCore, type RealtimeCore } from '../services/realtime/core'
+import { createRealtimeCore, type RealtimeCore } from '../core';
 
 export class NotificationDurableObject {
   private core: RealtimeCore
@@ -10,7 +10,7 @@ export class NotificationDurableObject {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
 
-    if (url.pathname === '/ws' || url.pathname === '/api/ws') {
+    if (url.pathname === '/ws' || url.pathname === '/api/ws' || url.pathname === '/api/chat/ws') {
       return this.handleWebSocket()
     }
 
@@ -49,7 +49,7 @@ export class NotificationDurableObject {
 
     this.core.wsClients.set(clientId, {
       id: clientId,
-      send: data => server.send(JSON.stringify(data)),
+      send: (data: unknown) => server.send(JSON.stringify(data)),
       close: () => server.close(),
     })
 
@@ -136,3 +136,5 @@ export class NotificationDurableObject {
     return Response.json({ success: false, error: 'Client not found' })
   }
 }
+
+export { NotificationDurableObject as NotificationDurableObjectClass }

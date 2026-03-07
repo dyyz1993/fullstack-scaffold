@@ -21,7 +21,7 @@ export function useWebSocket(): UseWebSocketReturn<AppWSProtocol> {
   const connect = useCallback(() => {
     if (clientRef.current) return
 
-    const client = createWS(apiClient.api.ws)
+    const client = createWS(apiClient.api.chat.ws)
     clientRef.current = client
 
     client.onStatusChange(setStatus)

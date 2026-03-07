@@ -1,5 +1,6 @@
 import type { AppNotification } from '@shared/schemas';
-import { isCloudflare } from '../../../utils/env';
+import { isCloudflare } from '../utils/env';
+import { getNodeWSServer } from './node-ws';
 
 export interface BroadcastMessage {
   event: string;
@@ -38,7 +39,6 @@ function createRealtimeService(): RealtimeService {
 
   return {
     async broadcast(event: string, data: unknown): Promise<void> {
-      const { getNodeWSServer } = await import('./node-ws');
       const wss = getNodeWSServer();
       wss.broadcast(data, [], event);
     },
@@ -48,7 +48,7 @@ function createRealtimeService(): RealtimeService {
   };
 }
 
-function getRealtimeService(): RealtimeService {
+export function getRealtimeService(): RealtimeService {
   if (!_realtimeService) {
     _realtimeService = createRealtimeService();
   }
@@ -62,4 +62,6 @@ export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
   },
 });
 
-export { getRealtimeService };
+export { getNodeWSServer } from './node-ws';
+export { handleSSERequest, handleWSRequest } from './handlers';
+export { NotificationDurableObject } from './durable-objects/NotificationDO';

@@ -1,7 +1,7 @@
 import { createApp } from '../app'
 import type { AppBindings } from '../types/bindings'
 import { getDb } from '../db/driver-cloudflare'
-import { NotificationDurableObject } from '../realtime/durable-objects/NotificationDO'
+import { NotificationDurableObject } from '@server/core'
 
 export interface CloudflareBindings extends AppBindings {
   DB: D1Database

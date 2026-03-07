@@ -1,6 +1,6 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { handleWSRequest } from '../handlers'
+import { handleWSRequest } from '@server/core'
 import type { AppBindings } from '../../types/bindings'
 import type { TypedResponse } from 'hono'
 
@@ -18,8 +18,8 @@ const WSRouteResponseSchema = z.object({
 
 const statusRoute = createRoute({
   method: 'get',
-  path: '/ws/status',
-  tags: ['realtime'],
+  path: '/chat/ws/status',
+  tags: ['chat'],
   responses: {
     200: {
       content: {
@@ -34,8 +34,8 @@ const statusRoute = createRoute({
 
 const wsRoute = createRoute({
   method: 'get',
-  path: '/ws',
-  tags: ['realtime'],
+  path: '/chat/ws',
+  tags: ['chat'],
   responses: {
     200: {
       content: {
@@ -43,21 +43,19 @@ const wsRoute = createRoute({
           schema: WSRouteResponseSchema,
         },
       },
-      description: 'WebSocket endpoint - returns protocol info for type inference',
+      description: 'WebSocket endpoint for chat',
     },
   },
 })
 
-export function createWSRoutes() {
-  return new OpenAPIHono<{ Bindings: AppBindings }>()
-    .openapi(statusRoute, async c => {
-      return c.json({ success: true, data: { connectedClients: 0 } })
-    })
-    .openapi(wsRoute, async c => {
-      return handleWSRequest(c) as unknown as Promise<
-        TypedResponse<{ protocol: 'AppWSProtocol'; message: string }, 200, 'json'>
-      >
-    })
-}
+export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
+  .openapi(statusRoute, async c => {
+    return c.json({ success: true, data: { connectedClients: 0 } })
+  })
+  .openapi(wsRoute, async c => {
+    return handleWSRequest(c) as unknown as Promise<
+      TypedResponse<{ protocol: 'AppWSProtocol'; message: string }, 200, 'json'>
+    >
+  })
 
-export type WSRoutesType = ReturnType<typeof createWSRoutes>
+export type ChatRoutesType = typeof chatRoutes

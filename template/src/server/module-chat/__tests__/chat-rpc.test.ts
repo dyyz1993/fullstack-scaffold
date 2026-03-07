@@ -2,10 +2,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createServer } from 'http'
 import WebSocket, { WebSocketServer } from 'ws'
 import app from '../../entries/node'
-import { getNodeWSServer } from '../services/realtime/node-ws'
+import { getNodeWSServer } from '@server/core'
 import { createTestClient } from '../../test-utils/test-client'
 
-describe('Realtime Routes with Type-Safe Test Client', () => {
+describe('Chat Routes with Type-Safe Test Client', () => {
   let server: ReturnType<typeof createServer>
   let port: number
   let wsUrl: string
@@ -16,7 +16,7 @@ describe('Realtime Routes with Type-Safe Test Client', () => {
       server = createServer()
 
       server.on('upgrade', (req, socket, head) => {
-        if (req.url?.startsWith('/api/ws')) {
+        if (req.url?.startsWith('/api/chat/ws')) {
           const wssInstance = new WebSocketServer({ noServer: true })
 
           wssInstance.handleUpgrade(req, socket, head, ws => {
@@ -33,7 +33,7 @@ describe('Realtime Routes with Type-Safe Test Client', () => {
         const address = server.address()
         if (address && typeof address === 'object') {
           port = address.port
-          wsUrl = `ws://localhost:${port}/api/ws`
+          wsUrl = `ws://localhost:${port}/api/chat/ws`
         }
         resolve()
       })
@@ -46,11 +46,11 @@ describe('Realtime Routes with Type-Safe Test Client', () => {
     })
   }, 15000)
 
-  describe('GET /api/ws/status', () => {
+  describe('GET /api/chat/ws/status', () => {
     it('should return WebSocket status', async () => {
       const client = createTestClient()
 
-      const res = await client.api.ws.status.$get()
+      const res = await client.api.chat.ws.status.$get()
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -60,11 +60,11 @@ describe('Realtime Routes with Type-Safe Test Client', () => {
     })
   })
 
-  describe('GET /api/ws', () => {
+  describe('GET /api/chat/ws', () => {
     it('should return WebSocket protocol info', async () => {
       const client = createTestClient()
 
-      const res = await client.api.ws.$get()
+      const res = await client.api.chat.ws.$get()
       expect(res.status).toBe(200)
 
       const data = await res.json()

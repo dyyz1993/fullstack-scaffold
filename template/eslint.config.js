@@ -4,11 +4,13 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax.js'
 import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
+import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
 
 const localRules = {
   rules: {
     'require-hono-chain-syntax': requireHonoChainSyntax,
     'require-type-safe-test-client': requireTypeSafeTestClient,
+    'no-ambiguous-file-paths': noAmbiguousFilePaths,
   },
 }
 
@@ -43,6 +45,7 @@ export default tseslint.config(
           message: '请使用 AI client 代替 fetch。参考: src/client/lib/ai-client.ts',
         },
       ],
+      'local-rules/no-ambiguous-file-paths': 'error',
     },
   },
   {

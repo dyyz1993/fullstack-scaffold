@@ -1,9 +1,9 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
-import { realtime, setRealtimeEnv } from '../../realtime/services/realtime'
+import { realtime, setRealtimeEnv } from '@server/core'
 import { NotificationSchema, CreateNotificationSchema, SSEEventSchema } from '@shared/schemas'
-import { handleSSERequest } from '../../realtime/handlers'
+import { handleSSERequest } from '@server/core'
 
 const NotificationListResponseSchema = z.object({
   success: z.boolean(),

@@ -30,7 +30,7 @@ export const useChatWSStore = create<WSState>((set, get) => ({
   connect: () => {
     if (wsClient) return
     
-    const client = extendWSRoute(apiClient.api.ws).$ws()
+    const client = extendWSRoute(apiClient.api.chat.ws).$ws()
     wsClient = client
 
     client.onStatusChange((newStatus: WSStatus) => {
