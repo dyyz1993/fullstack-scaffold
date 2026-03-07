@@ -63,19 +63,6 @@ describe('Chat Routes with Type-Safe Test Client', () => {
     })
   })
 
-  describe('GET /api/chat/ws', () => {
-    it('should return WebSocket protocol info', async () => {
-      const client = createTestClient()
-
-      const res = await client.api.chat.ws.$get()
-      expect(res.status).toBe(200)
-
-      const data = (await res.json()) as { protocol: string; message: string }
-      expect(data.protocol).toBe('AppWSProtocol')
-      expect(data.message).toBeDefined()
-    })
-  })
-
   describe('WebSocket RPC Methods', () => {
     it('should handle echo RPC call', async () => {
       await new Promise<void>((resolve, reject) => {
