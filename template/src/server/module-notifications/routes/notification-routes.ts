@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
 import { realtime, setRealtimeEnv } from '@server/core'
 import { NotificationSchema, CreateNotificationSchema, SSEEventSchema } from '@shared/schemas'
-import { handleSSERequest } from '@server/core'
+import { getRuntimeAdapter } from '@server/core/runtime'
 
 const NotificationListResponseSchema = z.object({
   success: z.boolean(),
@@ -236,8 +236,14 @@ const deleteRoute = createRoute({
 })
 
 export const notificationRoutes = new OpenAPIHono()
-  .openapi(streamRoute, async c => {
-    return handleSSERequest(c)
+  .openapi(streamRoute, async _c => {
+    const adapter = getRuntimeAdapter()
+    if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
+      return (
+        adapter as { handleSSERequest: () => Response | Promise<Response> }
+      ).handleSSERequest()
+    }
+    return new Response('SSE not supported', { status: 500 })
   })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')

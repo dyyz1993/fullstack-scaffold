@@ -1,5 +1,4 @@
 import { isCloudflare } from '../utils/env'
-import { getNodeWSServer } from './node-ws'
 
 export interface BroadcastMessage {
   event: string
@@ -36,8 +35,8 @@ function createRealtimeService(): RealtimeService {
 
   return {
     async broadcast(event: string, data: unknown): Promise<void> {
-      const wss = getNodeWSServer()
-      wss.broadcast(data, [], event)
+      const { getRuntimeAdapter } = await import('./runtime')
+      getRuntimeAdapter().broadcast(event, data)
     },
   }
 }
@@ -56,8 +55,18 @@ export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
   },
 })
 
-export { getNodeWSServer } from './node-ws'
-export { handleSSERequest, handleWSRequest } from './handlers'
 export { NotificationDurableObject } from './durable-objects/NotificationDO'
 export type { WSClient, SSEClient, RealtimeCore, RPCHandler, EventHandler } from './realtime-core'
 export { createRealtimeCore, createWSMessageHandler } from './realtime-core'
+
+export {
+  runtime,
+  setRuntimeAdapter,
+  getRuntimeAdapter,
+  type RuntimeAdapter,
+  type RuntimePlatform,
+  type WSConnection,
+  type SSEConnection,
+} from './runtime'
+export { NodeRuntimeAdapter, getNodeRuntimeAdapter } from './runtime-node'
+export { CloudflareRuntimeAdapter, getCloudflareRuntimeAdapter } from './runtime-cloudflare'

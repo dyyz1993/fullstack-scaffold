@@ -9,8 +9,10 @@ import { getAppConfig } from '../config'
 import { logger } from '../utils/logger'
 import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
-import { getNodeWSServer } from '@server/core'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import { initChatHandlers } from '../module-chat/services/chat-service'
+import { initNotificationHandlers } from '../module-notifications/services/notification-service'
 
 const config = getAppConfig()
 const distPath = resolve(process.cwd(), 'dist/client')
@@ -19,9 +21,12 @@ const indexHtml = hasDist ? readFileSync(resolve(distPath, 'index.html'), 'utf-8
 const devIndexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
 
 const log = logger.api()
-const wss = getNodeWSServer()
+
+const runtimeAdapter = getNodeRuntimeAdapter()
+setRuntimeAdapter(runtimeAdapter)
 
 initChatHandlers()
+initNotificationHandlers()
 
 const app = createApp().use('*', async (c, next) => {
   const start = Date.now()
@@ -91,11 +96,13 @@ export async function createServer() {
   })
 
   server.on('upgrade', (req, socket, head) => {
-    if (req.url?.startsWith('/api/chat/ws')) {
+    const url = new URL(req.url || '', `http://localhost`)
+
+    if (runtimeAdapter.hasWSPath(url.pathname)) {
       const wssInstance = new WebSocketServer({ noServer: true })
 
       wssInstance.handleUpgrade(req, socket, head, ws => {
-        wss.handleConnection(ws)
+        runtimeAdapter.handleConnection(ws)
       })
     } else {
       socket.destroy()

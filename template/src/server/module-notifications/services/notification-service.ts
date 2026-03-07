@@ -1,7 +1,12 @@
 import type { AppNotification, CreateNotificationInput } from '@shared/schemas'
 import { generateUUID } from '../../utils/uuid'
+import { runtime } from '@server/core/runtime'
 
 const notifications: AppNotification[] = []
+
+export function initNotificationHandlers(): void {
+  runtime.handleSSE('/api/notifications/stream')
+}
 
 export function listNotifications(options: {
   unreadOnly?: boolean

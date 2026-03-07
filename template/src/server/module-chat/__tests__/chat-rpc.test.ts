@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createServer } from 'http'
 import WebSocket, { WebSocketServer } from 'ws'
 import app from '../../entries/node'
-import { getNodeWSServer } from '@server/core'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import { initChatHandlers } from '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
 
@@ -12,7 +12,7 @@ describe('Chat Routes with Type-Safe Test Client', () => {
   let server: ReturnType<typeof createServer>
   let port: number
   let wsUrl: string
-  const wss = getNodeWSServer()
+  const runtimeAdapter = getNodeRuntimeAdapter()
 
   beforeAll(async () => {
     return new Promise<void>(resolve => {
@@ -23,7 +23,7 @@ describe('Chat Routes with Type-Safe Test Client', () => {
           const wssInstance = new WebSocketServer({ noServer: true })
 
           wssInstance.handleUpgrade(req, socket, head, ws => {
-            wss.handleConnection(ws)
+            runtimeAdapter.handleConnection(ws)
           })
         } else {
           socket.destroy()

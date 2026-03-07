@@ -1,40 +1,34 @@
-import { getNodeWSServer } from '@server/core'
+import { runtime } from '@server/core/runtime'
 
 export function initChatHandlers(): void {
-  const wss = getNodeWSServer()
+  runtime.handleWS('/api/chat/ws')
 
-  wss.registerRPCHandler('echo', (params: unknown) => {
+  runtime.registerRPC('echo', (params: unknown) => {
     const { message } = params as { message: string }
     return { message, timestamp: Date.now() }
   })
 
-  wss.registerRPCHandler('ping', () => {
+  runtime.registerRPC('ping', () => {
     return { pong: true, timestamp: Date.now() }
   })
 
-  wss.registerEventHandler('broadcast', (payload, clientId, broadcast) => {
-    broadcast(payload, [clientId], 'broadcast')
+  runtime.registerEvent('broadcast', (payload: unknown, clientId: string) => {
+    runtime.broadcast('broadcast', payload, [clientId])
   })
 }
 
-export function getChatWSServer() {
-  return getNodeWSServer()
-}
-
 export function getConnectedClientsCount(): number {
-  const wss = getNodeWSServer()
-  return wss.getConnectedClientsCount()
+  return runtime.adapter.getWSConnections().size
 }
 
-export function broadcastChatMessage(message: { 
+export function broadcastChatMessage(message: {
   id: string
   content: string
   sender: string
   timestamp: number
 }): void {
-  const wss = getNodeWSServer()
-  wss.broadcast({
+  runtime.broadcast('chat:message', {
     type: 'chat:message',
-    data: message
+    data: message,
   })
 }

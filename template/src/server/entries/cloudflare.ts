@@ -2,11 +2,21 @@ import { createApp } from '../app'
 import type { AppBindings } from '../types/bindings'
 import { getDb } from '../db/driver-cloudflare'
 import { NotificationDurableObject } from '@server/core'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getCloudflareRuntimeAdapter } from '@server/core/runtime-cloudflare'
+import { initChatHandlers } from '../module-chat/services/chat-service'
+import { initNotificationHandlers } from '../module-notifications/services/notification-service'
 
 export interface CloudflareBindings extends AppBindings {
   DB: D1Database
   NOTIFICATION_DO: DurableObjectNamespace
 }
+
+const runtimeAdapter = getCloudflareRuntimeAdapter()
+setRuntimeAdapter(runtimeAdapter)
+
+initChatHandlers()
+initNotificationHandlers()
 
 const app = createApp<CloudflareBindings>()
 

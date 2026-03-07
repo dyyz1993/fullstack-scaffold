@@ -1,8 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { handleWSRequest } from '@server/core'
 import type { AppBindings } from '../../types/bindings'
-import type { TypedResponse } from 'hono'
+import { getRuntimeAdapter } from '@server/core/runtime'
 
 const WSStatusResponseSchema = z.object({
   success: z.boolean(),
@@ -52,10 +51,17 @@ export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
   .openapi(statusRoute, async c => {
     return c.json({ success: true, data: { connectedClients: 0 } })
   })
-  .openapi(wsRoute, async c => {
-    return handleWSRequest(c) as unknown as Promise<
-      TypedResponse<{ protocol: 'AppWSProtocol'; message: string }, 200, 'json'>
-    >
+  .openapi(wsRoute, async _c => {
+    const adapter = getRuntimeAdapter()
+    if (
+      'handleWebSocketRequest' in adapter &&
+      typeof adapter.handleWebSocketRequest === 'function'
+    ) {
+      return (
+        adapter as { handleWebSocketRequest: () => Response | Promise<Response> }
+      ).handleWebSocketRequest()
+    }
+    return new Response('WebSocket not supported', { status: 500 })
   })
 
 export type ChatRoutesType = typeof chatRoutes
