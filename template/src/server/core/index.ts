@@ -59,5 +59,5 @@ export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
 export { getNodeWSServer } from './node-ws'
 export { handleSSERequest, handleWSRequest } from './handlers'
 export { NotificationDurableObject } from './durable-objects/NotificationDO'
-export type { WSClient, SSEClient, RealtimeCore } from './realtime-core'
+export type { WSClient, SSEClient, RealtimeCore, RPCHandler, EventHandler } from './realtime-core'
 export { createRealtimeCore, createWSMessageHandler } from './realtime-core'

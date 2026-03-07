@@ -9,64 +9,9 @@ export interface SSEClient {
   send: (data: string) => void
 }
 
-export interface WSMessageHandlers {
-  onEcho?: (message: string) => { message: string; timestamp: number }
-  onPing?: () => { pong: boolean; timestamp: number }
-  onBroadcast?: (payload: unknown, exclude: string[]) => void
-}
+export type RPCHandler = (params: unknown, clientId: string) => unknown
 
-export function createWSMessageHandler(
-  broadcastFn: (data: unknown, exclude: string[], event: string) => void
-) {
-  return {
-    handleMessage(clientId: string, data: unknown, send: (response: unknown) => void): void {
-      // RPC 模式: { id, method, params }
-      if (typeof data === 'object' && data !== null && 'method' in data && 'id' in data) {
-        const rpc = data as { id: string; method: string; params: unknown }
-        const response = this.handleRpc(rpc)
-        send(response)
-        return
-      }
-
-      // 事件模式: { type, payload }
-      if (typeof data === 'object' && data !== null && 'type' in data) {
-        const msg = data as { type: string; payload?: unknown }
-        this.handleEvent(clientId, msg)
-      }
-    },
-
-    handleRpc(rpc: { id: string; method: string; params: unknown }): unknown {
-      switch (rpc.method) {
-        case 'echo': {
-          const params = rpc.params as { message: string }
-          return {
-            id: rpc.id,
-            result: { message: params.message, timestamp: Date.now() },
-          }
-        }
-        case 'ping': {
-          return {
-            id: rpc.id,
-            result: { pong: true, timestamp: Date.now() },
-          }
-        }
-        default:
-          return {
-            id: rpc.id,
-            error: `Unknown method: ${rpc.method}`,
-          }
-      }
-    },
-
-    handleEvent(clientId: string, msg: { type: string; payload?: unknown }): void {
-      switch (msg.type) {
-        case 'broadcast':
-          broadcastFn(msg.payload, [clientId], 'broadcast')
-          break
-      }
-    },
-  }
-}
+export type EventHandler = (payload: unknown, clientId: string, broadcast: (data: unknown, exclude: string[], event: string) => void) => void
 
 export type RealtimeBroadcastFn = (data: unknown, exclude: string[], event: string) => void
 
@@ -75,12 +20,15 @@ export interface RealtimeCore {
   sseClients: Map<string, SSEClient>
   broadcast: RealtimeBroadcastFn
   handleWSMessage: (clientId: string, data: unknown) => void
-  handleSSEMessage: (clientId: string, data: string) => void
+  registerRPCHandler: (method: string, handler: RPCHandler) => void
+  registerEventHandler: (type: string, handler: EventHandler) => void
 }
 
 export function createRealtimeCore(): RealtimeCore {
   const wsClients = new Map<string, WSClient>()
   const sseClients = new Map<string, SSEClient>()
+  const rpcHandlers = new Map<string, RPCHandler>()
+  const eventHandlers = new Map<string, EventHandler>()
 
   const broadcast: RealtimeBroadcastFn = (
     data: unknown,
@@ -90,7 +38,6 @@ export function createRealtimeCore(): RealtimeCore {
     const message = JSON.stringify(data)
     const sseMessage = `event: ${event}\ndata: ${message}\n\n`
 
-    // 广播给 WebSocket 客户端
     for (const [id, client] of wsClients) {
       if (!exclude.includes(id)) {
         try {
@@ -101,7 +48,6 @@ export function createRealtimeCore(): RealtimeCore {
       }
     }
 
-    // 广播给 SSE 客户端
     for (const [id, client] of sseClients) {
       if (!exclude.includes(id)) {
         try {
@@ -117,50 +63,39 @@ export function createRealtimeCore(): RealtimeCore {
     const client = wsClients.get(clientId)
     if (!client) return
 
-    // RPC 模式
     if (typeof data === 'object' && data !== null && 'method' in data && 'id' in data) {
       const rpc = data as { id: string; method: string; params: unknown }
-
-      let result: unknown
-      switch (rpc.method) {
-        case 'echo': {
-          const params = rpc.params as { message: string }
-          result = { message: params.message, timestamp: Date.now() }
-          break
+      const handler = rpcHandlers.get(rpc.method)
+      
+      if (handler) {
+        try {
+          const result = handler(rpc.params, clientId)
+          client.send({ id: rpc.id, result })
+        } catch (error) {
+          client.send({ id: rpc.id, error: error instanceof Error ? error.message : 'Unknown error' })
         }
-        case 'ping': {
-          result = { pong: true, timestamp: Date.now() }
-          break
-        }
-        default:
-          client.send({ id: rpc.id, error: `Unknown method: ${rpc.method}` })
-          return
+      } else {
+        client.send({ id: rpc.id, error: `Unknown method: ${rpc.method}` })
       }
-
-      client.send({ id: rpc.id, result })
       return
     }
 
-    // 事件模式
     if (typeof data === 'object' && data !== null && 'type' in data) {
       const msg = data as { type: string; payload?: unknown }
-
-      switch (msg.type) {
-        case 'broadcast':
-          broadcast(msg.payload, [clientId], 'broadcast')
-          break
+      const handler = eventHandlers.get(msg.type)
+      
+      if (handler) {
+        handler(msg.payload, clientId, broadcast)
       }
     }
   }
 
-  const handleSSEMessage = (clientId: string, data: string): void => {
-    // SSE 通常是单向的，但也可以支持
-    try {
-      const parsed = JSON.parse(data)
-      handleWSMessage(clientId, parsed)
-    } catch {
-      // Ignore invalid messages
-    }
+  const registerRPCHandler = (method: string, handler: RPCHandler): void => {
+    rpcHandlers.set(method, handler)
+  }
+
+  const registerEventHandler = (type: string, handler: EventHandler): void => {
+    eventHandlers.set(type, handler)
   }
 
   return {
@@ -168,6 +103,42 @@ export function createRealtimeCore(): RealtimeCore {
     sseClients,
     broadcast,
     handleWSMessage,
-    handleSSEMessage,
+    registerRPCHandler,
+    registerEventHandler,
+  }
+}
+
+export function createWSMessageHandler(
+  broadcastFn: (data: unknown, exclude: string[], event: string) => void
+) {
+  return {
+    handleMessage(clientId: string, data: unknown, send: (response: unknown) => void): void {
+      if (typeof data === 'object' && data !== null && 'method' in data && 'id' in data) {
+        const rpc = data as { id: string; method: string; params: unknown }
+        const response = this.handleRpc(rpc)
+        send(response)
+        return
+      }
+
+      if (typeof data === 'object' && data !== null && 'type' in data) {
+        const msg = data as { type: string; payload?: unknown }
+        this.handleEvent(clientId, msg)
+      }
+    },
+
+    handleRpc(rpc: { id: string; method: string; params: unknown }): unknown {
+      return {
+        id: rpc.id,
+        error: `Unknown method: ${rpc.method}`,
+      }
+    },
+
+    handleEvent(clientId: string, msg: { type: string; payload?: unknown }): void {
+      switch (msg.type) {
+        case 'broadcast':
+          broadcastFn(msg.payload, [clientId], 'broadcast')
+          break
+      }
+    },
   }
 }

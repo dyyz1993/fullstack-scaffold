@@ -3,7 +3,10 @@ import { createServer } from 'http'
 import WebSocket, { WebSocketServer } from 'ws'
 import app from '../../entries/node'
 import { getNodeWSServer } from '@server/core'
+import { initChatHandlers } from '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
+
+initChatHandlers()
 
 describe('Chat Routes with Type-Safe Test Client', () => {
   let server: ReturnType<typeof createServer>

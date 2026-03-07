@@ -10,6 +10,7 @@ import { logger } from '../utils/logger'
 import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
 import { getNodeWSServer } from '@server/core'
+import { initChatHandlers } from '../module-chat/services/chat-service'
 
 const config = getAppConfig()
 const distPath = resolve(process.cwd(), 'dist/client')
@@ -19,6 +20,8 @@ const devIndexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
 
 const log = logger.api()
 const wss = getNodeWSServer()
+
+initChatHandlers()
 
 const app = createApp().use('*', async (c, next) => {
   const start = Date.now()
@@ -88,7 +91,7 @@ export async function createServer() {
   })
 
   server.on('upgrade', (req, socket, head) => {
-    if (req.url?.startsWith('/api/ws')) {
+    if (req.url?.startsWith('/api/chat/ws')) {
       const wssInstance = new WebSocketServer({ noServer: true })
 
       wssInstance.handleUpgrade(req, socket, head, ws => {

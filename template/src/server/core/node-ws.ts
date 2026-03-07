@@ -1,5 +1,5 @@
 import type { WebSocket } from 'ws'
-import { createRealtimeCore, type RealtimeCore, type WSClient } from './realtime-core'
+import { createRealtimeCore, type RealtimeCore, type WSClient, type RPCHandler, type EventHandler } from './realtime-core'
 import { generateUUID } from '../utils/uuid'
 
 class NodeWSClient implements WSClient {
@@ -48,6 +48,14 @@ export class NodeWSServer {
 
   broadcast(data: unknown, exclude: string[] = [], event: string = 'notification'): void {
     this.core.broadcast(data, exclude, event)
+  }
+
+  registerRPCHandler(method: string, handler: RPCHandler): void {
+    this.core.registerRPCHandler(method, handler)
+  }
+
+  registerEventHandler(type: string, handler: EventHandler): void {
+    this.core.registerEventHandler(type, handler)
   }
 
   send(clientId: string, data: unknown): boolean {
