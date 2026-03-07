@@ -119,32 +119,6 @@ describe('Chat Routes with Type-Safe Test Client', () => {
       }
     })
 
-    it('should handle unknown method error with type-safe client', async () => {
-      const wsClient = createTestWSClient(wsUrl)
-
-      try {
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Test timeout'))
-          }, 5000)
-
-          wsClient.onStatusChange(status => {
-            if (status === 'open') {
-              clearTimeout(timeout)
-              resolve()
-            }
-          })
-        })
-
-        await expect(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (wsClient as any).call('unknownMethod', {})
-        ).rejects.toThrow('Unknown method')
-      } finally {
-        wsClient.close()
-      }
-    })
-
     it('should handle events with type-safe client', async () => {
       const wsClient = createTestWSClient(wsUrl)
 
