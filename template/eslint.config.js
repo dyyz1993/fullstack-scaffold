@@ -5,12 +5,14 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax.js'
 import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
 import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
+import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-service.js'
 
 const localRules = {
   rules: {
     'require-hono-chain-syntax': requireHonoChainSyntax,
     'require-type-safe-test-client': requireTypeSafeTestClient,
     'no-ambiguous-file-paths': noAmbiguousFilePaths,
+    'no-util-functions-in-service': noUtilFunctionsInService,
   },
 }
 
@@ -53,6 +55,7 @@ export default tseslint.config(
     rules: {
       'no-console': 'error',
       'local-rules/require-hono-chain-syntax': 'error',
+      'local-rules/no-util-functions-in-service': 'warn',
     },
   },
   {

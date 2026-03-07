@@ -2,10 +2,7 @@ import { eq, desc } from 'drizzle-orm'
 import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/types'
 import { getDb } from '../../db'
 import { todos, type TodoTable } from '../../db/schema'
-
-function toISOString(date: Date): string {
-  return date.toISOString()
-}
+import { toISOString } from '../../utils/date'
 
 export async function listTodos(): Promise<Todo[]> {
   const db = await getDb()
