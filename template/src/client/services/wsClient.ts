@@ -1,6 +1,3 @@
-import { AppWSProtocol, type WSProtocolMessage, type WSRpcResponse, type WSEventMessage } from '@shared/schemas'
-import type { InferResponseType } from 'hono/client'
-
 export type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
 
 type PendingRequest = {
@@ -9,7 +6,21 @@ type PendingRequest = {
   timer: ReturnType<typeof setTimeout>
 }
 
-export class WSClient<P extends AppWSProtocol> {
+export interface WSProtocol {
+  rpc: Record<string, { in: unknown; out: unknown }>
+  events: Record<string, unknown>
+}
+
+interface WSMessageBase {
+  id?: string
+  method?: string
+  type?: string
+  payload?: unknown
+  result?: unknown
+  error?: string
+}
+
+export class WSClient<P extends WSProtocol> {
   private socket: WebSocket | null = null
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private pendingRequests = new Map<string, PendingRequest>()
@@ -56,21 +67,19 @@ export class WSClient<P extends AppWSProtocol> {
 
   private handleMessage(event: MessageEvent) {
     try {
-      const data = JSON.parse(event.data) as WSProtocolMessage
+      const data: WSMessageBase = JSON.parse(event.data)
 
       if ('id' in data && !('method' in data)) {
-        const resp = data as WSRpcResponse
-        const pending = this.pendingRequests.get(resp.id)
+        const pending = this.pendingRequests.get(data.id!)
         if (pending) {
           clearTimeout(pending.timer)
-          this.pendingRequests.delete(resp.id)
-          if (resp.error) pending.reject(new Error(resp.error))
-          else pending.resolve(resp.result)
+          this.pendingRequests.delete(data.id!)
+          if (data.error) pending.reject(new Error(data.error))
+          else pending.resolve(data.result)
         }
       } else if ('type' in data) {
-        const ev = data as WSEventMessage
-        const callbacks = this.handlers.get(ev.type)
-        callbacks?.forEach(cb => cb(ev.payload))
+        const callbacks = this.handlers.get(data.type!)
+        callbacks?.forEach(cb => cb(data.payload))
       }
     } catch (e) {
       console.error('Failed to parse WS message', e)
@@ -94,7 +103,12 @@ export class WSClient<P extends AppWSProtocol> {
         reject(new Error(`RPC Timeout: ${String(method)}`))
       }, timeout)
 
-      this.pendingRequests.set(id, { resolve: resolve as (val: unknown) => void, reject, timer })
+      this.pendingRequests.set(id, {
+        resolve: resolve as (val: unknown) => void,
+        reject,
+        timer,
+      })
+
       this.sendRaw({ id, method, params })
     })
   }
@@ -136,31 +150,3 @@ export class WSClient<P extends AppWSProtocol> {
     }
   }
 }
-
-type ExtractWSProtocol<T> = T extends { rpc: unknown; events: unknown } ? T : never
-
-export type InferWSProtocol<T> = T extends { $get: unknown } 
-  ? ExtractWSProtocol<Awaited<InferResponseType<T['$get'], 200>>>
-  : never
-
-interface CreateWSOptions {
-  token?: string
-}
-
-interface RouteWithURL {
-  $get: unknown
-  $url: (options?: { query?: Record<string, string> }) => URL
-}
-
-export function createWS<R extends RouteWithURL>(
-  route: R,
-  options?: CreateWSOptions
-) {
-  return new WSClient<InferWSProtocol<R>>(() => {
-    const httpUrl = route.$url({ query: options?.token ? { token: options.token } : undefined })
-    const wsUrl = httpUrl.href.replace(/^http/, 'ws')
-    return new WebSocket(wsUrl)
-  })
-}
-
-export type { AppWSProtocol }

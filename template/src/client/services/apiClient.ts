@@ -6,7 +6,6 @@
 import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import type { ApiSuccess, ApiError, ApiResponse, AppWSProtocol } from '@shared/schemas'
-import type { ClientResponse } from 'hono/client'
 import { WSClient } from './wsClient'
 
 export type { ApiSuccess, ApiError, ApiResponse }
@@ -28,7 +27,7 @@ const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
 export const apiClient = hc<AppType>(baseUrl, {
   webSocket: (url: string | URL) => {
-    const client = createWSClient<AppWSProtocol>(url)
+    const client = createWSClient(url)
     return client.getSocket()!
   },
 })
@@ -61,37 +60,3 @@ export function extendWSRoute<T extends WSRoute>(
 export function getWSClient(url: string): WSClient<AppWSProtocol> | undefined {
   return wsClientInstances.get(url)
 }
-
-export async function* consumeStream<T>(
-  responsePromise: Promise<ClientResponse<T>>
-): AsyncIterable<T> {
-  const res = (await responsePromise) as unknown as Response
-  if (!res.ok || !res.body) return
-
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder()
-
-  let buffer = ''
-
-  while (true) {
-    const { value, done } = await reader.read()
-    if (done) break
-
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() || ''
-
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const data = line.slice(6)
-        try {
-          yield JSON.parse(data) as T
-        } catch (e) {
-          console.error('Failed to parse SSE line', e)
-        }
-      }
-    }
-  }
-}
-
-export const USE_MOCK_SERVER = false

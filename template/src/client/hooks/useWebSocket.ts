@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createWS, WSClient, type AppWSProtocol, type WSStatus } from '@client/services/wsClient'
-import { apiClient } from '@client/services/apiClient'
+import { WSClient, type WSStatus } from '@client/services/wsClient'
+import type { AppWSProtocol } from '@shared/schemas'
+import { apiClient, extendWSRoute } from '@client/services/apiClient'
 
 interface UseWebSocketReturn<P extends AppWSProtocol> {
   status: WSStatus
@@ -11,7 +12,10 @@ interface UseWebSocketReturn<P extends AppWSProtocol> {
     params: P['rpc'][K] extends { in: infer I } ? I : never
   ) => Promise<P['rpc'][K] extends { out: infer O } ? O : never>
   emit: <K extends keyof P['events']>(type: K, payload: P['events'][K]) => void
-  on: <K extends keyof P['events']>(type: K, handler: (payload: P['events'][K]) => void) => () => void
+  on: <K extends keyof P['events']>(
+    type: K,
+    handler: (payload: P['events'][K]) => void
+  ) => () => void
 }
 
 export function useWebSocket(): UseWebSocketReturn<AppWSProtocol> {
@@ -21,7 +25,7 @@ export function useWebSocket(): UseWebSocketReturn<AppWSProtocol> {
   const connect = useCallback(() => {
     if (clientRef.current) return
 
-    const client = createWS(apiClient.api.chat.ws)
+    const client = extendWSRoute(apiClient.api.chat.ws).$ws()
     clientRef.current = client
 
     client.onStatusChange(setStatus)
