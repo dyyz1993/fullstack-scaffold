@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { WSClient, type WSStatus } from '@client/services/wsClient'
-import type { AppWSProtocol } from '@shared/schemas'
-import { apiClient, extendWSRoute } from '@client/services/apiClient'
+import type { WSStatus } from '@client/services/wsClient'
+import { apiClient } from '@client/services/apiClient'
 
 interface WSMessage {
   type: string
@@ -22,41 +21,45 @@ interface WSState {
   clearMessages: () => void
 }
 
-let wsClient: WSClient<AppWSProtocol> | null = null
+let wsClient: Awaited<ReturnType<typeof apiClient.api.chat.ws.$ws>> | null = null
 
-export const useChatWSStore = create<WSState>((set, get) => ({
+export const useChatWsStore = create<WSState>((set, get) => ({
   status: 'closed',
   messages: [],
 
   connect: () => {
     if (wsClient) return
 
-    const client = extendWSRoute(apiClient.api.chat.ws).$ws()
-    wsClient = client
+    apiClient.api.chat.ws.$ws().then(client => {
+      wsClient = client
 
-    client.onStatusChange((newStatus: WSStatus) => {
-      set({ status: newStatus })
-    })
+      client.onStatusChange((newStatus: WSStatus) => {
+        set({ status: newStatus })
+      })
 
-    client.on('notification', (payload: { title: string; body: string; timestamp: number }) => {
-      set(state => ({
-        messages: [
-          ...state.messages,
-          { type: 'notification', payload, timestamp: payload.timestamp },
-        ],
-      }))
-    })
+      client.on('notification', (payload: unknown) => {
+        const p = payload as { title: string; body: string; timestamp: number }
+        set(state => ({
+          messages: [
+            ...state.messages,
+            { type: 'notification', payload: p, timestamp: p.timestamp },
+          ],
+        }))
+      })
 
-    client.on('broadcast', (payload: { message: string; timestamp: number }) => {
-      set(state => ({
-        messages: [...state.messages, { type: 'broadcast', payload, timestamp: payload.timestamp }],
-      }))
-    })
+      client.on('broadcast', (payload: unknown) => {
+        const p = payload as { message: string; timestamp: number }
+        set(state => ({
+          messages: [...state.messages, { type: 'broadcast', payload: p, timestamp: p.timestamp }],
+        }))
+      })
 
-    client.on('connected', (payload: { timestamp: number }) => {
-      set(state => ({
-        messages: [...state.messages, { type: 'connected', payload, timestamp: payload.timestamp }],
-      }))
+      client.on('connected', (payload: unknown) => {
+        const p = payload as { timestamp: number }
+        set(state => ({
+          messages: [...state.messages, { type: 'connected', payload: p, timestamp: p.timestamp }],
+        }))
+      })
     })
   },
 

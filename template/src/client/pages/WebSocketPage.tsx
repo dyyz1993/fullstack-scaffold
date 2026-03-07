@@ -15,7 +15,7 @@ import {
   Bell,
   Activity,
 } from 'lucide-react'
-import { useChatWSStore } from '@client/stores/chatWSStore'
+import { useChatWsStore } from '@client/stores/chatWSStore'
 import { LoadingSpinner, EmptyState, MessageCard } from '@client/components'
 import type { WSStatus } from '@client/services/wsClient'
 
@@ -30,7 +30,7 @@ export const WebSocketPage: React.FC = () => {
     broadcast,
     notification,
     clearMessages,
-  } = useChatWSStore()
+  } = useChatWsStore()
   const [inputMessage, setInputMessage] = useState('')
   const [messageType, setMessageType] = useState<'echo' | 'notification' | 'broadcast' | 'ping'>(
     'echo'
@@ -80,7 +80,8 @@ export const WebSocketPage: React.FC = () => {
     reconnecting: 'text-orange-500',
   }
 
-  const isLoading = status === 'connecting' || status === 'reconnecting'
+  const currentStatus = status as WSStatus
+  const isLoading = currentStatus === 'connecting' || currentStatus === 'reconnecting'
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -97,9 +98,9 @@ export const WebSocketPage: React.FC = () => {
       <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <span className="font-medium text-gray-700">Status:</span>
-          <span className={`flex items-center gap-1 ${statusColors[status]}`}>
+          <span className={`flex items-center gap-1 ${statusColors[currentStatus]}`}>
             {isLoading ? (
-              <LoadingSpinner size="sm" color={statusColors[status]} />
+              <LoadingSpinner size="sm" color={statusColors[currentStatus]} />
             ) : status === 'open' ? (
               <Wifi className="w-4 h-4" />
             ) : (
@@ -189,24 +190,26 @@ export const WebSocketPage: React.FC = () => {
         {messages.length === 0 ? (
           <EmptyState icon={MessageSquare} title="No messages yet. Connect and send a message!" />
         ) : (
-          messages.map((msg, index) => {
-            const config = typeConfig[msg.type] || {
-              colorScheme: 'gray' as const,
-              icon: MessageSquare,
-              borderColor: '#6b7280',
+          messages.map(
+            (msg: { type: string; payload: unknown; timestamp?: number }, index: number) => {
+              const config = typeConfig[msg.type] || {
+                colorScheme: 'gray' as const,
+                icon: MessageSquare,
+                borderColor: '#6b7280',
+              }
+              return (
+                <MessageCard
+                  key={index}
+                  type={msg.type}
+                  payload={msg.payload}
+                  timestamp={msg.timestamp}
+                  icon={config.icon}
+                  colorScheme={config.colorScheme}
+                  borderColor={config.borderColor}
+                />
+              )
             }
-            return (
-              <MessageCard
-                key={index}
-                type={msg.type}
-                payload={msg.payload}
-                timestamp={msg.timestamp}
-                icon={config.icon}
-                colorScheme={config.colorScheme}
-                borderColor={config.borderColor}
-              />
-            )
-          })
+          )
         )}
       </div>
     </div>

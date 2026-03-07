@@ -2,8 +2,6 @@ import { createServer, type Server } from 'http'
 import { WebSocketServer } from 'ws'
 import type { Hono, Env } from 'hono'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
-import { WSClient } from '@client/services/wsClient'
-import type { AppWSProtocol } from '@shared/schemas'
 
 export interface TestServer {
   server: Server
@@ -54,8 +52,4 @@ export function createTestServer<E extends Env>(
       }
     })
   })
-}
-
-export function createTestWSClient(url: string): WSClient<AppWSProtocol> {
-  return new WSClient<AppWSProtocol>(() => new WebSocket(url))
 }

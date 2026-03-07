@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import app from '../../entries/node'
 import { initChatHandlers } from '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
-import { createTestServer, createTestWSClient } from '../../test-utils/test-server'
+import { createTestServer } from '../../test-utils/test-server'
 
 initChatHandlers()
 
@@ -33,7 +33,8 @@ describe('Chat Routes with Type-Safe Test Client', () => {
 
   describe('WebSocket RPC Methods', () => {
     it('should handle echo RPC call with type-safe client', async () => {
-      const wsClient = createTestWSClient(testServer.wsUrl)
+      const client = createTestClient()
+      const wsClient = await client.api.chat.ws.$ws()
 
       try {
         await new Promise<void>((resolve, reject) => {
@@ -60,7 +61,8 @@ describe('Chat Routes with Type-Safe Test Client', () => {
     })
 
     it('should handle ping RPC call with type-safe client', async () => {
-      const wsClient = createTestWSClient(testServer.wsUrl)
+      const client = createTestClient()
+      const wsClient = await client.api.chat.ws.$ws()
 
       try {
         await new Promise<void>((resolve, reject) => {
@@ -87,7 +89,8 @@ describe('Chat Routes with Type-Safe Test Client', () => {
     })
 
     it('should handle events with type-safe client', async () => {
-      const wsClient = createTestWSClient(testServer.wsUrl)
+      const client = createTestClient()
+      const wsClient = await client.api.chat.ws.$ws()
 
       try {
         await new Promise<void>((resolve, reject) => {
