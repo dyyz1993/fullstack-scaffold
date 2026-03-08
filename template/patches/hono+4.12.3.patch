@@ -1,5 +1,19 @@
+diff --git a/node_modules/hono/dist/types/client/protocols.d.ts b/node_modules/hono/dist/types/client/protocols.d.ts
+new file mode 100644
+index 0000000..6a42386
+--- /dev/null
++++ b/node_modules/hono/dist/types/client/protocols.d.ts
+@@ -0,0 +1,8 @@
++export interface WSProtocol {
++  rpc: Record<string, { in: unknown; out: unknown }>
++  events: Record<string, unknown>
++}
++
++export interface SSEProtocol {
++  events: Record<string, unknown>
++}
 diff --git a/node_modules/hono/dist/types/client/types.d.ts b/node_modules/hono/dist/types/client/types.d.ts
-index 6af21ca..191dc05 100644
+index 6af21ca..3ee9e11 100644
 --- a/node_modules/hono/dist/types/client/types.d.ts
 +++ b/node_modules/hono/dist/types/client/types.d.ts
 @@ -92,10 +92,11 @@ export type ClientRequest<Prefix extends string, Path extends string, S extends
@@ -11,39 +25,66 @@ index 6af21ca..191dc05 100644
      input: infer I;
  } ? {
 -    $ws: (args?: I) => WebSocket;
-+    $ws: (args?: I) => O;
++    $ws: (args?: I) => WSClient<O>;
  } : {} : {});
  type ClientResponseOfEndpoint<T extends Endpoint = Endpoint> = T extends {
      output: infer O;
-diff --git a/node_modules/hono/dist/types/helper/streaming/sse.d.ts b/node_modules/hono/dist/types/helper/streaming/sse.d.ts
-index c4cf659..7327dcb 100644
---- a/node_modules/hono/dist/types/helper/streaming/sse.d.ts
-+++ b/node_modules/hono/dist/types/helper/streaming/sse.d.ts
-@@ -1,4 +1,5 @@
- import type { Context } from '../../context';
-+import type { TypedResponse } from '../../types';
- import { StreamingApi } from '../../utils/stream';
- export interface SSEMessage {
-     data: string | Promise<string>;
-@@ -10,4 +11,4 @@ export declare class SSEStreamingApi extends StreamingApi {
-     constructor(writable: WritableStream, readable: ReadableStream);
-     writeSSE(message: SSEMessage): Promise<void>;
- }
--export declare const streamSSE: (c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response;
-+export declare const streamSSE: <T = unknown>(c: Context, cb: (stream: SSEStreamingApi) => Promise<void>, onError?: (e: Error, stream: SSEStreamingApi) => Promise<void>) => Response & TypedResponse<T, 200, 'sse'>;
-diff --git a/node_modules/hono/dist/types/helper/websocket/index.d.ts b/node_modules/hono/dist/types/helper/websocket/index.d.ts
-index 0d7ebbb..b189ce4 100644
---- a/node_modules/hono/dist/types/helper/websocket/index.d.ts
-+++ b/node_modules/hono/dist/types/helper/websocket/index.d.ts
-@@ -19,9 +19,10 @@ export interface WSEvents<T = unknown> {
-  */
- export interface UpgradeWebSocket<T = unknown, U = any, _WSEvents = WSEvents<T>> {
-     (createEvents: (c: Context) => _WSEvents | Promise<_WSEvents>, options?: U): MiddlewareHandler<any, string, {
-+        output: T;
-         outputFormat: 'ws';
-     }>;
--    (c: Context, events: _WSEvents, options?: U): Promise<Response & TypedResponse<{}, StatusCode, 'ws'>>;
-+    (c: Context, events: _WSEvents, options?: U): Promise<Response & TypedResponse<T, StatusCode, 'ws'>>;
- }
- /**
-  * ReadyState for WebSocket
+diff --git a/node_modules/hono/dist/types/client/ws-client.d.ts b/node_modules/hono/dist/types/client/ws-client.d.ts
+new file mode 100644
+index 0000000..0da075f
+--- /dev/null
++++ b/node_modules/hono/dist/types/client/ws-client.d.ts
+@@ -0,0 +1,40 @@
++export type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
++
++export interface WSProtocol {
++  rpc: Record<string, { in: unknown; out: unknown }>
++  events: Record<string, unknown>
++}
++
++export interface SSEProtocol {
++  events: Record<string, unknown>
++}
++
++export interface WSClient<T extends WSProtocol = WSProtocol> {
++  readonly status: WSStatus
++  getSocket(): WebSocket | null
++
++  call<K extends keyof T['rpc']>(
++    method: K,
++    params: T['rpc'][K] extends { in: infer I } ? I : never,
++    timeout?: number
++  ): Promise<T['rpc'][K] extends { out: infer O } ? O : never>
++
++  emit<K extends keyof T['events']>(type: K, payload: T['events'][K]): void
++
++  on<K extends keyof T['events']>(type: K, handler: (payload: T['events'][K]) => void): () => void
++
++  onStatusChange(handler: (status: WSStatus) => void): () => void
++
++  close(): void
++}
++
++export interface SSEClient<T extends SSEProtocol = SSEProtocol> {
++  readonly status: 'connecting' | 'open' | 'closed'
++
++  on<K extends keyof T['events']>(type: K, handler: (payload: T['events'][K]) => void): () => void
++
++  onStatusChange(handler: (status: 'connecting' | 'open' | 'closed') => void): () => void
++  onError(handler: (error: Error) => void): () => void
++
++  abort(): void
++}
+diff --git a/node_modules/hono/dist/types/types.d.ts b/node_modules/hono/dist/types/types.d.ts
+index 18ac8e2..9546b5f 100644
+--- a/node_modules/hono/dist/types/types.d.ts
++++ b/node_modules/hono/dist/types/types.d.ts
+@@ -524,7 +524,7 @@ export type AddParam<I, P extends string> = ParamKeys<P> extends never ? I : I e
+ };
+ type AddDollar<T extends string> = `$${Lowercase<T>}`;
+ export type MergePath<A extends string, B extends string> = B extends '' ? MergePath<A, '/'> : A extends '' ? B : A extends '/' ? B : A extends `${infer P}/` ? B extends `/${infer Q}` ? `${P}/${Q}` : `${P}/${B}` : B extends `/${infer Q}` ? Q extends '' ? A : `${A}/${Q}` : `${A}/${B}`;
+-export type KnownResponseFormat = 'json' | 'text' | 'redirect';
++export type KnownResponseFormat = 'json' | 'text' | 'redirect' | 'ws' | 'sse';
+ export type ResponseFormat = KnownResponseFormat | string;
+ export type TypedResponse<T = unknown, U extends StatusCode = StatusCode, F extends ResponseFormat = T extends string ? 'text' : T extends JSONValue ? 'json' : ResponseFormat> = {
+     _data: T;

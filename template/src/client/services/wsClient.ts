@@ -1,14 +1,9 @@
-export type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
+import type { WSStatus, WSProtocol } from '@shared/schemas'
 
 type PendingRequest = {
   resolve: (val: unknown) => void
   reject: (err: unknown) => void
   timer: ReturnType<typeof setTimeout>
-}
-
-export interface WSProtocol {
-  rpc: Record<string, { in: unknown; out: unknown }>
-  events: Record<string, unknown>
 }
 
 interface WSMessageBase {
@@ -20,36 +15,41 @@ interface WSMessageBase {
   error?: string
 }
 
-export class WSClient<P extends WSProtocol> {
-  private socket: WebSocket | null = null
+export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WebSocket {
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private pendingRequests = new Map<string, PendingRequest>()
   private statusHandlers: ((status: WSStatus) => void)[] = []
   private messageBuffer: string[] = []
   private _status: WSStatus = 'closed'
 
-  constructor(private createSocket: () => WebSocket) {
-    this.connect()
+  constructor(url: string | URL, protocols?: string | string[]) {
+    super(url, protocols)
+    this.attachSocket()
   }
 
-  public get status() {
-    return this._status
-  }
-
-  public getSocket() {
-    return this.socket
-  }
-
-  private connect() {
-    this._status = 'connecting'
-    try {
-      this.socket = this.createSocket()
-      this.socket.onopen = () => this.handleOpen()
-      this.socket.onmessage = msg => this.handleMessage(msg)
-      this.socket.onclose = () => this.handleClose()
-      this.socket.onerror = () => this.updateStatus('closed')
-    } catch {
-      this.handleClose()
+  private attachSocket() {
+    if (this.readyState === WebSocket.OPEN) {
+      this._status = 'open'
+    } else if (this.readyState === WebSocket.CONNECTING) {
+      this._status = 'connecting'
+    } else {
+      this._status = 'closed'
+    }
+    this.onmessage = msg => this.handleMessage(msg)
+    this.onclose = () => {
+      if (this._status !== 'closed') {
+        this.handleClose()
+      }
+    }
+    this.onerror = () => {
+      if (this._status !== 'closed') {
+        this.updateStatus('closed')
+      }
+    }
+    this.onopen = () => {
+      if (this._status !== 'open') {
+        this.handleOpen()
+      }
     }
   }
 
@@ -57,7 +57,7 @@ export class WSClient<P extends WSProtocol> {
     this.updateStatus('open')
     while (this.messageBuffer.length > 0) {
       const msg = this.messageBuffer.shift()
-      if (msg) this.socket?.send(msg)
+      if (msg) this.send(msg)
     }
   }
 
@@ -135,16 +135,13 @@ export class WSClient<P extends WSProtocol> {
   }
 
   close() {
-    if (this.socket) {
-      this.socket.onclose = null
-      this.socket.close()
-    }
+    super.close()
   }
 
   private sendRaw(data: unknown) {
     const msg = JSON.stringify(data)
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      this.socket.send(msg)
+    if (this.readyState === WebSocket.OPEN) {
+      this.send(msg)
     } else {
       this.messageBuffer.push(msg)
     }

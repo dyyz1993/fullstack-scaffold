@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { WSClient, WSProtocol, WSStatus } from '@client/services/wsClient'
+import type { WSClient, WSProtocol, WSStatus } from '@shared/schemas'
 
 interface UseWebSocketReturn<T extends WSProtocol> {
   status: WSStatus
-  connect: () => Promise<void>
+  connect: () => void
   disconnect: () => void
   call: WSClient<T>['call']
   emit: WSClient<T>['emit']
@@ -12,15 +12,15 @@ interface UseWebSocketReturn<T extends WSProtocol> {
 }
 
 export function useWebSocket<T extends WSProtocol>(route: {
-  $ws: () => Promise<WSClient<T>>
+  $ws: () => WSClient<T>
 }): UseWebSocketReturn<T> {
   const [status, setStatus] = useState<WSStatus>('closed')
   const clientRef = useRef<WSClient<T> | null>(null)
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(() => {
     if (clientRef.current) return
 
-    const client = await route.$ws()
+    const client = route.$ws()
     clientRef.current = client
 
     client.onStatusChange(setStatus)

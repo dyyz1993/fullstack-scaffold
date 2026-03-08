@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { useChatWsStore } from '@client/stores/chatWSStore'
 import { LoadingSpinner, EmptyState, MessageCard } from '@client/components'
-import type { WSStatus } from '@client/services/wsClient'
+import type { WSStatus } from '@shared/schemas'
 
 export const WebSocketPage: React.FC = () => {
   const {

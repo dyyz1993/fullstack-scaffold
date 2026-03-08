@@ -1,22 +1,22 @@
 /**
  * Unified schema exports
- * 
+ *
  * Schema Organization Strategy:
- * 
+ *
  * 1. Each module has its own schema file (todos.ts, notifications.ts)
  *    - Module-specific schemas live alongside the module
  *    - Easy to find and maintain
- * 
+ *
  * 2. Common schemas (API response, pagination, etc.) in common.ts
  *    - Shared across all modules
- * 
+ *
  * 3. This index.ts re-exports everything for convenient imports
- * 
+ *
  * Usage:
  * ```ts
  * // Import from unified entry (recommended for client)
  * import { TodoSchema, NotificationSchema, type Todo, type Notification } from '@shared/schemas';
- * 
+ *
  * // Or import from module-specific file (for server modules)
  * import { TodoSchema, type Todo } from '@shared/schemas/todos';
  * ```
@@ -30,7 +30,7 @@ export {
   type ApiSuccess,
   type ApiError,
   type ApiResponse,
-} from './common';
+} from './common'
 
 // Todo module schemas
 export {
@@ -43,7 +43,7 @@ export {
   type Todo,
   type CreateTodoInput,
   type UpdateTodoInput,
-} from './todos';
+} from './todos'
 
 // Notification module schemas
 export {
@@ -57,7 +57,7 @@ export {
   type CreateNotificationInput,
   type NotificationListQuery,
   type SSEEvent,
-} from './notifications';
+} from './notifications'
 
 // WebSocket module schemas
 export {
@@ -69,7 +69,7 @@ export {
   type WSMessage,
   type WSEchoPayload,
   type WSNotificationPayload,
-} from './websocket';
+} from './websocket'
 
 // WebSocket protocol (for GhostWSClient type inference)
 export {
@@ -83,4 +83,7 @@ export {
   type WSRpcResponse,
   type WSEventMessage,
   type WSMessage as WSProtocolMessage,
-} from './ws-protocol';
+} from './ws-protocol'
+
+// WebSocket client types
+export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus } from '../types/ws-client'

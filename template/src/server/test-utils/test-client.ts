@@ -1,26 +1,19 @@
-/**
- * Type-safe test client for API testing
- * Pre-calculates types at compile time for better IDE performance
- */
-
-import { testClient } from 'hono/testing'
+import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
+import { createWSClient } from '@client/services/wsClientFactory'
 
-/**
- * Pre-calculated client type for better IDE performance
- * This avoids type instantiation at runtime
- */
-export type TestClient = ReturnType<typeof testClient<AppType>>
+export type TestClient = ReturnType<typeof hc<AppType>>
 
-/**
- * Create a type-safe test client with pre-calculated types
- * Usage:
- *   const client = createTestClient()
- *   const res = await client.api.todos.$get()
- *   const data = await res.json() // Type is automatically inferred
- */
-export function createTestClient(): TestClient {
+export function createTestClient(baseUrl?: string): TestClient {
   const app = createApp()
-  return testClient<AppType>(app)
+  if (baseUrl) {
+    return hc<AppType>(baseUrl, {
+      webSocket: url => createWSClient(url) as unknown as WebSocket,
+    })
+  }
+  return hc<AppType>('http://localhost', {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetch: (input: any) => app.fetch(new Request(input)),
+  })
 }

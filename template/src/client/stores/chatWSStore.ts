@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { WSStatus } from '@client/services/wsClient'
 import { apiClient } from '@client/services/apiClient'
+import type { AppWSProtocol, WSClient, WSStatus } from '@shared/schemas'
 
 interface WSMessage {
   type: string
@@ -21,7 +21,7 @@ interface WSState {
   clearMessages: () => void
 }
 
-let wsClient: Awaited<ReturnType<typeof apiClient.api.chat.ws.$ws>> | null = null
+let wsClient: WSClient<AppWSProtocol> | null = null
 
 export const useChatWsStore = create<WSState>((set, get) => ({
   status: 'closed',
@@ -30,36 +30,33 @@ export const useChatWsStore = create<WSState>((set, get) => ({
   connect: () => {
     if (wsClient) return
 
-    apiClient.api.chat.ws.$ws().then(client => {
-      wsClient = client
+    wsClient = apiClient.api.chat.ws.$ws()
 
-      client.onStatusChange((newStatus: WSStatus) => {
-        set({ status: newStatus })
-      })
+    if (!wsClient) return
 
-      client.on('notification', (payload: unknown) => {
-        const p = payload as { title: string; body: string; timestamp: number }
-        set(state => ({
-          messages: [
-            ...state.messages,
-            { type: 'notification', payload: p, timestamp: p.timestamp },
-          ],
-        }))
-      })
+    wsClient.onStatusChange((newStatus: WSStatus) => {
+      set({ status: newStatus })
+    })
 
-      client.on('broadcast', (payload: unknown) => {
-        const p = payload as { message: string; timestamp: number }
-        set(state => ({
-          messages: [...state.messages, { type: 'broadcast', payload: p, timestamp: p.timestamp }],
-        }))
-      })
+    wsClient.on('notification', (payload: unknown) => {
+      const p = payload as { title: string; body: string; timestamp: number }
+      set(state => ({
+        messages: [...state.messages, { type: 'notification', payload: p, timestamp: p.timestamp }],
+      }))
+    })
 
-      client.on('connected', (payload: unknown) => {
-        const p = payload as { timestamp: number }
-        set(state => ({
-          messages: [...state.messages, { type: 'connected', payload: p, timestamp: p.timestamp }],
-        }))
-      })
+    wsClient.on('broadcast', (payload: unknown) => {
+      const p = payload as { message: string; timestamp: number }
+      set(state => ({
+        messages: [...state.messages, { type: 'broadcast', payload: p, timestamp: p.timestamp }],
+      }))
+    })
+
+    wsClient.on('connected', (payload: unknown) => {
+      const p = payload as { timestamp: number }
+      set(state => ({
+        messages: [...state.messages, { type: 'connected', payload: p, timestamp: p.timestamp }],
+      }))
     })
   },
 
