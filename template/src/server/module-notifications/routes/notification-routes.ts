@@ -2,7 +2,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
 import { realtime, setRealtimeEnv } from '@server/core'
-import { NotificationSchema, CreateNotificationSchema, SSEEventSchema } from '@shared/schemas'
+import { NotificationSchema, CreateNotificationSchema, AppSSEProtocolSchema } from '@shared/schemas'
 import { getRuntimeAdapter } from '@server/core/runtime'
 
 const NotificationListResponseSchema = z.object({
@@ -38,7 +38,7 @@ const streamRoute = createRoute({
     200: {
       content: {
         'text/event-stream': {
-          schema: SSEEventSchema,
+          schema: AppSSEProtocolSchema,
         },
       },
       description: 'SSE stream for notifications',

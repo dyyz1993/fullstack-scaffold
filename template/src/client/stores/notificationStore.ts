@@ -1,12 +1,11 @@
-/**
- * Notification store using Zustand
- * Demonstrates SSE consumption via Hono RPC with type inference
- */
-
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
-import { SSEConnection } from '@client/services/sseConnection'
-import type { AppNotification, CreateNotificationInput } from '@shared/schemas'
+import type {
+  AppNotification,
+  CreateNotificationInput,
+  SSEClient,
+  AppSSEProtocol,
+} from '@shared/schemas'
 
 interface NotificationState {
   notifications: AppNotification[]
@@ -21,11 +20,11 @@ interface NotificationState {
   markAllAsRead: () => Promise<void>
   deleteNotification: (id: string) => Promise<void>
   fetchUnreadCount: () => Promise<void>
-  connectSSE: () => void
+  connectSSE: () => Promise<void>
   disconnectSSE: () => void
 }
 
-let sseConnection: SSEConnection | null = null
+let sseClient: SSEClient<AppSSEProtocol> | null = null
 
 export const useNotificationStore = create<NotificationState>(set => ({
   notifications: [],
@@ -142,38 +141,43 @@ export const useNotificationStore = create<NotificationState>(set => ({
     }
   },
 
-  connectSSE: () => {
-    if (sseConnection?.connected) return
+  connectSSE: async () => {
+    if (sseClient) return
 
-    sseConnection = new SSEConnection(
-      signal => apiClient.api.notifications.stream.$get({ signal }),
-      {
-        onConnect: () => set({ sseConnected: true }),
-        onDisconnect: () => set({ sseConnected: false }),
-        onNotification: notification => {
-          set(state => {
-            if (state.notifications.some(n => n.id === notification.id)) {
-              return state
-            }
-            return {
-              notifications: [notification, ...state.notifications],
-              unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
-            }
-          })
-        },
-        onError: error => {
-          console.error('SSE error:', error)
-        },
-      }
-    )
+    try {
+      const conn = await apiClient.api.notifications.stream.$sse()
 
-    sseConnection.connect()
+      conn.onStatusChange(status => {
+        set({ sseConnected: status === 'open' })
+      })
+
+      conn.on('notification', notification => {
+        set(state => {
+          if (state.notifications.some(n => n.id === notification.id)) {
+            return state
+          }
+          return {
+            notifications: [notification, ...state.notifications],
+            unreadCount: notification.read ? state.unreadCount : state.unreadCount + 1,
+          }
+        })
+      })
+
+      conn.onError(error => {
+        console.error('SSE error:', error)
+      })
+
+      sseClient = conn
+    } catch (error) {
+      console.error('Failed to connect SSE:', error)
+    }
   },
 
   disconnectSSE: () => {
-    if (sseConnection) {
-      sseConnection.disconnect()
-      sseConnection = null
+    if (sseClient) {
+      sseClient.abort()
+      sseClient = null
+      set({ sseConnected: false })
     }
   },
 }))

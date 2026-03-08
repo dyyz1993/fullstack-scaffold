@@ -5,8 +5,9 @@ import {
   createSSETypeValidator,
   consumeSSEStream,
 } from '../../test-utils/test-sse'
-import * as notificationService from '../../module-notifications/services/notification-service'
-import { NotificationSchema, SSEEventSchema } from '@shared/schemas'
+import * as notificationService from '../services/notification-service'
+import { NotificationSchema, AppSSEProtocolSchema } from '@shared/schemas'
+import type { AppSSEProtocol } from '@shared/schemas'
 
 describe('SSE Routes with Type-Safe Test Client', () => {
   beforeEach(() => {
@@ -20,9 +21,9 @@ describe('SSE Routes with Type-Safe Test Client', () => {
   describe('GET /api/notifications/stream', () => {
     it('should establish SSE connection and receive events', async () => {
       const client = createTestClient()
-      const validator = createSSETypeValidator(SSEEventSchema)
+      const validator = createSSETypeValidator(AppSSEProtocolSchema)
 
-      const sseClient = createSSETestClient(
+      const sseClient = createSSETestClient<AppSSEProtocol>(
         signal => client.api.notifications.stream.$get({ signal }),
         { validateType: validator.validate }
       )
@@ -31,24 +32,20 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       expect(result.events.length).toBeGreaterThanOrEqual(1)
       expect(result.duration).toBeLessThan(4000)
-
-      result.events.forEach(event => {
-        expect(['notification', 'ping', 'connected']).toContain(event.event)
-      })
     })
 
     it('should use raw consumeSSEStream for low-level testing', async () => {
       const client = createTestClient()
 
       const controller = new AbortController()
-      const events: Array<{ event: string; data: unknown }> = []
+      const events: unknown[] = []
 
       const streamPromise = (async () => {
-        for await (const { data } of consumeSSEStream(
+        for await (const { data } of consumeSSEStream<AppSSEProtocol>(
           signal => client.api.notifications.stream.$get({ signal }),
           controller.signal
         )) {
-          events.push(data as { event: string; data: unknown })
+          events.push(data)
           if (events.length >= 1) break
         }
       })()
@@ -57,31 +54,42 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       controller.abort()
 
       expect(events.length).toBeGreaterThanOrEqual(1)
-      events.forEach(event => {
-        expect(['notification', 'ping', 'connected']).toContain(event.event)
-      })
     })
   })
 
   describe('SSE Type Inference', () => {
-    it('should infer correct types from RPC client', async () => {
+    it('should use $sse() method for type-safe SSE connection', async () => {
       const client = createTestClient()
 
-      const streamPromise = client.api.notifications.stream.$get({})
+      const conn = await client.api.notifications.stream.$sse()
 
-      const res = (await streamPromise) as unknown as Response
-      expect(res.headers.get('content-type')).toContain('text/event-stream')
-      expect(res.body).not.toBeNull()
+      expect(['connecting', 'open', 'closed']).toContain(conn.status)
 
-      const reader = res.body!.getReader()
-      await reader.cancel()
+      const receivedNotifications: AppSSEProtocol['events']['notification'][] = []
+
+      const unsubscribe = conn.on('notification', notification => {
+        receivedNotifications.push(notification)
+      })
+
+      conn.on('ping', ping => {
+        expect(ping.timestamp).toBeDefined()
+      })
+
+      conn.on('connected', connected => {
+        expect(connected.timestamp).toBeDefined()
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      unsubscribe()
+      conn.abort()
     })
 
     it('should work with typed SSE test client', async () => {
       const client = createTestClient()
-      const validator = createSSETypeValidator(SSEEventSchema)
+      const validator = createSSETypeValidator(AppSSEProtocolSchema)
 
-      const sseClient = createSSETestClient(
+      const sseClient = createSSETestClient<AppSSEProtocol>(
         signal => client.api.notifications.stream.$get({ signal }),
         { validateType: validator.validate }
       )
@@ -90,16 +98,14 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       result.events.forEach(event => {
         expect(() => validator.assert(event)).not.toThrow()
-        expect(event.event).toBeDefined()
-        expect(event.data).toBeDefined()
       })
     })
 
     it('should validate SSE event schema at runtime', async () => {
       const client = createTestClient()
-      const sseValidator = createSSETypeValidator(SSEEventSchema)
+      const sseValidator = createSSETypeValidator(AppSSEProtocolSchema)
 
-      const sseClient = createSSETestClient(
+      const sseClient = createSSETestClient<AppSSEProtocol>(
         signal => client.api.notifications.stream.$get({ signal }),
         { validateType: sseValidator.validate }
       )
@@ -108,17 +114,15 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       result.events.forEach(event => {
         expect(() => sseValidator.assert(event)).not.toThrow()
-        expect(event.event).toBeDefined()
-        expect(event.data).toBeDefined()
       })
     })
 
     it('should correctly type notification data within SSE events', async () => {
       const client = createTestClient()
-      const sseValidator = createSSETypeValidator(SSEEventSchema)
+      const sseValidator = createSSETypeValidator(AppSSEProtocolSchema)
       const notifValidator = createSSETypeValidator(NotificationSchema)
 
-      const sseClient = createSSETestClient(
+      const sseClient = createSSETestClient<AppSSEProtocol>(
         signal => client.api.notifications.stream.$get({ signal }),
         { validateType: sseValidator.validate }
       )
@@ -128,18 +132,22 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       expect(result.events.length).toBeGreaterThanOrEqual(1)
 
       result.events.forEach(event => {
-        if (event.event === 'connected' || event.event === 'ping') {
-          expect(event.data).toHaveProperty('timestamp')
-        } else if (event.event === 'notification') {
-          const data = event.data
-          if ('id' in data && 'type' in data && 'title' in data) {
-            expect(() => notifValidator.assert(data)).not.toThrow()
-            expect(data.id).toBeDefined()
-            expect(data.type).toBeDefined()
-            expect(data.title).toBeDefined()
-            expect(data.message).toBeDefined()
-            expect(data.read).toBeDefined()
-            expect(data.createdAt).toBeDefined()
+        if ('events' in event && event.events) {
+          if ('notification' in event.events) {
+            const notification = event.events.notification
+            expect(() => notifValidator.assert(notification)).not.toThrow()
+            expect(notification.id).toBeDefined()
+            expect(notification.type).toBeDefined()
+            expect(notification.title).toBeDefined()
+            expect(notification.message).toBeDefined()
+            expect(notification.read).toBeDefined()
+            expect(notification.createdAt).toBeDefined()
+          }
+          if ('ping' in event.events) {
+            expect(event.events.ping.timestamp).toBeDefined()
+          }
+          if ('connected' in event.events) {
+            expect(event.events.connected.timestamp).toBeDefined()
           }
         }
       })

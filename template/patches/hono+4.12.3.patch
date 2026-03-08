@@ -13,19 +13,26 @@ index 0000000..6a42386
 +  events: Record<string, unknown>
 +}
 diff --git a/node_modules/hono/dist/types/client/types.d.ts b/node_modules/hono/dist/types/client/types.d.ts
-index 6af21ca..3ee9e11 100644
+index 6af21ca..338ec91 100644
 --- a/node_modules/hono/dist/types/client/types.d.ts
 +++ b/node_modules/hono/dist/types/client/types.d.ts
-@@ -92,10 +92,11 @@ export type ClientRequest<Prefix extends string, Path extends string, S extends
+@@ -92,10 +92,18 @@ export type ClientRequest<Prefix extends string, Path extends string, S extends
      } : {} : {}) | undefined = undefined>(arg?: Arg) => BuildPath<Path, Arg>;
  } & (S['$get'] extends {
      outputFormat: 'ws';
++    output: infer O;
++} ? S['$get'] extends {
++    input: infer I;
++} ? {
++    $ws: (args?: I) => WSClient<O>;
++} : {} : {}) & (S['$get'] extends {
++    outputFormat: 'sse';
 +    output: infer O;
  } ? S['$get'] extends {
      input: infer I;
  } ? {
 -    $ws: (args?: I) => WebSocket;
-+    $ws: (args?: I) => WSClient<O>;
++    $sse: (args?: I) => Promise<SSEClient<O>>;
  } : {} : {});
  type ClientResponseOfEndpoint<T extends Endpoint = Endpoint> = T extends {
      output: infer O;

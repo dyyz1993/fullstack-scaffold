@@ -52,11 +52,13 @@ export {
   CreateNotificationSchema,
   NotificationListQuerySchema,
   SSEEventSchema,
+  AppSSEProtocolSchema,
   type NotificationType,
   type AppNotification,
   type CreateNotificationInput,
   type NotificationListQuery,
   type SSEEvent,
+  type AppSSEProtocol,
 } from './notifications'
 
 // WebSocket module schemas
