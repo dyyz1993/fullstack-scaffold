@@ -6,6 +6,8 @@ import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax
 import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
 import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
 import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-service.js'
+import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
+import { protectWsSseInterface } from './eslint-rules/protect-ws-sse-interface.js'
 
 const localRules = {
   rules: {
@@ -13,6 +15,8 @@ const localRules = {
     'require-type-safe-test-client': requireTypeSafeTestClient,
     'no-ambiguous-file-paths': noAmbiguousFilePaths,
     'no-util-functions-in-service': noUtilFunctionsInService,
+    'no-direct-ws-sse': noDirectWsSse,
+    'protect-ws-sse-interface': protectWsSseInterface,
   },
 }
 
@@ -48,6 +52,7 @@ export default tseslint.config(
         },
       ],
       'local-rules/no-ambiguous-file-paths': 'error',
+      'local-rules/no-direct-ws-sse': 'error',
     },
   },
   {
@@ -70,6 +75,12 @@ export default tseslint.config(
       'no-console': 'off',
       'no-restricted-globals': 'off',
       'local-rules/require-type-safe-test-client': 'error',
+    },
+  },
+  {
+    files: ['src/client/services/wsClient.ts', 'src/client/services/sseClient.ts'],
+    rules: {
+      'local-rules/protect-ws-sse-interface': 'error',
     },
   }
 )
