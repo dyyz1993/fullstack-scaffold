@@ -1,7 +1,5 @@
 import type { SSEClient, SSEProtocol } from '@shared/schemas'
 
-type SSEEventMap<T> = T extends SSEProtocol ? T['events'] : T
-
 export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSEClient<P> {
   private eventSource: EventSource | null = null
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
@@ -77,10 +75,7 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
     }
   }
 
-  on<K extends keyof SSEEventMap<P>>(
-    type: K,
-    handler: (payload: SSEEventMap<P>[K]) => void
-  ): () => void {
+  on<K extends keyof P['events']>(type: K, handler: (payload: P['events'][K]) => void): () => void {
     const eventName = type as string
 
     if (this.eventSource && eventName !== 'message') {
@@ -122,4 +117,27 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
     this._status = 'closed'
     this.statusHandlers.forEach(h => h('closed'))
   }
+}
+
+export async function createSSEClient<P extends SSEProtocol>(
+  url: string | URL
+): Promise<SSEClient<P>> {
+  return new Promise((resolve, reject) => {
+    const client = new SSEClientImpl<P>(url)
+
+    const timeout = setTimeout(() => {
+      reject(new Error('SSE connection timeout'))
+      client.abort()
+    }, 10000)
+
+    client.onStatusChange(status => {
+      if (status === 'open') {
+        clearTimeout(timeout)
+        resolve(client as unknown as SSEClient<P>)
+      } else if (status === 'closed') {
+        clearTimeout(timeout)
+        reject(new Error('SSE connection failed'))
+      }
+    })
+  })
 }

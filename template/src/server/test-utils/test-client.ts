@@ -1,7 +1,7 @@
 import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
-import { createWSClient } from '@client/services/wsClientFactory'
+import { createWSClient } from '@client/services/wsClient'
 
 export type TestClient = ReturnType<typeof hc<AppType>>
 

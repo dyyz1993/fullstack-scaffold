@@ -29,13 +29,10 @@ declare global {
     close(): void
   }
 
-  export interface SSEClient<T = SSEProtocol> {
+  export interface SSEClient<T extends SSEProtocol = SSEProtocol> {
     readonly status: 'connecting' | 'open' | 'closed'
 
-    on<K extends keyof (T extends SSEProtocol ? T['events'] : T)>(
-      type: K,
-      handler: (payload: (T extends SSEProtocol ? T['events'] : T)[K]) => void
-    ): () => void
+    on<K extends keyof T['events']>(type: K, handler: (payload: T['events'][K]) => void): () => void
 
     onStatusChange(handler: (status: 'connecting' | 'open' | 'closed') => void): () => void
     onError(handler: (error: Error) => void): () => void

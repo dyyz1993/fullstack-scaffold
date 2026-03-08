@@ -87,5 +87,5 @@ export {
   type WSMessage as WSProtocolMessage,
 } from './ws-protocol'
 
-// WebSocket client types
-export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus } from '../types/ws-client'
+// Re-export global types for convenience
+export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus }

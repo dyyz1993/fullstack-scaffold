@@ -1,4 +1,4 @@
-import type { WSStatus, WSProtocol } from '@shared/schemas'
+import type { WSStatus, WSProtocol, WSClient } from '@shared/schemas'
 
 type PendingRequest = {
   resolve: (val: unknown) => void
@@ -146,4 +146,8 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WebSocket {
       this.messageBuffer.push(msg)
     }
   }
+}
+
+export function createWSClient<P extends WSProtocol>(url: string | URL): WSClient<P> {
+  return new WSClientImpl<P>(url) as unknown as WSClient<P>
 }

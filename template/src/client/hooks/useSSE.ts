@@ -1,66 +1,45 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { SSEConnection } from '@client/services/sseConnection'
-import type { SSEEvent } from '@shared/schemas'
+import type { SSEClient, SSEProtocol } from '@shared/schemas'
 
 type SSEStatus = 'connecting' | 'open' | 'closed'
 
-interface UseSSEReturn {
+interface UseSSEReturn<T extends SSEProtocol> {
   status: SSEStatus
   connect: () => Promise<void>
   disconnect: () => void
-  onMessage: (handler: (data: SSEEvent) => void) => void
-  onNotification: (handler: (notification: SSEEvent['data']) => void) => void
-  client: SSEConnection | null
+  client: SSEClient<T> | null
 }
 
-export function useSSE(route: {
-  $get: (options?: { signal?: AbortSignal }) => Promise<Response>
-}): UseSSEReturn {
+export function useSSE<T extends SSEProtocol>(route: () => Promise<SSEClient<T>>): UseSSEReturn<T> {
   const [status, setStatus] = useState<SSEStatus>('closed')
-  const clientRef = useRef<SSEConnection | null>(null)
+  const clientRef = useRef<SSEClient<T> | null>(null)
 
   const connect = useCallback(async () => {
     if (clientRef.current) return
 
     setStatus('connecting')
 
-    const client = new SSEConnection(
-      async (signal: AbortSignal) => {
-        const res = await route.$get({ signal })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return res as any
-      },
-      {
-        onConnect: () => setStatus('open'),
-        onDisconnect: () => setStatus('closed'),
-        onError: () => setStatus('closed'),
-      }
-    )
+    try {
+      const client = await route()
+      clientRef.current = client
 
-    clientRef.current = client
-    await client.connect()
+      client.onStatusChange((newStatus: 'connecting' | 'open' | 'closed') => {
+        setStatus(newStatus)
+      })
+
+      setStatus(client.status)
+    } catch (error) {
+      console.error('Failed to connect SSE:', error)
+      setStatus('closed')
+    }
   }, [route])
 
   const disconnect = useCallback(() => {
     if (clientRef.current) {
-      clientRef.current.disconnect()
+      clientRef.current.abort()
       clientRef.current = null
       setStatus('closed')
     }
-  }, [])
-
-  const onMessage = useCallback((handler: (data: SSEEvent) => void) => {
-    if (!clientRef.current) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const originalOptions = (clientRef.current as any).options || {}
-    Object.assign(originalOptions, { onMessage: handler })
-  }, [])
-
-  const onNotification = useCallback((handler: (notification: SSEEvent['data']) => void) => {
-    if (!clientRef.current) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const originalOptions = (clientRef.current as any).options || {}
-    Object.assign(originalOptions, { onNotification: handler })
   }, [])
 
   useEffect(() => {
@@ -73,8 +52,6 @@ export function useSSE(route: {
     status,
     connect,
     disconnect,
-    onMessage,
-    onNotification,
     client: clientRef.current,
   }
 }
