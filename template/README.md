@@ -8,6 +8,7 @@ A full-stack React + Hono application template with TypeScript, demonstrating be
 - **Backend**: Hono with TypeScript
 - **Database**: SQLite with Drizzle ORM
 - **State Management**: Zustand
+- **Real-time**: WebSocket + SSE support
 - **Testing**: Vitest (unit + integration tests)
 - **Code Quality**: ESLint, Prettier, pre-commit hooks
 - **Type Safety**: End-to-end type safety with Hono RPC
@@ -19,20 +20,20 @@ src/
 ├── client/          # React frontend
 │   ├── components/  # UI components
 │   ├── stores/      # Zustand state management
-│   ├── services/    # API clients
+│   ├── services/    # API clients (wsClient, sseClient)
+│   ├── hooks/       # Custom hooks (useWS, useSSE)
 │   ├── test/        # Test setup
 │   └── App.tsx
 ├── server/          # Hono backend
-│   ├── module-todos/ # Todo module
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── __tests__/
-│   ├── shared/      # Database configuration
-│   ├── integration/ # Integration tests
+│   ├── module-todos/   # Todo module
+│   ├── module-chat/    # WebSocket chat module
+│   ├── module-notifications/ # SSE notifications module
+│   ├── core/           # Core services (realtime)
+│   ├── test-utils/     # Test utilities
 │   └── index.ts
 └── shared/          # Shared types
-    ├── types.ts
-    └── schemas.ts
+    ├── schemas/    # Zod schemas
+    └── types/      # TypeScript types
 ```
 
 ## Getting Started
@@ -74,9 +75,9 @@ npm test:integration
 
 ### Path Aliases
 
-- `@shared/*` → src/shared/*
-- `@client/*` → src/client/*
-- `@server/*` → src/server/*
+- `@shared/*` → src/shared/\*
+- `@client/*` → src/client/\*
+- `@server/*` → src/server/\*
 
 ### Single-Port Development
 
@@ -87,15 +88,39 @@ Uses `@hono/vite-dev-server` to run both frontend and backend on port 3010.
 Provides type-safe API calls from frontend to backend:
 
 ```typescript
-import { apiClient } from '@client/services/apiClient';
+import { apiClient } from '@client/services/apiClient'
 
-const response = await apiClient.api.todos.$get();
-const result = await response.json();
+// HTTP API
+const response = await apiClient.api.todos.$get()
+const result = await response.json()
+
+// WebSocket
+const ws = apiClient.api.chat.ws.$ws()
+const result = await ws.call('echo', { message: 'hello' })
+
+// SSE
+const conn = await apiClient.api.notifications.stream.$sse()
+conn.on('notification', n => console.log(n))
 ```
+
+### Real-time Features
+
+| Feature   | Method              | Type Safety | Testing          |
+| --------- | ------------------- | ----------- | ---------------- |
+| HTTP API  | `$get()`, `$post()` | ✅          | No server needed |
+| WebSocket | `$ws()`             | ✅          | Requires server  |
+| SSE       | `$sse()`            | ✅          | No server needed |
 
 ### Module Structure
 
-Backend is organized by feature modules (`module-todos/`), each containing:
+Backend is organized by feature modules:
+
+- `module-todos/` - Todo CRUD
+- `module-chat/` - WebSocket chat
+- `module-notifications/` - SSE notifications
+
+Each module contains:
+
 - `routes/` - API endpoints
 - `services/` - Business logic
 - `__tests__/` - Unit tests
@@ -111,3 +136,10 @@ The project uses Husky for Git hooks:
 ## Environment Variables
 
 See `.env.example` for required environment variables.
+
+## Documentation
+
+- `QUICKSTART.md` - Quick start guide
+- `DESIGN.md` - Technical architecture
+- `CLAUDE.md` - Development guidelines
+- `.claude/rules/` - Detailed development constraints

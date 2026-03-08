@@ -31,26 +31,32 @@ template/
 │   ├── client/              # React frontend
 │   │   ├── App.tsx         # Main component
 │   │   ├── stores/         # Zustand state management
-│   │   ├── services/       # API client
+│   │   ├── services/       # API clients (wsClient, sseClient)
+│   │   ├── hooks/          # Custom hooks (useWS, useSSE)
 │   │   └── test/           # Test setup
 │   ├── server/             # Hono backend
 │   │   ├── module-todos/   # Todo feature module
-│   │   ├── shared/         # Database config
-│   │   ├── integration/    # Integration tests
+│   │   ├── module-chat/    # WebSocket chat module
+│   │   ├── module-notifications/ # SSE notifications module
+│   │   ├── core/           # Core services (realtime)
+│   │   ├── test-utils/     # Test utilities
 │   │   └── index.ts        # Server entry
 │   └── shared/             # Shared types
-├── scripts/                # Validation scripts
+│       ├── schemas/        # Zod schemas
+│       └── types/          # TypeScript types
+├── lint-scripts/           # Validation scripts
 ├── .husky/                 # Git hooks
 └── [config files]
 ```
 
 ## Key Files to Understand
 
-1. **src/shared/types.ts** - Shared TypeScript types
-2. **src/server/index.ts** - Hono server with RPC
+1. **src/shared/schemas/** - Zod validation schemas
+2. **src/server/app.ts** - Hono server with RPC
 3. **src/server/module-todos/routes/todos-routes.ts** - API endpoints
 4. **src/client/App.tsx** - React UI component
 5. **src/client/stores/todoStore.ts** - Zustand state management
+6. **src/client/services/apiClient.ts** - Type-safe API client
 
 ## Testing
 
@@ -68,6 +74,14 @@ npm run test:integration
 npm test -- --coverage
 ```
 
+### Testing Real-time Features
+
+| Feature   | Requires Server | Test Method                 |
+| --------- | --------------- | --------------------------- |
+| HTTP API  | ❌ No           | `createTestClient()`        |
+| SSE       | ❌ No           | `$sse()` with `app.fetch()` |
+| WebSocket | ✅ Yes          | `createTestServer()`        |
+
 ## Adding a New Feature
 
 ### 1. Create Server Module
@@ -80,17 +94,23 @@ mkdir -p src/server/module-{feature}/__tests__
 
 ### 2. Define Types
 
-Add to `src/shared/types.ts`:
+Add to `src/shared/schemas/`:
+
 ```typescript
-export interface NewFeature {
-  id: number;
-  name: string;
-}
+import { z } from 'zod'
+
+export const NewFeatureSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+})
+
+export type NewFeature = z.infer<typeof NewFeatureSchema>
 ```
 
 ### 3. Create Service
 
 `src/server/module-{feature}/services/feature-service.ts`:
+
 ```typescript
 export async function listFeatures() {
   // Business logic
@@ -100,50 +120,53 @@ export async function listFeatures() {
 ### 4. Create Routes
 
 `src/server/module-{feature}/routes/feature-routes.ts`:
-```typescript
-import { createRoute } from '@hono/zod-openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
 
-const app = new OpenAPIHono();
+```typescript
+import { createRoute } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+
+const app = new OpenAPIHono()
 
 const listRoute = createRoute({
   method: 'get',
   path: '/features',
   // ... route definition
-});
+})
 
-app.openapi(listRoute, async (c) => {
-  const features = await featureService.listFeatures();
-  return c.json({ success: true, data: features });
-});
+app.openapi(listRoute, async c => {
+  const features = await featureService.listFeatures()
+  return c.json({ success: true, data: features })
+})
 
-export const featureRoutes = app;
+export const featureRoutes = app
 ```
 
 ### 5. Register Routes
 
-Add to `src/server/index.ts`:
-```typescript
-import { featureRoutes } from './module-features/routes/feature-routes';
+Add to `src/server/app.ts`:
 
-app.route('/api', featureRoutes);
+```typescript
+import { featureRoutes } from './module-features/routes/feature-routes'
+
+app.route('/api', featureRoutes)
 ```
 
 ### 6. Create Client Store
 
 `src/client/stores/featureStore.ts`:
-```typescript
-import { create } from 'zustand';
-import { apiClient } from '@client/services/apiClient';
 
-export const useFeatureStore = create((set) => ({
+```typescript
+import { create } from 'zustand'
+import { apiClient } from '@client/services/apiClient'
+
+export const useFeatureStore = create(set => ({
   features: [],
   fetchFeatures: async () => {
-    const response = await apiClient.api.features.$get();
-    const result = await response.json();
-    set({ features: result.data });
+    const response = await apiClient.api.features.$get()
+    const result = await response.json()
+    set({ features: result.data })
   },
-}));
+}))
 ```
 
 ### 7. Create UI Component
@@ -164,6 +187,47 @@ export function FeatureList() {
 }
 ```
 
+## Real-time Features
+
+### WebSocket
+
+```typescript
+// Server: Define protocol
+const AppWSProtocolSchema = z.object({
+  rpc: z.object({
+    echo: z.object({
+      in: z.object({ message: z.string() }),
+      out: z.object({ message: z.string() }),
+    }),
+  }),
+  events: z.object({
+    notification: z.object({ message: z.string() }),
+  }),
+})
+
+// Client: Use $ws()
+const ws = apiClient.api.chat.ws.$ws()
+const result = await ws.call('echo', { message: 'hello' })
+ws.on('notification', n => console.log(n))
+```
+
+### SSE
+
+```typescript
+// Server: Define protocol
+const AppSSEProtocolSchema = z.object({
+  events: z.object({
+    notification: NotificationSchema,
+    ping: z.object({ timestamp: z.number() }),
+  }),
+})
+
+// Client: Use $sse()
+const conn = await apiClient.api.notifications.stream.$sse()
+conn.on('notification', n => console.log(n))
+conn.on('ping', p => console.log(p.timestamp))
+```
+
 ## Code Quality
 
 ```bash
@@ -173,8 +237,11 @@ npm run format
 # Lint code
 npm run lint
 
+# Type check
+npm run typecheck
+
 # Run validation script
-node --import tsx/esm scripts/validate-all.ts
+node --import tsx/esm lint-scripts/validate-all.ts
 ```
 
 ## Pre-commit Hooks
@@ -186,6 +253,7 @@ The project uses Husky for Git hooks:
 - **validate-all**: Custom validation
 
 To skip hooks (not recommended):
+
 ```bash
 git commit --no-verify -m "message"
 ```

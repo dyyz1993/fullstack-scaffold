@@ -17,6 +17,7 @@ npm run test:unit    # Run unit tests only
 npm run test:integration  # Run integration tests only
 npm run lint         # Run ESLint
 npm run format       # Run Prettier format
+npm run typecheck    # Run TypeScript type check
 ```
 
 ## Architecture Overview
@@ -28,27 +29,27 @@ src/
 ├── client/          # React frontend
 │   ├── components/  # UI components
 │   ├── stores/      # Zustand state management
-│   ├── services/    # API clients
+│   ├── services/    # API clients (wsClient, sseClient, apiClient)
+│   ├── hooks/       # Custom hooks (useWS, useSSE)
 │   ├── test/        # Test setup
 │   └── App.tsx
 ├── server/          # Hono backend
-│   ├── module-todos/ # Todo module
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── __tests__/
-│   ├── shared/      # Database configuration
-│   ├── integration/ # Integration tests
+│   ├── module-todos/   # Todo module
+│   ├── module-chat/    # WebSocket chat module
+│   ├── module-notifications/ # SSE notifications module
+│   ├── core/           # Core services (realtime)
+│   ├── test-utils/     # Test utilities
 │   └── index.ts
 └── shared/          # Shared types
-    ├── types.ts
-    └── schemas.ts
+    ├── schemas/    # Zod schemas
+    └── types/      # TypeScript types
 ```
 
 **Path Aliases** (configured in vite.config.ts and tsconfig.json):
 
-- `@shared/*` → src/shared/*
-- `@client/*` → src/client/*
-- `@server/*` → src/server/*
+- `@shared/*` → src/shared/\*
+- `@client/*` → src/client/\*
+- `@server/*` → src/server/\*
 
 ## Key Technical Concepts
 
@@ -65,12 +66,28 @@ Uses `@hono/vite-dev-server` to run both frontend and backend on port 3010:
 Type-safe API calls from frontend to backend:
 
 ```typescript
-import { apiClient } from '@client/services/apiClient';
+import { apiClient } from '@client/services/apiClient'
 
-// Fully typed API call
-const response = await apiClient.api.todos.$get();
-const result = await response.json();
+// HTTP API
+const response = await apiClient.api.todos.$get()
+const result = await response.json()
+
+// WebSocket
+const ws = apiClient.api.chat.ws.$ws()
+const result = await ws.call('echo', { message: 'hello' })
+
+// SSE
+const conn = await apiClient.api.notifications.stream.$sse()
+conn.on('notification', n => console.log(n))
 ```
+
+### Real-time Features
+
+| Feature   | Method              | Type Safety | Testing          |
+| --------- | ------------------- | ----------- | ---------------- |
+| HTTP API  | `$get()`, `$post()` | ✅          | No server needed |
+| WebSocket | `$ws()`             | ✅          | Requires server  |
+| SSE       | `$sse()`            | ✅          | No server needed |
 
 ### Module Pattern
 
@@ -85,7 +102,7 @@ module-{feature}/
 
 ### State Management with Zustand
 
-Global application state in `src/client/stores/todoStore.ts`:
+Global application state in `src/client/stores/`:
 
 - **Minimal Re-renders**: Use precise selector hooks
 - **Selector Pattern**: `const todos = useTodoStore((state) => state.todos)`
@@ -95,7 +112,9 @@ Global application state in `src/client/stores/todoStore.ts`:
 
 - **Unit Tests**: `__tests__/*.test.ts` (jsdom for client, node for server)
 - **Integration Tests**: `src/server/integration/*.test.ts`
-- **Frameworks**: Vitest + @testing-library/react
+- **E2E Tests**: `tests/e2e/*.spec.ts` (Playwright)
+- **WebSocket Tests**: Require real server (`createTestServer`)
+- **SSE Tests**: No server needed (`$sse()` works with `app.fetch()`)
 
 ## Important Conventions
 
@@ -104,8 +123,8 @@ Global application state in `src/client/stores/todoStore.ts`:
 Always use path aliases instead of relative imports:
 
 ```typescript
-import { Todo } from '@shared/types';
-import { useTodoStore } from '@client/stores/todoStore';
+import { Todo } from '@shared/types'
+import { useTodoStore } from '@client/stores/todoStore'
 ```
 
 ### Environment Variables
@@ -122,7 +141,7 @@ To add a new feature module:
 
 1. Create `src/server/module-{feature}/`
 2. Add routes, services, tests
-3. Register in `src/server/index.ts`
+3. Register in `src/server/app.ts`
 4. Add client store if needed
 5. Add integration tests
 
@@ -131,24 +150,70 @@ To add a new feature module:
 Use Hono RPC with chain syntax:
 
 ```typescript
-app.openapi(listRoute, async (c) => {
-  const todos = await todoService.listTodos();
-  return c.json({ success: true, data: todos });
-});
+app.openapi(listRoute, async c => {
+  const todos = await todoService.listTodos()
+  return c.json({ success: true, data: todos })
+})
+```
+
+### WebSocket Pattern
+
+Use `$ws()` method for type-safe WebSocket:
+
+```typescript
+// Server: Define WSProtocol schema
+const AppWSProtocolSchema = z.object({
+  rpc: z.object({
+    echo: z.object({
+      in: z.object({ message: z.string() }),
+      out: z.object({ message: z.string() }),
+    }),
+  }),
+  events: z.object({
+    notification: z.object({ message: z.string() }),
+  }),
+})
+
+// Client: Use $ws()
+const ws = apiClient.api.chat.ws.$ws()
+const result = await ws.call('echo', { message: 'hello' })
+ws.on('notification', n => console.log(n))
+```
+
+### SSE Pattern
+
+Use `$sse()` method for type-safe SSE:
+
+```typescript
+// Server: Define SSEProtocol schema
+const AppSSEProtocolSchema = z.object({
+  events: z.object({
+    notification: NotificationSchema,
+    ping: z.object({ timestamp: z.number() }),
+  }),
+})
+
+// Client: Use $sse()
+const conn = await apiClient.api.notifications.stream.$sse()
+conn.on('notification', n => console.log(n))
+conn.on('ping', p => console.log(p.timestamp))
 ```
 
 ## Project Rules
 
 See `.claude/rules/` for detailed development constraints:
 
-- `project_rules.md` - Environment & constants management
+- `project-rules.md` - Environment & constants management
 - `client-component-rules.md` - React component patterns
 - `client-service-rules.md` - Service layer patterns
-- `client-store-rules.md` - Zustand store patterns
-- `server-rules.md` - Server-side patterns
+- `zustand-rules.md` - Zustand store patterns
+- `websocket-rules.md` - WebSocket development patterns
+- `sse-rules.md` - SSE development patterns
 - `testing-standards.md` - Testing conventions
+- `hono-testing-best-practices.md` - Hono testing patterns
 
 ## Documentation
 
 - `README.md` - User-facing feature overview
 - `DESIGN.md` - Technical architecture
+- `QUICKSTART.md` - Quick start guide
