@@ -87,6 +87,8 @@ export interface ClientRPCConfig {
   ignoreDirs: string[]
   requireAPIClient: boolean
   forbidDirectFetch: boolean
+  forbidDirectWebSocket?: boolean
+  forbidDirectEventSource?: boolean
 }
 
 export interface ClientRPCError {

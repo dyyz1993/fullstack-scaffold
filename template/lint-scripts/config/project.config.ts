@@ -151,6 +151,8 @@ export const clientRPCConfig: ClientRPCConfig = {
   ignoreDirs: ['node_modules', 'dist', '__tests__'],
   requireAPIClient: true,
   forbidDirectFetch: true,
+  forbidDirectWebSocket: true,
+  forbidDirectEventSource: true,
 }
 
 // ============================================

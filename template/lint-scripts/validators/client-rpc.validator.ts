@@ -3,8 +3,9 @@
  *
  * 检查客户端代码是否符合 API 调用规范：
  * 1. 必须使用 apiClient 进行 API 调用
- * 2. 必须使用类型安全的方法（$get, $post 等）
+ * 2. 必须使用类型安全的方法（$get, $post, $ws, $sse 等）
  * 3. 禁止直接使用 fetch 调用内部 API
+ * 4. 禁止直接使用 WebSocket/EventSource
  */
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
@@ -66,6 +67,42 @@ export function validateClientRPCInFile(
           line: lineNumber,
           message: `Non-type-safe API method call: ${matchedText}`,
           suggestion: `Use type-safe method with $ prefix: apiClient.api.todos.$get()`,
+        })
+      }
+    }
+  }
+
+  if (config.forbidDirectWebSocket !== false) {
+    const wsPattern = /new\s+WebSocket\s*\(/g
+    let match
+    while ((match = wsPattern.exec(content)) !== null) {
+      const lineNumber = content.substring(0, match.index).split('\n').length
+      errors.push({
+        file: relative(rootPath, filePath),
+        line: lineNumber,
+        message: 'Direct new WebSocket() is not allowed',
+        suggestion: `Use type-safe $ws() method: apiClient.api.chat.ws.$ws()`,
+      })
+    }
+  }
+
+  if (config.forbidDirectEventSource !== false) {
+    const isImplementationFile =
+      filePath.endsWith('wsClient.ts') ||
+      filePath.endsWith('sseClient.ts') ||
+      filePath.includes('/services/wsClient.ts') ||
+      filePath.includes('/services/sseClient.ts')
+
+    if (!isImplementationFile) {
+      const ssePattern = /new\s+EventSource\s*\(/g
+      let match
+      while ((match = ssePattern.exec(content)) !== null) {
+        const lineNumber = content.substring(0, match.index).split('\n').length
+        errors.push({
+          file: relative(rootPath, filePath),
+          line: lineNumber,
+          message: 'Direct new EventSource() is not allowed',
+          suggestion: `Use type-safe $sse() method: await apiClient.api.notifications.stream.$sse()`,
         })
       }
     }
@@ -134,10 +171,19 @@ export function formatClientRPCErrors(errors: ClientRPCError[]): string {
   output += "    import { apiClient } from '@client/services/apiClient'\n"
   output += '    const response = await apiClient.api.todos.$get()\n'
   output += '    const result = await response.json()\n\n'
+  output += '  ✅ DO: Use $ws() for WebSocket\n'
+  output += '    const ws = apiClient.api.chat.ws.$ws()\n'
+  output += '    const result = await ws.call("echo", { message: "hello" })\n\n'
+  output += '  ✅ DO: Use $sse() for SSE\n'
+  output += '    const conn = await apiClient.api.notifications.stream.$sse()\n'
+  output += '    conn.on("notification", (n) => { ... })\n\n'
   output += "  ❌ DON'T: Use direct fetch for internal APIs\n"
   output += "    const response = await fetch('/api/todos')\n\n"
   output += "  ❌ DON'T: Use non-type-safe methods\n"
   output += '    apiClient.api.todos()  // Missing $ prefix\n\n'
+  output += "  ❌ DON'T: Use direct WebSocket/EventSource\n"
+  output += '    new WebSocket(...)  // Use $ws() instead\n'
+  output += '    new EventSource(...)  // Use $sse() instead\n\n'
   output += '  📖 See: .claude/rules/client-service-rules.md\n'
 
   return output

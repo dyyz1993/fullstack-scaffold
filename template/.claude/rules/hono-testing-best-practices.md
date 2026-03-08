@@ -1,184 +1,200 @@
-# Hono 测试最佳实践：使用 testClient 实现类型安全测试
+---
+paths: src/server/**/*.test.ts, src/server/**/__tests__/**/*.ts
+---
 
-## 概述
+# Hono 测试最佳实践
 
-Hono 提供了 `testClient` 工具（位于 `hono/testing` 包），可以为测试提供完整的类型安全支持。这意味着：
+## 🎯 核心原则
 
-- ✅ **路径自动补全**：`client.api.todos` 自动提示
-- ✅ **方法自动提示**：`$get`, `$post`, `$put`, `$delete`
-- ✅ **请求体类型检查**：写错字段或类型会直接报错
-- ✅ **响应类型推导**：自动推导响应数据类型
-- ✅ **重构友好**：修改 API 后测试代码自动报错
+测试必须使用**类型安全的 RPC 客户端**，确保端到端类型推导。
 
-## 对比：传统方式 vs 类型安全方式
+## 📁 测试文件结构
 
-### ❌ 传统方式（无类型安全）
-
-```typescript
-import app from './app'
-
-describe('Todo Routes', () => {
-  it('should create a todo', async () => {
-    // ❌ 路径是字符串，容易拼写错误
-    const res = await app.request('/api/todos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // ❌ 需要手动 JSON 序列化
-      body: JSON.stringify({ title: 'New Todo' }),
-    })
-
-    expect(res.status).toBe(201)
-
-    // ❌ 返回类型是 any，没有类型检查
-    const data = await res.json()
-    // ❌ 字段名拼写错误不会被发现
-    expect(data.data.titl).toBe('New Todo') // 应该是 title
-  })
-})
+```
+src/server/
+├── module-todos/
+│   └── __tests__/
+│       └── todos-route-rpc.test.ts    # HTTP API 测试
+├── module-chat/
+│   └── __tests__/
+│       └── chat-rpc.test.ts           # WebSocket 测试
+├── module-notifications/
+│   └── __tests__/
+│       └── sse-rpc.test.ts            # SSE 测试
+└── test-utils/
+    ├── test-client.ts                 # 测试客户端工厂
+    └── test-server.ts                 # 测试服务器（WebSocket 需要）
 ```
 
-**问题：**
+## 🔧 测试客户端
 
-1. 路径 `/api/todos` 是字符串，拼写错误不会被发现
-2. 请求体需要手动 `JSON.stringify`
-3. 响应类型是 `any`，没有类型检查
-4. 修改 API 后，测试代码不会自动报错
-
-### ✅ 类型安全方式（使用 testClient）
+### createTestClient
 
 ```typescript
-import { testClient } from 'hono/testing'
-import app from './app'
+import { createTestClient } from '../../test-utils/test-client'
 
-describe('Todo Routes with Type Safety', () => {
-  it('should create a todo with type safety', async () => {
-    const client = testClient(app)
+// 方式 1：不传 baseUrl - 用于 HTTP/SSE 测试
+const client = createTestClient()
+// 内部使用 app.fetch() 模拟请求，不需要启动服务器
 
-    // ✅ 路径自动补全，拼写错误会报错
-    // ✅ 方法自动提示：$get, $post, $put, $delete
+// 方式 2：传入 baseUrl - 用于 WebSocket 测试
+const client = createTestClient(`http://localhost:${port}`)
+// 连接真实服务器，用于 WebSocket 测试
+```
+
+## 📋 测试类型对比
+
+| 测试类型  | 是否需要启动服务器 | 使用方式                                           |
+| --------- | ------------------ | -------------------------------------------------- |
+| HTTP API  | ❌ 不需要          | `createTestClient()`                               |
+| SSE       | ❌ 不需要          | `createTestClient()` + `$sse()`                    |
+| WebSocket | ✅ 必须启动        | `createTestClient(baseUrl)` + `createTestServer()` |
+
+## 🧪 HTTP API 测试
+
+```typescript
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createTestClient } from '../../test-utils/test-client'
+
+describe('Todo API', () => {
+  it('should return todos', async () => {
+    const client = createTestClient()
+
+    // ✅ 类型安全的 API 调用
+    const res = await client.api.todos.$get()
+    expect(res.status).toBe(200)
+
+    const data = await res.json()
+    expect(data.success).toBe(true)
+  })
+
+  it('should create todo', async () => {
+    const client = createTestClient()
+
     const res = await client.api.todos.$post({
-      json: {
-        title: 'New Todo', // ✅ 类型检查，字段错误会报错
-        description: 'Optional', // ✅ 可选字段提示
-      },
+      json: { title: 'New Todo' },
     })
-
     expect(res.status).toBe(201)
-
-    // ✅ 响应类型自动推导
-    const data = await res.json()
-    // ✅ 字段名有类型检查，拼写错误会报错
-    expect(data.data.title).toBe('New Todo')
   })
 })
 ```
 
-**优势：**
-
-1. 路径自动补全：`client.api.todos`
-2. 方法自动提示：`$get`, `$post`, `$put`, `$delete`
-3. 请求体类型检查：写错字段或类型会直接报错
-4. 响应类型自动推导
-5. 重构友好：修改 API 后测试代码自动报错
-
-## 完整示例
-
-### GET 请求（带查询参数）
+## 🔄 SSE 测试
 
 ```typescript
-const client = testClient(app)
+import { describe, it, expect } from 'vitest'
+import { createTestClient } from '../../test-utils/test-client'
+import type { AppSSEProtocol } from '@shared/schemas'
 
-// ✅ 查询参数类型检查
-const res = await client.api.todos.$get({
-  query: {
-    status: 'completed', // ✅ 自动提示可选值
-  },
+describe('SSE Routes', () => {
+  it('should receive events with type safety', async () => {
+    const client = createTestClient()
+
+    // ✅ 使用 $sse() 方法
+    const conn = await client.api.notifications.stream.$sse()
+
+    // 类型安全的事件监听
+    conn.on('notification', notification => {
+      // notification 类型自动推导
+      expect(notification.id).toBeDefined()
+    })
+
+    conn.on('ping', ping => {
+      expect(ping.timestamp).toBeDefined()
+    })
+
+    // 等待事件
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    conn.abort()
+  })
 })
 ```
 
-### POST 请求（带请求体）
+## 🔌 WebSocket 测试
 
 ```typescript
-const client = testClient(app)
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createTestClient } from '../../test-utils/test-client'
+import { createTestServer } from '../../test-utils/test-server'
+import { createApp } from '@server/app'
 
-// ✅ 请求体类型检查
-const res = await client.api.todos.$post({
-  json: {
-    title: 'New Todo', // ✅ 必填字段
-    description: 'Optional', // ✅ 可选字段
-  },
+describe('WebSocket Routes', () => {
+  let testServer: Awaited<ReturnType<typeof createTestServer>>
+  let client: ReturnType<typeof createTestClient>
+
+  beforeAll(async () => {
+    // ⚠️ WebSocket 测试必须启动服务器
+    const app = createApp()
+    testServer = await createTestServer(app, ['/api/chat/ws'])
+    client = createTestClient(`http://localhost:${testServer.port}`)
+  }, 15000)
+
+  afterAll(async () => {
+    await testServer.close()
+  })
+
+  it('should handle RPC calls', async () => {
+    // ✅ 使用 $ws() 方法
+    const ws = client.api.chat.ws.$ws()
+
+    // 等待连接
+    await new Promise<void>(resolve => {
+      ws.onStatusChange(status => {
+        if (status === 'open') resolve()
+      })
+    })
+
+    // 类型安全的 RPC 调用
+    const result = await ws.call('echo', { message: 'hello' })
+    expect(result.message).toBe('hello')
+
+    ws.close()
+  })
 })
 ```
 
-### PUT 请求（带路径参数）
+## 📝 测试命名规范
+
+| 类型     | 约定            | 示例                      |
+| -------- | --------------- | ------------------------- |
+| 测试文件 | \*-rpc.test.ts  | `todos-route-rpc.test.ts` |
+| 测试描述 | should + 动词   | `should return todos`     |
+| 测试分组 | 模块名 + Routes | `Todo Routes`             |
+
+## 🚫 Anti-Patterns
 
 ```typescript
-const client = testClient(app)
+// ❌ 不要直接使用 fetch
+const res = await fetch('/api/todos')
 
-// ✅ 路径参数类型检查
-const res = await client.api.todos[':id'].$put({
-  param: { id: '123' }, // ✅ 自动提示需要 id 参数
-  json: {
-    title: 'Updated Todo',
-    status: 'completed', // ✅ 自动提示可选值
-  },
-})
+// ✅ 应该使用类型安全的客户端
+const res = await client.api.todos.$get()
+
+// ❌ 不要手动解析响应
+const data = JSON.parse(await res.text())
+
+// ✅ 应该使用 json() 方法
+const data = await res.json()
+
+// ❌ WebSocket 测试不要忘记启动服务器
+const client = createTestClient()
+const ws = client.api.chat.ws.$ws() // 会失败！
+
+// ✅ WebSocket 测试必须启动服务器
+const testServer = await createTestServer(app, ['/api/chat/ws'])
+const client = createTestClient(`http://localhost:${testServer.port}`)
+const ws = client.api.chat.ws.$ws()
 ```
 
-### DELETE 请求（带路径参数）
+## 🎯 总结
 
-```typescript
-const client = testClient(app)
+测试的关键点：
 
-// ✅ 路径参数类型检查
-const res = await client.api.todos[':id'].$delete({
-  param: { id: '123' },
-})
-```
-
-## 实际项目中的应用
-
-项目中已经创建了示例测试文件：
-
-- [todos-route-rpc.test.ts](file:///Users/xuyingzhou/Project/create-biomimic-app/template/src/server/module-todos/__tests__/todos-route-rpc.test.ts) - 使用 testClient 的类型安全测试
-- [todos-route.test.ts](file:///Users/xuyingzhou/Project/create-biomimic-app/template/src/server/module-todos/__tests__/todos-route.test.ts) - 传统测试方式（保留用于对比）
-
-## 测试结果
-
-```bash
-npm test -- todos-route-rpc.test.ts
-
- ✓ src/server/module-todos/__tests__/todos-route-rpc.test.ts (8 tests) 19ms
-   ✓ Todo Routes with Type-Safe Test Client (8)
-     ✓ GET /api/todos (2)
-       ✓ should return empty array
-       ✓ should return todos list
-     ✓ POST /api/todos (2)
-       ✓ should create a todo with type safety
-       ✓ should reject empty title
-     ✓ GET /api/todos/:id (2)
-       ✓ should return 404 for non-existent todo
-       ✓ should return todo by id with type safety
-     ✓ PUT /api/todos/:id (1)
-       ✓ should update todo with type safety
-     ✓ DELETE /api/todos/:id (1)
-       ✓ should delete todo with type safety
-```
-
-## 最佳实践建议
-
-1. **新项目**：直接使用 `testClient` 进行类型安全测试
-2. **现有项目**：逐步迁移到 `testClient`，享受类型安全的优势
-3. **团队协作**：使用 `testClient` 可以减少因拼写错误导致的测试失败
-4. **重构时**：修改 API 后，测试代码会自动报错，确保测试与实现同步
-
-## 总结
-
-使用 Hono 的 `testClient` 可以让测试代码：
-
-- 🎯 **更安全**：编译时捕获错误
-- 🚀 **更高效**：IDE 自动补全和类型提示
-- 🔧 **更易维护**：重构时自动更新测试代码
-- 📚 **更易学习**：类型提示帮助理解 API 结构
-
-这是 Hono 官方推荐的测试方式，充分利用了 TypeScript 的类型系统优势！
+1. ✅ 使用 `createTestClient()` 创建测试客户端
+2. ✅ HTTP/SSE 测试不需要启动服务器
+3. ✅ WebSocket 测试必须启动服务器
+4. ✅ 使用 `$get()`, `$post()` 等类型安全方法
+5. ✅ 使用 `$sse()` 测试 SSE
+6. ✅ 使用 `$ws()` 测试 WebSocket
+7. ✅ 遵循 ESLint 规则

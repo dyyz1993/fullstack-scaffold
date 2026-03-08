@@ -67,9 +67,9 @@ src/
 
 ```typescript
 // ❌ 错误 - 过于简单，没有验证实际业务逻辑
-expect(result.success).toBe(true);
-expect(data.length).toBeGreaterThan(0);
-expect(todo.completed).toBe(true);
+expect(result.success).toBe(true)
+expect(data.length).toBeGreaterThan(0)
+expect(todo.completed).toBe(true)
 
 // ✅ 正确 - 验证具体的业务值
 expect(result).toEqual({
@@ -79,10 +79,10 @@ expect(result).toEqual({
     title: 'Buy groceries',
     status: 'pending',
   },
-});
-expect(data.items).toHaveLength(3);
-expect(data.items[0].title).toBe('Buy groceries');
-expect(todo.status).toBe('completed');
+})
+expect(data.items).toHaveLength(3)
+expect(data.items[0].title).toBe('Buy groceries')
+expect(todo.status).toBe('completed')
 ```
 
 ### ✅ 断言数量要求
@@ -97,25 +97,25 @@ it('应当创建新 Todo 并设置初始属性', async () => {
   const todo = await createTodo({
     title: 'Test Todo',
     description: 'Test description',
-  });
+  })
 
   // 验证 ID 生成
-  expect(todo.id).toBeGreaterThan(0);
+  expect(todo.id).toBeGreaterThan(0)
 
   // 验证所有字段
-  expect(todo.title).toBe('Test Todo');
-  expect(todo.description).toBe('Test description');
-  expect(todo.status).toBe('pending');
+  expect(todo.title).toBe('Test Todo')
+  expect(todo.description).toBe('Test description')
+  expect(todo.status).toBe('pending')
 
   // 验证时间戳
-  expect(todo.createdAt).toBeLessThanOrEqual(Date.now());
-});
+  expect(todo.createdAt).toBeLessThanOrEqual(Date.now())
+})
 
 // ❌ 错误 - 仅一个简单断言
 it('应当创建 Todo', async () => {
-  const todo = await createTodo({ title: 'Test' });
-  expect(todo).toBeTruthy(); // 没有验证任何实际属性
-});
+  const todo = await createTodo({ title: 'Test' })
+  expect(todo).toBeTruthy() // 没有验证任何实际属性
+})
 ```
 
 ### 🔄 生命周期管理（强制）
@@ -124,34 +124,34 @@ it('应当创建 Todo', async () => {
 
 ```typescript
 describe('TodoService', () => {
-  let testDb: any;
+  let testDb: any
 
   beforeEach(() => {
     // 前置处理：初始化测试数据库
-    testDb = createTestDatabase();
-  });
+    testDb = createTestDatabase()
+  })
 
   afterEach(() => {
     // 后置清理：销毁数据，重置状态
-    testDb?.destroy?.();
-    testDb = null;
+    testDb?.destroy?.()
+    testDb = null
 
     // 清除所有 mock
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   it('应当创建新 Todo', async () => {
     const todo = await service.createTodo({
       title: 'Test Todo',
       status: 'pending',
-    });
+    })
 
     // 验证具体数值
-    expect(todo.id).toBeGreaterThan(0);
-    expect(todo.title).toBe('Test Todo');
-    expect(todo.status).toBe('pending');
-  });
-});
+    expect(todo.id).toBeGreaterThan(0)
+    expect(todo.title).toBe('Test Todo')
+    expect(todo.status).toBe('pending')
+  })
+})
 ```
 
 ### 测试用例类型
@@ -171,40 +171,40 @@ describe('TodoService', () => {
 describe('TodoService', () => {
   beforeEach(() => {
     // 初始化测试状态
-    initializeTestDatabase();
-  });
+    initializeTestDatabase()
+  })
 
   it('应当创建 Todo 并设置默认状态', () => {
     const todo = createTodo({
       title: 'Buy milk',
       description: '2% milk',
-    });
+    })
 
     // 验证具体数值
-    expect(todo.id).toBe(1);
-    expect(todo.title).toBe('Buy milk');
-    expect(todo.description).toBe('2% milk');
-    expect(todo.status).toBe('pending'); // 默认状态
-    expect(todo.completed).toBe(false);
-  });
+    expect(todo.id).toBe(1)
+    expect(todo.title).toBe('Buy milk')
+    expect(todo.description).toBe('2% milk')
+    expect(todo.status).toBe('pending') // 默认状态
+    expect(todo.completed).toBe(false)
+  })
 
   it('应当更新 Todo 状态', () => {
-    const todo = createTodo({ title: 'Test' });
-    const updated = updateTodoStatus(todo.id, 'completed');
+    const todo = createTodo({ title: 'Test' })
+    const updated = updateTodoStatus(todo.id, 'completed')
 
     // 验证更新的值
-    expect(updated.status).toBe('completed');
-    expect(updated.completed).toBe(true);
+    expect(updated.status).toBe('completed')
+    expect(updated.completed).toBe(true)
 
     // 验证时间戳更新
-    expect(updated.updatedAt).toBeGreaterThan(todo.updatedAt);
-  });
+    expect(updated.updatedAt).toBeGreaterThan(todo.updatedAt)
+  })
 
   afterEach(() => {
     // 清理
-    cleanupTestDatabase();
-  });
-});
+    cleanupTestDatabase()
+  })
+})
 ```
 
 ## 🌐 E2E 测试规范 (Playwright)
@@ -213,11 +213,11 @@ describe('TodoService', () => {
 
 使用 Playwright 进行端到端测试的场景：
 
-| 场景           | 示例                              | 不适用           |
-| -------------- | --------------------------------- | ---------------- |
-| 多页面用户流程 | 创建 → 编辑 → 完成 Todo           | 单组件交互       |
-| 跨页面状态     | 筛选条件在不同页面保持一致          | 状态管理逻辑     |
-| 真实浏览器行为 | 网络请求、本地存储                | 可用 mock 替代   |
+| 场景           | 示例                       | 不适用         |
+| -------------- | -------------------------- | -------------- |
+| 多页面用户流程 | 创建 → 编辑 → 完成 Todo    | 单组件交互     |
+| 跨页面状态     | 筛选条件在不同页面保持一致 | 状态管理逻辑   |
+| 真实浏览器行为 | 网络请求、本地存储         | 可用 mock 替代 |
 
 ### E2E 测试规则
 
@@ -238,33 +238,33 @@ npx playwright test
 ```typescript
 // ✅ 正确 - 验证具体数值
 test('should display todo list with correct data', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/')
 
   // 验证 Todo 数量
-  await expect(page.locator('.todo-item')).toHaveCount(3);
+  await expect(page.locator('.todo-item')).toHaveCount(3)
 
   // 验证第一个 Todo 的内容
-  await expect(page.locator('.todo-item').first()).toHaveText('Buy groceries');
-  await expect(page.locator('.todo-item').nth(1)).toHaveText('Clean house');
-});
+  await expect(page.locator('.todo-item').first()).toHaveText('Buy groceries')
+  await expect(page.locator('.todo-item').nth(1)).toHaveText('Clean house')
+})
 
 // ❌ 错误 - 过于简单
 test('should display todos', async ({ page }) => {
-  await page.goto('/');
-  const element = await page.$('.todo-item');
-  expect(element).toBeTruthy(); // 没有验证实际内容
-});
+  await page.goto('/')
+  const element = await page.$('.todo-item')
+  expect(element).toBeTruthy() // 没有验证实际内容
+})
 ```
 
 #### 2. 使用 data-testid 选择器
 
 ```typescript
 // ✅ 正确 - 使用稳定的 data-testid
-await page.click('[data-testid="add-todo-button"]');
-await page.fill('[data-testid="todo-title-input"]', 'Buy groceries');
+await page.click('[data-testid="add-todo-button"]')
+await page.fill('[data-testid="todo-title-input"]', 'Buy groceries')
 
 // ❌ 错误 - 使用不稳定的 CSS 类
-await page.click('.btn-primary'); // 类名可能变化
+await page.click('.btn-primary') // 类名可能变化
 ```
 
 #### 3. 生命周期管理
@@ -273,24 +273,24 @@ await page.click('.btn-primary'); // 类名可能变化
 test.describe('Todo App', () => {
   test.beforeEach(async ({ page }) => {
     // 前置：清空 localStorage
-    await page.evaluate(() => localStorage.clear());
-  });
+    await page.evaluate(() => localStorage.clear())
+  })
 
   test.afterEach(async ({ page }) => {
     // 后置：清理测试数据
-    await page.request.delete('/api/test-data');
-  });
+    await page.request.delete('/api/test-data')
+  })
 
   test('should create and complete todo', async ({ page }) => {
-    await page.goto('/');
-    await page.fill('[data-testid="todo-title-input"]', 'Buy groceries');
-    await page.click('[data-testid="add-todo-button"]');
+    await page.goto('/')
+    await page.fill('[data-testid="todo-title-input"]', 'Buy groceries')
+    await page.click('[data-testid="add-todo-button"]')
 
     // 验证创建成功
-    await expect(page.locator('.todo-item')).toHaveCount(1);
-    await expect(page.locator('.todo-item')).toHaveText('Buy groceries');
-  });
-});
+    await expect(page.locator('.todo-item')).toHaveCount(1)
+    await expect(page.locator('.todo-item')).toHaveText('Buy groceries')
+  })
+})
 ```
 
 ### E2E 测试不在 pre-commit 中运行
@@ -298,6 +298,7 @@ test.describe('Todo App', () => {
 **理由**: E2E 测试启动真实浏览器，运行时间较长。
 
 **运行时机**:
+
 - CI/CD Pipeline 中
 - 手动运行 `npx playwright test`
 - 开发特定功能时
@@ -311,3 +312,88 @@ test.describe('Todo App', () => {
 | 测试范围   | 函数/组件/服务    | 完整用户流程          |
 | Pre-commit | ✅ 运行           | ❌ 不运行             |
 | CI/CD      | ✅ 运行           | ✅ 运行               |
+
+## 🔌 WebSocket/SSE 测试规范
+
+### 测试类型对比
+
+| 测试类型  | 是否需要启动服务器 | 使用方式                                           |
+| --------- | ------------------ | -------------------------------------------------- |
+| HTTP API  | ❌ 不需要          | `createTestClient()`                               |
+| SSE       | ❌ 不需要          | `createTestClient()` + `$sse()`                    |
+| WebSocket | ✅ 必须启动        | `createTestClient(baseUrl)` + `createTestServer()` |
+
+### WebSocket 测试
+
+```typescript
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createTestClient } from '../../test-utils/test-client'
+import { createTestServer } from '../../test-utils/test-server'
+import { createApp } from '@server/app'
+
+describe('WebSocket Routes', () => {
+  let testServer: Awaited<ReturnType<typeof createTestServer>>
+  let client: ReturnType<typeof createTestClient>
+
+  beforeAll(async () => {
+    // ⚠️ WebSocket 测试必须启动服务器
+    const app = createApp()
+    testServer = await createTestServer(app, ['/api/chat/ws'])
+    client = createTestClient(`http://localhost:${testServer.port}`)
+  }, 15000)
+
+  afterAll(async () => {
+    await testServer.close()
+  })
+
+  it('should handle RPC calls', async () => {
+    const ws = client.api.chat.ws.$ws()
+
+    await new Promise<void>(resolve => {
+      ws.onStatusChange(status => {
+        if (status === 'open') resolve()
+      })
+    })
+
+    const result = await ws.call('echo', { message: 'hello' })
+    expect(result.message).toBe('hello')
+
+    ws.close()
+  })
+})
+```
+
+### SSE 测试
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { createTestClient } from '../../test-utils/test-client'
+
+describe('SSE Routes', () => {
+  it('should receive events', async () => {
+    const client = createTestClient()
+
+    // ✅ SSE 测试不需要启动服务器
+    const conn = await client.api.notifications.stream.$sse()
+
+    conn.on('notification', notification => {
+      expect(notification.id).toBeDefined()
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    conn.abort()
+  })
+})
+```
+
+### 为什么 WebSocket 需要启动服务器？
+
+| 特性           | HTTP                 | WebSocket            |
+| -------------- | -------------------- | -------------------- |
+| 连接方式       | 请求-响应（一次性）  | 持久双向连接         |
+| 测试方式       | `app.fetch(request)` | `new WebSocket(url)` |
+| 是否需要 URL   | ❌ 不需要            | ✅ 需要真实 URL      |
+| 是否需要服务器 | ❌ 不需要            | ✅ 必须启动          |
+
+WebSocket 需要真实的网络 socket 进行双向通信，不能通过 `app.fetch()` 模拟。
