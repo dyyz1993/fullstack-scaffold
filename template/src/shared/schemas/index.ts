@@ -73,19 +73,8 @@ export {
   type WSNotificationPayload,
 } from './websocket'
 
-// WebSocket protocol (for GhostWSClient type inference)
-export {
-  AppWSProtocolSchema,
-  WSRpcRequestSchema,
-  WSRpcResponseSchema,
-  WSEventMessageSchema,
-  WSMessageSchema as WSProtocolMessageSchema,
-  type AppWSProtocol,
-  type WSRpcRequest,
-  type WSRpcResponse,
-  type WSEventMessage,
-  type WSMessage as WSProtocolMessage,
-} from './ws-protocol'
-
 // Re-export global types for convenience
 export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus }
+
+// Re-export protocols
+export { ChatProtocolSchema, type ChatProtocol } from '../protocols/chat.protocol'

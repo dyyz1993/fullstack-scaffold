@@ -2,7 +2,8 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppBindings } from '../../types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
-import { AppWSProtocolSchema, ApiSuccessSchema } from '@shared/schemas'
+import { ApiSuccessSchema } from '@shared/schemas'
+import { ChatProtocolSchema } from '@shared/protocols/chat.protocol'
 import '../services/chat-service'
 
 const WSStatusResponseSchema = ApiSuccessSchema(
@@ -35,7 +36,7 @@ const wsRoute = createRoute({
     200: {
       content: {
         websocket: {
-          schema: AppWSProtocolSchema,
+          schema: ChatProtocolSchema,
         },
       },
       description: 'WebSocket endpoint for chat',

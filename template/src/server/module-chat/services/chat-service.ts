@@ -1,20 +1,24 @@
-import { runtime } from '@server/core/runtime'
+import { createTypedRuntime } from '@server/core/typed-runtime'
+import type { ChatProtocol } from '@shared/protocols/chat.protocol'
 
-runtime.registerRPC('echo', (params: unknown) => {
-  const { message } = params as { message: string }
-  return { message, timestamp: Date.now() }
+const chatRuntime = createTypedRuntime<ChatProtocol>('/chat/ws')
+
+chatRuntime.registerRPC('echo', params => {
+  return { message: params.message, timestamp: Date.now() }
 })
 
-runtime.registerRPC('ping', () => {
+chatRuntime.registerRPC('ping', () => {
   return { pong: true, timestamp: Date.now() }
 })
 
-runtime.registerEvent('broadcast', (payload: unknown, clientId: string) => {
-  runtime.broadcast('broadcast', payload, [clientId])
+chatRuntime.registerEvent('broadcast', (payload, clientId) => {
+  chatRuntime.broadcast('broadcast', payload, [clientId])
 })
 
+export { chatRuntime }
+
 export function getConnectedClientsCount(): number {
-  return runtime.adapter.getWSConnections().size
+  return chatRuntime.adapter.getWSConnections().size
 }
 
 export function broadcastChatMessage(message: {
@@ -23,8 +27,8 @@ export function broadcastChatMessage(message: {
   sender: string
   timestamp: number
 }): void {
-  runtime.broadcast('chat:message', {
-    type: 'chat:message',
-    data: message,
+  chatRuntime.broadcast('broadcast', {
+    message: message.content,
+    timestamp: message.timestamp,
   })
 }

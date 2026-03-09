@@ -68,5 +68,6 @@ export {
   type WSConnection,
   type SSEConnection,
 } from './runtime'
+export { createTypedRuntime, type TypedRuntime } from './typed-runtime'
 export { NodeRuntimeAdapter, getNodeRuntimeAdapter } from './runtime-node'
 export { CloudflareRuntimeAdapter, getCloudflareRuntimeAdapter } from './runtime-cloudflare'

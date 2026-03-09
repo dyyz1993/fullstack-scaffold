@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
-import type { AppWSProtocol, WSClient, WSStatus } from '@shared/schemas'
+import type { WSClient, WSStatus, ChatProtocol } from '@shared/schemas'
 
 interface WSMessage {
   type: string
@@ -21,7 +21,7 @@ interface WSState {
   clearMessages: () => void
 }
 
-let wsClient: WSClient<AppWSProtocol> | null = null
+let wsClient: WSClient<ChatProtocol> | null = null
 
 export const useChatWsStore = create<WSState>((set, get) => ({
   status: 'closed',
@@ -38,22 +38,22 @@ export const useChatWsStore = create<WSState>((set, get) => ({
       set({ status: newStatus })
     })
 
-    wsClient.on('notification', (payload: unknown) => {
-      const p = payload as { title: string; body: string; timestamp: number }
+    wsClient.on('notification', payload => {
+      const p = payload
       set(state => ({
         messages: [...state.messages, { type: 'notification', payload: p, timestamp: p.timestamp }],
       }))
     })
 
-    wsClient.on('broadcast', (payload: unknown) => {
-      const p = payload as { message: string; timestamp: number }
+    wsClient.on('broadcast', payload => {
+      const p = payload
       set(state => ({
         messages: [...state.messages, { type: 'broadcast', payload: p, timestamp: p.timestamp }],
       }))
     })
 
-    wsClient.on('connected', (payload: unknown) => {
-      const p = payload as { timestamp: number }
+    wsClient.on('connected', payload => {
+      const p = payload
       set(state => ({
         messages: [...state.messages, { type: 'connected', payload: p, timestamp: p.timestamp }],
       }))

@@ -1,0 +1,64 @@
+import { runtime, type RuntimeAdapter } from './runtime'
+import type { RpcMethod, EventName, RpcInput, RpcOutput, EventPayload } from '@shared/protocols'
+
+export interface TypedRuntime<T extends { rpc: unknown; events: unknown }> {
+  path: string
+  get adapter(): RuntimeAdapter
+
+  registerRPC<M extends RpcMethod<T>>(
+    method: M,
+    handler: (
+      params: RpcInput<T, M>,
+      clientId: string
+    ) => RpcOutput<T, M> | Promise<RpcOutput<T, M>>
+  ): void
+
+  registerEvent<E extends EventName<T>>(
+    type: E,
+    handler: (payload: EventPayload<T, E>, clientId: string) => void
+  ): void
+
+  broadcast<E extends EventName<T>>(event: E, data: EventPayload<T, E>, exclude?: string[]): void
+}
+
+export function createTypedRuntime<T extends { rpc: unknown; events: unknown }>(
+  path: string
+): TypedRuntime<T> {
+  return {
+    path,
+    get adapter(): RuntimeAdapter {
+      return runtime.adapter
+    },
+
+    registerRPC<M extends RpcMethod<T>>(
+      method: M,
+      handler: (
+        params: RpcInput<T, M>,
+        clientId: string
+      ) => RpcOutput<T, M> | Promise<RpcOutput<T, M>>
+    ): void {
+      const wrappedHandler = (params: unknown, clientId: string): unknown => {
+        return handler(params as RpcInput<T, M>, clientId)
+      }
+      runtime.registerRPC(method as string, wrappedHandler)
+    },
+
+    registerEvent<E extends EventName<T>>(
+      type: E,
+      handler: (payload: EventPayload<T, E>, clientId: string) => void
+    ): void {
+      const wrappedHandler = (payload: unknown, clientId: string): void => {
+        handler(payload as EventPayload<T, E>, clientId)
+      }
+      runtime.registerEvent(type as string, wrappedHandler)
+    },
+
+    broadcast<E extends EventName<T>>(
+      event: E,
+      data: EventPayload<T, E>,
+      exclude?: string[]
+    ): void {
+      runtime.broadcast(event as string, data, exclude)
+    },
+  }
+}

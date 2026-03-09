@@ -145,7 +145,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
     if (sseClient) return
 
     try {
-      const conn = await apiClient.api.notifications.stream.$sse()
+      const conn = apiClient.api.notifications.stream.$sse()
 
       conn.onStatusChange(status => {
         set({ sseConnected: status === 'open' })
