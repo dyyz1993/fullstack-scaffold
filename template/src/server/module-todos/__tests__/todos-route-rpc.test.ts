@@ -2,43 +2,8 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { createTestClient } from '../../test-utils/test-client'
 import { getRawClient, getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { isSuccess } from '@shared/utils/type-guards'
 import type { Todo } from '@shared/types'
-
-type TodoResponse = { success: boolean; data: Todo }
-type TodoListResponse = { success: boolean; data: Todo[] }
-type DeleteResponse = { success: boolean; data: { id: number } }
-
-function isTodoResponse(data: unknown): data is TodoResponse {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'success' in data &&
-    data.success === true &&
-    'data' in data
-  )
-}
-
-function isTodoListResponse(data: unknown): data is TodoListResponse {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'success' in data &&
-    data.success === true &&
-    'data' in data &&
-    Array.isArray((data as TodoListResponse).data)
-  )
-}
-
-function isDeleteResponse(data: unknown): data is DeleteResponse {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'success' in data &&
-    data.success === true &&
-    'data' in data &&
-    typeof (data as DeleteResponse).data.id === 'number'
-  )
-}
 
 describe('Todo Routes - Business Logic Tests', () => {
   beforeAll(async () => {
@@ -69,8 +34,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(201)
       const data = await res.json()
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.status).toBe('pending')
       }
     })
@@ -87,8 +52,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(201)
       const data = await res.json()
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.description).toBe('This is a detailed description')
       }
     })
@@ -102,8 +67,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(201)
       const data = await res.json()
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.description).toBeUndefined()
       }
     })
@@ -121,9 +86,9 @@ describe('Todo Routes - Business Logic Tests', () => {
       const data1 = await res1.json()
       const data2 = await res2.json()
 
-      expect(isTodoResponse(data1)).toBe(true)
-      expect(isTodoResponse(data2)).toBe(true)
-      if (isTodoResponse(data1) && isTodoResponse(data2)) {
+      expect(isSuccess<Todo>(data1)).toBe(true)
+      expect(isSuccess<Todo>(data2)).toBe(true)
+      if (isSuccess<Todo>(data1) && isSuccess<Todo>(data2)) {
         expect(data1.data.id).not.toBe(data2.data.id)
       }
     })
@@ -137,8 +102,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       const data = await res.json()
 
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.createdAt).toBeDefined()
         expect(data.data.updatedAt).toBeDefined()
         expect(data.data.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
@@ -183,8 +148,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.title).toBe('Updated Title')
         expect(data.data.status).toBe('pending')
       }
@@ -201,8 +166,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.status).toBe('completed')
       }
     })
@@ -228,8 +193,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
         expect(res.status).toBe(200)
         const data = await res.json()
-        expect(isTodoResponse(data)).toBe(true)
-        if (isTodoResponse(data)) {
+        expect(isSuccess<Todo>(data)).toBe(true)
+        if (isSuccess<Todo>(data)) {
           expect(data.data.status).toBe('pending')
         }
       }
@@ -258,8 +223,8 @@ describe('Todo Routes - Business Logic Tests', () => {
         })
 
         const data = await res.json()
-        expect(isTodoResponse(data)).toBe(true)
-        if (isTodoResponse(data)) {
+        expect(isSuccess<Todo>(data)).toBe(true)
+        if (isSuccess<Todo>(data)) {
           expect(data.data.updatedAt).not.toBe(originalUpdatedAt)
           expect(new Date(data.data.updatedAt).getTime()).toBeGreaterThan(originalUpdatedAt)
         }
@@ -281,8 +246,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(isTodoResponse(data)).toBe(true)
-      if (isTodoResponse(data)) {
+      expect(isSuccess<Todo>(data)).toBe(true)
+      if (isSuccess<Todo>(data)) {
         expect(data.data.title).toBe('Multi Update')
         expect(data.data.description).toBe('New description')
         expect(data.data.status).toBe('completed')
@@ -334,8 +299,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       const res = await client.api.todos.$get()
       const data = await res.json()
 
-      expect(isTodoListResponse(data)).toBe(true)
-      if (isTodoListResponse(data)) {
+      expect(isSuccess<Todo[]>(data)).toBe(true)
+      if (isSuccess<Todo[]>(data)) {
         expect(data.data).toHaveLength(3)
         const timestamps = data.data.map(t => new Date(t.createdAt).getTime())
         for (let i = 0; i < timestamps.length - 1; i++) {
@@ -350,8 +315,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       const res = await client.api.todos.$get()
       const data = await res.json()
 
-      expect(isTodoListResponse(data)).toBe(true)
-      if (isTodoListResponse(data)) {
+      expect(isSuccess<Todo[]>(data)).toBe(true)
+      if (isSuccess<Todo[]>(data)) {
         expect(data.data).toEqual([])
       }
     })
@@ -382,8 +347,8 @@ describe('Todo Routes - Business Logic Tests', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(isDeleteResponse(data)).toBe(true)
-      if (isDeleteResponse(data)) {
+      expect(isSuccess<{ id: number }>(data)).toBe(true)
+      if (isSuccess<{ id: number }>(data)) {
         expect(data.data.id).toBe(todoId)
       }
     })
@@ -442,8 +407,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       const createData = await createRes.json()
-      expect(isTodoResponse(createData)).toBe(true)
-      if (isTodoResponse(createData)) {
+      expect(isSuccess<Todo>(createData)).toBe(true)
+      if (isSuccess<Todo>(createData)) {
         const todoId = createData.data.id
 
         const getRes = await client.api.todos[':id'].$get({
@@ -451,8 +416,8 @@ describe('Todo Routes - Business Logic Tests', () => {
         })
 
         const getData = await getRes.json()
-        expect(isTodoResponse(getData)).toBe(true)
-        if (isTodoResponse(getData)) {
+        expect(isSuccess<Todo>(getData)).toBe(true)
+        if (isSuccess<Todo>(getData)) {
           expect(getData.data.id).toBe(todoId)
           expect(getData.data.title).toBe('Full Todo')
           expect(getData.data.description).toBe('Full description')
