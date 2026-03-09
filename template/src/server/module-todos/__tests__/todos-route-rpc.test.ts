@@ -2,8 +2,45 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { createTestClient } from '../../test-utils/test-client'
 import { getRawClient, getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import type { Todo } from '@shared/types'
 
-describe('Todo Routes with Type-Safe Test Client', () => {
+type TodoResponse = { success: boolean; data: Todo }
+type TodoListResponse = { success: boolean; data: Todo[] }
+type DeleteResponse = { success: boolean; data: { id: number } }
+
+function isTodoResponse(data: unknown): data is TodoResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'success' in data &&
+    data.success === true &&
+    'data' in data
+  )
+}
+
+function isTodoListResponse(data: unknown): data is TodoListResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'success' in data &&
+    data.success === true &&
+    'data' in data &&
+    Array.isArray((data as TodoListResponse).data)
+  )
+}
+
+function isDeleteResponse(data: unknown): data is DeleteResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'success' in data &&
+    data.success === true &&
+    'data' in data &&
+    typeof (data as DeleteResponse).data.id === 'number'
+  )
+}
+
+describe('Todo Routes - Business Logic Tests', () => {
   beforeAll(async () => {
     await setupTestDatabase()
     const db = await getDb()
@@ -22,165 +59,406 @@ describe('Todo Routes with Type-Safe Test Client', () => {
     await cleanupTestDatabase()
   })
 
-  describe('GET /api/todos', () => {
-    it('should return empty array', async () => {
+  describe('Todo Creation Business Logic', () => {
+    it('should create todo with default status "pending"', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$get()
-      expect(res.status).toBe(200)
+      const res = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
 
+      expect(res.status).toBe(201)
       const data = await res.json()
-      expect(data).toEqual({ success: true, data: [] })
-    })
-
-    it('should return todos list', async () => {
-      const client = await getRawClient()
-      if (client && 'execute' in client) {
-        const now = Date.now()
-        await client.execute({
-          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
-          args: ['Test Todo', 'pending', now, now],
-        })
-      }
-
-      const testClientApp = createTestClient()
-      const res = await testClientApp.api.todos.$get()
-      expect(res.status).toBe(200)
-
-      const data = await res.json()
-      expect(data.success).toBe(true)
-      if (data.success && 'data' in data) {
-        expect(data.data).toHaveLength(1)
-        expect(data.data[0].title).toBe('Test Todo')
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.status).toBe('pending')
       }
     })
-  })
 
-  describe('POST /api/todos', () => {
-    it('should create a todo with type safety', async () => {
+    it('should create todo with description', async () => {
       const client = createTestClient()
 
       const res = await client.api.todos.$post({
         json: {
-          title: 'New Todo',
-          description: 'Test',
+          title: 'Test Todo',
+          description: 'This is a detailed description',
         },
       })
 
       expect(res.status).toBe(201)
-
       const data = await res.json()
-      expect(data.success).toBe(true)
-      if (data.success && 'data' in data) {
-        expect(data.data.title).toBe('New Todo')
-        expect(data.data.description).toBe('Test')
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.description).toBe('This is a detailed description')
       }
     })
 
-    it('should reject empty title', async () => {
+    it('should create todo without description (optional field)', async () => {
       const client = createTestClient()
 
       const res = await client.api.todos.$post({
-        json: {
-          title: '',
-        },
+        json: { title: 'No Description Todo' },
+      })
+
+      expect(res.status).toBe(201)
+      const data = await res.json()
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.description).toBeUndefined()
+      }
+    })
+
+    it('should generate unique id for each todo', async () => {
+      const client = createTestClient()
+
+      const res1 = await client.api.todos.$post({
+        json: { title: 'Todo 1' },
+      })
+      const res2 = await client.api.todos.$post({
+        json: { title: 'Todo 2' },
+      })
+
+      const data1 = await res1.json()
+      const data2 = await res2.json()
+
+      expect(isTodoResponse(data1)).toBe(true)
+      expect(isTodoResponse(data2)).toBe(true)
+      if (isTodoResponse(data1) && isTodoResponse(data2)) {
+        expect(data1.data.id).not.toBe(data2.data.id)
+      }
+    })
+
+    it('should set createdAt and updatedAt timestamps', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos.$post({
+        json: { title: 'Timestamped Todo' },
+      })
+
+      const data = await res.json()
+
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.createdAt).toBeDefined()
+        expect(data.data.updatedAt).toBeDefined()
+        expect(data.data.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+        expect(data.data.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+      }
+    })
+
+    it('should reject title longer than max length', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos.$post({
+        json: { title: 'a'.repeat(256) },
       })
 
       expect(res.status).toBe(400)
     })
   })
 
-  describe('GET /api/todos/:id', () => {
-    it('should return 404 for non-existent todo', async () => {
+  describe('Todo Update Business Logic', () => {
+    async function createTestTodo(title: string = 'Test Todo') {
+      const client = await getRawClient()
+      if (client && 'execute' in client) {
+        const now = Date.now()
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: [title, 'pending', now, now],
+        })
+        const result = await client.execute('SELECT id FROM todos WHERE title = ?', [title])
+        return (result.rows[0] as unknown as { id: number }).id
+      }
+      throw new Error('Failed to create test todo')
+    }
+
+    it('should update title', async () => {
+      const todoId = await createTestTodo()
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$get({
-        param: { id: '999' },
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { title: 'Updated Title' },
       })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.title).toBe('Updated Title')
+        expect(data.data.status).toBe('pending')
+      }
+    })
+
+    it('should update status from pending to completed', async () => {
+      const todoId = await createTestTodo()
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { status: 'completed' },
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.status).toBe('completed')
+      }
+    })
+
+    it('should update status from completed to pending', async () => {
+      const rawClient = await getRawClient()
+      if (rawClient && 'execute' in rawClient) {
+        const now = Date.now()
+        await rawClient.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Completed Todo', 'completed', now, now],
+        })
+        const result = await rawClient.execute('SELECT id FROM todos WHERE title = ?', [
+          'Completed Todo',
+        ])
+        const todoId = (result.rows[0] as unknown as { id: number }).id
+
+        const client = createTestClient()
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(todoId) },
+          json: { status: 'pending' },
+        })
+
+        expect(res.status).toBe(200)
+        const data = await res.json()
+        expect(isTodoResponse(data)).toBe(true)
+        if (isTodoResponse(data)) {
+          expect(data.data.status).toBe('pending')
+        }
+      }
+    })
+
+    it('should update updatedAt timestamp on any change', async () => {
+      const rawClient = await getRawClient()
+      if (rawClient && 'execute' in rawClient) {
+        const now = Date.now()
+        await rawClient.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: ['Old Todo', 'pending', now - 10000, now - 10000],
+        })
+        const result = await rawClient.execute('SELECT id, updated_at FROM todos WHERE title = ?', [
+          'Old Todo',
+        ])
+        const row = result.rows[0] as unknown as { id: number; updated_at: number }
+        const originalUpdatedAt = row.updated_at
+
+        const client = createTestClient()
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(row.id) },
+          json: { title: 'Updated Todo' },
+        })
+
+        const data = await res.json()
+        expect(isTodoResponse(data)).toBe(true)
+        if (isTodoResponse(data)) {
+          expect(data.data.updatedAt).not.toBe(originalUpdatedAt)
+          expect(new Date(data.data.updatedAt).getTime()).toBeGreaterThan(originalUpdatedAt)
+        }
+      }
+    })
+
+    it('should update multiple fields at once', async () => {
+      const todoId = await createTestTodo()
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: {
+          title: 'Multi Update',
+          description: 'New description',
+          status: 'completed',
+        },
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(isTodoResponse(data)).toBe(true)
+      if (isTodoResponse(data)) {
+        expect(data.data.title).toBe('Multi Update')
+        expect(data.data.description).toBe('New description')
+        expect(data.data.status).toBe('completed')
+      }
+    })
+
+    it('should reject invalid status value', async () => {
+      const todoId = await createTestTodo()
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { status: 'invalid_status' as 'pending' },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should return 404 when updating non-existent todo', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$put({
+        param: { id: '99999' },
+        json: { title: 'Updated' },
+      })
+
+      expect(res.status).toBe(404)
+    })
+  })
+
+  describe('Todo List Business Logic', () => {
+    async function createMultipleTodos(count: number) {
+      const client = await getRawClient()
+      if (client && 'execute' in client) {
+        for (let i = 0; i < count; i++) {
+          const now = Date.now() + i
+          await client.execute({
+            sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+            args: [`Todo ${i + 1}`, i % 2 === 0 ? 'pending' : 'completed', now, now],
+          })
+        }
+      }
+    }
+
+    it('should return todos ordered by createdAt descending', async () => {
+      await createMultipleTodos(3)
+      const client = createTestClient()
+
+      const res = await client.api.todos.$get()
+      const data = await res.json()
+
+      expect(isTodoListResponse(data)).toBe(true)
+      if (isTodoListResponse(data)) {
+        expect(data.data).toHaveLength(3)
+        const timestamps = data.data.map(t => new Date(t.createdAt).getTime())
+        for (let i = 0; i < timestamps.length - 1; i++) {
+          expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i + 1])
+        }
+      }
+    })
+
+    it('should return empty array when no todos exist', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos.$get()
+      const data = await res.json()
+
+      expect(isTodoListResponse(data)).toBe(true)
+      if (isTodoListResponse(data)) {
+        expect(data.data).toEqual([])
+      }
+    })
+  })
+
+  describe('Todo Delete Business Logic', () => {
+    async function createTestTodo(title: string = 'To Delete') {
+      const client = await getRawClient()
+      if (client && 'execute' in client) {
+        const now = Date.now()
+        await client.execute({
+          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+          args: [title, 'pending', now, now],
+        })
+        const result = await client.execute('SELECT id FROM todos WHERE title = ?', [title])
+        return (result.rows[0] as unknown as { id: number }).id
+      }
+      throw new Error('Failed to create test todo')
+    }
+
+    it('should delete existing todo', async () => {
+      const todoId = await createTestTodo()
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$delete({
+        param: { id: String(todoId) },
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(isDeleteResponse(data)).toBe(true)
+      if (isDeleteResponse(data)) {
+        expect(data.data.id).toBe(todoId)
+      }
+    })
+
+    it('should return 404 when deleting non-existent todo', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$delete({
+        param: { id: '99999' },
+      })
+
       expect(res.status).toBe(404)
     })
 
-    it('should return todo by id with type safety', async () => {
-      const client = await getRawClient()
-      if (client && 'execute' in client) {
-        const now = Date.now()
-        await client.execute({
-          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
-          args: ['Find Me', 'pending', now, now],
-        })
-        const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['Find Me'])
-        const row = result.rows[0] as unknown as { id: number }
+    it('should not be able to get deleted todo', async () => {
+      const todoId = await createTestTodo()
+      const client = createTestClient()
 
-        const testClientApp = createTestClient()
-        const res = await testClientApp.api.todos[':id'].$get({
-          param: { id: String(row.id) },
-        })
-        expect(res.status).toBe(200)
+      await client.api.todos[':id'].$delete({
+        param: { id: String(todoId) },
+      })
 
-        const data = await res.json()
-        expect(data.success).toBe(true)
-        if (data.success && 'data' in data) {
-          expect(data.data.title).toBe('Find Me')
-        }
-      }
+      const res = await client.api.todos[':id'].$get({
+        param: { id: String(todoId) },
+      })
+
+      expect(res.status).toBe(404)
+    })
+
+    it('should not be able to update deleted todo', async () => {
+      const todoId = await createTestTodo()
+      const client = createTestClient()
+
+      await client.api.todos[':id'].$delete({
+        param: { id: String(todoId) },
+      })
+
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { title: 'Updated' },
+      })
+
+      expect(res.status).toBe(404)
     })
   })
 
-  describe('PUT /api/todos/:id', () => {
-    it('should update todo with type safety', async () => {
-      const client = await getRawClient()
-      if (client && 'execute' in client) {
-        const now = Date.now()
-        await client.execute({
-          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
-          args: ['Original', 'pending', now, now],
+  describe('Todo Get By ID Business Logic', () => {
+    it('should return todo with all fields', async () => {
+      const client = createTestClient()
+
+      const createRes = await client.api.todos.$post({
+        json: {
+          title: 'Full Todo',
+          description: 'Full description',
+        },
+      })
+
+      const createData = await createRes.json()
+      expect(isTodoResponse(createData)).toBe(true)
+      if (isTodoResponse(createData)) {
+        const todoId = createData.data.id
+
+        const getRes = await client.api.todos[':id'].$get({
+          param: { id: String(todoId) },
         })
-        const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['Original'])
-        const row = result.rows[0] as unknown as { id: number }
 
-        const testClientApp = createTestClient()
-        const res = await testClientApp.api.todos[':id'].$put({
-          param: { id: String(row.id) },
-          json: {
-            title: 'Updated',
-            status: 'completed',
-          },
-        })
-
-        expect(res.status).toBe(200)
-
-        const data = await res.json()
-        expect(data.success).toBe(true)
-        if (data.success && 'data' in data) {
-          expect(data.data.title).toBe('Updated')
-          expect(data.data.status).toBe('completed')
-        }
-      }
-    })
-  })
-
-  describe('DELETE /api/todos/:id', () => {
-    it('should delete todo with type safety', async () => {
-      const client = await getRawClient()
-      if (client && 'execute' in client) {
-        const now = Date.now()
-        await client.execute({
-          sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
-          args: ['To Delete', 'pending', now, now],
-        })
-        const result = await client.execute('SELECT id FROM todos WHERE title = ?', ['To Delete'])
-        const row = result.rows[0] as unknown as { id: number }
-
-        const testClientApp = createTestClient()
-        const res = await testClientApp.api.todos[':id'].$delete({
-          param: { id: String(row.id) },
-        })
-        expect(res.status).toBe(200)
-
-        const data = await res.json()
-        expect(data.success).toBe(true)
-        if (data.success && 'data' in data) {
-          expect(data.data.id).toBe(row.id)
+        const getData = await getRes.json()
+        expect(isTodoResponse(getData)).toBe(true)
+        if (isTodoResponse(getData)) {
+          expect(getData.data.id).toBe(todoId)
+          expect(getData.data.title).toBe('Full Todo')
+          expect(getData.data.description).toBe('Full description')
+          expect(getData.data.status).toBe('pending')
+          expect(getData.data.createdAt).toBeDefined()
+          expect(getData.data.updatedAt).toBeDefined()
         }
       }
     })
