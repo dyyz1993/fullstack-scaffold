@@ -45,6 +45,7 @@ export function autoRegisterRealtime<E extends Env, S extends Schema, BasePath e
     info: { title: 'API', version: '1.0.0' },
   })
   const paths = (doc as unknown as OpenAPIDocument).paths
+
   if (!paths) return
 
   const registeredPaths = new Set<string>()

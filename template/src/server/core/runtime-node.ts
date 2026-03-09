@@ -3,6 +3,9 @@ import { createRealtimeCore, type RealtimeCore, type WSClient } from './realtime
 import type { RuntimeAdapter, RuntimePlatform, WSConnection, SSEConnection } from './runtime'
 import { generateUUID } from '../utils/uuid'
 
+// Node.js 18+ has ReadableStream in global scope
+// For older versions, we would need to import from 'stream/web'
+
 class NodeWSConnection implements WSConnection, WSClient {
   readonly id: string
   private ws: WebSocket

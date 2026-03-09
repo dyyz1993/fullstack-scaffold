@@ -10,6 +10,7 @@ import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
 import { protectWsSseInterface } from './eslint-rules/protect-ws-sse-interface.js'
 import { noBooleanSuccess } from './eslint-rules/no-boolean-success.js'
 import { middlewareLocation, noMiddlewareOutsideDir } from './eslint-rules/middleware-location.js'
+import { e2eTestLocation, noE2ETestOutsideDir } from './eslint-rules/e2e-test-location.js'
 
 const localRules = {
   rules: {
@@ -22,6 +23,8 @@ const localRules = {
     'no-boolean-success': noBooleanSuccess,
     'middleware-location': middlewareLocation,
     'no-middleware-outside-dir': noMiddlewareOutsideDir,
+    'e2e-test-location': e2eTestLocation,
+    'no-e2e-test-outside-dir': noE2ETestOutsideDir,
   },
 }
 
@@ -95,6 +98,18 @@ export default tseslint.config(
     files: ['src/client/services/wsClient.ts', 'src/client/services/sseClient.ts'],
     rules: {
       'local-rules/protect-ws-sse-interface': 'error',
+    },
+  },
+  {
+    files: ['tests/e2e/**/*.ts'],
+    rules: {
+      'local-rules/e2e-test-location': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      'local-rules/no-e2e-test-outside-dir': 'error',
     },
   }
 )

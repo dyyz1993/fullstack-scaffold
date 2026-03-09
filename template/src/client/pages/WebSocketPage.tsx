@@ -84,7 +84,7 @@ export const WebSocketPage: React.FC = () => {
   const isLoading = currentStatus === 'connecting' || currentStatus === 'reconnecting'
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6" data-testid="websocket-container">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
           <Plug className="w-8 h-8 text-indigo-500" />
@@ -98,7 +98,10 @@ export const WebSocketPage: React.FC = () => {
       <div className="mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <span className="font-medium text-gray-700">Status:</span>
-          <span className={`flex items-center gap-1 ${statusColors[currentStatus]}`}>
+          <span
+            className={`flex items-center gap-1 ${statusColors[currentStatus]}`}
+            data-testid={`ws-status-${status}`}
+          >
             {isLoading ? (
               <LoadingSpinner size="sm" color={statusColors[currentStatus]} />
             ) : status === 'open' ? (
@@ -118,6 +121,7 @@ export const WebSocketPage: React.FC = () => {
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-green-500 text-white hover:bg-green-600'
             }`}
+            data-testid="connect-ws-button"
           >
             <Wifi className="w-4 h-4" />
             Connect
@@ -130,6 +134,7 @@ export const WebSocketPage: React.FC = () => {
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-red-500 text-white hover:bg-red-600'
             }`}
+            data-testid="disconnect-ws-button"
           >
             <WifiOff className="w-4 h-4" />
             Disconnect
@@ -143,6 +148,7 @@ export const WebSocketPage: React.FC = () => {
             value={messageType}
             onChange={e => setMessageType(e.target.value as typeof messageType)}
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            data-testid="ws-message-type-select"
           >
             <option value="echo">Echo (RPC)</option>
             <option value="ping">Ping (RPC)</option>
@@ -159,6 +165,7 @@ export const WebSocketPage: React.FC = () => {
             }
             disabled={status !== 'open' || messageType === 'ping'}
             className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+            data-testid="ws-message-input"
           />
           <button
             onClick={handleSend}
@@ -168,6 +175,7 @@ export const WebSocketPage: React.FC = () => {
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-indigo-500 text-white hover:bg-indigo-600'
             }`}
+            data-testid="send-message-button"
           >
             <Send className="w-5 h-5" />
             Send
@@ -176,10 +184,13 @@ export const WebSocketPage: React.FC = () => {
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">Messages ({messages.length})</h3>
+        <h3 className="text-lg font-medium text-gray-900" data-testid="message-count">
+          Messages ({messages.length})
+        </h3>
         <button
           onClick={clearMessages}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          data-testid="clear-messages-button"
         >
           <Trash2 className="w-4 h-4" />
           Clear
@@ -206,6 +217,7 @@ export const WebSocketPage: React.FC = () => {
                   icon={config.icon}
                   colorScheme={config.colorScheme}
                   borderColor={config.borderColor}
+                  data-testid="message-item"
                 />
               )
             }

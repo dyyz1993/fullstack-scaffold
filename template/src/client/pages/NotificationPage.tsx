@@ -81,7 +81,7 @@ export const NotificationPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6" data-testid="notification-container">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
           <Bell className="w-8 h-8 text-purple-500" />
@@ -97,12 +97,18 @@ export const NotificationPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-700">SSE Status:</span>
             {sseConnected ? (
-              <span className="flex items-center gap-1 text-green-600">
+              <span
+                className="flex items-center gap-1 text-green-600"
+                data-testid="sse-status-connected"
+              >
                 <Wifi className="w-4 h-4" />
                 Connected
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-red-500">
+              <span
+                className="flex items-center gap-1 text-red-500"
+                data-testid="sse-status-disconnected"
+              >
                 <WifiOff className="w-4 h-4" />
                 Disconnected
               </span>
@@ -110,7 +116,10 @@ export const NotificationPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-700">Unread:</span>
-            <span className="px-2.5 py-0.5 bg-blue-500 text-white text-sm font-medium rounded-full">
+            <span
+              className="px-2.5 py-0.5 bg-blue-500 text-white text-sm font-medium rounded-full"
+              data-testid="unread-count"
+            >
               {unreadCount}
             </span>
           </div>
@@ -124,6 +133,7 @@ export const NotificationPage: React.FC = () => {
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-green-500 text-white hover:bg-green-600'
             }`}
+            data-testid="connect-sse-button"
           >
             <Wifi className="w-4 h-4" />
             Connect
@@ -136,6 +146,7 @@ export const NotificationPage: React.FC = () => {
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-red-500 text-white hover:bg-red-600'
             }`}
+            data-testid="disconnect-sse-button"
           >
             <WifiOff className="w-4 h-4" />
             Disconnect
@@ -143,6 +154,7 @@ export const NotificationPage: React.FC = () => {
           <button
             onClick={markAllAsRead}
             className="flex items-center gap-1.5 px-4 py-2 bg-gray-500 text-white rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors"
+            data-testid="mark-all-read-button"
           >
             <CheckCheck className="w-4 h-4" />
             Mark All Read
@@ -159,6 +171,7 @@ export const NotificationPage: React.FC = () => {
             value={type}
             onChange={e => setType(e.target.value as NotificationType)}
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+            data-testid="notification-type-select"
           >
             <option value="info">Info</option>
             <option value="warning">Warning</option>
@@ -171,6 +184,7 @@ export const NotificationPage: React.FC = () => {
             onChange={e => setTitle(e.target.value)}
             placeholder="Title..."
             className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+            data-testid="notification-title-input"
           />
         </div>
         <div className="mb-4">
@@ -179,12 +193,14 @@ export const NotificationPage: React.FC = () => {
             onChange={e => setMessage(e.target.value)}
             placeholder="Message..."
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none min-h-[100px]"
+            data-testid="notification-message-input"
           />
         </div>
         <button
           type="submit"
           disabled={!title.trim() || !message.trim() || loading}
           className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          data-testid="create-notification-button"
         >
           {loading ? <LoadingSpinner size="sm" color="text-white" /> : <Send className="w-5 h-5" />}
           Create Notification
@@ -209,6 +225,9 @@ export const NotificationPage: React.FC = () => {
                   ? 'bg-gray-50 border-gray-200'
                   : 'bg-white border-gray-200 shadow-sm'
               } ${config.border}`}
+              data-testid={
+                notification.read ? 'notification-item-read' : 'notification-item-unread'
+              }
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -218,9 +237,13 @@ export const NotificationPage: React.FC = () => {
                       icon={TypeIcon}
                       colorScheme={config.colorScheme}
                     />
-                    <span className="font-medium text-gray-900">{notification.title}</span>
+                    <span className="font-medium text-gray-900" data-testid="notification-title">
+                      {notification.title}
+                    </span>
                   </div>
-                  <p className="text-gray-600 text-sm">{notification.message}</p>
+                  <p className="text-gray-600 text-sm" data-testid="notification-message">
+                    {notification.message}
+                  </p>
                   <span className="text-xs text-gray-400 mt-2 block">
                     {new Date(notification.createdAt).toLocaleString()}
                   </span>
@@ -231,6 +254,7 @@ export const NotificationPage: React.FC = () => {
                       onClick={() => markAsRead(notification.id)}
                       className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                       title="Mark as read"
+                      data-testid="mark-as-read-button"
                     >
                       <CheckCheck className="w-5 h-5" />
                     </button>
@@ -238,6 +262,7 @@ export const NotificationPage: React.FC = () => {
                   <button
                     onClick={() => deleteNotification(notification.id)}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    data-testid="delete-notification-button"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>

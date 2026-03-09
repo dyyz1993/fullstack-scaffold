@@ -16,11 +16,14 @@ export default defineConfig({
     react(),
     devServer({
       entry: 'src/server/index.ts',
-      // Exclude static files and root path
+      // Exclude static files, root path, and frontend routes
       exclude: [
         /^\/$/,
         /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
+        /^\/todos$/,
+        /^\/notifications$/,
+        /^\/websocket$/,
       ],
     }),
     websocketPlugin(),
