@@ -3,23 +3,27 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { WebSocketPage } from '../WebSocketPage'
 
+const mockStore = {
+  status: 'closed' as const,
+  messages: [] as Array<{ type: string; payload: unknown; timestamp?: number }>,
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  echo: vi.fn().mockResolvedValue(undefined),
+  ping: vi.fn().mockResolvedValue(undefined),
+  broadcast: vi.fn(),
+  notification: vi.fn(),
+  clearMessages: vi.fn(),
+}
+
 vi.mock('@client/stores/chatWSStore', () => ({
-  useChatWSStore: vi.fn(() => ({
-    status: 'closed',
-    messages: [],
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    echo: vi.fn().mockResolvedValue(undefined),
-    ping: vi.fn().mockResolvedValue(undefined),
-    broadcast: vi.fn(),
-    notification: vi.fn(),
-    clearMessages: vi.fn(),
-  })),
+  useChatWsStore: vi.fn(() => mockStore),
 }))
 
 describe('WebSocketPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockStore.status = 'closed'
+    mockStore.messages = []
   })
 
   describe('Initial Render', () => {

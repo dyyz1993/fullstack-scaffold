@@ -1,48 +1,23 @@
-/**
- * Unit tests for App component
- */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { App } from '../../App'
-import type { Todo } from '@shared/types'
 
-interface MockStore {
-  todos: Todo[]
-  loading: boolean
-  error: string | null
-  fetchTodos: ReturnType<typeof vi.fn>
-  createTodo: ReturnType<typeof vi.fn>
-  updateTodo: ReturnType<typeof vi.fn>
-  deleteTodo: ReturnType<typeof vi.fn>
-}
+vi.mock('../../pages/TodoPage', () => ({
+  TodoPage: () => <div data-testid="todo-page">Todo Page</div>,
+}))
 
-const mockStore: MockStore = {
-  todos: [],
-  loading: false,
-  error: null,
-  fetchTodos: vi.fn(),
-  createTodo: vi.fn(),
-  updateTodo: vi.fn(),
-  deleteTodo: vi.fn(),
-}
+vi.mock('../../pages/NotificationPage', () => ({
+  NotificationPage: () => <div data-testid="notification-page">Notification Page</div>,
+}))
 
-vi.mock('../../stores/todoStore', () => ({
-  useTodoStore: vi.fn((selector?: (state: typeof mockStore) => unknown) => {
-    if (selector) {
-      return selector(mockStore)
-    }
-    return mockStore
-  }),
+vi.mock('../../pages/WebSocketPage', () => ({
+  WebSocketPage: () => <div data-testid="websocket-page">WebSocket Page</div>,
 }))
 
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockStore.todos = []
-    mockStore.loading = false
-    mockStore.error = null
   })
 
   afterEach(() => {
@@ -57,73 +32,48 @@ describe('App Component', () => {
       expect(titleElement).toHaveTextContent('Biomimic App')
     })
 
-    it('should render create form with all inputs', () => {
+    it('should render navigation', () => {
       render(<App />)
-
-      const titleInput = screen.getByTestId('todo-title-input')
-      const descriptionInput = screen.getByTestId('todo-description-input')
-      const submitButton = screen.getByTestId('add-todo-button')
-
-      expect(titleInput).toBeInTheDocument()
-      expect(titleInput).toHaveAttribute('placeholder', 'Todo title...')
-      expect(descriptionInput).toBeInTheDocument()
-      expect(descriptionInput).toHaveAttribute('placeholder', 'Description (optional)...')
-      expect(submitButton).toBeInTheDocument()
-      expect(submitButton).toHaveTextContent('Add Todo')
+      expect(screen.getByTestId('app-nav')).toBeInTheDocument()
     })
 
-    it('should call fetchTodos on mount', () => {
+    it('should render footer', () => {
       render(<App />)
-      expect(mockStore.fetchTodos).toHaveBeenCalledTimes(1)
+      expect(screen.getByTestId('app-footer')).toBeInTheDocument()
     })
   })
 
-  describe('Empty State', () => {
-    it('should display empty state message when no todos', () => {
+  describe('Navigation Links', () => {
+    it('should render todos nav link', () => {
       render(<App />)
-      const emptyState = screen.getByTestId('empty-state')
-      expect(emptyState).toBeInTheDocument()
-      expect(emptyState).toHaveTextContent('No todos yet. Add one above!')
+      expect(screen.getByTestId('nav-todos-button')).toBeInTheDocument()
+    })
+
+    it('should render notifications nav link', () => {
+      render(<App />)
+      expect(screen.getByTestId('nav-notifications-button')).toBeInTheDocument()
+    })
+
+    it('should render websocket nav link', () => {
+      render(<App />)
+      expect(screen.getByTestId('nav-websocket-button')).toBeInTheDocument()
+    })
+
+    it('should render github link', () => {
+      render(<App />)
+      expect(screen.getByTestId('github-link')).toBeInTheDocument()
     })
   })
 
-  describe('Loading State', () => {
-    it('should display loading indicator when loading is true', () => {
-      mockStore.loading = true
+  describe('Layout', () => {
+    it('should render main content area', () => {
       render(<App />)
-      expect(screen.getByTestId('loading-indicator')).toBeInTheDocument()
+      expect(screen.getByTestId('app-main')).toBeInTheDocument()
     })
-  })
 
-  describe('Error State', () => {
-    it('should display error message when error exists', () => {
-      mockStore.error = 'Test error message'
+    it('should render container', () => {
       render(<App />)
-      const errorElement = screen.getByTestId('error-message')
-      expect(errorElement).toBeInTheDocument()
-      expect(errorElement).toHaveTextContent('Test error message')
-    })
-  })
-
-  describe('Todo List', () => {
-    it('should render todos when available', () => {
-      const now = new Date().toISOString()
-      mockStore.todos = [
-        { id: 1, title: 'Todo 1', status: 'pending', createdAt: now, updatedAt: now },
-        {
-          id: 2,
-          title: 'Todo 2',
-          status: 'completed',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]
-      render(<App />)
-
-      expect(screen.getByTestId('todo-item-1')).toBeInTheDocument()
-      expect(screen.getByTestId('todo-item-2')).toBeInTheDocument()
-      expect(screen.getByText('Todo 1')).toBeInTheDocument()
-      expect(screen.getByText('Todo 2')).toBeInTheDocument()
+      expect(screen.getByTestId('app-container')).toBeInTheDocument()
     })
   })
 })

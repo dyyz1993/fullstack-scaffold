@@ -1,10 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest'
 import { createTestClient } from '../../test-utils/test-client'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import * as notificationService from '../services/notification-service'
 
 import type { AppNotification } from '@shared/schemas'
 
+setRuntimeAdapter(getNodeRuntimeAdapter())
+
 describe('Notification Routes with Type-Safe Test Client', () => {
+  beforeAll(() => {
+    notificationService.initNotificationHandlers()
+  })
+
   beforeEach(() => {
     notificationService.clearAllNotifications()
   })
