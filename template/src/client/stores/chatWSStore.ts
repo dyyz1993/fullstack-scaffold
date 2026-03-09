@@ -78,10 +78,11 @@ export const useChatWsStore = create<WSState>((set, get) => ({
     }))
     try {
       const result = await wsClient.call('echo', params)
+      const typedResult = result as { message: string; timestamp: number }
       set(state => ({
         messages: [
           ...state.messages,
-          { type: 'echo_response', payload: result, timestamp: result.timestamp },
+          { type: 'echo_response', payload: result, timestamp: typedResult.timestamp },
         ],
       }))
     } catch (error) {
@@ -93,10 +94,11 @@ export const useChatWsStore = create<WSState>((set, get) => ({
     if (!wsClient || get().status !== 'open') return
     try {
       const result = await wsClient.call('ping', {})
+      const typedResult = result as { pong: boolean; timestamp: number }
       set(state => ({
         messages: [
           ...state.messages,
-          { type: 'pong', payload: result, timestamp: result.timestamp },
+          { type: 'pong', payload: result, timestamp: typedResult.timestamp },
         ],
       }))
     } catch (error) {

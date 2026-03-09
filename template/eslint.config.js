@@ -11,6 +11,7 @@ import { protectWsSseInterface } from './eslint-rules/protect-ws-sse-interface.j
 import { noBooleanSuccess } from './eslint-rules/no-boolean-success.js'
 import { middlewareLocation, noMiddlewareOutsideDir } from './eslint-rules/middleware-location.js'
 import { e2eTestLocation, noE2ETestOutsideDir } from './eslint-rules/e2e-test-location.js'
+import { layerBoundary } from './eslint-rules/layer-boundary.js'
 
 const localRules = {
   rules: {
@@ -25,6 +26,7 @@ const localRules = {
     'no-middleware-outside-dir': noMiddlewareOutsideDir,
     'e2e-test-location': e2eTestLocation,
     'no-e2e-test-outside-dir': noE2ETestOutsideDir,
+    'layer-boundary': layerBoundary,
   },
 }
 
@@ -110,6 +112,17 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'local-rules/no-e2e-test-outside-dir': 'error',
+    },
+  },
+  {
+    files: [
+      'src/shared/modules/**/*.ts',
+      'src/server/module-*/**/*.ts',
+      'src/client/**/*.ts',
+      'src/client/**/*.tsx',
+    ],
+    rules: {
+      'local-rules/layer-boundary': 'error',
     },
   }
 )
