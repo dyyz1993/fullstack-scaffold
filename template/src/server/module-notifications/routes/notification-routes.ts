@@ -2,33 +2,27 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
 import { realtime, setRealtimeEnv } from '@server/core'
-import { NotificationSchema, CreateNotificationSchema, AppSSEProtocolSchema } from '@shared/schemas'
+import {
+  NotificationSchema,
+  CreateNotificationSchema,
+  AppSSEProtocolSchema,
+  ApiSuccessSchema,
+  ApiErrorSchema,
+} from '@shared/schemas'
 import { getRuntimeAdapter } from '@server/core/runtime'
 
-const NotificationListResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.array(NotificationSchema),
-  nextCursor: z.string().optional(),
-})
+const NotificationListResponseSchema = ApiSuccessSchema(
+  z.object({
+    items: z.array(NotificationSchema),
+    nextCursor: z.string().optional(),
+  })
+)
 
-const UnreadCountResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
+const UnreadCountResponseSchema = ApiSuccessSchema(
+  z.object({
     count: z.number(),
-  }),
-})
-
-const MarkAllReadResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
-    count: z.number(),
-  }),
-})
-
-const ErrorResponseSchema = z.object({
-  success: z.boolean().optional(),
-  error: z.string().optional(),
-})
+  })
+)
 
 const streamRoute = createRoute({
   method: 'get',
@@ -66,6 +60,14 @@ const listRoute = createRoute({
       },
       description: 'List notifications',
     },
+    500: {
+      content: {
+        'application/json': {
+          schema: ApiErrorSchema,
+        },
+      },
+      description: 'Internal server error',
+    },
   },
 })
 
@@ -81,6 +83,14 @@ const unreadCountRoute = createRoute({
         },
       },
       description: 'Get unread count',
+    },
+    500: {
+      content: {
+        'application/json': {
+          schema: ApiErrorSchema,
+        },
+      },
+      description: 'Internal server error',
     },
   },
 })
@@ -98,10 +108,7 @@ const getRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: NotificationSchema,
-          }),
+          schema: ApiSuccessSchema(NotificationSchema),
         },
       },
       description: 'Get notification by ID',
@@ -109,7 +116,7 @@ const getRoute = createRoute({
     404: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Notification not found',
@@ -134,10 +141,7 @@ const createRouteDef = createRoute({
     201: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: NotificationSchema,
-          }),
+          schema: ApiSuccessSchema(NotificationSchema),
         },
       },
       description: 'Create notification',
@@ -145,7 +149,7 @@ const createRouteDef = createRoute({
     400: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Invalid input',
@@ -161,10 +165,18 @@ const markAllReadRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: MarkAllReadResponseSchema,
+          schema: UnreadCountResponseSchema,
         },
       },
       description: 'Mark all as read',
+    },
+    500: {
+      content: {
+        'application/json': {
+          schema: ApiErrorSchema,
+        },
+      },
+      description: 'Internal server error',
     },
   },
 })
@@ -182,10 +194,7 @@ const markReadRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: NotificationSchema,
-          }),
+          schema: ApiSuccessSchema(NotificationSchema),
         },
       },
       description: 'Mark as read',
@@ -193,7 +202,7 @@ const markReadRoute = createRoute({
     404: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Notification not found',
@@ -214,12 +223,7 @@ const deleteRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: z.object({
-              id: z.string(),
-            }),
-          }),
+          schema: ApiSuccessSchema(z.object({ id: z.string() })),
         },
       },
       description: 'Delete notification',
@@ -227,7 +231,7 @@ const deleteRoute = createRoute({
     404: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Notification not found',
@@ -252,7 +256,7 @@ export const notificationRoutes = new OpenAPIHono()
       limit: query.limit ? parseInt(query.limit) : 20,
       cursor: query.cursor,
     })
-    return c.json({ success: true, data: result.data, nextCursor: result.nextCursor })
+    return c.json({ success: true, data: { items: result.data, nextCursor: result.nextCursor } })
   })
   .openapi(unreadCountRoute, async c => {
     const count = notificationService.getUnreadCount()

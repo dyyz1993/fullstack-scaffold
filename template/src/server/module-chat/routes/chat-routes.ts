@@ -2,14 +2,13 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppBindings } from '../../types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
-import { AppWSProtocolSchema } from '@shared/schemas'
+import { AppWSProtocolSchema, ApiSuccessSchema } from '@shared/schemas'
 
-const WSStatusResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
+const WSStatusResponseSchema = ApiSuccessSchema(
+  z.object({
     connectedClients: z.number(),
-  }),
-})
+  })
+)
 
 const statusRoute = createRoute({
   method: 'get',

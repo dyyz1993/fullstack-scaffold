@@ -1,23 +1,13 @@
-/**
- * Todo API routes using Hono RPC
- * Type-safe API endpoints with Zod validation
- *
- * CRITICAL: Uses CHAIN SYNTAX for proper Hono RPC type inference
- */
-
-import { createRoute, z } from '@hono/zod-openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import * as todoService from '../services/todo-service';
+import { createRoute, z } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+import * as todoService from '../services/todo-service'
 import {
   TodoSchema,
   CreateTodoSchema,
   UpdateTodoSchema,
-} from '@shared/schemas';
-
-const ErrorResponseSchema = z.object({
-  success: z.boolean().optional(),
-  error: z.string().optional(),
-});
+  ApiSuccessSchema,
+  ApiErrorSchema,
+} from '@shared/schemas'
 
 const listRoute = createRoute({
   method: 'get',
@@ -27,16 +17,21 @@ const listRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: z.array(TodoSchema),
-          }),
+          schema: ApiSuccessSchema(z.array(TodoSchema)),
         },
       },
       description: 'List all todos',
     },
+    500: {
+      content: {
+        'application/json': {
+          schema: ApiErrorSchema,
+        },
+      },
+      description: 'Internal server error',
+    },
   },
-});
+})
 
 const getRoute = createRoute({
   method: 'get',
@@ -51,10 +46,7 @@ const getRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: TodoSchema,
-          }),
+          schema: ApiSuccessSchema(TodoSchema),
         },
       },
       description: 'Get a todo by ID',
@@ -62,13 +54,13 @@ const getRoute = createRoute({
     404: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Todo not found',
     },
   },
-});
+})
 
 const createRouteDef = createRoute({
   method: 'post',
@@ -87,10 +79,7 @@ const createRouteDef = createRoute({
     201: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: TodoSchema,
-          }),
+          schema: ApiSuccessSchema(TodoSchema),
         },
       },
       description: 'Create a new todo',
@@ -98,13 +87,13 @@ const createRouteDef = createRoute({
     400: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Invalid input',
     },
   },
-});
+})
 
 const updateRoute = createRoute({
   method: 'put',
@@ -126,10 +115,7 @@ const updateRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: TodoSchema,
-          }),
+          schema: ApiSuccessSchema(TodoSchema),
         },
       },
       description: 'Update a todo',
@@ -137,13 +123,13 @@ const updateRoute = createRoute({
     404: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Todo not found',
     },
   },
-});
+})
 
 const deleteRoute = createRoute({
   method: 'delete',
@@ -158,12 +144,7 @@ const deleteRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            data: z.object({
-              id: z.number(),
-            }),
-          }),
+          schema: ApiSuccessSchema(z.object({ id: z.number() })),
         },
       },
       description: 'Delete a todo',
@@ -171,48 +152,48 @@ const deleteRoute = createRoute({
     404: {
       content: {
         'application/json': {
-          schema: ErrorResponseSchema,
+          schema: ApiErrorSchema,
         },
       },
       description: 'Todo not found',
     },
   },
-});
+})
 
 export const apiRoutes = new OpenAPIHono()
-  .openapi(listRoute, async (c) => {
-    const todos = await todoService.listTodos();
-    return c.json({ success: true, data: todos });
+  .openapi(listRoute, async c => {
+    const todos = await todoService.listTodos()
+    return c.json({ success: true, data: todos })
   })
-  .openapi(getRoute, async (c) => {
-    const id = parseInt(c.req.param('id'));
-    const todo = await todoService.getTodo(id);
+  .openapi(getRoute, async c => {
+    const id = parseInt(c.req.param('id'))
+    const todo = await todoService.getTodo(id)
     if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404);
+      return c.json({ success: false, error: 'Todo not found' }, 404)
     }
-    return c.json({ success: true, data: todo });
+    return c.json({ success: true, data: todo })
   })
-  .openapi(createRouteDef, async (c) => {
-    const data = c.req.valid('json');
-    const todo = await todoService.createTodo(data);
-    return c.json({ success: true, data: todo }, 201);
+  .openapi(createRouteDef, async c => {
+    const data = c.req.valid('json')
+    const todo = await todoService.createTodo(data)
+    return c.json({ success: true, data: todo }, 201)
   })
-  .openapi(updateRoute, async (c) => {
-    const id = parseInt(c.req.param('id'));
-    const data = c.req.valid('json');
-    const todo = await todoService.updateTodo(id, data);
+  .openapi(updateRoute, async c => {
+    const id = parseInt(c.req.param('id'))
+    const data = c.req.valid('json')
+    const todo = await todoService.updateTodo(id, data)
     if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404);
+      return c.json({ success: false, error: 'Todo not found' }, 404)
     }
-    return c.json({ success: true, data: todo });
+    return c.json({ success: true, data: todo })
   })
-  .openapi(deleteRoute, async (c) => {
-    const id = parseInt(c.req.param('id'));
-    const result = await todoService.deleteTodo(id);
+  .openapi(deleteRoute, async c => {
+    const id = parseInt(c.req.param('id'))
+    const result = await todoService.deleteTodo(id)
     if (!result) {
-      return c.json({ success: false, error: 'Todo not found' }, 404);
+      return c.json({ success: false, error: 'Todo not found' }, 404)
     }
-    return c.json({ success: true, data: { id } });
+    return c.json({ success: true, data: { id } })
   })
   .doc('/docs', {
     openapi: '3.0.0',
@@ -220,4 +201,4 @@ export const apiRoutes = new OpenAPIHono()
       version: '1.0.0',
       title: 'Todo API',
     },
-  });
+  })

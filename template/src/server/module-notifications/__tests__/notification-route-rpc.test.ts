@@ -32,8 +32,10 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      expect(data.data).toEqual([])
-      expect(data.nextCursor).toBeUndefined()
+      if (data.success) {
+        expect(data.data.items).toEqual([])
+        expect(data.data.nextCursor).toBeUndefined()
+      }
     })
 
     it('should return notifications list with pagination', async () => {
@@ -56,8 +58,10 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      expect(data.data).toHaveLength(1)
-      expect(data.nextCursor).toBeDefined()
+      if (data.success) {
+        expect(data.data.items).toHaveLength(1)
+        expect(data.data.nextCursor).toBeDefined()
+      }
     })
 
     it('should filter unread notifications', async () => {
@@ -82,8 +86,10 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      expect(data.data).toHaveLength(1)
-      expect(data.data[0].read).toBe(false)
+      if (data.success) {
+        expect(data.data.items).toHaveLength(1)
+        expect(data.data.items[0].read).toBe(false)
+      }
     })
   })
 
@@ -103,7 +109,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      if (data.success && 'data' in data) {
+      if (data.success) {
         expect(data.data.type).toBe('info')
         expect(data.data.title).toBe('New Notification')
         expect(data.data.message).toBe('Test message')
@@ -153,7 +159,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      if (data.success && 'data' in data) {
+      if (data.success) {
         expect(data.data.id).toBe(notif.id)
         expect(data.data.title).toBe('Find Me')
       }
@@ -177,7 +183,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      if (data.success && 'data' in data) {
+      if (data.success) {
         expect(data.data.read).toBe(true)
       }
     })
@@ -211,7 +217,9 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      expect(data.data.count).toBe(2)
+      if (data.success) {
+        expect(data.data.count).toBe(2)
+      }
     })
   })
 
@@ -231,7 +239,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      if (data.success && 'data' in data) {
+      if (data.success) {
         expect(data.data.id).toBe(notif.id)
       }
 
@@ -269,7 +277,9 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      expect(data.data.count).toBe(1)
+      if (data.success) {
+        expect(data.data.count).toBe(1)
+      }
     })
   })
 })

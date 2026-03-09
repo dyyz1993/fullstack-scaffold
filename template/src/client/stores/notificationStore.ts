@@ -40,10 +40,10 @@ export const useNotificationStore = create<NotificationState>(set => ({
         query: { unreadOnly: String(unreadOnly) },
       })
       const result = await response.json()
-      if (result.success && 'data' in result) {
-        set({ notifications: result.data, loading: false })
+      if (result.success) {
+        set({ notifications: result.data.items, loading: false })
       } else {
-        set({ error: 'Failed to fetch', loading: false })
+        set({ error: result.error, loading: false })
       }
     } catch (error) {
       set({
@@ -60,13 +60,13 @@ export const useNotificationStore = create<NotificationState>(set => ({
         json: input,
       })
       const result = await response.json()
-      if (result.success && 'data' in result) {
+      if (result.success) {
         set(state => ({
           notifications: [result.data, ...state.notifications],
           loading: false,
         }))
       } else {
-        set({ error: 'Failed to create', loading: false })
+        set({ error: result.error, loading: false })
       }
     } catch (error) {
       set({
@@ -82,7 +82,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
         param: { id },
       })
       const result = await response.json()
-      if (result.success && 'data' in result) {
+      if (result.success) {
         set(state => ({
           notifications: state.notifications.map(n => (n.id === id ? { ...n, read: true } : n)),
           unreadCount: Math.max(0, state.unreadCount - 1),
@@ -133,7 +133,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
     try {
       const response = await apiClient.api.notifications['unread-count'].$get()
       const result = await response.json()
-      if (result.success && 'data' in result) {
+      if (result.success) {
         set({ unreadCount: result.data.count })
       }
     } catch (error) {
