@@ -129,6 +129,7 @@ export default tseslint.config(
       '**/routes/index.ts',
       'src/client/services/apiClient.ts',
       'src/server/module-chat/routes/chat-routes.ts',
+      'src/server/module-chat/services/chat-service.ts',
       'src/server/module-notifications/routes/notification-routes.ts',
     ],
     rules: {
