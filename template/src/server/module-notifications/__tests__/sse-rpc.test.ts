@@ -1,9 +1,30 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
+import { createApp } from '../../app'
 import { createTestClient } from '../../test-utils/test-client'
+import { createTestServer } from '../../test-utils/test-server'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
+import { initNotificationHandlers } from '../services/notification-service'
 import * as notificationService from '../services/notification-service'
 import type { AppSSEProtocol } from '@shared/schemas'
 
+setRuntimeAdapter(getNodeRuntimeAdapter())
+initNotificationHandlers()
+
 describe('SSE Routes with Type-Safe Test Client', () => {
+  let testServer: Awaited<ReturnType<typeof createTestServer>>
+  let client: ReturnType<typeof createTestClient>
+
+  beforeAll(async () => {
+    const app = createApp()
+    testServer = await createTestServer(app, ['/api/notifications/stream'])
+    client = createTestClient(`http://localhost:${testServer.port}`)
+  }, 15000)
+
+  afterAll(async () => {
+    await testServer.close()
+  }, 15000)
+
   beforeEach(() => {
     notificationService.clearAllNotifications()
   })
@@ -14,9 +35,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
   describe('GET /api/notifications/stream', () => {
     it('should use $sse() method for type-safe SSE connection', async () => {
-      const client = createTestClient()
-
-      const conn = await client.api.notifications.stream.$sse()
+      const conn = client.api.notifications.stream.$sse()
 
       expect(['connecting', 'open', 'closed']).toContain(conn.status)
 
@@ -49,9 +68,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     })
 
     it('should receive typed notification events', async () => {
-      const client = createTestClient()
-
-      const conn = await client.api.notifications.stream.$sse()
+      const conn = client.api.notifications.stream.$sse()
 
       const receivedNotifications: AppSSEProtocol['events']['notification'][] = []
 
@@ -75,9 +92,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     })
 
     it('should receive typed ping events', async () => {
-      const client = createTestClient()
-
-      const conn = await client.api.notifications.stream.$sse()
+      const conn = client.api.notifications.stream.$sse()
 
       const receivedPings: AppSSEProtocol['events']['ping'][] = []
 
@@ -97,9 +112,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     })
 
     it('should receive typed connected events', async () => {
-      const client = createTestClient()
-
-      const conn = await client.api.notifications.stream.$sse()
+      const conn = client.api.notifications.stream.$sse()
 
       const receivedConnected: AppSSEProtocol['events']['connected'][] = []
 
@@ -119,9 +132,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     })
 
     it('should handle connection status changes', async () => {
-      const client = createTestClient()
-
-      const conn = await client.api.notifications.stream.$sse()
+      const conn = client.api.notifications.stream.$sse()
 
       const statusHistory: ('connecting' | 'open' | 'closed')[] = []
 
@@ -142,9 +153,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     })
 
     it('should handle errors gracefully', async () => {
-      const client = createTestClient()
-
-      const conn = await client.api.notifications.stream.$sse()
+      const conn = client.api.notifications.stream.$sse()
 
       const unsubscribe = conn.onError(error => {
         console.error('SSE error:', error)

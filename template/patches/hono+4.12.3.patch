@@ -32,7 +32,7 @@ index 6af21ca..338ec91 100644
      input: infer I;
  } ? {
 -    $ws: (args?: I) => WebSocket;
-+    $sse: (args?: I) => Promise<SSEClient<O>>;
++    $sse: (args?: I) => SSEClient<O>;
  } : {} : {});
  type ClientResponseOfEndpoint<T extends Endpoint = Endpoint> = T extends {
      output: infer O;

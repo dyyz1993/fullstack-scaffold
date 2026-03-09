@@ -2,6 +2,7 @@ import { createServer, type Server } from 'http'
 import { WebSocketServer } from 'ws'
 import type { Hono, Env, Schema } from 'hono'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
+import type { ReadableStream } from 'stream/web'
 
 export interface TestServer {
   server: Server
@@ -62,9 +63,28 @@ export function createTestServer<E extends Env, S extends Schema, BasePath exten
             response.headers.forEach((value: string, key: string) => {
               res.setHeader(key, value)
             })
-            response.arrayBuffer().then((buffer: ArrayBuffer) => {
-              res.end(Buffer.from(buffer))
-            })
+
+            const contentType = response.headers.get('content-type') || ''
+            if (contentType.includes('text/event-stream')) {
+              const reader = (response.body as ReadableStream<Uint8Array>).getReader()
+              const pump = (): Promise<void> =>
+                reader.read().then(({ done, value }) => {
+                  if (done) {
+                    res.end()
+                    return
+                  }
+                  res.write(Buffer.from(value))
+                  return pump()
+                })
+              pump().catch((err: Error) => {
+                console.error('SSE stream error:', err)
+                res.end()
+              })
+            } else {
+              response.arrayBuffer().then((buffer: ArrayBuffer) => {
+                res.end(Buffer.from(buffer))
+              })
+            }
           })
           .catch((err: Error) => {
             res.statusCode = 500

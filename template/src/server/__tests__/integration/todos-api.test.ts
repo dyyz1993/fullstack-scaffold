@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
-import app from '../../entries/node'
+import { createTestClient } from '../../test-utils/test-client'
 import { getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
@@ -24,52 +24,56 @@ describe('Integration: Todos API (Real Database)', () => {
 
   describe('Full CRUD Flow', () => {
     it('should handle complete todo lifecycle', async () => {
-      const listRes = await app.request('/api/todos')
+      const client = createTestClient()
+
+      const listRes = await client.api.todos.$get()
       const listData = await listRes.json()
       expect(listData).toEqual({ success: true, data: [] })
 
-      const createRes = await app.request('/api/todos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'Integration Todo', description: 'Full test' }),
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Integration Todo', description: 'Full test' },
       })
       expect(createRes.status).toBe(201)
-      const created = (await createRes.json()) as {
-        success: boolean
-        data: { id: number; title: string }
-      }
+      const created = await createRes.json()
       expect(created.success).toBe(true)
-      expect(created.data.title).toBe('Integration Todo')
+      if (created.success && 'data' in created) {
+        expect(created.data.title).toBe('Integration Todo')
 
-      const readRes = await app.request(`/api/todos/${created.data.id}`)
-      const readData = (await readRes.json()) as { success: boolean; data: { title: string } }
-      expect(readData.success).toBe(true)
+        const readRes = await client.api.todos[':id'].$get({
+          param: { id: String(created.data.id) },
+        })
+        const readData = await readRes.json()
+        expect(readData.success).toBe(true)
 
-      const updateRes = await app.request(`/api/todos/${created.data.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' }),
-      })
-      const updated = (await updateRes.json()) as { success: boolean; data: { status: string } }
-      expect(updated.success).toBe(true)
-      expect(updated.data.status).toBe('completed')
+        const updateRes = await client.api.todos[':id'].$put({
+          param: { id: String(created.data.id) },
+          json: { status: 'completed' },
+        })
+        const updated = await updateRes.json()
+        expect(updated.success).toBe(true)
+        if (updated.success && 'data' in updated) {
+          expect(updated.data.status).toBe('completed')
+        }
 
-      const deleteRes = await app.request(`/api/todos/${created.data.id}`, {
-        method: 'DELETE',
-      })
-      const deleted = (await deleteRes.json()) as { success: boolean }
-      expect(deleted.success).toBe(true)
+        const deleteRes = await client.api.todos[':id'].$delete({
+          param: { id: String(created.data.id) },
+        })
+        const deleted = await deleteRes.json()
+        expect(deleted.success).toBe(true)
 
-      const verifyRes = await app.request(`/api/todos/${created.data.id}`)
-      expect(verifyRes.status).toBe(404)
+        const verifyRes = await client.api.todos[':id'].$get({
+          param: { id: String(created.data.id) },
+        })
+        expect(verifyRes.status).toBe(404)
+      }
     })
 
     it('should handle concurrent requests', async () => {
+      const client = createTestClient()
+
       const promises = Array.from({ length: 10 }, (_, i) =>
-        app.request('/api/todos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: `Concurrent Todo ${i}` }),
+        client.api.todos.$post({
+          json: { title: `Concurrent Todo ${i}` },
         })
       )
 
@@ -78,23 +82,29 @@ describe('Integration: Todos API (Real Database)', () => {
         expect(res.status).toBe(201)
       })
 
-      const listRes = await app.request('/api/todos')
-      const listData = (await listRes.json()) as { success: boolean; data: unknown[] }
-      expect(listData.data).toHaveLength(10)
+      const listRes = await client.api.todos.$get()
+      const listData = await listRes.json()
+      if (listData.success && 'data' in listData) {
+        expect(listData.data).toHaveLength(10)
+      }
     })
   })
 
   describe('Edge Cases', () => {
     it('should return 404 for non-existent todo', async () => {
-      const res = await app.request('/api/todos/99999')
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$get({
+        param: { id: '99999' },
+      })
       expect(res.status).toBe(404)
     })
 
     it('should reject invalid todo data', async () => {
-      const res = await app.request('/api/todos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: '' }),
+      const client = createTestClient()
+
+      const res = await client.api.todos.$post({
+        json: { title: '' },
       })
       expect(res.status).toBe(400)
     })

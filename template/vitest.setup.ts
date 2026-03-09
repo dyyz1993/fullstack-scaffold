@@ -5,6 +5,7 @@
 
 import { afterEach } from 'vitest'
 import '@testing-library/jest-dom'
+import { EventSource } from 'eventsource'
 
 afterEach(() => {})
 
@@ -34,3 +35,5 @@ global.IntersectionObserver = class IntersectionObserver {
   rootMargin = ''
   thresholds = []
 } as unknown as typeof IntersectionObserver
+
+global.EventSource = EventSource as unknown as typeof globalThis.EventSource
