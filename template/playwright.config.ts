@@ -1,9 +1,13 @@
 import { defineConfig, devices } from '@playwright/test'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+// Load test environment variables
+dotenv.config({ path: join(__dirname, '.env.test') })
 
 /**
  * Playwright E2E Test Configuration
@@ -87,7 +91,7 @@ export default defineConfig({
   // Projects define different browser configurations
   projects: [
     {
-      name: 'chromium',
+      name: process.env.PLAYWRIGHT_TEST_BROWSER_TYPE || 'chromium',
       use: {
         ...devices['Desktop Chrome'],
       },
