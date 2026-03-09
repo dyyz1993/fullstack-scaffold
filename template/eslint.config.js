@@ -8,6 +8,7 @@ import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
 import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-service.js'
 import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
 import { protectWsSseInterface } from './eslint-rules/protect-ws-sse-interface.js'
+import { noBooleanSuccess } from './eslint-rules/no-boolean-success.js'
 
 const localRules = {
   rules: {
@@ -17,6 +18,7 @@ const localRules = {
     'no-util-functions-in-service': noUtilFunctionsInService,
     'no-direct-ws-sse': noDirectWsSse,
     'protect-ws-sse-interface': protectWsSseInterface,
+    'no-boolean-success': noBooleanSuccess,
   },
 }
 
@@ -61,6 +63,7 @@ export default tseslint.config(
       'no-console': 'error',
       'local-rules/require-hono-chain-syntax': 'error',
       'local-rules/no-util-functions-in-service': 'warn',
+      'local-rules/no-boolean-success': 'error',
     },
   },
   {
