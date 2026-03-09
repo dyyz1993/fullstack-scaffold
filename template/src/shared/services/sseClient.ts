@@ -119,25 +119,6 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
   }
 }
 
-export async function createSSEClient<P extends SSEProtocol>(
-  url: string | URL
-): Promise<SSEClient<P>> {
-  return new Promise((resolve, reject) => {
-    const client = new SSEClientImpl<P>(url)
-
-    const timeout = setTimeout(() => {
-      reject(new Error('SSE connection timeout'))
-      client.abort()
-    }, 10000)
-
-    client.onStatusChange(status => {
-      if (status === 'open') {
-        clearTimeout(timeout)
-        resolve(client as unknown as SSEClient<P>)
-      } else if (status === 'closed') {
-        clearTimeout(timeout)
-        reject(new Error('SSE connection failed'))
-      }
-    })
-  })
+export function createSSEClient<P extends SSEProtocol>(url: string | URL): SSEClient<P> {
+  return new SSEClientImpl<P>(url) as unknown as SSEClient<P>
 }

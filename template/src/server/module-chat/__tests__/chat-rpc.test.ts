@@ -3,6 +3,7 @@ import app from '../../entries/node'
 import { initChatHandlers } from '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
 import { createTestServer } from '../../test-utils/test-server'
+import { createWSClient } from '@shared/services/wsClient'
 import type { WSStatus } from '@shared/schemas'
 
 initChatHandlers()
@@ -13,7 +14,9 @@ describe('Chat Routes with Type-Safe Test Client', () => {
 
   beforeAll(async () => {
     testServer = await createTestServer(app, ['/api/chat/ws'])
-    client = createTestClient(`http://localhost:${testServer.port}`)
+    client = createTestClient(`http://localhost:${testServer.port}`, {
+      webSocket: (url: string | URL) => createWSClient(url) as unknown as WebSocket,
+    })
   }, 15000)
 
   afterAll(async () => {

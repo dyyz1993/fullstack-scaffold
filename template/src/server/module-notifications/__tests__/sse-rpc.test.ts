@@ -5,6 +5,7 @@ import { createTestServer } from '../../test-utils/test-server'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import { initNotificationHandlers } from '../services/notification-service'
+import { createSSEClient } from '@shared/services/sseClient'
 import * as notificationService from '../services/notification-service'
 import type { AppSSEProtocol } from '@shared/schemas'
 
@@ -18,7 +19,9 @@ describe('SSE Routes with Type-Safe Test Client', () => {
   beforeAll(async () => {
     const app = createApp()
     testServer = await createTestServer(app, ['/api/notifications/stream'])
-    client = createTestClient(`http://localhost:${testServer.port}`)
+    client = createTestClient(`http://localhost:${testServer.port}`, {
+      sse: (url: string | URL) => createSSEClient(url),
+    })
   }, 15000)
 
   afterAll(async () => {
