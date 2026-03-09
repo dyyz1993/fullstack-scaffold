@@ -25,6 +25,16 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
       }
     })
+    .post('/api/__test__/cleanup', async c => {
+      try {
+        const { cleanupTestDatabase } = await import('./db/test-setup')
+        await cleanupTestDatabase()
+        return c.json({ success: true, message: 'Database cleaned up' })
+      } catch (error) {
+        console.error('Error during database cleanup:', error)
+        return c.json({ success: false, message: 'Failed to cleanup database' }, 500)
+      }
+    })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   autoRegisterRealtime(app as any)

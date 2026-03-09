@@ -90,29 +90,6 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // 指定系统自带浏览器可执行文件路径
-        launchOptions: {
-          executablePath: '/Applications/Chromium.app/Contents/MacOS/Chromium',
-        },
-      },
-    },
-    /* Test against mobile viewports */
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-        launchOptions: {
-          executablePath: '/Applications/Chromium.app/Contents/MacOS/Chromium',
-        },
-      },
-    },
-    {
-      name: 'Mobile Safari',
-      use: {
-        ...devices['iPhone 12'],
-        launchOptions: {
-          executablePath: '/Applications/Chromium.app/Contents/MacOS/Chromium',
-        },
       },
     },
   ],

@@ -46,7 +46,7 @@ export const useTodoStore = create<TodoState>(set => ({
       const result = await response.json()
       if (result.success) {
         set(state => ({
-          todos: [...state.todos, result.data],
+          todos: [result.data, ...state.todos],
           loading: false,
         }))
       } else {

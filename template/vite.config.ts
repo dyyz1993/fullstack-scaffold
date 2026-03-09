@@ -1,6 +1,6 @@
 import path from 'path'
 import { defineConfig } from 'vite'
-// import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
 
@@ -13,10 +13,13 @@ export default defineConfig({
     },
   },
   plugins: [
+    react(),
     devServer({
       entry: 'src/server/index.ts',
+      // Exclude static files and root path
       exclude: [
-        /^\/(@[a-zA-Z0-9_-]+|src|node_modules|__inspect|index\.html)/,
+        /^\/$/,
+        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
     }),

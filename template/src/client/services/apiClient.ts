@@ -3,6 +3,7 @@ import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/services/wsClient'
 import { SSEClientImpl } from '@shared/services/sseClient'
 
+// Use environment variable for API base URL if available, otherwise use window.location.origin
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
 export const apiClient = hc<AppType>(baseUrl, {
