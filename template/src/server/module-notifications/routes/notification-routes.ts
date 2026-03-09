@@ -143,8 +143,7 @@ export const notificationRoutes = new OpenAPIHono()
   })
   .openapi(createRouteDef, async c => {
     const data = c.req.valid('json')
-    const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace }
-    const notification = notificationService.createNotificationAndBroadcast(data, env)
+    const notification = await notificationService.createNotificationAndBroadcast(data)
 
     return c.json({ success: true, data: notification }, 201)
   })

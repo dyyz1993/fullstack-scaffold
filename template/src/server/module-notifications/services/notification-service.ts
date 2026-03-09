@@ -1,6 +1,6 @@
 import type { AppNotification, CreateNotificationInput } from '@shared/schemas'
 import { generateUUID } from '../../utils/uuid'
-import { realtime, setRealtimeEnv } from '@server/core'
+import { realtime } from '@server/core'
 
 const notifications: AppNotification[] = []
 
@@ -53,14 +53,9 @@ export function createNotification(input: CreateNotificationInput): AppNotificat
 }
 
 export async function createNotificationAndBroadcast(
-  input: CreateNotificationInput,
-  env?: { NOTIFICATION_DO?: DurableObjectNamespace }
+  input: CreateNotificationInput
 ): Promise<AppNotification> {
   const notification = createNotification(input)
-
-  if (env) {
-    setRealtimeEnv(env)
-  }
 
   await realtime.broadcast('notification', notification)
 

@@ -5,6 +5,7 @@ import { chatRoutes } from './module-chat/routes/chat-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
+import { realtimeEnvMiddleware } from './middleware/realtime-env'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 
@@ -13,6 +14,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .use('*', errorHandlerMiddleware())
     .use('*', loggerMiddleware())
     .use('*', corsMiddleware())
+    .use('*', realtimeEnvMiddleware())
     .route('/api', notificationRoutes)
     .route('/api', chatRoutes)
     .route('/api', apiRoutes)
