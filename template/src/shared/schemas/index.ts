@@ -61,18 +61,6 @@ export {
   type AppSSEProtocol,
 } from './notifications'
 
-// WebSocket module schemas
-export {
-  WSMessageTypeSchema,
-  WSMessageSchema,
-  WSEchoPayloadSchema,
-  WSNotificationPayloadSchema,
-  type WSMessageType,
-  type WSMessage,
-  type WSEchoPayload,
-  type WSNotificationPayload,
-} from './websocket'
-
 // Re-export global types for convenience
 export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus }
 
