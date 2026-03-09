@@ -56,7 +56,7 @@ export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
 })
 
 export { NotificationDurableObject } from './durable-objects/NotificationDO'
-export type { WSClient, SSEClient, RealtimeCore, RPCHandler, EventHandler } from './realtime-core'
+export type { RealtimeCore, RPCHandler, EventHandler } from './realtime-core'
 export { createRealtimeCore, createWSMessageHandler } from './realtime-core'
 
 export {

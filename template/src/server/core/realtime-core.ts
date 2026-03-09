@@ -1,23 +1,18 @@
-export interface WSClient {
-  id: string
-  send: (data: unknown) => void
-  close: () => void
-}
-
-export interface SSEClient {
-  id: string
-  send: (data: string) => void
-}
+import type { WSConnection, SSEConnection } from './runtime'
 
 export type RPCHandler = (params: unknown, clientId: string) => unknown
 
-export type EventHandler = (payload: unknown, clientId: string, broadcast: (data: unknown, exclude: string[], event: string) => void) => void
+export type EventHandler = (
+  payload: unknown,
+  clientId: string,
+  broadcast: (data: unknown, exclude: string[], event: string) => void
+) => void
 
 export type RealtimeBroadcastFn = (data: unknown, exclude: string[], event: string) => void
 
 export interface RealtimeCore {
-  wsClients: Map<string, WSClient>
-  sseClients: Map<string, SSEClient>
+  wsClients: Map<string, WSConnection>
+  sseClients: Map<string, SSEConnection>
   broadcast: RealtimeBroadcastFn
   handleWSMessage: (clientId: string, data: unknown) => void
   registerRPCHandler: (method: string, handler: RPCHandler) => void
@@ -25,8 +20,8 @@ export interface RealtimeCore {
 }
 
 export function createRealtimeCore(): RealtimeCore {
-  const wsClients = new Map<string, WSClient>()
-  const sseClients = new Map<string, SSEClient>()
+  const wsClients = new Map<string, WSConnection>()
+  const sseClients = new Map<string, SSEConnection>()
   const rpcHandlers = new Map<string, RPCHandler>()
   const eventHandlers = new Map<string, EventHandler>()
 
@@ -66,13 +61,16 @@ export function createRealtimeCore(): RealtimeCore {
     if (typeof data === 'object' && data !== null && 'method' in data && 'id' in data) {
       const rpc = data as { id: string; method: string; params: unknown }
       const handler = rpcHandlers.get(rpc.method)
-      
+
       if (handler) {
         try {
           const result = handler(rpc.params, clientId)
           client.send({ id: rpc.id, result })
         } catch (error) {
-          client.send({ id: rpc.id, error: error instanceof Error ? error.message : 'Unknown error' })
+          client.send({
+            id: rpc.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
         }
       } else {
         client.send({ id: rpc.id, error: `Unknown method: ${rpc.method}` })
@@ -83,7 +81,7 @@ export function createRealtimeCore(): RealtimeCore {
     if (typeof data === 'object' && data !== null && 'type' in data) {
       const msg = data as { type: string; payload?: unknown }
       const handler = eventHandlers.get(msg.type)
-      
+
       if (handler) {
         handler(msg.payload, clientId, broadcast)
       }
