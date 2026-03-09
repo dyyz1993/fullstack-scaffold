@@ -1,7 +1,6 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
-import { realtime, setRealtimeEnv } from '@server/core'
 import { NotificationSchema, CreateNotificationSchema, AppSSEProtocolSchema } from '@shared/schemas'
 import { successResponse, errorResponse, listResponse } from '@server/utils/route-helpers'
 import { getRuntimeAdapter } from '@server/core/runtime'
@@ -144,11 +143,8 @@ export const notificationRoutes = new OpenAPIHono()
   })
   .openapi(createRouteDef, async c => {
     const data = c.req.valid('json')
-    const notification = notificationService.createNotification(data)
-
     const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace }
-    setRealtimeEnv(env)
-    await realtime.broadcast('notification', notification)
+    const notification = notificationService.createNotificationAndBroadcast(data, env)
 
     return c.json({ success: true, data: notification }, 201)
   })
