@@ -62,7 +62,21 @@ export const layerBoundary = {
 
     const isFrameworkFile = frameworkLayerPaths.some(p => filename.includes(p))
     const isBusinessFile = businessLayerPaths.some(p => filename.includes(p))
-    const isFrameworkInternal = frameworkInternalFiles.some(p => filename.includes(p))
+
+    function hasCommentAbove(node, commentTag) {
+      const comments = context.sourceCode.getAllComments()
+      const nodeLine = node.loc?.start.line
+      if (!nodeLine) return false
+
+      for (const comment of comments) {
+        if (comment.loc && comment.loc.end.line === nodeLine - 1) {
+          if (comment.value?.includes(commentTag)) {
+            return true
+          }
+        }
+      }
+      return false
+    }
 
     return {
       ImportDeclaration(node) {
@@ -90,15 +104,7 @@ export const layerBoundary = {
 
         const isImportingFramework = frameworkLayerPaths.some(p => normalizedImport.includes(p))
         if (isImportingFramework) {
-          const comments = context.sourceCode.getAllComments()
-          const nodeComments =
-            comments?.filter(c => c.loc && c.loc.end.line === node.loc?.start.line) || []
-
-          const hasFrameworkImportComment = nodeComments.some(c =>
-            c.value?.includes('@framework-import')
-          )
-
-          if (!hasFrameworkImportComment) {
+          if (!hasCommentAbove(node, '@framework-import')) {
             context.report({
               node,
               messageId: 'missingFrameworkImportComment',
@@ -119,15 +125,7 @@ export const layerBoundary = {
               const dangerousMethods = ['registerRPC', 'registerEvent', 'broadcast']
 
               if (dangerousMethods.includes(method)) {
-                const comments = context.sourceCode.getAllComments()
-                const nodeComments =
-                  comments?.filter(c => c.loc && c.loc.end.line === node.loc?.start.line) || []
-
-                const hasFrameworkAllowComment = nodeComments.some(c =>
-                  c.value?.includes('@framework-allow-modification')
-                )
-
-                if (!hasFrameworkAllowComment) {
+                if (!hasCommentAbove(node, '@framework-allow-modification')) {
                   context.report({
                     node,
                     messageId: 'modifyFrameworkCode',
@@ -146,15 +144,7 @@ export const layerBoundary = {
         if (node.left.type === 'MemberExpression') {
           const obj = node.left.object
           if (obj.type === 'Identifier' && obj.name === 'runtime') {
-            const comments = context.sourceCode.getAllComments()
-            const nodeComments =
-              comments?.filter(c => c.loc && c.loc.end.line === node.loc?.start.line) || []
-
-            const hasFrameworkAllowComment = nodeComments.some(c =>
-              c.value?.includes('@framework-allow-modification')
-            )
-
-            if (!hasFrameworkAllowComment) {
+            if (!hasCommentAbove(node, '@framework-allow-modification')) {
               context.report({
                 node,
                 messageId: 'modifyFrameworkCode',
