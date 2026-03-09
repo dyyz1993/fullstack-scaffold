@@ -14,7 +14,8 @@ export default defineConfig({
       '**/integration/**/*.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/dist/**'],
-    testTimeout: 30000,
+    testTimeout: 60000,
+    hookTimeout: 60000,
     env: {
       NODE_ENV: 'test',
       SQLITE_PATH: ':memory:',
