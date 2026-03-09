@@ -1,5 +1,5 @@
 import { createTypedRuntime } from '@server/core/typed-runtime'
-import type { ChatProtocol } from '@shared/protocols/chat.protocol'
+import type { ChatProtocol } from '@shared/modules/chat'
 
 const chatRuntime = createTypedRuntime<ChatProtocol>('/chat/ws')
 

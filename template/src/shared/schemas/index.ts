@@ -1,28 +1,7 @@
-/**
- * Unified schema exports
- *
- * Schema Organization Strategy:
- *
- * 1. Each module has its own schema file (todos.ts, notifications.ts)
- *    - Module-specific schemas live alongside the module
- *    - Easy to find and maintain
- *
- * 2. Common schemas (API response, pagination, etc.) in common.ts
- *    - Shared across all modules
- *
- * 3. This index.ts re-exports everything for convenient imports
- *
- * Usage:
- * ```ts
- * // Import from unified entry (recommended for client)
- * import { TodoSchema, NotificationSchema, type Todo, type Notification } from '@shared/schemas';
- *
- * // Or import from module-specific file (for server modules)
- * import { TodoSchema, type Todo } from '@shared/schemas/todos';
- * ```
- */
+// Re-export global types for convenience (these are declared in types/global.d.ts)
+export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus }
 
-// Common schemas
+// Re-export core
 export {
   ApiSuccessSchema,
   ApiErrorSchema,
@@ -30,39 +9,39 @@ export {
   type ApiSuccess,
   type ApiError,
   type ApiResponse,
-} from './common'
+  type RpcMethod,
+  type EventName,
+  type RpcInput,
+  type RpcOutput,
+  type EventPayload,
+  createWSClient,
+  createSSEClient,
+} from '../core'
 
-// Todo module schemas
+// Re-export modules
+export { ChatProtocolSchema, type ChatProtocol } from '../modules/chat'
 export {
-  TodoStatusSchema,
   TodoSchema,
+  TodoStatusSchema,
   CreateTodoSchema,
   UpdateTodoSchema,
   TodoIdSchema,
-  type TodoStatus,
   type Todo,
+  type TodoStatus,
   type CreateTodoInput,
   type UpdateTodoInput,
-} from './todos'
-
-// Notification module schemas
+} from '../modules/todos'
 export {
-  NotificationTypeSchema,
   NotificationSchema,
+  NotificationTypeSchema,
   CreateNotificationSchema,
   NotificationListQuerySchema,
   SSEEventSchema,
   AppSSEProtocolSchema,
-  type NotificationType,
   type AppNotification,
+  type NotificationType,
   type CreateNotificationInput,
   type NotificationListQuery,
   type SSEEvent,
   type AppSSEProtocol,
-} from './notifications'
-
-// Re-export global types for convenience
-export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus }
-
-// Re-export protocols
-export { ChatProtocolSchema, type ChatProtocol } from '../protocols/chat.protocol'
+} from '../modules/notifications'

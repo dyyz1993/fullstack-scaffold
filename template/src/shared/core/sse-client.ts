@@ -1,4 +1,14 @@
-import type { SSEClient, SSEProtocol } from '@shared/schemas'
+interface SSEProtocol {
+  events: Record<string, unknown>
+}
+
+interface SSEClient<P extends SSEProtocol = SSEProtocol> {
+  readonly status: 'connecting' | 'open' | 'closed'
+  on<K extends keyof P['events']>(type: K, handler: (payload: P['events'][K]) => void): () => void
+  onStatusChange(handler: (status: 'connecting' | 'open' | 'closed') => void): () => void
+  onError(handler: (error: Error) => void): () => void
+  abort(): void
+}
 
 export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSEClient<P> {
   private eventSource: EventSource | null = null

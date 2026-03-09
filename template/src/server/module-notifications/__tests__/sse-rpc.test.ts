@@ -4,7 +4,7 @@ import { createTestClient } from '../../test-utils/test-client'
 import { createTestServer } from '../../test-utils/test-server'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
-import { createSSEClient } from '@shared/services/sseClient'
+import { createSSEClient } from '@shared/core/sse-client'
 import * as notificationService from '../services/notification-service'
 import type { AppSSEProtocol } from '@shared/schemas'
 

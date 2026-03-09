@@ -1,4 +1,23 @@
-import type { WSStatus, WSProtocol, WSClient } from '@shared/schemas'
+type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
+
+interface WSProtocol {
+  rpc: Record<string, { in: unknown; out: unknown }>
+  events: Record<string, unknown>
+}
+
+interface WSClient<T extends WSProtocol = WSProtocol> {
+  readonly status: WSStatus
+  getSocket(): WebSocket | null
+  call<K extends keyof T['rpc']>(
+    method: K,
+    params: T['rpc'][K] extends { in: infer I } ? I : never,
+    timeout?: number
+  ): Promise<T['rpc'][K] extends { out: infer O } ? O : never>
+  emit<K extends keyof T['events']>(type: K, payload: T['events'][K]): void
+  on<K extends keyof T['events']>(type: K, handler: (payload: T['events'][K]) => void): () => void
+  onStatusChange(handler: (status: WSStatus) => void): () => void
+  close(): void
+}
 
 type PendingRequest = {
   resolve: (val: unknown) => void

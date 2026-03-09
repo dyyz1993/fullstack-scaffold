@@ -1,5 +1,11 @@
 import { runtime, type RuntimeAdapter } from './runtime'
-import type { RpcMethod, EventName, RpcInput, RpcOutput, EventPayload } from '@shared/protocols'
+import type {
+  RpcMethod,
+  EventName,
+  RpcInput,
+  RpcOutput,
+  EventPayload,
+} from '@shared/core/protocol-types'
 
 export interface TypedRuntime<T extends { rpc: unknown; events: unknown }> {
   path: string

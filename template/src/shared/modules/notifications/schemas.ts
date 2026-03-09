@@ -1,8 +1,3 @@
-/**
- * Notification module schemas
- * Demonstrates SSE (Server-Sent Events) support
- */
-
 import { z } from 'zod'
 
 export const NotificationTypeSchema = z.enum(['info', 'warning', 'success', 'error'])

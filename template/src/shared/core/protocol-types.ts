@@ -1,5 +1,3 @@
-export { ChatProtocolSchema, type ChatProtocol } from './chat.protocol'
-
 export type RpcMethod<T extends { rpc: unknown }> = keyof T['rpc']
 export type EventName<T extends { events: unknown }> = keyof T['events']
 

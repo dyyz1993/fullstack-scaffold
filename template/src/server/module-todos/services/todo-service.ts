@@ -1,5 +1,5 @@
 import { eq, desc } from 'drizzle-orm'
-import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/types'
+import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/schemas'
 import { getDb } from '../../db'
 import { todos, type TodoTable } from '../../db/schema'
 import { toISOString } from '../../utils/date'

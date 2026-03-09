@@ -3,7 +3,7 @@ import app from '../../entries/node'
 import '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
 import { createTestServer } from '../../test-utils/test-server'
-import { createWSClient } from '@shared/services/wsClient'
+import { createWSClient } from '@shared/core/ws-client'
 import type { WSStatus } from '@shared/schemas'
 
 describe('Chat Routes with Type-Safe Test Client', () => {

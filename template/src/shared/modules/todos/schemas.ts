@@ -1,8 +1,3 @@
-/**
- * Todo module schemas
- * Each module has its own schema file for better organization
- */
-
 import { z } from 'zod'
 
 export const TodoStatusSchema = z.enum(['pending', 'in_progress', 'completed'])

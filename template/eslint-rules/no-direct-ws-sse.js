@@ -23,7 +23,7 @@ export const noDirectWsSse = {
   create(context) {
     const filename = context.filename || context.getFilename()
 
-    const allowedFiles = ['wsClient.ts', 'sseClient.ts']
+    const allowedFiles = ['wsClient.ts', 'sseClient.ts', 'ws-client.ts', 'sse-client.ts']
 
     if (allowedFiles.some(f => filename.endsWith(f))) {
       return {}

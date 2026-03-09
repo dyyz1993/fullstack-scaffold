@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
-import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/types'
+import type { Todo, CreateTodoInput, UpdateTodoInput } from '@shared/schemas'
 
 interface TodoState {
   todos: Todo[]
