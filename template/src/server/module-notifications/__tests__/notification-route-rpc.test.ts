@@ -9,9 +9,7 @@ import type { AppNotification } from '@shared/schemas'
 setRuntimeAdapter(getNodeRuntimeAdapter())
 
 describe('Notification Routes with Type-Safe Test Client', () => {
-  beforeAll(() => {
-    notificationService.initNotificationHandlers()
-  })
+  beforeAll(() => {})
 
   beforeEach(() => {
     notificationService.clearAllNotifications()

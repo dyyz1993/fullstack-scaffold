@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import app from '../../entries/node'
-import { initChatHandlers } from '../services/chat-service'
+import '../services/chat-service'
 import { createTestClient } from '../../test-utils/test-client'
 import { createTestServer } from '../../test-utils/test-server'
 import { createWSClient } from '@shared/services/wsClient'
 import type { WSStatus } from '@shared/schemas'
-
-initChatHandlers()
 
 describe('Chat Routes with Type-Safe Test Client', () => {
   let testServer: Awaited<ReturnType<typeof createTestServer>>

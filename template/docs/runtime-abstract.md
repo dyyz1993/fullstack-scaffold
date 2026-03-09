@@ -17,46 +17,70 @@
 
 ## 使用示例
 
-### 1. 业务模块初始化
+### 1. 业务模块开发
 
 ```typescript
 // src/server/module-chat/services/chat-service.ts
 import { runtime } from '@server/core/runtime'
 
-export function initChatHandlers(): void {
-  // ✅ 注册 WebSocket 路径（自动适配 Node/Cloudflare）
-  runtime.handleWS('/api/chat/ws')
+// 模块加载时自动注册，无需 init 函数
+runtime.registerRPC('echo', (params: unknown) => {
+  const { message } = params as { message: string }
+  return { message, timestamp: Date.now() }
+})
 
-  // ✅ 注册 RPC 方法
-  runtime.registerRPC('echo', (params: unknown) => {
-    const { message } = params as { message: string }
-    return { message, timestamp: Date.now() }
-  })
+runtime.registerRPC('ping', () => {
+  return { pong: true, timestamp: Date.now() }
+})
 
-  runtime.registerRPC('ping', () => {
-    return { pong: true, timestamp: Date.now() }
-  })
+runtime.registerEvent('broadcast', (payload: unknown, clientId: string) => {
+  runtime.broadcast('broadcast', payload, [clientId])
+})
 
-  // ✅ 注册事件处理
-  runtime.registerEvent('broadcast', (payload: unknown, clientId: string) => {
-    runtime.broadcast('broadcast', payload, [clientId])
-  })
+// 其他业务函数...
+export function getConnectedClientsCount(): number {
+  return runtime.adapter.getWSConnections().size
 }
 ```
 
-### 2. Node.js 入口
+### 2. 路由定义（WebSocket/SSE 路径自动注册）
+
+```typescript
+// src/server/module-chat/routes/chat-routes.ts
+import { createRoute, z } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+import '../services/chat-service' // 导入 service，触发自动注册
+
+const wsRoute = createRoute({
+  method: 'get',
+  path: '/chat/ws',
+  responses: {
+    200: {
+      content: {
+        websocket: { schema: AppWSProtocolSchema }, // realtime-scanner 自动识别
+      },
+    },
+  },
+})
+
+export const chatRoutes = new OpenAPIHono().openapi(wsRoute, async _c => {
+  // WebSocket 处理逻辑
+})
+```
+
+### 3. Node.js 入口
 
 ```typescript
 // src/server/entries/node.ts
 import { setRuntimeAdapter, getNodeRuntimeAdapter } from '@server/core/runtime'
-import { initChatHandlers } from '../module-chat/services/chat-service'
+import { createApp } from '../app'
 
 // 初始化运行时适配器
 const runtimeAdapter = getNodeRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
-// 初始化业务模块
-initChatHandlers()
+// 创建应用（app import routes → routes import services → 自动注册）
+const app = createApp()
 
 // WebSocket 升级处理（自动匹配注册的路径）
 server.on('upgrade', (req, socket, head) => {
@@ -71,45 +95,61 @@ server.on('upgrade', (req, socket, head) => {
 })
 ```
 
-### 3. Cloudflare Workers 入口
+### 4. Cloudflare Workers 入口
 
 ```typescript
 // src/server/entries/cloudflare.ts
 import { setRuntimeAdapter, getCloudflareRuntimeAdapter } from '@server/core/runtime'
-import { initChatHandlers } from '../module-chat/services/chat-service'
+import { createApp } from '../app'
 
 // 初始化运行时适配器
 const runtimeAdapter = getCloudflareRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
-// 初始化业务模块
-initChatHandlers()
+// 创建应用（自动注册）
+const app = createApp<CloudflareBindings>()
 
-// WebSocket 请求处理
 export default {
   async fetch(request: Request, env: CloudflareBindings, ctx: ExecutionContext) {
-    const url = new URL(request.url)
-
-    // 自动处理 WebSocket 升级
-    if (runtimeAdapter.hasWSPath(url.pathname) && request.headers.get('Upgrade') === 'websocket') {
+    // WebSocket 请求处理
+    if (request.headers.get('Upgrade') === 'websocket') {
       return runtimeAdapter.handleWebSocketRequest(request)
     }
-
     // 其他请求...
   },
 }
 ```
 
-## API 参考
+## 自动注册机制
 
-### `runtime.handleWS(path: string)`
+### WebSocket/SSE 路径自动发现
 
-注册 WebSocket 路径。
+`realtime-scanner.ts` 会扫描 OpenAPI 文档，自动发现并注册 WebSocket/SSE 路径：
 
 ```typescript
-runtime.handleWS('/api/chat/ws')
-runtime.handleWS('/api/game/ws')
+// 在 app.ts 中调用
+autoRegisterRealtime(app)
 ```
+
+扫描规则：
+
+- `content: { websocket: {...} }` → 自动调用 `runtime.handleWS(path)`
+- `content: { 'text/event-stream': {...} }` → 自动调用 `runtime.handleSSE(path)`
+
+### RPC/事件自动注册
+
+在 service 文件顶层直接调用注册函数，模块加载时自动执行：
+
+```typescript
+// chat-service.ts
+import { runtime } from '@server/core/runtime'
+
+// 顶层直接执行，无需 init 函数
+runtime.registerRPC('echo', handler)
+runtime.registerEvent('broadcast', handler)
+```
+
+## API 参考
 
 ### `runtime.registerRPC(method: string, handler)`
 
@@ -156,6 +196,12 @@ if (runtime.platform.isNode) {
 
 ## 优势
 
+### ✅ 零配置开发
+
+- 模块加载时自动注册
+- 无需 init 函数
+- 无需手动调用
+
 ### ✅ 统一的开发体验
 
 - 业务代码完全平台无关
@@ -164,7 +210,7 @@ if (runtime.platform.isNode) {
 
 ### ✅ 自动路径管理
 
-- 业务模块自己注册路径
+- OpenAPI 文档驱动
 - 入口文件无需硬编码
 - 支持动态添加新路径
 
@@ -174,74 +220,17 @@ if (runtime.platform.isNode) {
 - 编译时类型检查
 - IDE 自动补全
 
-### ✅ 易于扩展
-
-- 添加新模块只需调用 `runtime.handleWS()`
-- 无需修改核心代码
-- 支持多实例隔离
-
-## 迁移指南
-
-### 从旧 API 迁移
-
-**旧代码：**
-
-```typescript
-import { getNodeWSServer } from '@server/core'
-
-const wss = getNodeWSServer()
-wss.registerRPCHandler('echo', handler)
-```
-
-**新代码：**
-
-```typescript
-import { runtime } from '@server/core/runtime'
-
-runtime.registerRPC('echo', handler)
-```
-
-### 入口文件迁移
-
-**旧代码：**
-
-```typescript
-const wss = getNodeWSServer()
-initChatHandlers()
-
-server.on('upgrade', (req, socket, head) => {
-  if (req.url?.startsWith('/api/chat/ws')) {
-    // 硬编码
-    // ...
-  }
-})
-```
-
-**新代码：**
-
-```typescript
-const runtimeAdapter = getNodeRuntimeAdapter()
-setRuntimeAdapter(runtimeAdapter)
-initChatHandlers()
-
-server.on('upgrade', (req, socket, head) => {
-  const url = new URL(req.url || '', `http://localhost`)
-  if (runtimeAdapter.hasWSPath(url.pathname)) {
-    // 自动匹配
-    // ...
-  }
-})
-```
-
 ## 最佳实践
 
-1. **在模块初始化时注册路径**
+1. **在 service 顶层直接注册**
 
    ```typescript
-   export function initMyModule() {
-     runtime.handleWS('/api/my-module/ws')
-     runtime.registerRPC('myMethod', handler)
-   }
+   // ✅ 推荐
+   import { runtime } from '@server/core/runtime'
+
+   runtime.registerRPC('myMethod', handler)
+
+   export function myBusinessFunction() { ... }
    ```
 
 2. **避免在业务代码中使用平台判断**
@@ -256,10 +245,9 @@ server.on('upgrade', (req, socket, head) => {
    runtime.broadcast('event', data)
    ```
 
-3. **模块化组织**
+3. **路由文件导入 service**
+
    ```typescript
-   // 每个模块有自己的初始化函数
-   initChatHandlers()
-   initGameHandlers()
-   initNotificationHandlers()
+   // routes/chat-routes.ts
+   import '../services/chat-service' // 触发自动注册
    ```

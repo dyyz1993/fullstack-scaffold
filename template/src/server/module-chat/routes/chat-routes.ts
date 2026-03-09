@@ -3,6 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppBindings } from '../../types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
 import { AppWSProtocolSchema, ApiSuccessSchema } from '@shared/schemas'
+import '../services/chat-service'
 
 const WSStatusResponseSchema = ApiSuccessSchema(
   z.object({

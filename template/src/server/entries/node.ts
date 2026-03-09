@@ -11,8 +11,6 @@ import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
-import { initChatHandlers } from '../module-chat/services/chat-service'
-import { initNotificationHandlers } from '../module-notifications/services/notification-service'
 
 const config = getAppConfig()
 const distPath = resolve(process.cwd(), 'dist/client')
@@ -24,9 +22,6 @@ const log = logger.api()
 
 const runtimeAdapter = getNodeRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
-
-initChatHandlers()
-initNotificationHandlers()
 
 const app = createApp().use('*', async (c, next) => {
   const start = Date.now()

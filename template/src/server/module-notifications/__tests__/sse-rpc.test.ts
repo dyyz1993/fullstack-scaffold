@@ -4,13 +4,11 @@ import { createTestClient } from '../../test-utils/test-client'
 import { createTestServer } from '../../test-utils/test-server'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
-import { initNotificationHandlers } from '../services/notification-service'
 import { createSSEClient } from '@shared/services/sseClient'
 import * as notificationService from '../services/notification-service'
 import type { AppSSEProtocol } from '@shared/schemas'
 
 setRuntimeAdapter(getNodeRuntimeAdapter())
-initNotificationHandlers()
 
 describe('SSE Routes with Type-Safe Test Client', () => {
   let testServer: Awaited<ReturnType<typeof createTestServer>>
