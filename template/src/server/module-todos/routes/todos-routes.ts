@@ -1,35 +1,16 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as todoService from '../services/todo-service'
-import {
-  TodoSchema,
-  CreateTodoSchema,
-  UpdateTodoSchema,
-  ApiSuccessSchema,
-  ApiErrorSchema,
-} from '@shared/schemas'
+import { TodoSchema, CreateTodoSchema, UpdateTodoSchema } from '@shared/schemas'
+import { successResponse, errorResponse } from '@server/utils/route-helpers'
 
 const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(z.array(TodoSchema)),
-        },
-      },
-      description: 'List all todos',
-    },
-    500: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Internal server error',
-    },
+    200: successResponse(z.array(TodoSchema), 'List all todos'),
+    500: errorResponse('Internal server error'),
   },
 })
 
@@ -38,27 +19,11 @@ const getRoute = createRoute({
   path: '/todos/{id}',
   tags: ['todos'],
   request: {
-    params: z.object({
-      id: z.string(),
-    }),
+    params: z.object({ id: z.string() }),
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(TodoSchema),
-        },
-      },
-      description: 'Get a todo by ID',
-    },
-    404: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Todo not found',
-    },
+    200: successResponse(TodoSchema, 'Get a todo by ID'),
+    404: errorResponse('Todo not found'),
   },
 })
 
@@ -68,30 +33,12 @@ const createRouteDef = createRoute({
   tags: ['todos'],
   request: {
     body: {
-      content: {
-        'application/json': {
-          schema: CreateTodoSchema,
-        },
-      },
+      content: { 'application/json': { schema: CreateTodoSchema } },
     },
   },
   responses: {
-    201: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(TodoSchema),
-        },
-      },
-      description: 'Create a new todo',
-    },
-    400: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Invalid input',
-    },
+    201: successResponse(TodoSchema, 'Create a new todo'),
+    400: errorResponse('Invalid input'),
   },
 })
 
@@ -100,34 +47,14 @@ const updateRoute = createRoute({
   path: '/todos/{id}',
   tags: ['todos'],
   request: {
-    params: z.object({
-      id: z.string(),
-    }),
+    params: z.object({ id: z.string() }),
     body: {
-      content: {
-        'application/json': {
-          schema: UpdateTodoSchema,
-        },
-      },
+      content: { 'application/json': { schema: UpdateTodoSchema } },
     },
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(TodoSchema),
-        },
-      },
-      description: 'Update a todo',
-    },
-    404: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Todo not found',
-    },
+    200: successResponse(TodoSchema, 'Update a todo'),
+    404: errorResponse('Todo not found'),
   },
 })
 
@@ -136,27 +63,11 @@ const deleteRoute = createRoute({
   path: '/todos/{id}',
   tags: ['todos'],
   request: {
-    params: z.object({
-      id: z.string(),
-    }),
+    params: z.object({ id: z.string() }),
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(z.object({ id: z.number() })),
-        },
-      },
-      description: 'Delete a todo',
-    },
-    404: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Todo not found',
-    },
+    200: successResponse(z.object({ id: z.number() }), 'Delete a todo'),
+    404: errorResponse('Todo not found'),
   },
 })
 

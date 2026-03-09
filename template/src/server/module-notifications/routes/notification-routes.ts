@@ -2,27 +2,9 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
 import { realtime, setRealtimeEnv } from '@server/core'
-import {
-  NotificationSchema,
-  CreateNotificationSchema,
-  AppSSEProtocolSchema,
-  ApiSuccessSchema,
-  ApiErrorSchema,
-} from '@shared/schemas'
+import { NotificationSchema, CreateNotificationSchema, AppSSEProtocolSchema } from '@shared/schemas'
+import { successResponse, errorResponse, listResponse } from '@server/utils/route-helpers'
 import { getRuntimeAdapter } from '@server/core/runtime'
-
-const NotificationListResponseSchema = ApiSuccessSchema(
-  z.object({
-    items: z.array(NotificationSchema),
-    nextCursor: z.string().optional(),
-  })
-)
-
-const UnreadCountResponseSchema = ApiSuccessSchema(
-  z.object({
-    count: z.number(),
-  })
-)
 
 const streamRoute = createRoute({
   method: 'get',
@@ -31,9 +13,7 @@ const streamRoute = createRoute({
   responses: {
     200: {
       content: {
-        'text/event-stream': {
-          schema: AppSSEProtocolSchema,
-        },
+        'text/event-stream': { schema: AppSSEProtocolSchema },
       },
       description: 'SSE stream for notifications',
     },
@@ -52,22 +32,8 @@ const listRoute = createRoute({
     }),
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: NotificationListResponseSchema,
-        },
-      },
-      description: 'List notifications',
-    },
-    500: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Internal server error',
-    },
+    200: listResponse(NotificationSchema, 'List notifications'),
+    500: errorResponse('Internal server error'),
   },
 })
 
@@ -76,22 +42,8 @@ const unreadCountRoute = createRoute({
   path: '/notifications/unread-count',
   tags: ['notifications'],
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UnreadCountResponseSchema,
-        },
-      },
-      description: 'Get unread count',
-    },
-    500: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Internal server error',
-    },
+    200: successResponse(z.object({ count: z.number() }), 'Get unread count'),
+    500: errorResponse('Internal server error'),
   },
 })
 
@@ -100,27 +52,11 @@ const getRoute = createRoute({
   path: '/notifications/{id}',
   tags: ['notifications'],
   request: {
-    params: z.object({
-      id: z.string(),
-    }),
+    params: z.object({ id: z.string() }),
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(NotificationSchema),
-        },
-      },
-      description: 'Get notification by ID',
-    },
-    404: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Notification not found',
-    },
+    200: successResponse(NotificationSchema, 'Get notification by ID'),
+    404: errorResponse('Notification not found'),
   },
 })
 
@@ -130,30 +66,12 @@ const createRouteDef = createRoute({
   tags: ['notifications'],
   request: {
     body: {
-      content: {
-        'application/json': {
-          schema: CreateNotificationSchema,
-        },
-      },
+      content: { 'application/json': { schema: CreateNotificationSchema } },
     },
   },
   responses: {
-    201: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(NotificationSchema),
-        },
-      },
-      description: 'Create notification',
-    },
-    400: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Invalid input',
-    },
+    201: successResponse(NotificationSchema, 'Create notification'),
+    400: errorResponse('Invalid input'),
   },
 })
 
@@ -162,22 +80,8 @@ const markAllReadRoute = createRoute({
   path: '/notifications/read-all',
   tags: ['notifications'],
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: UnreadCountResponseSchema,
-        },
-      },
-      description: 'Mark all as read',
-    },
-    500: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Internal server error',
-    },
+    200: successResponse(z.object({ count: z.number() }), 'Mark all as read'),
+    500: errorResponse('Internal server error'),
   },
 })
 
@@ -186,27 +90,11 @@ const markReadRoute = createRoute({
   path: '/notifications/{id}/read',
   tags: ['notifications'],
   request: {
-    params: z.object({
-      id: z.string(),
-    }),
+    params: z.object({ id: z.string() }),
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(NotificationSchema),
-        },
-      },
-      description: 'Mark as read',
-    },
-    404: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Notification not found',
-    },
+    200: successResponse(NotificationSchema, 'Mark as read'),
+    404: errorResponse('Notification not found'),
   },
 })
 
@@ -215,27 +103,11 @@ const deleteRoute = createRoute({
   path: '/notifications/{id}',
   tags: ['notifications'],
   request: {
-    params: z.object({
-      id: z.string(),
-    }),
+    params: z.object({ id: z.string() }),
   },
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: ApiSuccessSchema(z.object({ id: z.string() })),
-        },
-      },
-      description: 'Delete notification',
-    },
-    404: {
-      content: {
-        'application/json': {
-          schema: ApiErrorSchema,
-        },
-      },
-      description: 'Notification not found',
-    },
+    200: successResponse(z.object({ id: z.string() }), 'Delete notification'),
+    404: errorResponse('Notification not found'),
   },
 })
 
