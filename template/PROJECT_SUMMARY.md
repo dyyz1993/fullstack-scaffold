@@ -15,64 +15,76 @@ template/
 │   │   ├── index.css              # Global styles
 │   │   ├── components/
 │   │   │   └── __tests__/         # Component tests
-│   │   │       └── App.test.tsx
 │   │   ├── stores/
 │   │   │   ├── todoStore.ts       # Zustand state management
 │   │   │   ├── notificationStore.ts # SSE notifications store
 │   │   │   └── __tests__/
-│   │   │       └── todoStore.test.ts
 │   │   ├── services/
-│   │   │   ├── apiClient.ts       # Hono RPC client
-│   │   │   ├── wsClient.ts        # WebSocket client
-│   │   │   └── sseClient.ts       # SSE client
+│   │   │   └── apiClient.ts       # Hono RPC client
 │   │   ├── hooks/
-│   │   │   ├── useWS.ts           # WebSocket hook
-│   │   │   └── useSSE.ts          # SSE hook
-│   │   └── test/
-│   │       ├── setup.ts           # Vitest setup
-│   │       └── cleanup.ts         # Test utilities
+│   │   │   └── useWS.ts          # WebSocket hook
+│   │   └── pages/
+│   │       └── NotificationPage.tsx
 │   │
 │   ├── server/                     # Hono Backend
-│   │   ├── app.ts                 # Server entry with CORS, logging
+│   │   ├── app.ts                 # Server entry with middleware
 │   │   ├── module-todos/          # Todo feature module
 │   │   │   ├── routes/
 │   │   │   │   └── todos-routes.ts  # API endpoints (Hono RPC)
 │   │   │   ├── services/
 │   │   │   │   └── todo-service.ts  # Business logic
 │   │   │   └── __tests__/
-│   │   │       └── todo-service.test.ts
 │   │   ├── module-chat/           # WebSocket chat module
 │   │   │   ├── routes/
 │   │   │   │   └── chat-routes.ts
 │   │   │   ├── services/
 │   │   │   │   └── chat-service.ts
 │   │   │   └── __tests__/
-│   │   │       └── chat-rpc.test.ts
 │   │   ├── module-notifications/  # SSE notifications module
 │   │   │   ├── routes/
 │   │   │   │   └── notification-routes.ts
 │   │   │   ├── services/
 │   │   │   │   └── notification-service.ts
 │   │   │   └── __tests__/
-│   │   │       └── sse-rpc.test.ts
-│   │   ├── core/
-│   │   │   ├── realtime.ts        # Real-time abstraction
+│   │   ├── core/                  # Core runtime
 │   │   │   ├── runtime.ts         # Runtime adapter interface
-│   │   │   └── runtime-node.ts    # Node.js runtime
+│   │   │   ├── runtime-node.ts   # Node.js runtime
+│   │   │   ├── runtime-cloudflare.ts # Cloudflare runtime
+│   │   │   ├── realtime-core.ts   # Real-time core
+│   │   │   ├── typed-runtime.ts  # Type-safe runtime
+│   │   │   └── realtime-scanner.ts # Auto-register realtime
+│   │   ├── middleware/             # Express middleware
+│   │   │   ├── cors.ts
+│   │   │   ├── logger.ts
+│   │   │   ├── error-handler.ts
+│   │   │   └── realtime-env.ts    # Realtime env middleware
 │   │   ├── test-utils/
 │   │   │   ├── test-client.ts     # Test client factory
 │   │   │   └── test-server.ts     # Test server (WebSocket)
+│   │   ├── entries/
+│   │   │   ├── node.ts           # Node.js entry point
+│   │   │   └── cloudflare.ts     # Cloudflare entry point
 │   │   └── integration/
 │   │       └── todos-api.test.ts  # Integration tests
 │   │
 │   └── shared/                     # Shared Types
-│       ├── schemas/               # Zod schemas
-│       │   ├── common.ts          # Common schemas
-│       │   ├── todos.ts           # Todo schemas
-│       │   ├── notifications.ts   # Notification + SSE schemas
-│       │   ├── websocket.ts       # WebSocket schemas
-│       │   └── ws-protocol.ts     # WSProtocol schema
-│       └── types/                 # TypeScript types
+│       ├── core/                   # Framework Layer
+│       │   ├── ws-client.ts       # WebSocket client
+│       │   ├── sse-client.ts      # SSE client
+│       │   ├── api-schemas.ts    # API response schemas
+│       │   ├── protocol-types.ts  # Protocol type utilities
+│       │   └── index.ts          # Framework exports
+│       ├── modules/               # Business Layer
+│       │   ├── chat/
+│       │   │   └── index.ts      # Chat protocol schema
+│       │   ├── todos/
+│       │   │   ├── schemas.ts    # Todo schemas
+│       │   │   └── index.ts
+│       │   └── notifications/
+│       │       ├── schemas.ts    # Notification + SSE schemas
+│       │       └── index.ts
+│       └── schemas/               # Unified exports
+│           └── index.ts
 │
 ├── lint-scripts/
 │   ├── config/
@@ -85,16 +97,13 @@ template/
 │   └── validate-all.ts            # Pre-commit validation
 │
 ├── eslint-rules/
+│   ├── layer-boundary.js          # Framework/Business layer separation
 │   ├── no-direct-ws-sse.js        # WebSocket/SSE protection
 │   ├── protect-ws-sse-interface.js
 │   ├── require-type-safe-test-client.js
 │   ├── require-hono-chain-syntax.js
 │   ├── no-ambiguous-file-paths.js
 │   └── no-util-functions-in-service.js
-│
-├── .husky/
-│   ├── pre-commit                 # Git pre-commit hook
-│   └── _/husky.sh                 # Husky utilities
 │
 ├── .claude/
 │   └── rules/
@@ -104,24 +113,10 @@ template/
 │       ├── zustand-rules.md
 │       ├── websocket-rules.md
 │       ├── sse-rules.md
+│       ├── shared-types-rules.md
+│       ├── layer-boundary-rules.md
 │       ├── testing-standards.md
 │       └── hono-testing-best-practices.md
-│
-├── .vscode/
-│   └── extensions.json            # Recommended VS Code extensions
-│
-├── Configuration Files
-│   ├── package.json               # Dependencies and scripts
-│   ├── vite.config.ts             # Vite + Hono dev server
-│   ├── tsconfig.json              # TypeScript config
-│   ├── vitest.config.ts           # Unit test config
-│   ├── vitest.integration.config.ts  # Integration test config
-│   ├── eslint.config.js           # ESLint rules
-│   ├── .prettierrc                # Prettier config
-│   ├── .prettierignore            # Prettier ignore
-│   ├── .gitignore                 # Git ignore
-│   ├── .env.example               # Environment variables template
-│   └── index.html                 # HTML entry point
 │
 └── Documentation
     ├── README.md                  # User-facing documentation
@@ -129,6 +124,22 @@ template/
     ├── DESIGN.md                  # Architecture documentation
     └── CLAUDE.md                  # Claude Code guidelines
 ```
+
+## Framework Layer vs Business Layer
+
+The project has clear separation between framework and business layers:
+
+### Framework Layer (`src/shared/core/`)
+
+- Generic, reusable infrastructure code
+- Examples: `ws-client.ts`, `sse-client.ts`, `api-schemas.ts`
+- Should not be modified by business code directly
+
+### Business Layer (`src/shared/modules/`)
+
+- Business-specific schemas and protocols
+- Examples: `chat/`, `todos/`, `notifications/`
+- Organized by feature modules
 
 ## Key Features Implemented
 
@@ -138,6 +149,7 @@ template/
 - ✅ Shared types for end-to-end type safety
 - ✅ Single-port development (3010) using @hono/vite-dev-server
 - ✅ Modular backend with feature-based organization
+- ✅ Framework layer vs Business layer separation
 
 ### 2. Frontend (React + Vite)
 
@@ -154,6 +166,7 @@ template/
 - ✅ CORS and error handling middleware
 - ✅ Module-based route organization
 - ✅ Health check endpoint
+- ✅ Middleware for realtime env
 
 ### 4. Real-time Features
 
@@ -161,15 +174,9 @@ template/
 - ✅ SSE support with `$sse()` method
 - ✅ Type-safe real-time communication
 - ✅ Runtime abstraction (Node.js / Cloudflare Workers)
+- ✅ Auto-register realtime via scanner
 
-### 5. Database
-
-- ✅ SQLite with Drizzle ORM
-- ✅ Auto-migration on startup
-- ✅ Type-safe queries
-- ✅ Database service layer
-
-### 6. Testing
+### 5. Testing
 
 - ✅ Vitest configuration for unit tests
 - ✅ Integration tests for API endpoints
@@ -178,22 +185,15 @@ template/
 - ✅ jsdom environment for client tests
 - ✅ Node environment for server tests
 
-### 7. Code Quality
+### 6. Code Quality
 
 - ✅ ESLint with TypeScript support
 - ✅ Custom ESLint rules for WebSocket/SSE
+- ✅ Layer boundary rules for framework/business separation
 - ✅ Prettier for code formatting
 - ✅ Pre-commit hooks with Husky
 - ✅ Validation script for common issues
 - ✅ lint-staged for efficient formatting
-
-### 8. Developer Experience
-
-- ✅ Path aliases (@shared, @client, @server)
-- ✅ Hot module replacement
-- ✅ TypeScript strict mode
-- ✅ Comprehensive documentation
-- ✅ VS Code extensions recommendations
 
 ## API Endpoints
 
@@ -232,8 +232,8 @@ interface Todo {
   title: string
   description?: string
   status: 'pending' | 'in_progress' | 'completed'
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 ```
 
@@ -294,17 +294,17 @@ npm run preview
 - SSE: Unidirectional server-to-client streaming
 - Type-safe protocols with Zod schemas
 
-### 3. Scalability
+### 3. Framework/Business Layer Separation
+
+- Clear boundaries enforced by ESLint
+- Framework layer: reusable infrastructure
+- Business layer: feature-specific code
+
+### 4. Scalability
 
 - Modular architecture easy to extend
 - Feature-based organization
 - Clear separation of concerns
-
-### 4. Performance
-
-- Minimal re-renders with Zustand selectors
-- Efficient database queries with Drizzle
-- Fast development server with Vite
 
 ### 5. Developer Experience
 
@@ -323,16 +323,3 @@ To use this template for a new project:
 4. Modify the Todo module or create new modules
 5. Add your own features following the established patterns
 6. Update documentation as needed
-
-## Files Created: 60+
-
-Total files created including:
-
-- 20+ TypeScript source files
-- 15+ configuration files
-- 10+ test files
-- 10+ documentation files
-- 5+ Git hook files
-- Multiple support files
-
-All files are complete, functional, and ready to use!

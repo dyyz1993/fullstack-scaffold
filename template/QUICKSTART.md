@@ -10,8 +10,6 @@
 ```bash
 # Install dependencies
 npm install
-
-# Setup pre-commit hooks (already done via husky install in package.json)
 ```
 
 ## Development
@@ -31,27 +29,30 @@ template/
 │   ├── client/              # React frontend
 │   │   ├── App.tsx         # Main component
 │   │   ├── stores/         # Zustand state management
-│   │   ├── services/       # API clients (wsClient, sseClient)
-│   │   ├── hooks/          # Custom hooks (useWS, useSSE)
-│   │   └── test/           # Test setup
+│   │   ├── services/       # API clients (apiClient)
+│   │   ├── hooks/         # Custom hooks
+│   │   ├── pages/         # Page components
+│   │   └── components/    # UI components
 │   ├── server/             # Hono backend
-│   │   ├── module-todos/   # Todo feature module
-│   │   ├── module-chat/    # WebSocket chat module
+│   │   ├── module-todos/  # Todo feature module
+│   │   ├── module-chat/   # WebSocket chat module
 │   │   ├── module-notifications/ # SSE notifications module
-│   │   ├── core/           # Core services (realtime)
-│   │   ├── test-utils/     # Test utilities
-│   │   └── index.ts        # Server entry
-│   └── shared/             # Shared types
-│       ├── schemas/        # Zod schemas
-│       └── types/          # TypeScript types
+│   │   ├── core/          # Core services (runtime, realtime)
+│   │   ├── middleware/    # Express middleware
+│   │   ├── test-utils/   # Test utilities
+│   │   └── entries/       # Entry points (node.ts, cloudflare.ts)
+│   └── shared/            # Shared types
+│       ├── core/          # Framework layer (ws-client, sse-client)
+│       ├── modules/       # Business layer (chat, todos, notifications)
+│       └── schemas/       # Unified exports
 ├── lint-scripts/           # Validation scripts
-├── .husky/                 # Git hooks
+├── .husky/                # Git hooks
 └── [config files]
 ```
 
 ## Key Files to Understand
 
-1. **src/shared/schemas/** - Zod validation schemas
+1. **src/shared/modules/** - Business schemas (chat, todos, notifications)
 2. **src/server/app.ts** - Hono server with RPC
 3. **src/server/module-todos/routes/todos-routes.ts** - API endpoints
 4. **src/client/App.tsx** - React UI component
@@ -94,7 +95,7 @@ mkdir -p src/server/module-{feature}/__tests__
 
 ### 2. Define Types
 
-Add to `src/shared/schemas/`:
+Add to `src/shared/modules/{feature}/schemas.ts`:
 
 ```typescript
 import { z } from 'zod'
@@ -192,18 +193,8 @@ export function FeatureList() {
 ### WebSocket
 
 ```typescript
-// Server: Define protocol
-const AppWSProtocolSchema = z.object({
-  rpc: z.object({
-    echo: z.object({
-      in: z.object({ message: z.string() }),
-      out: z.object({ message: z.string() }),
-    }),
-  }),
-  events: z.object({
-    notification: z.object({ message: z.string() }),
-  }),
-})
+// Server: Define protocol in src/shared/modules/chat/
+import { ChatProtocolSchema } from '@shared/modules/chat'
 
 // Client: Use $ws()
 const ws = apiClient.api.chat.ws.$ws()
@@ -214,19 +205,41 @@ ws.on('notification', n => console.log(n))
 ### SSE
 
 ```typescript
-// Server: Define protocol
-const AppSSEProtocolSchema = z.object({
-  events: z.object({
-    notification: NotificationSchema,
-    ping: z.object({ timestamp: z.number() }),
-  }),
-})
+// Server: Define protocol in src/shared/modules/notifications/
+import { AppSSEProtocolSchema } from '@shared/schemas'
 
 // Client: Use $sse()
 const conn = await apiClient.api.notifications.stream.$sse()
 conn.on('notification', n => console.log(n))
 conn.on('ping', p => console.log(p.timestamp))
 ```
+
+### SSE Broadcast Pattern
+
+When creating notifications, use the broadcast function in service layer:
+
+```typescript
+// In service layer - use createNotificationAndBroadcast
+import { createNotificationAndBroadcast } from '@server/module-notifications/services/notification-service'
+
+// The service automatically handles broadcasting
+const notification = await createNotificationAndBroadcast(input)
+```
+
+## Framework Layer vs Business Layer
+
+The project has clear separation between framework and business layers:
+
+**Framework Layer** (`src/shared/core/`):
+
+- Generic, reusable infrastructure code
+- Examples: `ws-client.ts`, `sse-client.ts`, `api-schemas.ts`
+- Should not be modified by business code directly
+
+**Business Layer** (`src/shared/modules/`):
+
+- Business-specific schemas and protocols
+- Examples: `chat/`, `todos/`, `notifications/`
 
 ## Code Quality
 

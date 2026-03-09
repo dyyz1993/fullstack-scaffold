@@ -29,20 +29,22 @@ src/
 ├── client/          # React frontend
 │   ├── components/  # UI components
 │   ├── stores/      # Zustand state management
-│   ├── services/    # API clients (wsClient, sseClient, apiClient)
-│   ├── hooks/       # Custom hooks (useWS, useSSE)
-│   ├── test/        # Test setup
+│   ├── services/    # API clients (apiClient)
+│   ├── hooks/       # Custom hooks
+│   ├── pages/      # Page components
 │   └── App.tsx
 ├── server/          # Hono backend
-│   ├── module-todos/   # Todo module
-│   ├── module-chat/    # WebSocket chat module
+│   ├── module-todos/     # Todo module
+│   ├── module-chat/      # WebSocket chat module
 │   ├── module-notifications/ # SSE notifications module
-│   ├── core/           # Core services (realtime)
-│   ├── test-utils/     # Test utilities
-│   └── index.ts
-└── shared/          # Shared types
-    ├── schemas/    # Zod schemas
-    └── types/      # TypeScript types
+│   ├── core/             # Core services (runtime, realtime)
+│   ├── middleware/       # Express middleware
+│   ├── test-utils/       # Test utilities
+│   └── entries/          # Entry points (node.ts, cloudflare.ts)
+└── shared/              # Shared types
+    ├── core/             # Framework layer (ws-client, sse-client, api-schemas)
+    ├── modules/          # Business layer (chat, todos, notifications schemas)
+    └── schemas/          # Unified exports
 ```
 
 **Path Aliases** (configured in vite.config.ts and tsconfig.json):
@@ -55,7 +57,7 @@ src/
 
 ### Single-Port Development
 
-Uses `@hono/vite-dev-server` to run both frontend and backend on port 3010:
+Uses "@hono/vite-dev-server" to run both frontend and backend on port 3010:
 
 - No CORS issues in development
 - Type safety across the boundary
@@ -96,9 +98,33 @@ Backend organized by feature modules:
 ```
 module-{feature}/
 ├── routes/         # API endpoints (Hono RPC)
-├── services/       # Business logic
-└── __tests__/      # Unit tests
+├── services/      # Business logic
+└── __tests__/     # Unit tests
 ```
+
+### Framework Layer vs Business Layer
+
+The project has clear separation between framework and business layers:
+
+**Framework Layer** (`src/shared/core/`):
+
+- Generic, reusable infrastructure code
+- Examples: `ws-client.ts`, `sse-client.ts`, `api-schemas.ts`
+- Should not be modified by business code directly
+
+**Business Layer** (`src/shared/modules/`):
+
+- Business-specific schemas and protocols
+- Examples: `chat/`, `todos/`, `notifications/`
+- Organized by feature modules
+
+### Layer Boundary Rules (ESLint)
+
+The project enforces layer boundaries with `layer-boundary` rule:
+
+- Business code cannot directly modify framework layer code
+- Business code importing framework code needs `@framework-import` comment
+- Framework code modification needs `@framework-allow-modification` comment
 
 ### State Management with Zustand
 
@@ -123,7 +149,7 @@ Global application state in `src/client/stores/`:
 Always use path aliases instead of relative imports:
 
 ```typescript
-import { Todo } from '@shared/types'
+import { Todo } from '@shared/schemas'
 import { useTodoStore } from '@client/stores/todoStore'
 ```
 
@@ -161,18 +187,8 @@ app.openapi(listRoute, async c => {
 Use `$ws()` method for type-safe WebSocket:
 
 ```typescript
-// Server: Define WSProtocol schema
-const AppWSProtocolSchema = z.object({
-  rpc: z.object({
-    echo: z.object({
-      in: z.object({ message: z.string() }),
-      out: z.object({ message: z.string() }),
-    }),
-  }),
-  events: z.object({
-    notification: z.object({ message: z.string() }),
-  }),
-})
+// Server: Define protocol in src/shared/modules/chat/
+import { ChatProtocolSchema } from '@shared/modules/chat'
 
 // Client: Use $ws()
 const ws = apiClient.api.chat.ws.$ws()
@@ -185,18 +201,25 @@ ws.on('notification', n => console.log(n))
 Use `$sse()` method for type-safe SSE:
 
 ```typescript
-// Server: Define SSEProtocol schema
-const AppSSEProtocolSchema = z.object({
-  events: z.object({
-    notification: NotificationSchema,
-    ping: z.object({ timestamp: z.number() }),
-  }),
-})
+// Server: Define protocol in src/shared/modules/notifications/
+import { AppSSEProtocolSchema } from '@shared/schemas'
 
 // Client: Use $sse()
 const conn = await apiClient.api.notifications.stream.$sse()
 conn.on('notification', n => console.log(n))
 conn.on('ping', p => console.log(p.timestamp))
+```
+
+### SSE Broadcast Pattern
+
+When creating notifications, broadcast to all connected SSE clients:
+
+```typescript
+// In service layer - use createNotificationAndBroadcast
+import { createNotificationAndBroadcast } from '@server/module-notifications/services/notification-service'
+
+// The service automatically handles broadcasting via realtime middleware
+const notification = await createNotificationAndBroadcast(input)
 ```
 
 ## Project Rules
@@ -209,6 +232,8 @@ See `.claude/rules/` for detailed development constraints:
 - `zustand-rules.md` - Zustand store patterns
 - `websocket-rules.md` - WebSocket development patterns
 - `sse-rules.md` - SSE development patterns
+- `shared-types-rules.md` - Shared types organization
+- `layer-boundary-rules.md` - Framework/Business layer separation
 - `testing-standards.md` - Testing conventions
 - `hono-testing-best-practices.md` - Hono testing patterns
 

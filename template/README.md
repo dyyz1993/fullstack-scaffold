@@ -19,21 +19,23 @@ A full-stack React + Hono application template with TypeScript, demonstrating be
 src/
 ├── client/          # React frontend
 │   ├── components/  # UI components
-│   ├── stores/      # Zustand state management
-│   ├── services/    # API clients (wsClient, sseClient)
-│   ├── hooks/       # Custom hooks (useWS, useSSE)
-│   ├── test/        # Test setup
+│   ├── stores/     # Zustand state management
+│   ├── services/    # API clients (apiClient)
+│   ├── hooks/      # Custom hooks
+│   ├── pages/      # Page components
 │   └── App.tsx
 ├── server/          # Hono backend
-│   ├── module-todos/   # Todo module
-│   ├── module-chat/    # WebSocket chat module
+│   ├── module-todos/     # Todo module
+│   ├── module-chat/      # WebSocket chat module
 │   ├── module-notifications/ # SSE notifications module
-│   ├── core/           # Core services (realtime)
-│   ├── test-utils/     # Test utilities
-│   └── index.ts
-└── shared/          # Shared types
-    ├── schemas/    # Zod schemas
-    └── types/      # TypeScript types
+│   ├── core/             # Core services (runtime, realtime)
+│   ├── middleware/       # Express middleware
+│   ├── test-utils/       # Test utilities
+│   └── entries/          # Entry points (node.ts, cloudflare.ts)
+└── shared/              # Shared types
+    ├── core/             # Framework layer (ws-client, sse-client)
+    ├── modules/          # Business layer (chat, todos, notifications)
+    └── schemas/          # Unified exports
 ```
 
 ## Getting Started
@@ -65,10 +67,10 @@ npm run build
 npm test
 
 # Run unit tests only
-npm test:unit
+npm run test:unit
 
 # Run integration tests only
-npm test:integration
+npm run test:integration
 ```
 
 ## Key Concepts
@@ -81,7 +83,14 @@ npm test:integration
 
 ### Single-Port Development
 
-Uses `@hono/vite-dev-server` to run both frontend and backend on port 3010.
+Uses "@hono/vite-dev-server" to run both frontend and backend on port 3010.
+
+### Framework Layer vs Business Layer
+
+The project has clear separation between framework and business layers:
+
+- **Framework Layer** (`src/shared/core/`): Generic, reusable infrastructure
+- **Business Layer** (`src/shared/modules/`): Business-specific schemas and protocols
 
 ### Hono RPC
 
