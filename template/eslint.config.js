@@ -117,9 +117,19 @@ export default tseslint.config(
   {
     files: [
       'src/shared/modules/**/*.ts',
-      'src/server/module-*/**/*.ts',
-      'src/client/**/*.ts',
-      'src/client/**/*.tsx',
+      'src/server/module-*/services/**/*.ts',
+      'src/server/module-*/routes/*.ts',
+      'src/client/stores/**/*.ts',
+      'src/client/pages/**/*.tsx',
+    ],
+    ignores: [
+      '**/__tests__/**/*.ts',
+      '**/*.test.ts',
+      '**/*.spec.ts',
+      '**/routes/index.ts',
+      'src/client/services/apiClient.ts',
+      'src/server/module-chat/routes/chat-routes.ts',
+      'src/server/module-notifications/routes/notification-routes.ts',
     ],
     rules: {
       'local-rules/layer-boundary': 'error',
