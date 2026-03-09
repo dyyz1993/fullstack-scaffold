@@ -9,6 +9,7 @@ import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-se
 import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
 import { protectWsSseInterface } from './eslint-rules/protect-ws-sse-interface.js'
 import { noBooleanSuccess } from './eslint-rules/no-boolean-success.js'
+import { middlewareLocation, noMiddlewareOutsideDir } from './eslint-rules/middleware-location.js'
 
 const localRules = {
   rules: {
@@ -19,6 +20,8 @@ const localRules = {
     'no-direct-ws-sse': noDirectWsSse,
     'protect-ws-sse-interface': protectWsSseInterface,
     'no-boolean-success': noBooleanSuccess,
+    'middleware-location': middlewareLocation,
+    'no-middleware-outside-dir': noMiddlewareOutsideDir,
   },
 }
 
@@ -64,6 +67,14 @@ export default tseslint.config(
       'local-rules/require-hono-chain-syntax': 'error',
       'local-rules/no-util-functions-in-service': 'warn',
       'local-rules/no-boolean-success': 'error',
+      'local-rules/no-middleware-outside-dir': 'error',
+    },
+  },
+  {
+    files: ['src/server/middleware/**/*.ts'],
+    ignores: ['src/server/middleware/index.ts'],
+    rules: {
+      'local-rules/middleware-location': 'error',
     },
   },
   {
