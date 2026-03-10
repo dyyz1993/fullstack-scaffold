@@ -1,30 +1,17 @@
-import { createRoute, z } from '@hono/zod-openapi'
+import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppBindings } from '../../types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
-import { ApiSuccessSchema } from '@shared/schemas'
-import { ChatProtocolSchema } from '@shared/modules/chat'
+import { ChatProtocolSchema, WebSocketStatusSchema } from '@shared/modules/chat'
+import { successResponse } from '@server/utils/route-helpers'
 import '../services/chat-service'
-
-const WSStatusResponseSchema = ApiSuccessSchema(
-  z.object({
-    connectedClients: z.number(),
-  })
-)
 
 const statusRoute = createRoute({
   method: 'get',
   path: '/chat/ws/status',
   tags: ['chat'],
   responses: {
-    200: {
-      content: {
-        'application/json': {
-          schema: WSStatusResponseSchema,
-        },
-      },
-      description: 'Get WebSocket status',
-    },
+    200: successResponse(WebSocketStatusSchema, 'Get WebSocket status'),
   },
 })
 

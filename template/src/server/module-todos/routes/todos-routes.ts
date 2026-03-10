@@ -1,15 +1,22 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as todoService from '../services/todo-service'
-import { TodoSchema, CreateTodoSchema, UpdateTodoSchema } from '@shared/schemas'
+import {
+  TodoSchema,
+  CreateTodoSchema,
+  UpdateTodoSchema,
+  TodoIdResponseSchema,
+} from '@shared/schemas'
 import { successResponse, errorResponse } from '@server/utils/route-helpers'
+
+const TodoListSchema = z.array(TodoSchema)
 
 const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
   responses: {
-    200: successResponse(z.array(TodoSchema), 'List all todos'),
+    200: successResponse(TodoListSchema, 'List all todos'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -66,7 +73,7 @@ const deleteRoute = createRoute({
     params: z.object({ id: z.string() }),
   },
   responses: {
-    200: successResponse(z.object({ id: z.number() }), 'Delete a todo'),
+    200: successResponse(TodoIdResponseSchema, 'Delete a todo'),
     404: errorResponse('Todo not found'),
   },
 })

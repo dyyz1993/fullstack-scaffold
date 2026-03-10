@@ -1,7 +1,13 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as notificationService from '../services/notification-service'
-import { NotificationSchema, CreateNotificationSchema, AppSSEProtocolSchema } from '@shared/schemas'
+import {
+  NotificationSchema,
+  CreateNotificationSchema,
+  AppSSEProtocolSchema,
+  UnreadCountSchema,
+  NotificationIdSchema,
+} from '@shared/schemas'
 import { successResponse, errorResponse, listResponse } from '@server/utils/route-helpers'
 import { getRuntimeAdapter } from '@server/core/runtime'
 
@@ -41,7 +47,7 @@ const unreadCountRoute = createRoute({
   path: '/notifications/unread-count',
   tags: ['notifications'],
   responses: {
-    200: successResponse(z.object({ count: z.number() }), 'Get unread count'),
+    200: successResponse(UnreadCountSchema, 'Get unread count'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -79,7 +85,7 @@ const markAllReadRoute = createRoute({
   path: '/notifications/read-all',
   tags: ['notifications'],
   responses: {
-    200: successResponse(z.object({ count: z.number() }), 'Mark all as read'),
+    200: successResponse(UnreadCountSchema, 'Mark all as read'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -105,7 +111,7 @@ const deleteRoute = createRoute({
     params: z.object({ id: z.string() }),
   },
   responses: {
-    200: successResponse(z.object({ id: z.string() }), 'Delete notification'),
+    200: successResponse(NotificationIdSchema, 'Delete notification'),
     404: errorResponse('Notification not found'),
   },
 })

@@ -36,9 +36,19 @@ export const AppSSEProtocolSchema = z.object({
   }),
 })
 
+export const UnreadCountSchema = z.object({
+  count: z.number(),
+})
+
+export const NotificationIdSchema = z.object({
+  id: z.string(),
+})
+
 export type NotificationType = z.infer<typeof NotificationTypeSchema>
 export type AppNotification = z.infer<typeof NotificationSchema>
 export type CreateNotificationInput = z.infer<typeof CreateNotificationSchema>
 export type NotificationListQuery = z.infer<typeof NotificationListQuerySchema>
 export type SSEEvent = z.infer<typeof SSEEventSchema>
 export type AppSSEProtocol = z.infer<typeof AppSSEProtocolSchema>
+export type UnreadCount = z.infer<typeof UnreadCountSchema>
+export type NotificationId = z.infer<typeof NotificationIdSchema>

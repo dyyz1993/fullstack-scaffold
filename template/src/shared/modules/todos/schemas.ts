@@ -26,7 +26,12 @@ export const TodoIdSchema = z.object({
   id: z.coerce.number().int().positive(),
 })
 
+export const TodoIdResponseSchema = z.object({
+  id: z.number(),
+})
+
 export type TodoStatus = z.infer<typeof TodoStatusSchema>
 export type Todo = z.infer<typeof TodoSchema>
 export type CreateTodoInput = z.infer<typeof CreateTodoSchema>
 export type UpdateTodoInput = z.infer<typeof UpdateTodoSchema>
+export type TodoIdResponse = z.infer<typeof TodoIdResponseSchema>

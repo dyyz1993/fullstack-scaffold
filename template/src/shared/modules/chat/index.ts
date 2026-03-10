@@ -30,4 +30,9 @@ export const ChatProtocolSchema = z.object({
   }),
 })
 
+export const WebSocketStatusSchema = z.object({
+  connectedClients: z.number(),
+})
+
 export type ChatProtocol = z.infer<typeof ChatProtocolSchema>
+export type WebSocketStatus = z.infer<typeof WebSocketStatusSchema>

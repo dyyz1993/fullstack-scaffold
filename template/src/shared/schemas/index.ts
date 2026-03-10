@@ -19,17 +19,24 @@ export {
 } from '../core'
 
 // Re-export modules
-export { ChatProtocolSchema, type ChatProtocol } from '../modules/chat'
+export {
+  ChatProtocolSchema,
+  WebSocketStatusSchema,
+  type ChatProtocol,
+  type WebSocketStatus,
+} from '../modules/chat'
 export {
   TodoSchema,
   TodoStatusSchema,
   CreateTodoSchema,
   UpdateTodoSchema,
   TodoIdSchema,
+  TodoIdResponseSchema,
   type Todo,
   type TodoStatus,
   type CreateTodoInput,
   type UpdateTodoInput,
+  type TodoIdResponse,
 } from '../modules/todos'
 export {
   NotificationSchema,
@@ -38,10 +45,14 @@ export {
   NotificationListQuerySchema,
   SSEEventSchema,
   AppSSEProtocolSchema,
+  UnreadCountSchema,
+  NotificationIdSchema,
   type AppNotification,
   type NotificationType,
   type CreateNotificationInput,
   type NotificationListQuery,
   type SSEEvent,
   type AppSSEProtocol,
+  type UnreadCount,
+  type NotificationId,
 } from '../modules/notifications'

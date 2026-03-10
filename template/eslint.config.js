@@ -12,6 +12,9 @@ import { noBooleanSuccess } from './eslint-rules/no-boolean-success.js'
 import { middlewareLocation, noMiddlewareOutsideDir } from './eslint-rules/middleware-location.js'
 import { e2eTestLocation, noE2ETestOutsideDir } from './eslint-rules/e2e-test-location.js'
 import { layerBoundary } from './eslint-rules/layer-boundary.js'
+import { requireResponseHelpers } from './eslint-rules/require-response-helpers.js'
+import { noInlineSchema } from './eslint-rules/no-inline-schema.js'
+import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
 
 const localRules = {
   rules: {
@@ -27,6 +30,8 @@ const localRules = {
     'e2e-test-location': e2eTestLocation,
     'no-e2e-test-outside-dir': noE2ETestOutsideDir,
     'layer-boundary': layerBoundary,
+    'require-response-helpers': requireResponseHelpers,
+    'no-inline-schema': noInlineSchema,
   },
 }
 
@@ -73,6 +78,8 @@ export default tseslint.config(
       'local-rules/no-util-functions-in-service': 'warn',
       'local-rules/no-boolean-success': 'error',
       'local-rules/no-middleware-outside-dir': 'error',
+      'local-rules/require-response-helpers': 'error',
+      'local-rules/no-inline-schema': 'error',
     },
   },
   {
