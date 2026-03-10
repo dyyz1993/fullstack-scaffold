@@ -84,8 +84,8 @@ export const apiRoutes = new OpenAPIHono()
     return c.json({ success: true, data: todos })
   })
   .openapi(getRoute, async c => {
-    const id = parseInt(c.req.param('id'))
-    const todo = await todoService.getTodo(id)
+    const { id } = c.req.valid('param')
+    const todo = await todoService.getTodo(parseInt(id))
     if (!todo) {
       return c.json({ success: false, error: 'Todo not found' }, 404)
     }
@@ -97,21 +97,22 @@ export const apiRoutes = new OpenAPIHono()
     return c.json({ success: true, data: todo }, 201)
   })
   .openapi(updateRoute, async c => {
-    const id = parseInt(c.req.param('id'))
+    const { id } = c.req.valid('param')
     const data = c.req.valid('json')
-    const todo = await todoService.updateTodo(id, data)
+    const todo = await todoService.updateTodo(parseInt(id), data)
     if (!todo) {
       return c.json({ success: false, error: 'Todo not found' }, 404)
     }
     return c.json({ success: true, data: todo })
   })
   .openapi(deleteRoute, async c => {
-    const id = parseInt(c.req.param('id'))
-    const result = await todoService.deleteTodo(id)
+    const { id } = c.req.valid('param')
+    const numericId = parseInt(id)
+    const result = await todoService.deleteTodo(numericId)
     if (!result) {
       return c.json({ success: false, error: 'Todo not found' }, 404)
     }
-    return c.json({ success: true, data: { id } })
+    return c.json({ success: true, data: { id: numericId } })
   })
   .doc('/docs', {
     openapi: '3.0.0',

@@ -22,6 +22,115 @@ describe('Todo Routes - Business Logic Tests', () => {
     await cleanupTestDatabase()
   })
 
+  describe('Invalid Parameter Tests - Zod Validation', () => {
+    it('should reject POST with empty title', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos.$post({
+        json: { title: '' },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject POST with missing title', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos.$post({
+        json: {} as { title: string },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject POST with title longer than 255 characters', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos.$post({
+        json: { title: 'a'.repeat(256) },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject PUT with invalid status', async () => {
+      const client = createTestClient()
+
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
+      const createData = await createRes.json()
+      expect(createData.success).toBe(true)
+
+      if (createData.success) {
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(createData.data.id) },
+          json: { status: 'invalid_status' as 'pending' },
+        })
+
+        expect(res.status).toBe(400)
+      }
+    })
+
+    it('should reject PUT with empty title', async () => {
+      const client = createTestClient()
+
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
+      const createData = await createRes.json()
+      expect(createData.success).toBe(true)
+
+      if (createData.success) {
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(createData.data.id) },
+          json: { title: '' },
+        })
+
+        expect(res.status).toBe(400)
+      }
+    })
+
+    it('should reject PUT with title longer than 255 characters', async () => {
+      const client = createTestClient()
+
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
+      const createData = await createRes.json()
+      expect(createData.success).toBe(true)
+
+      if (createData.success) {
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(createData.data.id) },
+          json: { title: 'a'.repeat(256) },
+        })
+
+        expect(res.status).toBe(400)
+      }
+    })
+
+    it('should return 500 for GET with non-numeric id (parseInt returns NaN)', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$get({
+        param: { id: 'not-a-number' },
+      })
+
+      expect(res.status).toBe(500)
+    })
+
+    it('should return 500 for DELETE with non-numeric id (parseInt returns NaN)', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.todos[':id'].$delete({
+        param: { id: 'not-a-number' },
+      })
+
+      expect(res.status).toBe(500)
+    })
+  })
+
   describe('Todo Creation Business Logic', () => {
     it('should create todo with default status "pending"', async () => {
       const client = createTestClient()

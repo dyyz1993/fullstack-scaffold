@@ -32,6 +32,7 @@ const localRules = {
     'layer-boundary': layerBoundary,
     'require-response-helpers': requireResponseHelpers,
     'no-inline-schema': noInlineSchema,
+    'enforce-valid-method': enforceValidMethod,
   },
 }
 
@@ -80,6 +81,7 @@ export default tseslint.config(
       'local-rules/no-middleware-outside-dir': 'error',
       'local-rules/require-response-helpers': 'error',
       'local-rules/no-inline-schema': 'error',
+      'local-rules/enforce-valid-method': 'error',
     },
   },
   {

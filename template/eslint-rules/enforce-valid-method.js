@@ -84,11 +84,57 @@ export const enforceValidMethod = {
       return schemas
     }
 
-    function getRouteVariableName(node) {
-      if (node.type === 'Identifier') {
-        return node.name
+    function checkOpenapiHandler(node, routeArg, handlerArg) {
+      let schemas = new Set()
+
+      if (routeArg.type === 'Identifier') {
+        schemas = routeDefinitions.get(routeArg.name) || new Set()
+      } else if (routeArg.type === 'ObjectExpression') {
+        schemas = extractRequestSchemas(routeArg)
       }
-      return null
+
+      if (schemas.size === 0) return
+
+      const handlerText = context.sourceCode.getText(handlerArg)
+      const usedValidMethods = new Set()
+      const validMethodRegex = /c\.req\.valid\s*\(\s*['"](\w+)['"]\s*\)/g
+      let match
+      while ((match = validMethodRegex.exec(handlerText)) !== null) {
+        usedValidMethods.add(match[1])
+      }
+
+      const rawMethodRegex = /c\.req\.(json|query|param|header|cookie)\s*\(/g
+      const rawMethodsUsed = new Set()
+      while ((match = rawMethodRegex.exec(handlerText)) !== null) {
+        rawMethodsUsed.add(match[1])
+      }
+
+      if (rawMethodsUsed.size > 0) {
+        for (const method of rawMethodsUsed) {
+          context.report({
+            node: handlerArg,
+            messageId: 'forbiddenRawMethod',
+            data: { method },
+          })
+        }
+        return
+      }
+
+      for (const schema of schemas) {
+        const validMethods = VALID_METHOD_MAP[schema] || []
+        const isUsed = validMethods.some(m => usedValidMethods.has(m))
+
+        if (!isUsed) {
+          context.report({
+            node: handlerArg,
+            messageId: 'unusedSchema',
+            data: {
+              schemaType: SCHEMA_TYPE_NAMES[schema],
+              validMethod: validMethods[0],
+            },
+          })
+        }
+      }
     }
 
     return {
@@ -107,69 +153,13 @@ export const enforceValidMethod = {
             }
           }
         }
-      },
 
-      CallExpression(node) {
         if (
-          node.callee?.type !== 'MemberExpression' ||
-          node.callee.property?.name !== 'openapi' ||
-          node.arguments.length < 2
+          node.callee?.type === 'MemberExpression' &&
+          node.callee.property?.name === 'openapi' &&
+          node.arguments.length >= 2
         ) {
-          return
-        }
-
-        const routeArg = node.arguments[0]
-        const handlerArg = node.arguments[1]
-
-        let schemas = new Set()
-
-        if (routeArg.type === 'Identifier') {
-          schemas = routeDefinitions.get(routeArg.name) || new Set()
-        } else if (routeArg.type === 'ObjectExpression') {
-          schemas = extractRequestSchemas(routeArg)
-        }
-
-        if (schemas.size === 0) return
-
-        const handlerText = context.sourceCode.getText(handlerArg)
-        const usedValidMethods = new Set()
-        const validMethodRegex = /c\.req\.valid\s*\(\s*['"](\w+)['"]\s*\)/g
-        let match
-        while ((match = validMethodRegex.exec(handlerText)) !== null) {
-          usedValidMethods.add(match[1])
-        }
-
-        const rawMethodRegex = /c\.req\.(json|query|param|header|cookie)\s*\(/g
-        const rawMethodsUsed = new Set()
-        while ((match = rawMethodRegex.exec(handlerText)) !== null) {
-          rawMethodsUsed.add(match[1])
-        }
-
-        if (rawMethodsUsed.size > 0) {
-          for (const method of rawMethodsUsed) {
-            context.report({
-              node: handlerArg,
-              messageId: 'forbiddenRawMethod',
-              data: { method },
-            })
-          }
-          return
-        }
-
-        for (const schema of schemas) {
-          const validMethods = VALID_METHOD_MAP[schema] || []
-          const isUsed = validMethods.some(m => usedValidMethods.has(m))
-
-          if (!isUsed) {
-            context.report({
-              node: handlerArg,
-              messageId: 'unusedSchema',
-              data: {
-                schemaType: SCHEMA_TYPE_NAMES[schema],
-                validMethod: validMethods[0],
-              },
-            })
-          }
+          checkOpenapiHandler(node, node.arguments[0], node.arguments[1])
         }
       },
     }

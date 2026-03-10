@@ -19,6 +19,96 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     notificationService.clearAllNotifications()
   })
 
+  describe('Invalid Parameter Tests - Zod Validation', () => {
+    it('should reject POST with missing title', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$post({
+        json: {
+          type: 'info',
+          message: 'Test message',
+        } as { type: 'info'; title: string; message: string },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject POST with missing message', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$post({
+        json: {
+          type: 'info',
+          title: 'Test title',
+        } as { type: 'info'; title: string; message: string },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject POST with invalid type', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$post({
+        json: {
+          type: 'invalid_type' as AppNotification['type'],
+          title: 'Test',
+          message: 'Test',
+        },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject POST with empty title', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$post({
+        json: {
+          type: 'info',
+          title: '',
+          message: 'Test message',
+        },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject POST with empty message', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$post({
+        json: {
+          type: 'info',
+          title: 'Test title',
+          message: '',
+        },
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject GET with invalid limit parameter', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$get({
+        query: { limit: 'invalid' },
+      })
+
+      expect(res.status).toBe(200)
+    })
+
+    it('should reject GET with invalid unreadOnly parameter', async () => {
+      const client = createTestClient()
+
+      const res = await client.api.notifications.$get({
+        query: { unreadOnly: 'invalid' },
+      })
+
+      expect(res.status).toBe(200)
+    })
+  })
+
   describe('GET /api/notifications', () => {
     it('should return empty array', async () => {
       const client = createTestClient()
