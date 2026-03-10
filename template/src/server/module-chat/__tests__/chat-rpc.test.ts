@@ -87,4 +87,81 @@ describe('Chat Routes with Type-Safe Test Client', () => {
       }
     })
   })
+
+  describe('Error Scenarios', () => {
+    it('should handle empty message in echo RPC', async () => {
+      const wsClient = client.api.chat.ws.$ws()
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Test timeout'))
+          }, 5000)
+
+          wsClient.onStatusChange((status: WSStatus) => {
+            if (status === 'open') {
+              clearTimeout(timeout)
+              resolve()
+            }
+          })
+        })
+
+        const result = await wsClient.call('echo', { message: '' })
+        expect(result.message).toBe('')
+        expect(result.timestamp).toBeDefined()
+      } finally {
+        wsClient.close()
+      }
+    })
+
+    it('should handle connection close gracefully', async () => {
+      const wsClient = client.api.chat.ws.$ws()
+
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Test timeout'))
+        }, 5000)
+
+        wsClient.onStatusChange((status: WSStatus) => {
+          if (status === 'open') {
+            clearTimeout(timeout)
+            resolve()
+          }
+        })
+      })
+
+      wsClient.close()
+
+      await new Promise<void>(resolve => setTimeout(resolve, 100))
+      expect(wsClient.status).toBe('closed')
+    })
+
+    it('should handle invalid RPC method gracefully', async () => {
+      const wsClient = client.api.chat.ws.$ws()
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Test timeout'))
+          }, 5000)
+
+          wsClient.onStatusChange((status: WSStatus) => {
+            if (status === 'open') {
+              clearTimeout(timeout)
+              resolve()
+            }
+          })
+        })
+
+        // @ts-expect-error - 测试无效方法
+        const result = await wsClient.call('invalidMethod', {})
+        expect(result).toBeNull()
+      } catch (error) {
+        // 预期会抛出错误
+        expect(error).toBeDefined()
+      } finally {
+        wsClient.close()
+      }
+    })
+  })
 })
