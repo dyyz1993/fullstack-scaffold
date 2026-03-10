@@ -132,3 +132,61 @@ export interface ForbiddenError {
   message: string
   suggestion: string
 }
+
+// ============================================
+// 模块测试文件验证配置
+// ============================================
+export interface RequiredTestFile {
+  pattern: string
+  description: string
+  minAssertions?: number
+}
+
+export interface ModuleTestsConfig {
+  modulePattern: string
+  testsDir: string
+  requiredTestFiles: RequiredTestFile[]
+  ignoreDirs: string[]
+  checkDirs: string[]
+}
+
+export interface ModuleTestError {
+  module: string
+  missingTests: string[]
+  suggestion: string
+}
+
+// ============================================
+// 测试质量验证配置
+// ============================================
+export interface AssertionRule {
+  type: 'min_per_test' | 'error_coverage' | 'edge_case_coverage'
+  minCount?: number
+  description: string
+}
+
+export interface TestQualityConfig {
+  minAssertionsPerTest: number
+  requireErrorAssertions: boolean
+  requireEdgeCaseAssertions: boolean
+  errorAssertionPatterns: string[]
+  edgeCasePatterns: string[]
+  ignoreDirs: string[]
+  checkDirs: string[]
+}
+
+export interface TestQualityError {
+  file: string
+  testSuite: string
+  testName: string
+  issue: string
+  suggestion: string
+}
+
+export interface TestQualityWarning {
+  file: string
+  testSuite: string
+  testName: string
+  assertionCount: number
+  suggestion: string
+}

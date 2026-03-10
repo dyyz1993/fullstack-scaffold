@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline af295398dc31b57a
+ */
+
 export interface RuntimePlatform {
   name: 'node' | 'cloudflare'
   isCloudflare: boolean

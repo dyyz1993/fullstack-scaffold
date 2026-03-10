@@ -1,3 +1,13 @@
+/**
+ * @framework-baseline 5493efed839d774d
+ *
+ * 此文件属于框架层代码。如需修改，请添加以下说明：
+ *
+ * @framework-modify
+ * @reason [必填] 修改原因
+ * @impact [必填] 影响范围
+ */
+
 import type { WebSocket } from 'ws'
 import { createRealtimeCore, type RealtimeCore } from './realtime-core'
 import type { RuntimeAdapter, RuntimePlatform, WSConnection, SSEConnection } from './runtime'

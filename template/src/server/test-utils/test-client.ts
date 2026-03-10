@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline d16fe334284db1d7
+ */
+
 import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { createApp } from '@server/app'

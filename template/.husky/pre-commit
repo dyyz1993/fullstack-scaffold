@@ -7,6 +7,9 @@ npm run typecheck
 echo "Running all validators..."
 npm run validate:all
 
+echo "Checking framework modifications..."
+npm run framework:check
+
 npx lint-staged
 
 echo "Running smart tests for changed files..."

@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline b31e6f04a2d9c702
+ */
+
 import { createApp } from '../app'
 import type { AppBindings } from '../types/bindings'
 import { getDb } from '../db/driver-cloudflare'

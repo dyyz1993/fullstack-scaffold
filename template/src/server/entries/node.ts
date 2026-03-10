@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline 6697f7f963c5f57c
+ */
+
 import '../config'
 
 import { serve } from '@hono/node-server'

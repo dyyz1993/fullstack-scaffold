@@ -25,7 +25,6 @@ function checkFileSensitiveData(
     const line = lines[i];
     const trimmedLine = line.trim();
 
-    // 跳过注释行
     if (
       trimmedLine.startsWith('//') ||
       trimmedLine.startsWith('#') ||
@@ -35,15 +34,12 @@ function checkFileSensitiveData(
       continue;
     }
 
-    // 检查敏感信息模式
     for (const rule of config.patterns) {
       if (rule.pattern.test(trimmedLine)) {
-        // 检查是否有排除模式（如 process.env）
         if (rule.excludePattern && rule.excludePattern.test(trimmedLine)) {
           continue;
         }
 
-        // 检查文件是否在忽略列表中
         const relativePath = relative(rootPath, filePath);
         if (config.ignorePatterns?.some((pattern) => pattern.test(relativePath))) {
           continue;
@@ -55,7 +51,7 @@ function checkFileSensitiveData(
           message: rule.message,
           content: trimmedLine.substring(0, 100) + (trimmedLine.length > 100 ? '...' : ''),
         });
-        break; // 每行只报告一个错误
+        break;
       }
     }
   }

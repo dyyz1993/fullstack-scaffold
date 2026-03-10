@@ -12,6 +12,8 @@ import type {
   ServerRPCConfig,
   ClientRPCConfig,
   DirectoryStructureConfig,
+  ModuleTestsConfig,
+  TestQualityConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -224,6 +226,62 @@ export const directoryStructureConfig: DirectoryStructureConfig = {
 }
 
 // ============================================
+// 模块测试文件验证配置
+// ============================================
+export const moduleTestsConfig: ModuleTestsConfig = {
+  modulePattern: 'module-*',
+  testsDir: '__tests__',
+  requiredTestFiles: [
+    {
+      pattern: '*-service.test.ts',
+      description: 'Service layer tests',
+      minAssertions: 5,
+    },
+    {
+      pattern: '*-route*.test.ts',
+      description: 'Route/API tests',
+      minAssertions: 5,
+    },
+  ],
+  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage'],
+  checkDirs: ['src/server'],
+}
+
+// ============================================
+// 测试质量验证配置
+// ============================================
+export const testQualityConfig: TestQualityConfig = {
+  minAssertionsPerTest: 2,
+  requireErrorAssertions: true,
+  requireEdgeCaseAssertions: false,
+  errorAssertionPatterns: [
+    'toBe\\(400\\)',
+    'toBe\\(401\\)',
+    'toBe\\(403\\)',
+    'toBe\\(404\\)',
+    'toBe\\(500\\)',
+    'toBeNull\\(\\)',
+    'toBeUndefined\\(\\)',
+    'toBeFalse\\(\\)',
+    'rejects',
+    'toThrow',
+  ],
+  edgeCasePatterns: [
+    'empty',
+    'null',
+    'undefined',
+    'max',
+    'min',
+    'boundary',
+    'edge',
+    'invalid',
+    'missing',
+  ],
+  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage'],
+  checkDirs: ['src/server', 'src/client'],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -233,6 +291,8 @@ export const projectConfig = {
   serverRPC: serverRPCConfig,
   clientRPC: clientRPCConfig,
   directory: directoryStructureConfig,
+  moduleTests: moduleTestsConfig,
+  testQuality: testQualityConfig,
 } as const
 
 export default projectConfig

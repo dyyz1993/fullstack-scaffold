@@ -43,7 +43,10 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "framework:init": "node --import tsx/esm lint-scripts/framework/init-baseline.ts",
+    "framework:update": "node --import tsx/esm lint-scripts/framework/update-baseline.ts",
+    "framework:check": "node --import tsx/esm lint-scripts/framework/check-modify.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.4",

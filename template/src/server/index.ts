@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 948282ecc1954dd4
+ */
+
+/**
  * Server Entry Point - Framework level, no business code awareness
  *
  * This file initializes the runtime adapter and automatically scans

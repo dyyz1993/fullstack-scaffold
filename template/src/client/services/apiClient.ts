@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline ab16e97716a7556e
+ */
+
 import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/core/ws-client'

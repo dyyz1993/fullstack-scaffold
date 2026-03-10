@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline bcbd4088a299f939
+ */
+
 import { createServer, type Server } from 'http'
 import { WebSocketServer } from 'ws'
 import type { Hono, Env, Schema } from 'hono'

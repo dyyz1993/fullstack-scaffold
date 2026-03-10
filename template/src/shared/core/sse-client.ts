@@ -1,3 +1,13 @@
+/**
+ * @framework-baseline bfe66a54cb969df5
+ *
+ * 此文件属于框架层代码。如需修改，请添加以下说明：
+ *
+ * @framework-modify
+ * @reason [必填] 修改原因
+ * @impact [必填] 影响范围
+ */
+
 interface SSEProtocol {
   events: Record<string, unknown>
 }

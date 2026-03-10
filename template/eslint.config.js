@@ -15,6 +15,8 @@ import { layerBoundary } from './eslint-rules/layer-boundary.js'
 import { requireResponseHelpers } from './eslint-rules/require-response-helpers.js'
 import { noInlineSchema } from './eslint-rules/no-inline-schema.js'
 import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
+import { frameworkProtect } from './eslint-rules/framework-protect.js'
+import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
 
 const localRules = {
   rules: {
@@ -33,6 +35,8 @@ const localRules = {
     'require-response-helpers': requireResponseHelpers,
     'no-inline-schema': noInlineSchema,
     'enforce-valid-method': enforceValidMethod,
+    'framework-protect': frameworkProtect,
+    'prefer-shared-types': preferSharedTypes,
   },
 }
 
@@ -95,6 +99,7 @@ export default tseslint.config(
     files: ['src/client/**/*.ts', 'src/client/**/*.tsx'],
     rules: {
       'no-console': 'off',
+      'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
     },
   },
   {
@@ -143,6 +148,12 @@ export default tseslint.config(
     ],
     rules: {
       'local-rules/layer-boundary': 'error',
+    },
+  },
+  {
+    files: ['src/shared/core/**/*.ts', 'src/server/core/**/*.ts', 'src/server/entries/**/*.ts', 'src/server/test-utils/**/*.ts', 'src/server/index.ts', 'src/client/services/**/*.ts'],
+    rules: {
+      'local-rules/framework-protect': 'error',
     },
   }
 )
