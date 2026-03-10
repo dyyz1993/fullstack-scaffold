@@ -190,3 +190,26 @@ export interface TestQualityWarning {
   assertionCount: number
   suggestion: string
 }
+
+// ============================================
+// Client 测试覆盖验证配置
+// ============================================
+export interface ClientTestRule {
+  dir: string
+  filePattern: string
+  testPattern: string
+  description: string
+}
+
+export interface ClientTestsConfig {
+  rules: ClientTestRule[]
+  ignoreFiles: string[]
+  ignoreDirs: string[]
+  checkDirs: string[]
+}
+
+export interface ClientTestError {
+  file: string
+  expectedTest: string
+  suggestion: string
+}

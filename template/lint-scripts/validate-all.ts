@@ -21,6 +21,7 @@ import {
   validateTestQuality,
   formatTestQualityErrors,
 } from './validators/test-quality.validator.js'
+import { validateClientTests, formatClientTestErrors } from './validators/client-tests.validator.js'
 import projectConfig from './config/project.config.js'
 
 interface ValidatorResult {
@@ -34,7 +35,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   const results: ValidatorResult[] = []
 
   // 1. TODO 验证
-  console.log('🔍 [1/8] Checking TODO/FIXME comments...')
+  console.log('🔍 [1/9] Checking TODO/FIXME comments...')
   const todoErrors = validateTodos(projectConfig.todos, rootPath)
   results.push({
     name: 'TODO/FIXME',
@@ -48,7 +49,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 2. 敏感信息验证
-  console.log('🔍 [2/8] Checking for sensitive data...')
+  console.log('🔍 [2/9] Checking for sensitive data...')
   const sensitiveErrors = await validateSensitive(projectConfig.sensitive, rootPath)
   results.push({
     name: 'Sensitive Data',
@@ -62,7 +63,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 3. 导入路径验证
-  console.log('🔍 [3/8] Checking import paths...')
+  console.log('🔍 [3/9] Checking import paths...')
   const importErrors = validateImports(projectConfig.imports, rootPath)
   results.push({
     name: 'Import Paths',
@@ -76,7 +77,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 4. 服务端 RPC 验证
-  console.log('🔍 [4/8] Checking server RPC patterns...')
+  console.log('🔍 [4/9] Checking server RPC patterns...')
   const serverRPCErrors = validateServerRPC(projectConfig.serverRPC, rootPath)
   results.push({
     name: 'Server RPC',
@@ -90,7 +91,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 5. 客户端 RPC 验证
-  console.log('🔍 [5/8] Checking client RPC usage...')
+  console.log('🔍 [5/9] Checking client RPC usage...')
   const clientRPCErrors = validateClientRPC(projectConfig.clientRPC, rootPath)
   results.push({
     name: 'Client RPC',
@@ -104,7 +105,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 6. 目录结构验证
-  console.log('🔍 [6/8] Checking directory structure...')
+  console.log('🔍 [6/9] Checking directory structure...')
   const { directoryErrors, forbiddenErrors } = validateDirectoryStructure(
     projectConfig.directory,
     rootPath
@@ -122,7 +123,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 7. 模块测试文件验证
-  console.log('🔍 [7/8] Checking module test files...')
+  console.log('🔍 [7/9] Checking module test files...')
   const moduleTestErrors = validateModuleTests(projectConfig.moduleTests, rootPath)
   results.push({
     name: 'Module Tests',
@@ -136,7 +137,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 8. 测试质量验证
-  console.log('🔍 [8/8] Checking test quality...')
+  console.log('🔍 [8/9] Checking test quality...')
   const { errors: testQualityErrors, warnings: testQualityWarnings } = validateTestQuality(
     projectConfig.testQuality,
     rootPath
@@ -151,6 +152,20 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.error(formatTestQualityErrors(testQualityErrors, testQualityWarnings))
   } else {
     console.log('  ✅ Test quality is good\n')
+  }
+
+  // 9. Client 测试覆盖验证
+  console.log('🔍 [9/9] Checking client test coverage...')
+  const clientTestErrors = validateClientTests(projectConfig.clientTests, rootPath)
+  results.push({
+    name: 'Client Tests',
+    passed: clientTestErrors.length === 0,
+    errors: clientTestErrors.length,
+  })
+  if (clientTestErrors.length > 0) {
+    console.error(formatClientTestErrors(clientTestErrors))
+  } else {
+    console.log('  ✅ All client files have tests\n')
   }
 
   return results

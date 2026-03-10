@@ -14,6 +14,7 @@ import type {
   DirectoryStructureConfig,
   ModuleTestsConfig,
   TestQualityConfig,
+  ClientTestsConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -282,6 +283,39 @@ export const testQualityConfig: TestQualityConfig = {
 }
 
 // ============================================
+// Client 测试覆盖验证配置
+// ============================================
+export const clientTestsConfig: ClientTestsConfig = {
+  rules: [
+    {
+      dir: 'src/client/components',
+      filePattern: '*.tsx',
+      testPattern: '{name}.test.tsx',
+      description: 'Component tests',
+    },
+    {
+      dir: 'src/client/pages',
+      filePattern: '*.tsx',
+      testPattern: '{name}.test.tsx',
+      description: 'Page tests',
+    },
+  ],
+  ignoreFiles: ['src/client/components/index.ts', 'src/client/pages/index.ts'],
+  ignoreDirs: [
+    'node_modules',
+    'dist',
+    '.git',
+    'build',
+    'coverage',
+    '__tests__',
+    'stores',
+    'hooks',
+    'services',
+  ],
+  checkDirs: ['src/client'],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -293,6 +327,7 @@ export const projectConfig = {
   directory: directoryStructureConfig,
   moduleTests: moduleTestsConfig,
   testQuality: testQualityConfig,
+  clientTests: clientTestsConfig,
 } as const
 
 export default projectConfig
