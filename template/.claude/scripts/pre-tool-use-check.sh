@@ -24,12 +24,12 @@ if [ -z "$COMMAND" ]; then
   exit 0
 fi
 
-# 检查是否包含 --no-verify
-if echo "$COMMAND" | grep -qE 'git\s+commit.*--no-verify'; then
+# 检查是否包含 --no-verify 或 -n
+if echo "$COMMAND" | grep -qE 'git\s+commit.*(--no-verify|-n)'; then
   echo ""
   echo "❌ 检测到禁止的命令！"
   echo ""
-  echo "🚫 禁止使用 'git commit --no-verify'"
+  echo "🚫 禁止使用 'git commit --no-verify' 或 'git commit -n'"
   echo ""
   echo "原因："
   echo "  • Pre-commit hooks 确保代码质量（格式检查、测试运行）"

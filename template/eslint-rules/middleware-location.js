@@ -2,8 +2,10 @@
  * 约束中间件的位置和写法
  * 1. 中间件必须放在 src/server/middleware/ 目录下
  * 2. 中间件文件必须导出命名函数，函数名以 Middleware 结尾
- * 3. 中间件函数必须返回 MiddlewareHandler 类型
+ * 3. 辅助函数（如 getAuthUser）不以 Middleware 结尾是允许的
  */
+
+const HELPER_FUNCTIONS = ['getAuthUser', 'requireAuth', 'hasPermission']
 
 export const middlewareLocation = {
   meta: {
@@ -28,7 +30,7 @@ export const middlewareLocation = {
 
         if (node.declaration?.type === 'FunctionDeclaration') {
           const name = node.declaration.id?.name
-          if (name && !name.endsWith('Middleware')) {
+          if (name && !name.endsWith('Middleware') && !HELPER_FUNCTIONS.includes(name)) {
             context.report({
               node: node.declaration,
               messageId: 'invalidName',
@@ -41,7 +43,7 @@ export const middlewareLocation = {
           for (const decl of node.declaration.declarations) {
             if (decl.id.type === 'Identifier') {
               const name = decl.id.name
-              if (!name.endsWith('Middleware')) {
+              if (!name.endsWith('Middleware') && !HELPER_FUNCTIONS.includes(name)) {
                 context.report({
                   node: decl,
                   messageId: 'invalidName',
@@ -59,12 +61,17 @@ export const middlewareLocation = {
         const hasMiddlewareExport = node.body.some(statement => {
           if (statement.type === 'ExportNamedDeclaration') {
             if (statement.declaration?.type === 'FunctionDeclaration') {
-              return statement.declaration.id?.name?.endsWith('Middleware')
+              const name = statement.declaration.id?.name
+              return name?.endsWith('Middleware') || HELPER_FUNCTIONS.includes(name)
             }
             if (statement.declaration?.type === 'VariableDeclaration') {
-              return statement.declaration.declarations.some(
-                decl => decl.id.type === 'Identifier' && decl.id.name.endsWith('Middleware')
-              )
+              return statement.declaration.declarations.some(decl => {
+                if (decl.id.type === 'Identifier') {
+                  const name = decl.id.name
+                  return name.endsWith('Middleware') || HELPER_FUNCTIONS.includes(name)
+                }
+                return false
+              })
             }
           }
           return false

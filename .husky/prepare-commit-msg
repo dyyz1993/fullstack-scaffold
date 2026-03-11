@@ -1,7 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-if [ "$GIT_SKIP_HOOKS" = "1" ]; then
-  echo "❌ 错误：禁止使用 --no-verify/-n 参数提交代码！" >&2
-  exit 1
-fi

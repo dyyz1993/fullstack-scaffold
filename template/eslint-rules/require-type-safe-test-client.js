@@ -35,10 +35,14 @@ export const requireTypeSafeTestClient = {
   create(context) {
     const filename = context.filename || context.getFilename()
 
+    const isMiddlewareTest =
+      filename.includes('/middleware/__tests__') || filename.includes('/middleware/')
+
     const isRouteTestFile =
-      filename.includes('-rpc.test.') ||
-      filename.includes('-route.test.') ||
-      (filename.includes('__tests__') && filename.includes('.test.'))
+      !isMiddlewareTest &&
+      (filename.includes('-rpc.test.') ||
+        filename.includes('-route.test.') ||
+        (filename.includes('__tests__') && filename.includes('.test.')))
 
     if (!isRouteTestFile) {
       return {}

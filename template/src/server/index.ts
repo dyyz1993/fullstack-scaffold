@@ -1,5 +1,8 @@
 /**
  * @framework-baseline 948282ecc1954dd4
+ * @framework-modify
+ * @reason 导出 adminRoutes 模块以支持管理员 API 功能
+ * @impact 新增 admin 模块导出，不影响现有功能
  */
 
 /**
@@ -15,7 +18,14 @@ import { getNodeRuntimeAdapter } from './core/runtime-node'
 const runtimeAdapter = getNodeRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
-export { createApp, apiRoutes, notificationRoutes, chatRoutes, type AppType } from './app'
+export {
+  createApp,
+  apiRoutes,
+  notificationRoutes,
+  chatRoutes,
+  adminRoutes,
+  type AppType,
+} from './app'
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 export { getAppConfig, getDatabaseConfig, type AppConfig, type DatabaseConfig } from './config'
 export { createServer, startServer } from './entries/node'

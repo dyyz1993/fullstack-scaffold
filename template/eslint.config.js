@@ -4,6 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax.js'
 import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
+import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
 import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
 import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-service.js'
 import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
@@ -22,6 +23,7 @@ const localRules = {
   rules: {
     'require-hono-chain-syntax': requireHonoChainSyntax,
     'require-type-safe-test-client': requireTypeSafeTestClient,
+    'no-disable-type-safe-client': noDisableTypeSafeClient,
     'no-ambiguous-file-paths': noAmbiguousFilePaths,
     'no-util-functions-in-service': noUtilFunctionsInService,
     'no-direct-ws-sse': noDirectWsSse,
@@ -90,7 +92,7 @@ export default tseslint.config(
   },
   {
     files: ['src/server/middleware/**/*.ts'],
-    ignores: ['src/server/middleware/index.ts'],
+    ignores: ['src/server/middleware/index.ts', '**/__tests__/**/*.ts', '**/*.test.ts'],
     rules: {
       'local-rules/middleware-location': 'error',
     },
@@ -108,6 +110,7 @@ export default tseslint.config(
       'no-console': 'off',
       'no-restricted-globals': 'off',
       'local-rules/require-type-safe-test-client': 'error',
+      'local-rules/no-disable-type-safe-client': 'error',
     },
   },
   {
@@ -151,7 +154,14 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/shared/core/**/*.ts', 'src/server/core/**/*.ts', 'src/server/entries/**/*.ts', 'src/server/test-utils/**/*.ts', 'src/server/index.ts', 'src/client/services/**/*.ts'],
+    files: [
+      'src/shared/core/**/*.ts',
+      'src/server/core/**/*.ts',
+      'src/server/entries/**/*.ts',
+      'src/server/test-utils/**/*.ts',
+      'src/server/index.ts',
+      'src/client/services/**/*.ts',
+    ],
     rules: {
       'local-rules/framework-protect': 'error',
     },

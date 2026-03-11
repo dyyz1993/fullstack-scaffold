@@ -2,6 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { apiRoutes } from './module-todos/routes/todos-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
+import { adminRoutes } from './module-admin/routes/admin-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
@@ -18,6 +19,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .route('/api', notificationRoutes)
     .route('/api', chatRoutes)
     .route('/api', apiRoutes)
+    .route('/api', adminRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')
@@ -46,4 +48,4 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
 export type AppType = ReturnType<typeof createApp>
 
-export { apiRoutes, notificationRoutes, chatRoutes }
+export { apiRoutes, notificationRoutes, chatRoutes, adminRoutes }

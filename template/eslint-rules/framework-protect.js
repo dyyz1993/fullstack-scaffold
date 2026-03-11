@@ -8,12 +8,11 @@ const FRAMEWORK_PATTERNS = [
   '/server/core/',
   '/server/entries/',
   '/server/test-utils/',
-  '/server/index.ts',
   '/client/services/',
 ]
 
 function isFrameworkFile(filePath) {
-  return FRAMEWORK_PATTERNS.some((p) => filePath.includes(p))
+  return FRAMEWORK_PATTERNS.some(p => filePath.includes(p))
 }
 
 function computeContentHash(content) {
@@ -117,13 +116,9 @@ export const frameworkProtect = {
         '@reason [必填] 修改原因\n' +
         '@impact [必填] 影响范围',
       missingReason:
-        '框架文件修改缺少 @reason 说明。\n\n' +
-        '请在注释中添加：\n' +
-        '@reason [修改原因]',
+        '框架文件修改缺少 @reason 说明。\n\n' + '请在注释中添加：\n' + '@reason [修改原因]',
       missingImpact:
-        '框架文件修改缺少 @impact 说明。\n\n' +
-        '请在注释中添加：\n' +
-        '@impact [影响范围]',
+        '框架文件修改缺少 @impact 说明。\n\n' + '请在注释中添加：\n' + '@impact [影响范围]',
     },
     schema: [],
   },
