@@ -18,6 +18,7 @@ import { noInlineSchema } from './eslint-rules/no-inline-schema.js'
 import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
 import { frameworkProtect } from './eslint-rules/framework-protect.js'
 import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
+import { routeLocation } from './eslint-rules/route-location.js'
 
 const localRules = {
   rules: {
@@ -39,6 +40,7 @@ const localRules = {
     'enforce-valid-method': enforceValidMethod,
     'framework-protect': frameworkProtect,
     'prefer-shared-types': preferSharedTypes,
+    'route-location': routeLocation,
   },
 }
 
@@ -129,6 +131,7 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'local-rules/no-e2e-test-outside-dir': 'error',
+      'local-rules/route-location': 'error',
     },
   },
   {
