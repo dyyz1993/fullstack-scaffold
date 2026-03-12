@@ -12,20 +12,17 @@ export const requireViteRouteConfig = {
       missingViteConfig:
         'Route path "{{routePath}}" is not configured in vite.config.ts devServer exclude.\n' +
         'This may cause the dev server to intercept the route incorrectly.\n' +
-        'Please add this path to the exclude array in vite.config.ts:\n' +
+        'Please add this path pattern to the exclude array in vite.config.ts:\n' +
         '\n' +
         '  devServer({\n' +
         '    exclude: [\n' +
         '      // ... existing patterns\n' +
-        '      /^\\/{{routePath}}$/,  // Add this line\n' +
+        '      /^\\/{{basename}}/,  // Add this line to cover all {{basename}} routes\n' +
         '    ],\n' +
-        '  })\n' +
-        '\n' +
-        'Or for admin routes:\n' +
-        '      /^\\/admin/,  // This covers all admin routes',
+        '  })',
       missingViteConfigNavigate:
         'Navigate target "{{routePath}}" is not configured in vite.config.ts devServer exclude.\n' +
-        'Please ensure this path is added to the exclude array in vite.config.ts.',
+        'Please add the path pattern to the exclude array in vite.config.ts.',
     },
     schema: [],
   },
@@ -115,15 +112,15 @@ export const requireViteRouteConfig = {
       return patterns
     }
 
-    function isPathConfigured(routePath, patterns, isAdminRoute) {
+    function isPathConfigured(routePath, patterns, basename) {
       if (!patterns || patterns.length === 0) return true
 
-      if (isAdminRoute) {
-        const hasAdminPattern = patterns.some(p => {
+      if (basename) {
+        const hasBasenamePattern = patterns.some(p => {
           const unescaped = p.pattern.replace(/\\\//g, '/')
-          return unescaped.includes('/admin')
+          return unescaped.includes('/' + basename) || unescaped.includes(basename)
         })
-        if (hasAdminPattern) return true
+        if (hasBasenamePattern) return true
       }
 
       const normalizedPath = routePath.startsWith('/') ? routePath : '/' + routePath
@@ -152,7 +149,7 @@ export const requireViteRouteConfig = {
       return false
     }
 
-    function checkRoutePath(node, pathValue, isAdminRoute) {
+    function checkRoutePath(node, pathValue, basename) {
       if (!pathValue || typeof pathValue !== 'string') return
       if (pathValue === '/*' || pathValue === '*') return
       if (pathValue.includes(':')) return
@@ -172,18 +169,19 @@ export const requireViteRouteConfig = {
         }
       }
 
-      if (!isPathConfigured(pathValue, viteExcludePatterns, isAdminRoute)) {
+      if (!isPathConfigured(pathValue, viteExcludePatterns, basename)) {
         context.report({
           node,
           messageId: 'missingViteConfig',
           data: {
-            routePath: isAdminRoute ? 'admin/' + pathValue : pathValue,
+            routePath: basename ? basename + '/' + pathValue : pathValue,
+            basename: basename || '',
           },
         })
       }
     }
 
-    function checkNavigatePath(node, toValue, isAdminRoute) {
+    function checkNavigatePath(node, toValue, basename) {
       if (!toValue || typeof toValue !== 'string') return
       if (toValue.startsWith('http://') || toValue.startsWith('https://')) return
 
@@ -203,18 +201,24 @@ export const requireViteRouteConfig = {
         }
       }
 
-      if (!isPathConfigured(pathValue, viteExcludePatterns, isAdminRoute)) {
+      if (!isPathConfigured(pathValue, viteExcludePatterns, basename)) {
         context.report({
           node,
           messageId: 'missingViteConfigNavigate',
           data: {
-            routePath: isAdminRoute ? 'admin/' + pathValue : pathValue,
+            routePath: basename ? basename + '/' + pathValue : pathValue,
           },
         })
       }
     }
 
-    const isAdminApp = filename.includes('/admin/')
+    let detectedBasename = null
+
+    if (filename.includes('/admin/')) {
+      detectedBasename = 'admin'
+    } else if (filename.includes('/client/')) {
+      detectedBasename = null
+    }
 
     return {
       JSXElement(node) {
@@ -224,8 +228,21 @@ export const requireViteRouteConfig = {
         const elementName = openingElement.name
         if (!elementName) return
 
+        const isBrowserRouter =
+          elementName.type === 'JSXIdentifier' && elementName.name === 'BrowserRouter'
         const isRoute = elementName.type === 'JSXIdentifier' && elementName.name === 'Route'
         const isNavigate = elementName.type === 'JSXIdentifier' && elementName.name === 'Navigate'
+
+        if (isBrowserRouter) {
+          const attributes = openingElement.attributes || []
+          for (const attr of attributes) {
+            if (attr.type === 'JSXAttribute' && attr.name.name === 'basename') {
+              if (attr.value && attr.value.type === 'Literal') {
+                detectedBasename = attr.value.value.replace(/^\//, '')
+              }
+            }
+          }
+        }
 
         if (!isRoute && !isNavigate) return
 
@@ -235,7 +252,7 @@ export const requireViteRouteConfig = {
           for (const attr of attributes) {
             if (attr.type === 'JSXAttribute' && attr.name.name === 'path') {
               if (attr.value && attr.value.type === 'Literal') {
-                checkRoutePath(attr.value, attr.value.value, isAdminApp)
+                checkRoutePath(attr.value, attr.value.value, detectedBasename)
               } else if (attr.value && attr.value.type === 'JSXExpressionContainer') {
                 // Skip dynamic paths
               }
@@ -247,7 +264,7 @@ export const requireViteRouteConfig = {
           for (const attr of attributes) {
             if (attr.type === 'JSXAttribute' && attr.name.name === 'to') {
               if (attr.value && attr.value.type === 'Literal') {
-                checkNavigatePath(attr.value, attr.value.value, isAdminApp)
+                checkNavigatePath(attr.value, attr.value.value, detectedBasename)
               }
             }
           }

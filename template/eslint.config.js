@@ -20,6 +20,7 @@ import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
 import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
 import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
 import { requireViteRouteConfig } from './eslint-rules/require-vite-route-config.js'
+import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
 
 const localRules = {
   rules: {
@@ -43,11 +44,12 @@ const localRules = {
     'no-type-assertion-in-rpc': noTypeAssertionInRpc,
     'no-direct-fetch': noDirectFetch,
     'require-vite-route-config': requireViteRouteConfig,
+    'flat-routes-services': flatRoutesServices,
   },
 }
 
 export default tseslint.config(
-  { ignores: ['dist', '.pi', 'lint-scripts', 'e2e'] },
+  { ignores: ['dist', '.pi', 'lint-scripts', 'e2e', 'scripts'] },
   {
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -85,6 +87,7 @@ export default tseslint.config(
       'local-rules/require-response-helpers': 'error',
       'local-rules/no-inline-schema': 'error',
       'local-rules/enforce-valid-method': 'error',
+      'local-rules/flat-routes-services': 'error',
     },
   },
   {

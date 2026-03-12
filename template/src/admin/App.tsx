@@ -17,7 +17,7 @@ export const App: React.FC = () => {
         },
       }}
     >
-      <BrowserRouter basename="/admin2">
+      <BrowserRouter basename="/admin">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
