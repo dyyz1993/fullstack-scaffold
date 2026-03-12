@@ -37,9 +37,125 @@ interface CreateOptions {
   withWebSocket: boolean
 }
 
+interface ModifiedFileResult {
+  success: boolean
+  diff?: string
+  addedLines?: number
+}
+
 interface CreatedFile {
   path: string
   type: 'created' | 'modified'
+  diff?: string
+  lineCount?: number
+}
+
+function generateClientUsageExample(name: string, options: CreateOptions): string {
+  const pascalName = toPascalCase(name)
+  const camelName = toCamelCase(name)
+  const kebabName = toKebabCase(name)
+
+  if (options.withSSE) {
+    return `
+// 📡 SSE 客户端使用示例
+import { apiClient } from '@client/services/apiClient'
+import type { ${pascalName}Event } from '@shared/modules/${kebabName}'
+
+// 获取 SSE 客户端
+const sseClient = await apiClient.api['${kebabName}s'].stream.$sse()
+
+// 监听连接状态
+sseClient.onStatusChange(status => {
+  console.log('SSE 状态:', status)
+})
+
+// 监听事件
+sseClient.on('${camelName}Event', (event: ${pascalName}Event) => {
+  console.log('收到事件:', event)
+})
+
+// 关闭连接
+sseClient.abort()
+`
+  } else if (options.withWebSocket) {
+    return `
+// 🔌 WebSocket 客户端使用示例
+import { apiClient } from '@client/services/apiClient'
+import type { ${pascalName}Message } from '@shared/modules/${kebabName}'
+
+// 获取 WebSocket 客户端
+const wsClient = apiClient.api['${kebabName}s'].ws.$ws()
+
+// 监听连接状态
+wsClient.onStatusChange(status => {
+  console.log('WebSocket 状态:', status)
+})
+
+// 发送消息
+wsClient.emit('${camelName}Message', { id: '1', type: 'test', payload: {} })
+
+// 监听消息
+wsClient.on('${camelName}Message', (message: ${pascalName}Message) => {
+  console.log('收到消息:', message)
+})
+
+// RPC 调用
+const result = await wsClient.call('echo', { message: 'Hello' })
+
+// 关闭连接
+wsClient.close()
+`
+  } else {
+    return `
+// 📦 REST API 客户端使用示例
+import { apiClient } from '@client/services/apiClient'
+import type { ${pascalName}, Create${pascalName}Input } from '@shared/modules/${kebabName}'
+
+// 获取列表
+const listRes = await apiClient.api['${kebabName}s'].$get()
+const listData = await listRes.json()
+if (listData.success) {
+  console.log('列表:', listData.data)
+}
+
+// 获取单个
+const getRes = await apiClient.api['${kebabName}s'][':id'].$get({
+  param: { id: '1' },
+})
+const getData = await getRes.json()
+if (getData.success) {
+  console.log('详情:', getData.data)
+}
+
+// 创建
+const createRes = await apiClient.api['${kebabName}s'].$post({
+  json: { name: 'New ${pascalName}' } as Create${pascalName}Input,
+})
+const createData = await createRes.json()
+if (createData.success) {
+  console.log('创建成功:', createData.data)
+}
+
+// 更新
+const updateRes = await apiClient.api['${kebabName}s'][':id'].$put({
+  param: { id: '1' },
+  json: { name: 'Updated ${pascalName}' },
+})
+const updateData = await updateRes.json()
+if (updateData.success) {
+  console.log('更新成功:', updateData.data)
+}
+
+// 删除
+const deleteRes = await apiClient.api['${kebabName}s'][':id'].$delete({
+  param: { id: '1' },
+})
+const deleteData = await deleteRes.json()
+if (deleteData.success) {
+  console.log('删除成功')
+}
+`
+  }
 }
 
 function toPascalCase(str: string): string {
@@ -83,9 +199,12 @@ export const Update${pascalName}Schema = ${pascalName}Schema.partial().omit({ id
 
 export const ${pascalName}ListSchema = z.array(${pascalName}Schema)
 
+export const DeleteResultSchema = z.object({ message: z.string() })
+
 export type ${pascalName} = z.infer<typeof ${pascalName}Schema>
 export type Create${pascalName}Input = z.infer<typeof Create${pascalName}Schema>
 export type Update${pascalName}Input = z.infer<typeof Update${pascalName}Schema>
+export type DeleteResult = z.infer<typeof DeleteResultSchema>
 `
 }
 
@@ -129,8 +248,13 @@ export const ${pascalName}ConnectionSchema = z.object({
   roomId: z.string().optional(),
 })
 
+export const WebSocketStatusSchema = z.object({
+  connectedClients: z.number(),
+})
+
 export type ${pascalName}Message = z.infer<typeof ${pascalName}MessageSchema>
 export type ${pascalName}Connection = z.infer<typeof ${pascalName}ConnectionSchema>
+export type WebSocketStatus = z.infer<typeof WebSocketStatusSchema>
 `
 }
 
@@ -152,8 +276,8 @@ import {
   Create${pascalName}Schema,
   Update${pascalName}Schema,
   ${pascalName}ListSchema,
+  DeleteResultSchema,
 } from '@shared/modules/${kebabName}'
-import { z } from 'zod'
 
 const listRoute = createRoute({
   method: 'get',
@@ -179,7 +303,7 @@ const getRoute = createRoute({
   },
 })
 
-const createRoute = createRoute({
+const createRouteDef = createRoute({
   method: 'post',
   path: '/${kebabName}s',
   tags: ['${kebabName}s'],
@@ -229,7 +353,7 @@ const deleteRoute = createRoute({
     params: ${pascalName}Schema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(z.object({ message: z.string() }), '${pascalName} deleted'),
+    200: successResponse(DeleteResultSchema, '${pascalName} deleted'),
     404: errorResponse('${pascalName} not found'),
     500: errorResponse('Internal server error'),
   },
@@ -248,7 +372,7 @@ export const ${camelName}Routes = new OpenAPIHono()
     }
     return c.json({ success: true, data: result })
   })
-  .openapi(createRoute, async c => {
+  .openapi(createRouteDef, async c => {
     const body = c.req.valid('json')
     const result = await ${camelName}Service.create(body)
     return c.json({ success: true, data: result }, 201)
@@ -287,8 +411,8 @@ import {
   Create${pascalName}Schema,
   Update${pascalName}Schema,
   ${pascalName}ListSchema,
+  DeleteResultSchema,
 } from '@shared/modules/${kebabName}'
-import { z } from 'zod'
 
 const listRoute = createRoute({
   method: 'get',
@@ -314,7 +438,7 @@ const getRoute = createRoute({
   },
 })
 
-const createRoute = createRoute({
+const createRouteDef = createRoute({
   method: 'post',
   path: '/${kebabName}s',
   tags: ['${kebabName}s'],
@@ -364,7 +488,7 @@ const deleteRoute = createRoute({
     params: ${pascalName}Schema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(z.object({ message: z.string() }), '${pascalName} deleted'),
+    200: successResponse(DeleteResultSchema, '${pascalName} deleted'),
     404: errorResponse('${pascalName} not found'),
     500: errorResponse('Internal server error'),
   },
@@ -383,7 +507,7 @@ export const ${camelName}Routes = new OpenAPIHono()
     }
     return c.json({ success: true, data: result })
   })
-  .openapi(createRoute, async c => {
+  .openapi(createRouteDef, async c => {
     const body = c.req.valid('json')
     const result = await ${camelName}Service.create(body)
     return c.json({ success: true, data: result }, 201)
@@ -416,7 +540,7 @@ function generateSSERouteTemplate(name: string): string {
   return `import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as ${camelName}Service from '../services/${kebabName}-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { errorResponse } from '../../utils/route-helpers'
 import { ${pascalName}SubscriptionSchema } from '@shared/modules/${kebabName}'
 
 const streamRoute = createRoute({
@@ -484,42 +608,54 @@ function generateWebSocketRouteTemplate(name: string): string {
 
   return `import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { upgradeWebSocket } from 'hono/cloudflare-workers'
-import * as ${camelName}Service from '../services/${kebabName}-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
-import { ${pascalName}ConnectionSchema } from '@shared/modules/${kebabName}'
+import type { AppBindings } from '../../types/bindings'
+import { getRuntimeAdapter } from '@server/core/runtime'
+import { ${pascalName}MessageSchema, WebSocketStatusSchema } from '@shared/modules/${kebabName}'
+import { successResponse } from '@server/utils/route-helpers'
+
+const statusRoute = createRoute({
+  method: 'get',
+  path: '/${kebabName}s/ws/status',
+  tags: ['${kebabName}s'],
+  responses: {
+    200: successResponse(WebSocketStatusSchema, 'Get WebSocket status'),
+  },
+})
 
 const wsRoute = createRoute({
   method: 'get',
   path: '/${kebabName}s/ws',
   tags: ['${kebabName}s'],
-  request: {
-    query: ${pascalName}ConnectionSchema,
-  },
   responses: {
-    101: {
-      description: 'WebSocket connection for ${kebabName}',
+    200: {
+      content: {
+        websocket: {
+          schema: ${pascalName}MessageSchema,
+        },
+      },
+      description: 'WebSocket endpoint for ${kebabName}',
     },
-    500: errorResponse('Internal server error'),
   },
 })
 
-export const ${camelName}Routes = new OpenAPIHono()
-  .openapi(wsRoute, async c => {
-    const query = c.req.valid('query')
-
-    return upgradeWebSocket({
-      onOpen(event, ws) {
-        ${camelName}Service.onConnect(ws, query)
-      },
-      onMessage(event, ws) {
-        ${camelName}Service.onMessage(ws, event.data.toString())
-      },
-      onClose(event, ws) {
-        ${camelName}Service.onDisconnect(ws)
-      },
-    })(c, async () => {})
+export const ${camelName}Routes = new OpenAPIHono<{ Bindings: AppBindings }>()
+  .openapi(statusRoute, async c => {
+    return c.json({ success: true, data: { connectedClients: 0 } })
   })
+  .openapi(wsRoute, async _c => {
+    const adapter = getRuntimeAdapter()
+    if (
+      'handleWebSocketRequest' in adapter &&
+      typeof adapter.handleWebSocketRequest === 'function'
+    ) {
+      return (
+        adapter as { handleWebSocketRequest: () => Response | Promise<Response> }
+      ).handleWebSocketRequest()
+    }
+    return new Response('WebSocket not supported', { status: 500 })
+  })
+
+export type ${pascalName}RoutesType = typeof ${camelName}Routes
 `
 }
 
@@ -540,20 +676,24 @@ function generateBasicServiceTemplate(name: string): string {
  * - 内存存储
  */
 
-const ${camelName}Store = new Map<string, any>()
+import type { ${pascalName}, Create${pascalName}Input, Update${pascalName}Input } from '@shared/modules/${name}'
+
+type ${pascalName}Row = ${pascalName}
+
+const ${camelName}Store = new Map<string, ${pascalName}Row>()
 let idCounter = 0
 
-export const getAll = async () => {
+export const getAll = async (): Promise<${pascalName}Row[]> => {
   return Array.from(${camelName}Store.values())
 }
 
-export const getById = async (id: string) => {
+export const getById = async (id: string): Promise<${pascalName}Row | null> => {
   return ${camelName}Store.get(id) || null
 }
 
-export const create = async (data: any) => {
+export const create = async (data: Create${pascalName}Input): Promise<${pascalName}Row> => {
   const id = \`\${++idCounter}\`
-  const item = {
+  const item: ${pascalName}Row = {
     id,
     ...data,
     createdAt: new Date().toISOString(),
@@ -563,11 +703,11 @@ export const create = async (data: any) => {
   return item
 }
 
-export const update = async (id: string, data: any) => {
+export const update = async (id: string, data: Update${pascalName}Input): Promise<${pascalName}Row | null> => {
   const existing = ${camelName}Store.get(id)
   if (!existing) return null
 
-  const updated = {
+  const updated: ${pascalName}Row = {
     ...existing,
     ...data,
     updatedAt: new Date().toISOString(),
@@ -576,7 +716,7 @@ export const update = async (id: string, data: any) => {
   return updated
 }
 
-export const delete${pascalName} = async (id: string) => {
+export const delete${pascalName} = async (id: string): Promise<boolean> => {
   return ${camelName}Store.delete(id)
 }
 `
@@ -594,38 +734,62 @@ function generateDatabaseServiceTemplate(name: string): string {
  * - 业务逻辑处理
  * - 数据验证
  * - 数据库操作
+ *
+ * TODO: 需要先创建数据库表定义
+ * 1. 在 src/server/db/schema/index.ts 中添加表定义
+ * 2. 取消注释下面的导入
  */
 
-import { db } from '@server/db'
-import { ${kebabName}s } from '@server/db/schema'
-import { eq } from 'drizzle-orm'
+// TODO: 取消注释以下导入
+// import { db } from '@server/db'
+// import { eq } from 'drizzle-orm'
+// import { ${kebabName}s } from '@server/db/schema'
 
-export const getAll = async () => {
-  return await db.select().from(${kebabName}s)
+import type { ${pascalName}, Create${pascalName}Input, Update${pascalName}Input } from '@shared/modules/${name}'
+
+type ${pascalName}Row = ${pascalName}
+
+export const getAll = async (): Promise<${pascalName}Row[]> => {
+  // TODO: 实现数据库查询
+  // return await db.select().from(${kebabName}s)
+  return []
 }
 
-export const getById = async (id: string) => {
-  const result = await db.select().from(${kebabName}s).where(eq(${kebabName}s.id, id))
-  return result[0] || null
+export const getById = async (_id: string): Promise<${pascalName}Row | null> => {
+  // TODO: 实现数据库查询
+  // const result = await db.select().from(${kebabName}s).where(eq(${kebabName}s.id, id))
+  // return result[0] || null
+  return null
 }
 
-export const create = async (data: any) => {
-  const result = await db.insert(${kebabName}s).values(data).returning()
-  return result[0]
+export const create = async (data: Create${pascalName}Input): Promise<${pascalName}Row> => {
+  // TODO: 实现数据库插入
+  // const result = await db.insert(${kebabName}s).values(data).returning()
+  // return result[0]
+  return {
+    id: 'temp',
+    ...data,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
 }
 
-export const update = async (id: string, data: any) => {
-  const result = await db
-    .update(${kebabName}s)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(${kebabName}s.id, id))
-    .returning()
-  return result[0] || null
+export const update = async (_id: string, _data: Update${pascalName}Input): Promise<${pascalName}Row | null> => {
+  // TODO: 实现数据库更新
+  // const result = await db
+  //   .update(${kebabName}s)
+  //   .set({ ...data, updatedAt: new Date() })
+  //   .where(eq(${kebabName}s.id, id))
+  //   .returning()
+  // return result[0] || null
+  return null
 }
 
-export const delete${pascalName} = async (id: string) => {
-  const result = await db.delete(${kebabName}s).where(eq(${kebabName}s.id, id)).returning()
-  return result.length > 0
+export const delete${pascalName} = async (_id: string): Promise<boolean> => {
+  // TODO: 实现数据库删除
+  // const result = await db.delete(${kebabName}s).where(eq(${kebabName}s.id, id)).returning()
+  // return result.length > 0
+  return false
 }
 `
 }
@@ -650,7 +814,7 @@ type EventCallback = (event: ${pascalName}Event) => void
 const subscribers = new Map<string, EventCallback>()
 
 export const subscribe = async (
-  subscription: ${pascalName}Subscription,
+  _subscription: ${pascalName}Subscription,
   callback: EventCallback
 ): Promise<() => void> => {
   const subscriberId = crypto.randomUUID()
@@ -675,7 +839,6 @@ export const getSubscriberCount = () => {
 
 function generateWebSocketServiceTemplate(name: string): string {
   const pascalName = toPascalCase(name)
-  const camelName = toCamelCase(name)
 
   return `/**
  * ${pascalName} 服务层 (WebSocket 模板)
@@ -684,61 +847,25 @@ function generateWebSocketServiceTemplate(name: string): string {
  * - WebSocket 连接管理
  * - 消息广播
  * - 房间管理
+ *
+ * 注意：此模板使用运行时适配器处理 WebSocket
+ * 实际连接管理在 runtime 层实现
  */
 
-import type { ${pascalName}Message, ${pascalName}Connection } from '@shared/modules/${name}'
+import type { ${pascalName}Message } from '@shared/modules/${name}'
 
-const connections = new Set<WebSocket>()
-const rooms = new Map<string, Set<WebSocket>>()
-
-export const onConnect = async (ws: WebSocket, connection: ${pascalName}Connection) => {
-  connections.add(ws)
-
-  if (connection.roomId) {
-    if (!rooms.has(connection.roomId)) {
-      rooms.set(connection.roomId, new Set())
-    }
-    rooms.get(connection.roomId)!.add(ws)
-  }
+export const getConnectedClientsCount = (): number => {
+  // TODO: 实现连接计数
+  return 0
 }
 
-export const onMessage = async (ws: WebSocket, data: string) => {
-  try {
-    const message: ${pascalName}Message = JSON.parse(data)
-
-    // Echo back or broadcast to room
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        ...message,
-        timestamp: new Date().toISOString(),
-      }))
-    }
-  } catch (error) {
-    console.error('Failed to parse message:', error)
-  }
+export const broadcast = async (_message: ${pascalName}Message): Promise<void> => {
+  // TODO: 实现消息广播
 }
 
-export const onDisconnect = async (ws: WebSocket) => {
-  connections.delete(ws)
-
-  // Remove from all rooms
-  for (const room of rooms.values()) {
-    room.delete(ws)
-  }
+export const broadcastToRoom = async (_roomId: string, _message: ${pascalName}Message): Promise<void> => {
+  // TODO: 实现房间消息广播
 }
-
-export const broadcast = async (message: ${pascalName}Message, roomId?: string) => {
-  const targets = roomId ? rooms.get(roomId) : connections
-  const data = JSON.stringify(message)
-
-  for (const ws of targets || []) {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(data)
-    }
-  }
-}
-
-export const getConnectionCount = () => connections.size
 `
 }
 
@@ -854,24 +981,15 @@ function generateWebSocketServiceTestTemplate(name: string): string {
   const pascalName = toPascalCase(name)
   const kebabName = toKebabCase(name)
 
-  return `import { describe, it, expect, vi } from 'vitest'
+  return `import { describe, it, expect } from 'vitest'
 import * as service from '../services/${kebabName}-service'
 
 describe('${pascalName} Service (WebSocket)', () => {
-  describe('onConnect', () => {
-    it('should add connection to set', async () => {
-      const mockWs = { readyState: 1 } as WebSocket
-      await service.onConnect(mockWs, {})
-
-      const count = service.getConnectionCount()
-      expect(count).toBeGreaterThanOrEqual(1)
-    })
-  })
-
-  describe('getConnectionCount', () => {
-    it('should return current connection count', async () => {
-      const count = service.getConnectionCount()
+  describe('getConnectedClientsCount', () => {
+    it('should return a number', async () => {
+      const count = service.getConnectedClientsCount()
       expect(typeof count).toBe('number')
+      expect(count).toBeGreaterThanOrEqual(0)
     })
   })
 })
@@ -889,22 +1007,25 @@ describe('${pascalName} Routes', () => {
   describe('GET /api/${kebabName}s', () => {
     it('should return list of ${kebabName}s', async () => {
       const client = createTestClient()
-      const res = await client.api.${kebabName}s.$get()
+      const res = await client.api['${kebabName}s'].$get()
       expect(res.status).toBe(200)
 
       const data = await res.json()
       expect(data.success).toBe(true)
-      expect(Array.isArray(data.data)).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+      }
     })
   })
 
   describe('GET /api/${kebabName}s/:id', () => {
     it('should return 404 for non-existent ${kebabName}', async () => {
       const client = createTestClient()
-      const res = await client.api.${kebabName}s[':id'].$get({
+      const res = await client.api['${kebabName}s'][':id'].$get({
         param: { id: 'non-existent' },
       })
       expect(res.status).toBe(404)
+      expect(typeof res.status).toBe('number')
     })
   })
 })
@@ -922,10 +1043,13 @@ describe('${pascalName} Routes (SSE)', () => {
   describe('GET /api/${kebabName}s/stream', () => {
     it('should return SSE stream', async () => {
       const client = createTestClient()
-      const res = await client.api.${kebabName}s.stream.$get()
+      const res = await client.api['${kebabName}s'].stream.$get({
+        query: {},
+      })
 
       expect(res.status).toBe(200)
       expect(res.headers.get('content-type')).toBe('text/event-stream')
+      expect(typeof res.status).toBe('number')
     })
   })
 })
@@ -940,13 +1064,15 @@ function generateWebSocketRouteTestTemplate(name: string): string {
 import { createTestClient } from '../../test-utils/test-client'
 
 describe('${pascalName} Routes (WebSocket)', () => {
-  describe('GET /api/${kebabName}s/ws', () => {
-    it('should upgrade to WebSocket', async () => {
+  describe('GET /api/${kebabName}s/ws/status', () => {
+    it('should return WebSocket status', async () => {
       const client = createTestClient()
-      const res = await client.api.${kebabName}s.ws.$get()
+      const res = await client.api['${kebabName}s'].ws.status.$get()
 
-      // WebSocket upgrade returns 101
-      expect([101, 426]).toContain(res.status)
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(typeof data.data.connectedClients).toBe('number')
     })
   })
 })
@@ -962,11 +1088,11 @@ function generateModuleIndexTemplate(): string {
 // 更新 app.ts 和 shared/modules/index.ts
 // ============================================
 
-function updateAppTs(name: string): boolean {
+function updateAppTs(name: string): ModifiedFileResult {
   const appPath = path.join(templateDir, 'src/server/app.ts')
   if (!fs.existsSync(appPath)) {
     console.log(`⚠️  app.ts 不存在: ${appPath}`)
-    return false
+    return { success: false }
   }
 
   const camelName = toCamelCase(name)
@@ -976,58 +1102,53 @@ function updateAppTs(name: string): boolean {
 
   if (content.includes(`${camelName}Routes`)) {
     console.log(`⚠️  app.ts 已经包含 ${camelName}Routes`)
-    return false
+    return { success: false }
   }
+
+  const diff: string[] = []
+  let addedLines = 0
 
   // 添加导入语句
   const importRegex = /(import \{[^}]+\} from '\.\/module-[^']+'\n)/
   const lastImportMatch = content.match(importRegex)
 
+  const importLine = `import { ${camelName}Routes } from './module-${kebabName}/routes/${kebabName}-routes'`
+
   if (lastImportMatch) {
     const lastImportIndex = content.lastIndexOf(lastImportMatch[0]) + lastImportMatch[0].length
-    content =
-      content.slice(0, lastImportIndex) +
-      `import { ${camelName}Routes } from './module-${kebabName}/routes/${kebabName}-routes'\n` +
-      content.slice(lastImportIndex)
+    content = content.slice(0, lastImportIndex) + `${importLine}\n` + content.slice(lastImportIndex)
+    diff.push(`+ ${importLine}`)
+    addedLines++
   } else {
     const firstImportEnd = content.indexOf('\n', content.indexOf('import'))
     content =
-      content.slice(0, firstImportEnd + 1) +
-      `import { ${camelName}Routes } from './module-${kebabName}/routes/${kebabName}-routes'\n` +
-      content.slice(firstImportEnd + 1)
+      content.slice(0, firstImportEnd + 1) + `${importLine}\n` + content.slice(firstImportEnd + 1)
+    diff.push(`+ ${importLine}`)
+    addedLines++
   }
 
   // 添加路由注册
   const routeRegex = /(\.route\('\/api', [a-zA-Z]+Routes\)\n)/
   const lastRouteMatch = content.match(routeRegex)
 
+  const routeLine = `    .route('/api', ${camelName}Routes)`
+
   if (lastRouteMatch) {
     const lastRouteIndex = content.lastIndexOf(lastRouteMatch[0]) + lastRouteMatch[0].length
-    content =
-      content.slice(0, lastRouteIndex) +
-      `    .route('/api', ${camelName}Routes)\n` +
-      content.slice(lastRouteIndex)
-  }
-
-  // 添加导出
-  const exportRegex = /export \{[^}]+\}/
-  const exportMatch = content.match(exportRegex)
-
-  if (exportMatch) {
-    const exportStatement = exportMatch[0]
-    const newExport = exportStatement.replace('}', `, ${camelName}Routes }`)
-    content = content.replace(exportRegex, newExport)
+    content = content.slice(0, lastRouteIndex) + `${routeLine}\n` + content.slice(lastRouteIndex)
+    diff.push(`+ ${routeLine}`)
+    addedLines++
   }
 
   fs.writeFileSync(appPath, content)
-  return true
+  return { success: true, diff: diff.join('\n'), addedLines }
 }
 
-function updateSharedModulesIndex(name: string, options: CreateOptions): boolean {
+function updateSharedModulesIndex(name: string, options: CreateOptions): ModifiedFileResult {
   const indexPath = path.join(templateDir, 'src/shared/modules/index.ts')
   if (!fs.existsSync(indexPath)) {
     console.log(`⚠️  shared/modules/index.ts 不存在: ${indexPath}`)
-    return false
+    return { success: false }
   }
 
   const pascalName = toPascalCase(name)
@@ -1037,7 +1158,7 @@ function updateSharedModulesIndex(name: string, options: CreateOptions): boolean
 
   if (content.includes(`from './${kebabName}'`)) {
     console.log(`⚠️  shared/modules/index.ts 已经包含 ${kebabName} 模块`)
-    return false
+    return { success: false }
   }
 
   let exports: string
@@ -1055,8 +1176,10 @@ export {
 export {
   ${pascalName}MessageSchema,
   ${pascalName}ConnectionSchema,
+  WebSocketStatusSchema,
   type ${pascalName}Message,
   type ${pascalName}Connection,
+  type WebSocketStatus,
 } from './${kebabName}'`
   } else {
     exports = `
@@ -1065,16 +1188,25 @@ export {
   Create${pascalName}Schema,
   Update${pascalName}Schema,
   ${pascalName}ListSchema,
+  DeleteResultSchema,
   type ${pascalName},
   type Create${pascalName}Input,
   type Update${pascalName}Input,
+  type DeleteResult,
 } from './${kebabName}'`
   }
+
+  const addedLines = exports.split('\n').length
+  const diff = exports
+    .trim()
+    .split('\n')
+    .map(line => `+ ${line}`)
+    .join('\n')
 
   content = content.trimEnd() + exports + '\n'
 
   fs.writeFileSync(indexPath, content)
-  return true
+  return { success: true, diff, addedLines }
 }
 
 // ============================================
@@ -1164,15 +1296,24 @@ function createModule(options: CreateOptions): CreatedFile[] {
   createdFiles.push({ path: routeTestFile, type: 'created' })
 
   // 更新 app.ts
-  if (updateAppTs(name)) {
-    createdFiles.push({ path: path.join(templateDir, 'src/server/app.ts'), type: 'modified' })
+  const appResult = updateAppTs(name)
+  if (appResult.success) {
+    createdFiles.push({
+      path: path.join(templateDir, 'src/server/app.ts'),
+      type: 'modified',
+      diff: appResult.diff,
+      lineCount: appResult.addedLines,
+    })
   }
 
   // 更新 shared/modules/index.ts
-  if (updateSharedModulesIndex(name, options)) {
+  const indexResult = updateSharedModulesIndex(name, options)
+  if (indexResult.success) {
     createdFiles.push({
       path: path.join(templateDir, 'src/shared/modules/index.ts'),
       type: 'modified',
+      diff: indexResult.diff,
+      lineCount: indexResult.addedLines,
     })
   }
 
@@ -1274,10 +1415,26 @@ function main(): void {
       console.log('✏️  修改的文件：')
       modified.forEach(file => {
         const relativePath = path.relative(templateDir, file.path)
-        console.log(`   ${relativePath}`)
+        const lineInfo = file.lineCount ? ` (+${file.lineCount} 行)` : ''
+        console.log(`   ${relativePath}${lineInfo}`)
+        if (file.diff) {
+          console.log()
+          console.log('   Diff:')
+          file.diff.split('\n').forEach(line => {
+            console.log(`   ${line}`)
+          })
+        }
+        console.log()
       })
-      console.log()
     }
+
+    // 显示客户端使用示例
+    console.log('💻 客户端调用示例：')
+    console.log(generateClientUsageExample(options.name, options))
+
+    console.log('📚 相关文档：')
+    console.log('   - .claude/rules/31-client-services.md - 客户端服务使用规范')
+    console.log()
 
     console.log('🚀 下一步：')
     if (options.withDatabase) {
