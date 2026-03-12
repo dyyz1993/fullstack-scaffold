@@ -1,5 +1,5 @@
 diff --git a/node_modules/@hono/zod-openapi/dist/index.d.ts b/node_modules/@hono/zod-openapi/dist/index.d.ts
-index 7355946..f6aaf5a 100644
+index 7355946..869a416 100644
 --- a/node_modules/@hono/zod-openapi/dist/index.d.ts
 +++ b/node_modules/@hono/zod-openapi/dist/index.d.ts
 @@ -23,7 +23,7 @@ type RequestTypes = {
@@ -24,7 +24,7 @@ index 7355946..f6aaf5a 100644
 -    };
 -  };
 -} ? MaybePromise<RouteConfigToTypedResponse<R$1>> : MaybePromise<RouteConfigToTypedResponse<R$1>> | MaybePromise<Response>>;
-+type RouteHandler<R$1 extends RouteConfig, E$1 extends Env = RouteConfigToEnv<R$1>, I$1 extends Input = InputTypeParam<R$1> & InputTypeQuery<R$1> & InputTypeHeader<R$1> & InputTypeCookie<R$1> & InputTypeForm<R$1> & InputTypeJson<R$1>, P$1 extends string = ConvertPathType<R$1["path"]>> = Handler<E$1, P$1, I$1, MaybePromise<TypedResponse<any, StatusCode, "json"> | Response>>;
++type RouteHandler<R$1 extends RouteConfig, E$1 extends Env = RouteConfigToEnv<R$1>, I$1 extends Input = InputTypeParam<R$1> & InputTypeQuery<R$1> & InputTypeHeader<R$1> & InputTypeCookie<R$1> & InputTypeForm<R$1> & InputTypeJson<R$1>, P$1 extends string = ConvertPathType<R$1["path"]>> = Handler<E$1, P$1, I$1, MaybePromise<TypedResponse<any, StatusCode, "json" | "sse" | "ws"> | Response>>;
  type RouteHook<R$1 extends RouteConfig, E$1 extends Env = RouteConfigToEnv<R$1>, I$1 extends Input = InputTypeParam<R$1> & InputTypeQuery<R$1> & InputTypeHeader<R$1> & InputTypeCookie<R$1> & InputTypeForm<R$1> & InputTypeJson<R$1>, P$1 extends string = ConvertPathType<R$1["path"]>> = Hook<I$1, E$1, P$1, RouteConfigToTypedResponse<R$1> | Response | Promise<Response> | void | Promise<void>>;
  type OpenAPIObjectConfig = Parameters<InstanceType<typeof OpenApiGeneratorV3>["generateDocument"]>[0];
  type OpenAPIObjectConfigure<E$1 extends Env, P$1 extends string> = OpenAPIObjectConfig | ((context: Context<E$1, P$1>) => OpenAPIObjectConfig);
