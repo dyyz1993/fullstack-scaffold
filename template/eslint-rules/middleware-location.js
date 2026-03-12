@@ -23,10 +23,11 @@ export const middlewareLocation = {
   create(context) {
     const filename = context.filename || context.getFilename()
     const isMiddlewareFile = filename.includes('/middleware/') && filename.endsWith('.ts')
+    const isTestFile = filename.includes('/__tests__/')
 
     return {
       ExportNamedDeclaration(node) {
-        if (!isMiddlewareFile) return
+        if (!isMiddlewareFile || isTestFile) return
 
         if (node.declaration?.type === 'FunctionDeclaration') {
           const name = node.declaration.id?.name
@@ -56,7 +57,7 @@ export const middlewareLocation = {
       },
 
       Program(node) {
-        if (!isMiddlewareFile) return
+        if (!isMiddlewareFile || isTestFile) return
 
         const hasMiddlewareExport = node.body.some(statement => {
           if (statement.type === 'ExportNamedDeclaration') {
@@ -105,10 +106,11 @@ export const noMiddlewareOutsideDir = {
   create(context) {
     const filename = context.filename || context.getFilename()
     const isMiddlewareFile = filename.includes('/middleware/')
+    const isTestFile = filename.includes('/__tests__/')
 
     return {
       VariableDeclaration(node) {
-        if (isMiddlewareFile) return
+        if (isMiddlewareFile || isTestFile) return
 
         for (const decl of node.declarations) {
           if (decl.id.type === 'Identifier' && decl.id.name.endsWith('Middleware')) {
@@ -120,7 +122,7 @@ export const noMiddlewareOutsideDir = {
         }
       },
       FunctionDeclaration(node) {
-        if (isMiddlewareFile) return
+        if (isMiddlewareFile || isTestFile) return
 
         if (node.id?.name?.endsWith('Middleware')) {
           context.report({
