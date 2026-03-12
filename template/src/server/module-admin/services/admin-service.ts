@@ -2,7 +2,7 @@ import { getDb, getRawClient } from '../../db'
 import { todos } from '../../db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '../../utils/date'
-import { getMockUsers, getMockTokens } from '../../utils/auth'
+import { getMockUsers } from '../../utils/auth'
 import type {
   SystemStats,
   HealthCheck,
@@ -92,7 +92,6 @@ export async function getRecentActivity(limit: number = 10): Promise<
 
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const mockUsers = getMockUsers()
-  const mockTokens = getMockTokens()
   const user = mockUsers.find(u => u.username === data.username)
 
   if (!user) {
@@ -103,8 +102,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     throw new Error('Invalid password')
   }
 
-  const token = `${user.role}-token-${Date.now()}`
-  mockTokens.set(token, user.id)
+  const token = user.role === 'admin' ? 'admin-token' : 'user-token'
 
   return {
     user: {
