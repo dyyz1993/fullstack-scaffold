@@ -4,7 +4,6 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax.js'
 import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
-import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
 import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
 import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-service.js'
 import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
@@ -18,13 +17,12 @@ import { noInlineSchema } from './eslint-rules/no-inline-schema.js'
 import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
 import { frameworkProtect } from './eslint-rules/framework-protect.js'
 import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
-import { routeLocation } from './eslint-rules/route-location.js'
+import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
 
 const localRules = {
   rules: {
     'require-hono-chain-syntax': requireHonoChainSyntax,
     'require-type-safe-test-client': requireTypeSafeTestClient,
-    'no-disable-type-safe-client': noDisableTypeSafeClient,
     'no-ambiguous-file-paths': noAmbiguousFilePaths,
     'no-util-functions-in-service': noUtilFunctionsInService,
     'no-direct-ws-sse': noDirectWsSse,
@@ -40,7 +38,7 @@ const localRules = {
     'enforce-valid-method': enforceValidMethod,
     'framework-protect': frameworkProtect,
     'prefer-shared-types': preferSharedTypes,
-    'route-location': routeLocation,
+    'no-type-assertion-in-rpc': noTypeAssertionInRpc,
   },
 }
 
@@ -94,16 +92,17 @@ export default tseslint.config(
   },
   {
     files: ['src/server/middleware/**/*.ts'],
-    ignores: ['src/server/middleware/index.ts', '**/__tests__/**/*.ts', '**/*.test.ts'],
+    ignores: ['src/server/middleware/index.ts'],
     rules: {
       'local-rules/middleware-location': 'error',
     },
   },
   {
-    files: ['src/client/**/*.ts', 'src/client/**/*.tsx'],
+    files: ['src/client/**/*.ts', 'src/client/**/*.tsx', 'src/admin/**/*.ts', 'src/admin/**/*.tsx'],
     rules: {
       'no-console': 'off',
       'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
+      'local-rules/no-type-assertion-in-rpc': 'error',
     },
   },
   {
@@ -112,7 +111,6 @@ export default tseslint.config(
       'no-console': 'off',
       'no-restricted-globals': 'off',
       'local-rules/require-type-safe-test-client': 'error',
-      'local-rules/no-disable-type-safe-client': 'error',
     },
   },
   {
@@ -131,7 +129,6 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       'local-rules/no-e2e-test-outside-dir': 'error',
-      'local-rules/route-location': 'error',
     },
   },
   {

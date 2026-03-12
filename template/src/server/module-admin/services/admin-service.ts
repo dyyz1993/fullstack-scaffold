@@ -2,18 +2,16 @@ import { getDb, getRawClient } from '../../db'
 import { todos } from '../../db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '../../utils/date'
-
-export interface SystemStats {
-  totalTodos: number
-  pendingTodos: number
-  completedTodos: number
-  lastUpdated: string
-}
-
-export interface HealthCheckResult {
-  database: 'connected' | 'disconnected'
-  timestamp: string
-}
+import { getMockUsers, getMockTokens } from '../../utils/auth'
+import type {
+  SystemStats,
+  HealthCheck,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  User,
+  UpdateUserRequest,
+} from '@shared/modules/admin'
 
 export async function getSystemStats(): Promise<SystemStats> {
   const rawClient = await getRawClient()
@@ -51,7 +49,7 @@ export async function getSystemStats(): Promise<SystemStats> {
   }
 }
 
-export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
+export async function checkDatabaseHealth(): Promise<HealthCheck> {
   try {
     const db = await getDb()
     await db.select().from(todos).limit(1)
@@ -90,4 +88,96 @@ export async function getRecentActivity(limit: number = 10): Promise<
     status: r.status,
     updatedAt: toISOString(r.updatedAt),
   }))
+}
+
+export async function login(data: LoginRequest): Promise<LoginResponse> {
+  const mockUsers = getMockUsers()
+  const mockTokens = getMockTokens()
+  const user = mockUsers.find(u => u.username === data.username)
+
+  if (!user) {
+    throw new Error('User not found')
+  }
+
+  if (data.password !== '123456') {
+    throw new Error('Invalid password')
+  }
+
+  const token = `${user.role}-token-${Date.now()}`
+  mockTokens.set(token, user.id)
+
+  return {
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      permissions: user.role === 'admin' ? ['read', 'write', 'delete'] : ['read'],
+    },
+    token,
+  }
+}
+
+export async function register(data: RegisterRequest): Promise<User> {
+  const mockUsers = getMockUsers()
+  const existingUser = mockUsers.find(u => u.username === data.username || u.email === data.email)
+
+  if (existingUser) {
+    throw new Error('User already exists')
+  }
+
+  const newUser: User = {
+    id: String(mockUsers.length + 1),
+    username: data.username,
+    email: data.email,
+    role: 'user',
+    status: 'active',
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  mockUsers.push(newUser)
+
+  return newUser
+}
+
+export async function getUsers(): Promise<User[]> {
+  return getMockUsers()
+}
+
+export async function getUserById(id: string): Promise<User | null> {
+  const mockUsers = getMockUsers()
+  return mockUsers.find(u => u.id === id) || null
+}
+
+export async function updateUser(id: string, data: UpdateUserRequest): Promise<User> {
+  const mockUsers = getMockUsers()
+  const userIndex = mockUsers.findIndex(u => u.id === id)
+
+  if (userIndex === -1) {
+    throw new Error('User not found')
+  }
+
+  const updatedUser: User = {
+    ...mockUsers[userIndex],
+    ...data,
+    updatedAt: new Date().toISOString(),
+  }
+
+  mockUsers[userIndex] = updatedUser
+
+  return updatedUser
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  const mockUsers = getMockUsers()
+  const userIndex = mockUsers.findIndex(u => u.id === id)
+
+  if (userIndex === -1) {
+    throw new Error('User not found')
+  }
+
+  mockUsers.splice(userIndex, 1)
 }

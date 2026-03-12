@@ -10,6 +10,13 @@ import {
   RecentActivitySchema,
   AuthUserSchema,
   ClearTodosResultSchema,
+  LoginRequestSchema,
+  LoginResponseSchema,
+  RegisterRequestSchema,
+  UserSchema,
+  UserListSchema,
+  UpdateUserRequestSchema,
+  SuccessSchema,
 } from '@shared/modules/admin'
 
 const getStatsRoute = createRoute({
@@ -81,6 +88,121 @@ const getCurrentUserRoute = createRoute({
   },
 })
 
+const loginRoute = createRoute({
+  method: 'post',
+  path: '/admin/login',
+  tags: ['admin'],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: LoginRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(LoginResponseSchema, 'Login successful'),
+    401: errorResponse('Invalid credentials'),
+  },
+})
+
+const registerRoute = createRoute({
+  method: 'post',
+  path: '/admin/register',
+  tags: ['admin'],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: RegisterRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: successResponse(UserSchema, 'User registered'),
+    400: errorResponse('User already exists'),
+  },
+})
+
+const getUsersRoute = createRoute({
+  method: 'get',
+  path: '/admin/users',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  responses: {
+    200: successResponse(UserListSchema, 'Get user list'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+  },
+})
+
+const getUserRoute = createRoute({
+  method: 'get',
+  path: '/admin/users/:id',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: successResponse(UserSchema, 'Get user'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('User not found'),
+  },
+})
+
+const updateUserRoute = createRoute({
+  method: 'put',
+  path: '/admin/users/:id',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: UpdateUserRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(UserSchema, 'User updated'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('User not found'),
+  },
+})
+
+const deleteUserRoute = createRoute({
+  method: 'delete',
+  path: '/admin/users/:id',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: successResponse(SuccessSchema, 'User deleted'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('User not found'),
+  },
+})
+
 export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getStatsRoute, async c => {
     const stats = await adminService.getSystemStats()
@@ -103,6 +225,55 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
   .openapi(getCurrentUserRoute, async c => {
     const user = getAuthUser(c)
     return c.json({ success: true, data: user })
+  })
+  .openapi(loginRoute, async c => {
+    try {
+      const data = c.req.valid('json')
+      const result = await adminService.login(data)
+      return c.json({ success: true, data: result })
+    } catch (error) {
+      return c.json({ success: false, error: (error as Error).message }, 401)
+    }
+  })
+  .openapi(registerRoute, async c => {
+    try {
+      const data = c.req.valid('json')
+      const user = await adminService.register(data)
+      return c.json({ success: true, data: user }, 201)
+    } catch (error) {
+      return c.json({ success: false, error: (error as Error).message }, 400)
+    }
+  })
+  .openapi(getUsersRoute, async c => {
+    const users = await adminService.getUsers()
+    return c.json({ success: true, data: users })
+  })
+  .openapi(getUserRoute, async c => {
+    const { id } = c.req.valid('param')
+    const user = await adminService.getUserById(id)
+    if (!user) {
+      return c.json({ success: false, error: 'User not found' }, 404)
+    }
+    return c.json({ success: true, data: user })
+  })
+  .openapi(updateUserRoute, async c => {
+    try {
+      const { id } = c.req.valid('param')
+      const data = c.req.valid('json')
+      const user = await adminService.updateUser(id, data)
+      return c.json({ success: true, data: user })
+    } catch (error) {
+      return c.json({ success: false, error: (error as Error).message }, 404)
+    }
+  })
+  .openapi(deleteUserRoute, async c => {
+    try {
+      const { id } = c.req.valid('param')
+      await adminService.deleteUser(id)
+      return c.json({ success: true })
+    } catch (error) {
+      return c.json({ success: false, error: (error as Error).message }, 404)
+    }
   })
   .doc('/docs', {
     openapi: '3.0.0',

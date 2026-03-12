@@ -16,25 +16,24 @@ export default defineConfig({
     react(),
     devServer({
       entry: 'src/server/index.ts',
-      // Exclude static files, root path, and frontend routes
       exclude: [
         /^\/$/,
-        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|src)/,
+        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|admin\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
         /^\/todos$/,
         /^\/notifications$/,
         /^\/websocket$/,
+        /^\/admin/,
       ],
     }),
     websocketPlugin(),
     dbPlugin(),
   ],
   build: {
-    outDir: 'dist/client',
-    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
+        admin: path.resolve(__dirname, 'admin.html'),
       },
     },
   },
@@ -43,6 +42,7 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, 'src/shared'),
       '@client': path.resolve(__dirname, 'src/client'),
       '@server': path.resolve(__dirname, 'src/server'),
+      '@admin': path.resolve(__dirname, 'src/admin'),
     },
   },
 })

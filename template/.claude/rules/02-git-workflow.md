@@ -1,3 +1,7 @@
+---
+paths: .git/**/*, .github/**/*
+---
+
 # Git 工作流规范
 
 ## 🚫 禁止跳过 Hooks
@@ -55,15 +59,15 @@ git commit --no-verify -m "fix: emergency fix
 
 ### Type 类型
 
-| Type       | 说明      | 示例                                           |
-| ---------- | --------- | ---------------------------------------------- |
-| `feat`     | 新功能    | `feat(todos): add search functionality`        |
-| `fix`      | Bug 修复  | `fix: handle null pointer exception`          |
-| `docs`     | 文档更新  | `docs(readme): update installation steps`      |
-| `style`    | 代码格式  | `style: indent code with 2 spaces`             |
-| `refactor` | 重构      | `refactor(api): simplify response handling`    |
-| `test`     | 测试      | `test: add unit tests for TodoService`         |
-| `chore`    | 构建/工具 | `chore: update dependencies`                   |
+| Type       | 说明      | 示例                                        |
+| ---------- | --------- | ------------------------------------------- |
+| `feat`     | 新功能    | `feat(todos): add search functionality`     |
+| `fix`      | Bug 修复  | `fix: handle null pointer exception`        |
+| `docs`     | 文档更新  | `docs(readme): update installation steps`   |
+| `style`    | 代码格式  | `style: indent code with 2 spaces`          |
+| `refactor` | 重构      | `refactor(api): simplify response handling` |
+| `test`     | 测试      | `test: add unit tests for TodoService`      |
+| `chore`    | 构建/工具 | `chore: update dependencies`                |
 
 ### Subject 主题
 
@@ -146,7 +150,8 @@ npx lint-staged
 npm run test:smart:staged
 ```
 
-**注意**: 
+**注意**:
+
 - lint-staged 的具体配置在 `package.json` 中定义
 - 智能测试会分析文件依赖，只运行相关的测试，提升效率
 

@@ -1,3 +1,7 @@
+---
+paths: src/**/*
+---
+
 # 文件类型规范
 
 ## 📋 原则
@@ -8,12 +12,12 @@
 
 ### 必须使用 TypeScript 的场景
 
-| 场景       | 文件类型 | 示例                                     |
-| ---------- | -------- | ---------------------------------------- |
-| 源代码     | `.ts`    | `src/client/services/apiClient.ts`       |
-| React 组件 | `.tsx`   | `src/client/components/TodoList.tsx`     |
-| 脚本工具   | `.ts`    | `scripts/validate-all.ts`                |
-| 配置文件   | `.ts`    | `vite.config.ts`, `vitest.config.ts`     |
+| 场景       | 文件类型 | 示例                                 |
+| ---------- | -------- | ------------------------------------ |
+| 源代码     | `.ts`    | `src/client/services/apiClient.ts`   |
+| React 组件 | `.tsx`   | `src/client/components/TodoList.tsx` |
+| 脚本工具   | `.ts`    | `scripts/validate-all.ts`            |
+| 配置文件   | `.ts`    | `vite.config.ts`, `vitest.config.ts` |
 
 ### TypeScript 特性要求
 
@@ -24,28 +28,28 @@ function process(data: TodoInput): Todo {
 }
 
 // ✅ 使用类型导入（性能更好）
-import type { Todo, CreateTodoInput } from '@shared/types';
-import { Todo } from '@shared/types'; // 值导入
+import type { Todo, CreateTodoInput } from '@shared/types'
+import { Todo } from '@shared/types' // 值导入
 
 // ✅ 使用 Node.js 协议前缀
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 // ❌ 避免使用 any
-const data: any = getData();
+const data: any = getData()
 
 // ✅ 使用 unknown 代替
-const data: unknown = getData();
+const data: unknown = getData()
 ```
 
 ## ⚠️ JavaScript (.js/.mjs/.cjs)
 
 ### 允许使用 JavaScript 的场景
 
-| 场景        | 理由         | 示例                           |
-| ----------- | ------------ | ------------------------------ |
-| ESLint 配置 | 工具限制     | `eslint.config.js`             |
-| 第三方钩子  | 工具要求     | `.husky/pre-commit`            |
+| 场景        | 理由     | 示例                |
+| ----------- | -------- | ------------------- |
+| ESLint 配置 | 工具限制 | `eslint.config.js`  |
+| 第三方钩子  | 工具要求 | `.husky/pre-commit` |
 
 ### JavaScript 代码规范
 
@@ -65,13 +69,13 @@ async function readFile(filePath) {
 
 ## 📝 配置文件类型映射
 
-| 文件                | 类型       | 理由                               |
-| ------------------- | ---------- | ---------------------------------- |
-| `vite.config.ts`    | TypeScript | ✅ Vite 原生支持                   |
-| `vitest.config.ts`  | TypeScript | ✅ Vitest 原生支持                 |
-| `eslint.config.js`  | JavaScript | ⚠️ ESLint 9 扁平配置要求           |
-| `package.json`      | JSON       | ✅ npm 标准                        |
-| `tsconfig.json`     | JSON       | ✅ TypeScript 标准                 |
+| 文件               | 类型       | 理由                     |
+| ------------------ | ---------- | ------------------------ |
+| `vite.config.ts`   | TypeScript | ✅ Vite 原生支持         |
+| `vitest.config.ts` | TypeScript | ✅ Vitest 原生支持       |
+| `eslint.config.js` | JavaScript | ⚠️ ESLint 9 扁平配置要求 |
+| `package.json`     | JSON       | ✅ npm 标准              |
+| `tsconfig.json`    | JSON       | ✅ TypeScript 标准       |
 
 ## 🚫 禁止的文件类型
 

@@ -4,4 +4,6 @@ dist
 .DS_Store
 lib/node_modules
 lib/dist
-lib/**
+lib/**.trae/
+.trae/documents/
+/template/.trae/documents/
