@@ -108,4 +108,4 @@ export const SuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
 - 运行时数据验证
 
 **参考文档：**
-详细规范请查看 [server-api-validation.md](.claude/rules/server-api-validation.md)
+详细规范请查看 [Server API 规范](./rules/20-server-api.md)

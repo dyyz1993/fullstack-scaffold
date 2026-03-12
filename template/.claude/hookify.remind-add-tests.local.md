@@ -204,6 +204,6 @@ npm run test:coverage
 
 ## 📚 参考文档
 
-详细测试规范请查看：[testing-standards.md](.claude/rules/testing-standards.md)
+详细测试规范请查看：[Testing 规范](./rules/60-testing-standards.md)
 
 **记住：新功能必须有对应的测试！**

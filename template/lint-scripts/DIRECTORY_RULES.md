@@ -280,8 +280,8 @@ rm src/example-wrong.ts
 
 ## 📚 相关文档
 
-- [项目规则](../.claude/rules/project-rules.md)
-- [测试标准](../.claude/rules/testing-standards.md)
+- [项目配置](../.claude/rules/00-project-config.md)
+- [测试标准](../.claude/rules/60-testing-standards.md)
 - [验证器使用指南](./README.md)
 - [验证器测试指南](./TESTING.md)
 

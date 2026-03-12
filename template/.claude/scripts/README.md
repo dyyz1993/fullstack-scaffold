@@ -139,9 +139,9 @@ function printWarning(duplicates: DuplicateInfo[])
 
 ## 📚 相关文档
 
-- [API Type Inference Rules](../rules/api-type-inference-rules.md)
-- [Shared Types Rules](../rules/shared-types-rules.md)
-- [Server API Validation](../rules/server-api-validation.md)
+- [API Type Inference Rules](../rules/10-api-type-inference.md)
+- [Shared Types Rules](../rules/40-shared-types.md)
+- [Server API Validation](../rules/20-server-api.md)
 
 ## 🎨 未来改进方向
 

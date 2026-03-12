@@ -442,4 +442,4 @@ import '../client/index.css' // 共享样式
 
 - [App 入口规范](./33-client-app-entry.md) - 用户前台入口规范
 - [Client 组件规范](./30-client-components.md) - 用户前台组件规范
-- [Server Admin API](../20-server-api.md) - 服务端 Admin API
+- [Server Admin API](./20-server-api.md) - 服务端 Admin API

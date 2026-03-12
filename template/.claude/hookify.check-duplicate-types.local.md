@@ -278,9 +278,9 @@ type TodoModel = typeof todos.$inferSelect
 
 ## 🔗 相关文档
 
-- [API Type Inference Rules](.claude/rules/api-type-inference-rules.md)
-- [Shared Types Rules](.claude/rules/shared-types-rules.md)
-- [Server API Validation](.claude/rules/server-api-validation.md)
+- [API Type Inference Rules](./rules/10-api-type-inference.md)
+- [Shared Types Rules](./rules/40-shared-types.md)
+- [Server API Validation](./rules/20-server-api.md)
 
 ---
 

@@ -90,4 +90,4 @@ it('应当返回 Todo 列表', async () => {
 - 业务逻辑的正确性
 
 **参考文档：**
-详细测试规范请查看 [testing-standards.md](.claude/rules/testing-standards.md)
+详细测试规范请查看 [Testing 规范](./rules/60-testing-standards.md)

@@ -14,12 +14,11 @@ const __dirname = path.dirname(__filename)
 const templateDir = path.resolve(__dirname, '..')
 
 const MD_FILE_PATTERN = /\.md$/
-const RELATIVE_REF_PATTERN = /\]\(\.\/([^)]+)\)/g
-const ABSOLUTE_REF_PATTERN = /\]\(\/([^)]+)\)/g
-const CODE_REF_PATTERN = /`([^`]+\.[a-z]+)`/g
+const MD_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g
 
-const GLOB_CHARS = ['*', '?', '[', ']', '{', '}']
+const GLOB_CHARS = ['*', '?', '[', '{']
 const PLACEHOLDER_PATTERN = /\{[a-zA-Z_]+\}/
+const EXCLUDED_PROTOCOLS = ['http://', 'https://', 'mailto:']
 
 interface CheckResult {
   file: string
@@ -28,7 +27,6 @@ interface CheckResult {
   resolvedPath: string
   exists: boolean
   isGlob: boolean
-  matchedFiles?: string[]
 }
 
 function isGlobPattern(p: string): boolean {
@@ -37,6 +35,12 @@ function isGlobPattern(p: string): boolean {
 
 function isPlaceholder(p: string): boolean {
   return PLACEHOLDER_PATTERN.test(p)
+}
+
+function shouldExclude(refPath: string): boolean {
+  if (refPath.startsWith('#')) return true
+  if (EXCLUDED_PROTOCOLS.some(proto => refPath.startsWith(proto))) return true
+  return false
 }
 
 function findAllMdFiles(dir: string): string[] {
@@ -57,24 +61,16 @@ function findAllMdFiles(dir: string): string[] {
   return results
 }
 
-function checkGlobPattern(
-  baseDir: string,
-  pattern: string
-): { exists: boolean; matchedFiles: string[] } {
+function checkGlobPattern(baseDir: string, pattern: string): boolean {
   try {
     const fullPattern = path.isAbsolute(pattern) ? pattern : path.join(baseDir, pattern)
-
     const matchedFiles = glob.sync(fullPattern, {
       cwd: templateDir,
       nodir: true,
     })
-
-    return {
-      exists: matchedFiles.length > 0,
-      matchedFiles,
-    }
+    return matchedFiles.length > 0
   } catch {
-    return { exists: false, matchedFiles: [] }
+    return false
   }
 }
 
@@ -96,105 +92,38 @@ function checkReferences(): CheckResult[] {
     lines.forEach((line, index) => {
       const lineNum = index + 1
 
-      RELATIVE_REF_PATTERN.lastIndex = 0
+      MD_LINK_PATTERN.lastIndex = 0
       let match
-      while ((match = RELATIVE_REF_PATTERN.exec(line)) !== null) {
-        const refPath = match[1]
-        const resolvedPath = path.resolve(fileDir, refPath)
+      while ((match = MD_LINK_PATTERN.exec(line)) !== null) {
+        const linkText = match[1]
+        const refPath = match[2]
+
+        if (shouldExclude(refPath)) continue
+        if (isPlaceholder(refPath)) continue
+
+        const resolvedPath = refPath.startsWith('/')
+          ? path.join(templateDir, refPath.slice(1))
+          : path.resolve(fileDir, refPath)
+
         const resolvedRelative = path.relative(templateDir, resolvedPath)
 
-        if (isPlaceholder(refPath)) {
-          continue
-        }
-
         if (isGlobPattern(refPath)) {
-          const { exists, matchedFiles } = checkGlobPattern(fileDir, refPath)
+          const exists = checkGlobPattern(refPath.startsWith('/') ? templateDir : fileDir, refPath)
           results.push({
             file: relativePath,
             line: lineNum,
-            ref: `./${refPath}`,
+            ref: refPath,
             resolvedPath: resolvedRelative,
             exists,
             isGlob: true,
-            matchedFiles,
           })
         } else {
           const exists = checkFileExists(fileDir, refPath)
           results.push({
             file: relativePath,
             line: lineNum,
-            ref: `./${refPath}`,
+            ref: refPath,
             resolvedPath: resolvedRelative,
-            exists,
-            isGlob: false,
-          })
-        }
-      }
-
-      ABSOLUTE_REF_PATTERN.lastIndex = 0
-      while ((match = ABSOLUTE_REF_PATTERN.exec(line)) !== null) {
-        const refPath = match[1]
-        const resolvedPath = path.join(templateDir, refPath)
-
-        if (isPlaceholder(refPath)) {
-          continue
-        }
-
-        if (isGlobPattern(refPath)) {
-          const { exists, matchedFiles } = checkGlobPattern(templateDir, refPath)
-          results.push({
-            file: relativePath,
-            line: lineNum,
-            ref: `/${refPath}`,
-            resolvedPath: refPath,
-            exists,
-            isGlob: true,
-            matchedFiles,
-          })
-        } else {
-          const exists = checkFileExists(templateDir, refPath)
-          results.push({
-            file: relativePath,
-            line: lineNum,
-            ref: `/${refPath}`,
-            resolvedPath: refPath,
-            exists,
-            isGlob: false,
-          })
-        }
-      }
-
-      CODE_REF_PATTERN.lastIndex = 0
-      while ((match = CODE_REF_PATTERN.exec(line)) !== null) {
-        const refPath = match[1]
-        if (!refPath.startsWith('src/') && !refPath.startsWith('eslint-rules/')) {
-          continue
-        }
-
-        if (isPlaceholder(refPath)) {
-          continue
-        }
-
-        const resolvedPath = path.join(templateDir, refPath)
-
-        if (isGlobPattern(refPath)) {
-          const { exists, matchedFiles } = checkGlobPattern(templateDir, refPath)
-          results.push({
-            file: relativePath,
-            line: lineNum,
-            ref: refPath,
-            resolvedPath: refPath,
-            exists,
-            isGlob: true,
-            matchedFiles,
-          })
-        } else {
-          const exists = fs.existsSync(resolvedPath)
-          results.push({
-            file: relativePath,
-            line: lineNum,
-            ref: refPath,
-            resolvedPath: refPath,
             exists,
             isGlob: false,
           })
@@ -207,32 +136,8 @@ function checkReferences(): CheckResult[] {
 }
 
 function main(): void {
-  console.log('🔍 Checking references in all *.md files...\n')
-
   const results = checkReferences()
   const broken = results.filter(r => !r.exists)
-  const valid = results.filter(r => r.exists)
-
-  if (valid.length > 0) {
-    console.log(`✅ Valid references (${valid.length}):\n`)
-    const grouped = new Map<string, CheckResult[]>()
-    for (const r of valid) {
-      const key = `${r.file}`
-      if (!grouped.has(key)) grouped.set(key, [])
-      grouped.get(key)!.push(r)
-    }
-    for (const [file, refs] of Array.from(grouped.entries())) {
-      console.log(`  📄 ${file}`)
-      for (const r of refs) {
-        if (r.isGlob && r.matchedFiles && r.matchedFiles.length > 0) {
-          console.log(`     L${r.line}: ${r.ref} (${r.matchedFiles.length} matches)`)
-        } else {
-          console.log(`     L${r.line}: ${r.ref}`)
-        }
-      }
-    }
-    console.log()
-  }
 
   if (broken.length > 0) {
     console.log(`\n❌ Broken references (${broken.length}):\n`)
@@ -255,8 +160,6 @@ function main(): void {
     console.log()
     process.exit(1)
   }
-
-  console.log('✅ All references are valid!\n')
 }
 
 main()

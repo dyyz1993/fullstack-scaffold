@@ -259,10 +259,10 @@ ignorePatterns: [
 
 ## 📚 相关文档
 
-- [API 类型推导规则](.claude/rules/api-type-inference-rules.md)
-- [客户端服务规则](.claude/rules/client-service-rules.md)
-- [项目规则](.claude/rules/project-rules.md)
-- [WebSocket 规范](.claude/rules/websocket-rules.md)
+- [API 类型推导规则](../.claude/rules/10-api-type-inference.md)
+- [客户端服务规则](../.claude/rules/31-client-services.md)
+- [项目配置](../.claude/rules/00-project-config.md)
+- [WebSocket 规范](../.claude/rules/50-websocket.md)
 
 ## 🎯 最佳实践
 
