@@ -58,20 +58,66 @@ function generateClientUsageExample(name: string, options: CreateOptions): strin
   if (options.withSSE) {
     return `
 // 📡 SSE 客户端使用示例
-import { apiClient } from '@client/services/apiClient'
-import type { ${pascalName}Event } from '@shared/modules/${kebabName}'
 
-// 获取 SSE 客户端
-const sseClient = await apiClient.api['${kebabName}s'].stream.$sse()
+// 1️⃣ React Hook 方式（推荐）
+import { useSSE } from '@client/hooks/useSSE'
+import { apiClient } from '@client/services/apiClient'
+import type { ${pascalName}Event, ${pascalName}Subscription } from '@shared/modules/${kebabName}'
+
+function ${pascalName}Component() {
+  const { status, connect, disconnect, client } = useSSE<${pascalName}Subscription>(
+    () => apiClient.api['${kebabName}s'].stream.$sse({ query: {} })
+  )
+
+  useEffect(() => {
+    connect()
+    return () => disconnect()
+  }, [connect, disconnect])
+
+  useEffect(() => {
+    if (!client) return
+
+    // 🎯 类型安全的事件监听 - 根据 type 自动推导 payload 类型
+    const unsubscribe = client.on('message', (event: ${pascalName}Event) => {
+      // TypeScript 能够根据 event.type 自动推导 payload 类型
+      switch (event.type) {
+        case 'created':
+          // event.payload 类型自动推导为 CreatedPayload
+          console.log('创建:', event.payload)
+          break
+        case 'updated':
+          // event.payload 类型自动推导为 UpdatedPayload
+          console.log('更新:', event.payload)
+          break
+        case 'deleted':
+          // event.payload 类型自动推导为 DeletedPayload
+          console.log('删除:', event.payload)
+          break
+      }
+    })
+
+    return unsubscribe
+  }, [client])
+
+  return <div>SSE 状态: {status}</div>
+}
+
+// 2️⃣ 直接使用 apiClient
+import { apiClient } from '@client/services/apiClient'
+
+const sseClient = await apiClient.api['${kebabName}s'].stream.$sse({ query: {} })
 
 // 监听连接状态
 sseClient.onStatusChange(status => {
   console.log('SSE 状态:', status)
 })
 
-// 监听事件
-sseClient.on('${camelName}Event', (event: ${pascalName}Event) => {
-  console.log('收到事件:', event)
+// 监听事件（带类型推导）
+sseClient.on('message', (event: ${pascalName}Event) => {
+  if (event.type === 'created') {
+    // TypeScript 知道 event.payload 是 CreatedPayload 类型
+    console.log('新创建:', event.payload)
+  }
 })
 
 // 关闭连接
@@ -80,10 +126,69 @@ sseClient.abort()
   } else if (options.withWebSocket) {
     return `
 // 🔌 WebSocket 客户端使用示例
+
+// 1️⃣ React Hook 方式（推荐）
+import { useWebSocket } from '@client/hooks/useWebSocket'
 import { apiClient } from '@client/services/apiClient'
 import type { ${pascalName}Message } from '@shared/modules/${kebabName}'
 
-// 获取 WebSocket 客户端
+function ${pascalName}Component() {
+  const { status, connect, disconnect, call, emit, on } = useWebSocket(
+    apiClient.api['${kebabName}s'].ws
+  )
+
+  useEffect(() => {
+    connect()
+    return () => disconnect()
+  }, [connect, disconnect])
+
+  useEffect(() => {
+    // 🎯 类型安全的事件监听 - 根据 type 自动推导 payload 类型
+    const unsubscribe = on('message', (message: ${pascalName}Message) => {
+      // TypeScript 能够根据 message.type 自动推导 payload 类型
+      switch (message.type) {
+        case 'chat':
+          // message.payload 类型自动推导为 ChatPayload
+          console.log('聊天消息:', message.payload)
+          break
+        case 'notification':
+          // message.payload 类型自动推导为 NotificationPayload
+          console.log('通知:', message.payload)
+          break
+        case 'system':
+          // message.payload 类型自动推导为 SystemPayload
+          console.log('系统消息:', message.payload)
+          break
+      }
+    })
+
+    return unsubscribe
+  }, [on])
+
+  // 🎯 类型安全的 RPC 调用
+  const handleEcho = async () => {
+    // 参数和返回值都有类型检查
+    const result = await call('echo', { message: 'Hello' })
+    console.log('Echo 结果:', result)
+  }
+
+  // 🎯 类型安全的事件发送
+  const handleSend = () => {
+    emit('message', { id: '1', type: 'chat', payload: { text: 'Hello' } })
+  }
+
+  return (
+    <div>
+      <p>WebSocket 状态: {status}</p>
+      <button onClick={handleEcho}>Echo</button>
+      <button onClick={handleSend}>发送消息</button>
+    </div>
+  )
+}
+
+// 2️⃣ 直接使用 apiClient
+import { apiClient } from '@client/services/apiClient'
+
 const wsClient = apiClient.api['${kebabName}s'].ws.$ws()
 
 // 监听连接状态
@@ -91,15 +196,18 @@ wsClient.onStatusChange(status => {
   console.log('WebSocket 状态:', status)
 })
 
-// 发送消息
-wsClient.emit('${camelName}Message', { id: '1', type: 'test', payload: {} })
+// 发送消息（带类型检查）
+wsClient.emit('message', { id: '1', type: 'chat', payload: { text: 'Hello' } })
 
-// 监听消息
-wsClient.on('${camelName}Message', (message: ${pascalName}Message) => {
-  console.log('收到消息:', message)
+// 监听消息（带类型推导）
+wsClient.on('message', (message: ${pascalName}Message) => {
+  if (message.type === 'chat') {
+    // TypeScript 知道 message.payload 是 ChatPayload 类型
+    console.log('聊天:', message.payload)
+  }
 })
 
-// RPC 调用
+// RPC 调用（带类型检查）
 const result = await wsClient.call('echo', { message: 'Hello' })
 
 // 关闭连接
@@ -108,6 +216,69 @@ wsClient.close()
   } else {
     return `
 // 📦 REST API 客户端使用示例
+
+// 1️⃣ React Hook 方式（推荐使用 SWR 或 React Query）
+import useSWR from 'swr'
+import { apiClient } from '@client/services/apiClient'
+import type { ${pascalName}, Create${pascalName}Input, Update${pascalName}Input } from '@shared/modules/${kebabName}'
+
+function ${pascalName}Component() {
+  // 🎯 类型安全的列表查询
+  const { data: listData, mutate } = useSWR(
+    '${kebabName}s-list',
+    async () => {
+      const res = await apiClient.api['${kebabName}s'].$get()
+      const data = await res.json()
+      return data.success ? data.data : []
+    }
+  )
+
+  // 🎯 类型安全的创建操作
+  const handleCreate = async (input: Create${pascalName}Input) => {
+    const res = await apiClient.api['${kebabName}s'].$post({ json: input })
+    const data = await res.json()
+    if (data.success) {
+      mutate() // 刷新列表
+    }
+  }
+
+  // 🎯 类型安全的更新操作
+  const handleUpdate = async (id: string, input: Update${pascalName}Input) => {
+    const res = await apiClient.api['${kebabName}s'][':id'].$put({
+      param: { id },
+      json: input,
+    })
+    const data = await res.json()
+    if (data.success) {
+      mutate()
+    }
+  }
+
+  // 🎯 类型安全的删除操作
+  const handleDelete = async (id: string) => {
+    const res = await apiClient.api['${kebabName}s'][':id'].$delete({
+      param: { id },
+    })
+    const data = await res.json()
+    if (data.success) {
+      mutate()
+    }
+  }
+
+  return (
+    <div>
+      {listData?.map(item => (
+        <div key={item.id}>
+          {item.name}
+          <button onClick={() => handleUpdate(item.id, { name: 'Updated' })}>更新</button>
+          <button onClick={() => handleDelete(item.id)}>删除</button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// 2️⃣ 直接使用 apiClient
 import { apiClient } from '@client/services/apiClient'
 import type { ${pascalName}, Create${pascalName}Input } from '@shared/modules/${kebabName}'
 
@@ -115,7 +286,7 @@ import type { ${pascalName}, Create${pascalName}Input } from '@shared/modules/${
 const listRes = await apiClient.api['${kebabName}s'].$get()
 const listData = await listRes.json()
 if (listData.success) {
-  console.log('列表:', listData.data)
+  console.log('列表:', listData.data) // data 类型为 ${pascalName}[]
 }
 
 // 获取单个
@@ -124,7 +295,7 @@ const getRes = await apiClient.api['${kebabName}s'][':id'].$get({
 })
 const getData = await getRes.json()
 if (getData.success) {
-  console.log('详情:', getData.data)
+  console.log('详情:', getData.data) // data 类型为 ${pascalName}
 }
 
 // 创建
@@ -1434,6 +1605,17 @@ function main(): void {
 
     console.log('📚 相关文档：')
     console.log('   - .claude/rules/31-client-services.md - 客户端服务使用规范')
+    if (options.withSSE) {
+      console.log('   - .claude/rules/51-sse.md - SSE 开发规范')
+      console.log('   - src/client/hooks/useSSE.ts - React Hook 封装')
+      console.log('   - src/shared/core/sse-client.ts - SSE 客户端实现')
+    } else if (options.withWebSocket) {
+      console.log('   - .claude/rules/50-websocket.md - WebSocket 开发规范')
+      console.log('   - src/client/hooks/useWebSocket.ts - React Hook 封装')
+      console.log('   - src/shared/core/ws-client.ts - WebSocket 客户端实现')
+    } else {
+      console.log('   - .claude/rules/10-api-type-inference.md - API 类型推导规范')
+    }
     console.log()
 
     console.log('🚀 下一步：')
