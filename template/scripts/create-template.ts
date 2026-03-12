@@ -62,11 +62,11 @@ function generateClientUsageExample(name: string, options: CreateOptions): strin
 // 1️⃣ React Hook 方式（推荐）
 import { useSSE } from '@shared/hooks'
 import { apiClient } from '@client/services/apiClient'
-import type { ${pascalName}Event, ${pascalName}Subscription } from '@shared/modules/${kebabName}'
+import type { ${pascalName}SSEProtocol, ${pascalName}Event } from '@shared/modules/${kebabName}'
 
 function ${pascalName}Component() {
-  const { status, connect, disconnect, client } = useSSE<${pascalName}Subscription>(
-    () => apiClient.api['${kebabName}s'].stream.$sse({ query: {} })
+  const { status, connect, disconnect, client } = useSSE<${pascalName}SSEProtocol>(
+    () => apiClient.api['${kebabName}s'].stream.$sse()
   )
 
   useEffect(() => {
@@ -77,23 +77,9 @@ function ${pascalName}Component() {
   useEffect(() => {
     if (!client) return
 
-    // 🎯 类型安全的事件监听 - 根据 type 自动推导 payload 类型
+    // 🎯 类型安全的事件监听
     const unsubscribe = client.on('message', (event: ${pascalName}Event) => {
-      // TypeScript 能够根据 event.type 自动推导 payload 类型
-      switch (event.type) {
-        case 'created':
-          // event.payload 类型自动推导为 CreatedPayload
-          console.log('创建:', event.payload)
-          break
-        case 'updated':
-          // event.payload 类型自动推导为 UpdatedPayload
-          console.log('更新:', event.payload)
-          break
-        case 'deleted':
-          // event.payload 类型自动推导为 DeletedPayload
-          console.log('删除:', event.payload)
-          break
-      }
+      console.log('收到事件:', event)
     })
 
     return unsubscribe
@@ -107,7 +93,7 @@ import { apiClient } from '@client/services/apiClient'
 
 // ========== 基础 SSE 连接 ==========
 
-const sseClient = await apiClient.api['${kebabName}s'].stream.$sse({ query: {} })
+const sseClient = apiClient.api['${kebabName}s'].stream.$sse()
 
 // 监听连接状态
 sseClient.onStatusChange(status => {
@@ -116,48 +102,11 @@ sseClient.onStatusChange(status => {
 
 // 监听事件（带类型推导）
 sseClient.on('message', (event: ${pascalName}Event) => {
-  if (event.type === 'created') {
-    // TypeScript 知道 event.payload 是 CreatedPayload 类型
-    console.log('新创建:', event.payload)
-  }
+  console.log('收到事件:', event)
 })
 
 // 关闭连接
 sseClient.abort()
-
-// ========== 🔐 带认证的 SSE 连接 ==========
-
-// 方式 1: 使用 header 选项传递认证 token
-const authSseClient = await apiClient.api['${kebabName}s'].stream.$sse({
-  query: {},
-  header: {
-    Authorization: 'Bearer your-token-here',
-  },
-})
-
-// 方式 2: 在创建 apiClient 时配置默认 headers
-// 参考 src/client/services/apiClient.ts
-
-// ========== 🛡️ 需要登录的 SSE 路由示例 ==========
-
-// 假设路由配置了 authMiddleware 中间件：
-// middleware: [authMiddleware()]
-
-// 带认证的 SSE 连接会自动验证 token
-// - 401: 未提供有效的认证 token
-// - 连接会被拒绝
-
-// 示例：用户专属通知流（需要登录）
-const userNotifications = await apiClient.api.notifications.stream.$sse({
-  query: { userId: 'user-1' },
-  header: {
-    Authorization: 'Bearer user-token',
-  },
-})
-
-userNotifications.on('message', (event) => {
-  console.log('收到通知:', event)
-})
 `
   } else if (options.withWebSocket) {
     return `
@@ -524,13 +473,16 @@ export const ${pascalName}EventSchema = z.object({
   timestamp: z.string(),
 })
 
-export const ${pascalName}SubscriptionSchema = z.object({
-  userId: z.string().optional(),
-  filter: z.string().optional(),
+export const ${pascalName}SSEProtocolSchema = z.object({
+  events: z.object({
+    message: ${pascalName}EventSchema,
+    ping: z.object({ timestamp: z.number() }),
+    connected: z.object({ timestamp: z.number() }),
+  }),
 })
 
 export type ${pascalName}Event = z.infer<typeof ${pascalName}EventSchema>
-export type ${pascalName}Subscription = z.infer<typeof ${pascalName}SubscriptionSchema>
+export type ${pascalName}SSEProtocol = z.infer<typeof ${pascalName}SSEProtocolSchema>
 `
 }
 
@@ -844,63 +796,32 @@ function generateSSERouteTemplate(name: string): string {
   return `import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as ${camelName}Service from '../services/${kebabName}-service'
-import { errorResponse } from '../../utils/route-helpers'
-import { ${pascalName}SubscriptionSchema } from '@shared/modules/${kebabName}'
+import { ${pascalName}SSEProtocolSchema } from '@shared/modules/${kebabName}'
+import { getRuntimeAdapter } from '@server/core/runtime'
 
 const streamRoute = createRoute({
   method: 'get',
   path: '/${kebabName}s/stream',
   tags: ['${kebabName}s'],
-  request: {
-    query: ${pascalName}SubscriptionSchema,
-  },
   responses: {
     200: {
       description: 'SSE stream for ${kebabName} events',
       content: {
-        'text/event-stream': {
-          schema: { type: 'string' },
-        },
+        'text/event-stream': { schema: ${pascalName}SSEProtocolSchema },
       },
     },
-    500: errorResponse('Internal server error'),
   },
 })
 
 export const ${camelName}Routes = new OpenAPIHono()
-  .openapi(streamRoute, async c => {
-    const query = c.req.valid('query')
-
-    return new Response(
-      new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder()
-
-          const unsubscribe = await ${camelName}Service.subscribe(query, (event) => {
-            const data = \`event: message\\ndata: \${JSON.stringify(event)}\\n\\n\`
-            controller.enqueue(encoder.encode(data))
-          })
-
-          const heartbeat = setInterval(() => {
-            controller.enqueue(encoder.encode(': heartbeat\\n\\n'))
-          }, 30000)
-
-          const cleanup = () => {
-            clearInterval(heartbeat)
-            unsubscribe()
-          }
-
-          c.req.raw.signal.addEventListener('abort', cleanup)
-        },
-      }),
-      {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-        },
-      }
-    )
+  .openapi(streamRoute, async _c => {
+    const adapter = getRuntimeAdapter()
+    if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
+      return (
+        adapter as { handleSSERequest: () => Response | Promise<Response> }
+      ).handleSSERequest()
+    }
+    return new Response('SSE not supported', { status: 500 })
   })
 `
 }
@@ -1101,42 +1022,34 @@ export const delete${pascalName} = async (_id: string): Promise<boolean> => {
 function generateSSEServiceTemplate(name: string): string {
   const pascalName = toPascalCase(name)
   const camelName = toCamelCase(name)
+  const kebabName = toKebabCase(name)
 
   return `/**
  * ${pascalName} 服务层 (SSE 模板)
  *
  * 职责：
- * - SSE 订阅管理
  * - 事件广播
- * - 连接管理
+ * - 业务逻辑处理
+ *
+ * 注意：SSE 连接管理由框架 runtime 层处理
+ * 使用 realtime.broadcast() 广播消息
  */
 
-import type { ${pascalName}Event, ${pascalName}Subscription } from '@shared/modules/${name}'
+import { realtime } from '@server/core'
+import type { ${pascalName}Event } from '@shared/modules/${kebabName}'
 
-type EventCallback = (event: ${pascalName}Event) => void
-
-const subscribers = new Map<string, EventCallback>()
-
-export const subscribe = async (
-  _subscription: ${pascalName}Subscription,
-  callback: EventCallback
-): Promise<() => void> => {
-  const subscriberId = crypto.randomUUID()
-  subscribers.set(subscriberId, callback)
-
-  return () => {
-    subscribers.delete(subscriberId)
-  }
+export async function broadcast${pascalName}Event(event: ${pascalName}Event): Promise<void> {
+  await realtime.broadcast('message', event)
 }
 
-export const broadcast = async (event: ${pascalName}Event) => {
-  for (const callback of subscribers.values()) {
-    callback(event)
+export async function sendTestEvent(): Promise<void> {
+  const event: ${pascalName}Event = {
+    id: crypto.randomUUID(),
+    type: 'test',
+    payload: { message: 'Test event' },
+    createdAt: new Date().toISOString(),
   }
-}
-
-export const getSubscriberCount = () => {
-  return subscribers.size
+  await broadcast${pascalName}Event(event)
 }
 `
 }
@@ -1234,29 +1147,23 @@ function generateSSEServiceTestTemplate(name: string): string {
   const pascalName = toPascalCase(name)
   const kebabName = toKebabCase(name)
 
-  return `import { describe, it, expect, vi } from 'vitest'
+  return `import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as service from '../services/${kebabName}-service'
-import type { ${pascalName}Event } from '@shared/modules/${name}'
+import type { ${pascalName}Event } from '@shared/modules/${kebabName}'
+
+vi.mock('@server/core', () => ({
+  realtime: {
+    broadcast: vi.fn(),
+  },
+}))
 
 describe('${pascalName} Service (SSE)', () => {
-  describe('subscribe', () => {
-    it('should return unsubscribe function', async () => {
-      const callback = vi.fn()
-      const unsubscribe = await service.subscribe({}, callback)
-
-      expect(typeof unsubscribe).toBe('function')
-      unsubscribe()
-    })
+  beforeEach(() => {
+    vi.clearAllMocks()
   })
 
-  describe('broadcast', () => {
-    it('should call all subscriber callbacks', async () => {
-      const callback1 = vi.fn()
-      const callback2 = vi.fn()
-
-      await service.subscribe({}, callback1)
-      await service.subscribe({}, callback2)
-
+  describe('broadcast${pascalName}Event', () => {
+    it('should call realtime.broadcast with event', async () => {
       const event: ${pascalName}Event = {
         id: '1',
         type: 'created',
@@ -1264,17 +1171,19 @@ describe('${pascalName} Service (SSE)', () => {
         timestamp: new Date().toISOString(),
       }
 
-      await service.broadcast(event)
+      await service.broadcast${pascalName}Event(event)
 
-      expect(callback1).toHaveBeenCalledWith(event)
-      expect(callback2).toHaveBeenCalledWith(event)
+      const { realtime } = await import('@server/core')
+      expect(realtime.broadcast).toHaveBeenCalledWith('message', event)
     })
   })
 
-  describe('getSubscriberCount', () => {
-    it('should return current subscriber count', async () => {
-      const initialCount = service.getSubscriberCount()
-      expect(typeof initialCount).toBe('number')
+  describe('sendTestEvent', () => {
+    it('should broadcast a test event', async () => {
+      await service.sendTestEvent()
+
+      const { realtime } = await import('@server/core')
+      expect(realtime.broadcast).toHaveBeenCalled()
     })
   })
 })
@@ -1340,20 +1249,39 @@ function generateSSERouteTestTemplate(name: string): string {
   const pascalName = toPascalCase(name)
   const kebabName = toKebabCase(name)
 
-  return `import { describe, it, expect } from 'vitest'
+  return `import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createApp } from '../../app'
 import { createTestClient } from '../../test-utils/test-client'
+import { createTestServer } from '../../test-utils/test-server'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
+import { createSSEClient } from '@shared/core/sse-client'
+
+setRuntimeAdapter(getNodeRuntimeAdapter())
 
 describe('${pascalName} Routes (SSE)', () => {
-  describe('GET /api/${kebabName}s/stream', () => {
-    it('should return SSE stream', async () => {
-      const client = createTestClient()
-      const res = await client.api['${kebabName}s'].stream.$get({
-        query: {},
-      })
+  let testServer: Awaited<ReturnType<typeof createTestServer>>
+  let client: ReturnType<typeof createTestClient>
 
-      expect(res.status).toBe(200)
-      expect(res.headers.get('content-type')).toBe('text/event-stream')
-      expect(typeof res.status).toBe('number')
+  beforeAll(async () => {
+    const app = createApp()
+    testServer = await createTestServer(app, ['/api/${kebabName}s/stream'])
+    client = createTestClient(\`http://localhost:\${testServer.port}\`, {
+      sse: (url: string | URL) => createSSEClient(url),
+    })
+  }, 15000)
+
+  afterAll(async () => {
+    await testServer.close()
+  }, 15000)
+
+  describe('GET /api/${kebabName}s/stream', () => {
+    it('should use $sse() method for type-safe SSE connection', async () => {
+      const conn = client.api['${kebabName}s'].stream.$sse()
+
+      expect(['connecting', 'open', 'closed']).toContain(conn.status)
+
+      conn.abort()
     })
   })
 })

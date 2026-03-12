@@ -18,6 +18,14 @@ import {
   UpdateUserRequestSchema,
   SuccessSchema,
 } from '@shared/modules/admin'
+import {
+  NotificationSchema,
+  NotificationListSchema,
+  UnreadCountSchema,
+  MarkAllReadResultSchema,
+  TestNotificationRequestSchema,
+  AppSSEProtocolSchema,
+} from '@shared/modules/notifications'
 
 const getStatsRoute = createRoute({
   method: 'get',
@@ -203,6 +211,102 @@ const deleteUserRoute = createRoute({
   },
 })
 
+const getNotificationsRoute = createRoute({
+  method: 'get',
+  path: '/admin/notifications',
+  tags: ['notifications'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    query: z.object({
+      unreadOnly: z.string().optional(),
+      limit: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: successResponse(NotificationListSchema, 'Get notifications'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const getUnreadCountRoute = createRoute({
+  method: 'get',
+  path: '/admin/notifications/unread-count',
+  tags: ['notifications'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(UnreadCountSchema, 'Get unread count'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const markNotificationReadRoute = createRoute({
+  method: 'put',
+  path: '/admin/notifications/:id/read',
+  tags: ['notifications'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: successResponse(SuccessSchema, 'Notification marked as read'),
+    401: errorResponse('Unauthorized'),
+    404: errorResponse('Notification not found'),
+  },
+})
+
+const markAllNotificationsReadRoute = createRoute({
+  method: 'put',
+  path: '/admin/notifications/read-all',
+  tags: ['notifications'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(MarkAllReadResultSchema, 'All notifications marked as read'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const sendTestNotificationRoute = createRoute({
+  method: 'post',
+  path: '/admin/notifications/test',
+  tags: ['notifications'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: TestNotificationRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(NotificationSchema, 'Test notification sent'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+  },
+})
+
+const notificationSSERoute = createRoute({
+  method: 'get',
+  path: '/admin/notifications/stream',
+  tags: ['notifications'],
+  responses: {
+    200: {
+      content: {
+        'text/event-stream': { schema: AppSSEProtocolSchema },
+      },
+      description: 'SSE stream for admin notifications',
+    },
+  },
+})
+
 export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getStatsRoute, async c => {
     const stats = await adminService.getSystemStats()
@@ -274,6 +378,50 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
     } catch (error) {
       return c.json({ success: false, error: (error as Error).message }, 404)
     }
+  })
+  .openapi(getNotificationsRoute, async c => {
+    const { unreadOnly, limit } = c.req.valid('query')
+    const notifications = adminService.getNotifications({
+      unreadOnly: unreadOnly === 'true',
+      limit: limit ? parseInt(limit, 10) : 20,
+    })
+    return c.json({ success: true, data: notifications })
+  })
+  .openapi(getUnreadCountRoute, async c => {
+    const count = adminService.getUnreadCount()
+    return c.json({ success: true, data: { count } })
+  })
+  .openapi(markNotificationReadRoute, async c => {
+    const { id } = c.req.valid('param')
+    const success = adminService.markNotificationRead(id)
+    if (!success) {
+      return c.json({ success: false, error: 'Notification not found' }, 404)
+    }
+    return c.json({ success: true })
+  })
+  .openapi(markAllNotificationsReadRoute, async c => {
+    const count = adminService.markAllNotificationsRead()
+    return c.json({ success: true, data: { count } })
+  })
+  .openapi(sendTestNotificationRoute, async c => {
+    const { type } = c.req.valid('json')
+    const notification = await adminService.sendTestNotification(type)
+    return c.json({ success: true, data: notification })
+  })
+  .openapi(notificationSSERoute, async c => {
+    const user = getAuthUser(c)
+    if (!user) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+
+    const { getRuntimeAdapter } = await import('@server/core/runtime')
+    const adapter = getRuntimeAdapter()
+    if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
+      return (
+        adapter as { handleSSERequest: () => Response | Promise<Response> }
+      ).handleSSERequest()
+    }
+    return new Response('SSE not supported', { status: 500 })
   })
 
 export default adminRoutes

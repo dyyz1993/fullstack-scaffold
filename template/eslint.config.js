@@ -20,6 +20,7 @@ import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
 import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
 import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
 import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
+import { noMiddlewareInRoutes } from './eslint-rules/no-middleware-in-routes.js'
 
 const localRules = {
   rules: {
@@ -43,6 +44,7 @@ const localRules = {
     'no-type-assertion-in-rpc': noTypeAssertionInRpc,
     'no-direct-fetch': noDirectFetch,
     'flat-routes-services': flatRoutesServices,
+    'no-middleware-in-routes': noMiddlewareInRoutes,
   },
 }
 
@@ -86,6 +88,7 @@ export default tseslint.config(
       'local-rules/no-inline-schema': 'error',
       'local-rules/enforce-valid-method': 'error',
       'local-rules/flat-routes-services': 'error',
+      'local-rules/no-middleware-in-routes': 'error',
     },
   },
   {

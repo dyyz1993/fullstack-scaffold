@@ -11,7 +11,7 @@ const captchaStore = new Map<string, CaptchaData>()
 
 export function generateCaptcha(): { id: string; image: string } {
   const id = Math.random().toString(36).substring(2) + Date.now().toString(36)
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+  const code = Math.random().toString(36).substring(2, 7).toUpperCase()
 
   captchaStore.set(id, {
     code,

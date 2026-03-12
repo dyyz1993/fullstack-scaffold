@@ -12,4 +12,10 @@ export {
   type AuthUser,
   type AuthMiddlewareOptions,
 } from './auth'
+export {
+  captchaMiddleware,
+  markCaptchaVerifiedMiddleware,
+  clearCaptchaSessionMiddleware,
+  type CaptchaConfig,
+} from './captcha'
 export { getAuthUser } from '../utils/auth'

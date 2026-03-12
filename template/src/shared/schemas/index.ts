@@ -47,6 +47,7 @@ export {
   AppSSEProtocolSchema,
   UnreadCountSchema,
   NotificationIdSchema,
+  UnreadCountEventSchema,
   type AppNotification,
   type NotificationType,
   type CreateNotificationInput,
@@ -55,4 +56,5 @@ export {
   type AppSSEProtocol,
   type UnreadCount,
   type NotificationId,
+  type UnreadCountEvent,
 } from '../modules/notifications'

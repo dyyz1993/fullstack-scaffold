@@ -54,6 +54,49 @@ export function authMiddleware() { ... }
 
 **路径**: `src/server/middleware/**/*.ts`
 
+### ⚠️ 中间件应用位置（重要）
+
+**中间件只能在 `app.ts` 中应用，不能在路由文件中应用！**
+
+```typescript
+// ✅ 正确 - 在 app.ts 中应用中间件
+// src/server/app.ts
+export function createApp<T extends AppBindings = AppBindings>() {
+  const app = new OpenAPIHono<{ Bindings: T }>()
+    .use('*', errorHandlerMiddleware())
+    .use('*', loggerMiddleware())
+    .use('*', corsMiddleware())
+    .use('/api/admin/*', captchaMiddleware({ ... }))
+    .route('/api', apiRoutes)
+    .route('/api', adminRoutes)
+
+  return app
+}
+
+// ❌ 错误 - 在路由文件中应用中间件
+// src/server/module-admin/routes/admin-routes.ts
+export const adminRoutes = new OpenAPIHono()
+  .use('*', captchaMiddleware())  // ❌ 会导致类型推导丢失
+  .openapi(getStatsRoute, async c => { ... })  // ❌ 类型错误
+```
+
+**为什么不能在路由文件中应用中间件？**
+
+| 操作                       | 返回类型      | 是否支持 .openapi() |
+| -------------------------- | ------------- | ------------------- |
+| `new OpenAPIHono()`        | `OpenAPIHono` | ✅ 支持             |
+| `.use(middleware)`         | `Hono`        | ❌ 不支持           |
+| `.openapi(route, handler)` | `OpenAPIHono` | ✅ 支持             |
+
+**类型推导链**：
+
+```
+OpenAPIHono
+  ↓ .use()
+Hono (丢失 OpenAPI 类型)
+  ↓ .openapi() ❌ 类型错误
+```
+
 ### 中间件导出规范
 
 ```typescript
@@ -67,6 +110,12 @@ export {
   type AuthUser,
   type AuthMiddlewareOptions,
 } from './auth'
+export {
+  captchaMiddleware,
+  markCaptchaVerifiedMiddleware,
+  clearCaptchaSessionMiddleware,
+  type CaptchaConfig,
+} from './captcha'
 ```
 
 ## 🛣️ 路由规范
@@ -275,6 +324,16 @@ export const apiRoutes = new OpenAPIHono()...
   const item = await createItem(data)  // ✅ 调用 Service
   return c.json({ success: true, data: item })
 })
+
+// ❌ 不要在路由文件中应用中间件
+export const adminRoutes = new OpenAPIHono()
+  .use('*', captchaMiddleware())  // ❌ 会导致类型错误
+  .openapi(getStatsRoute, async c => { ... })
+
+// ✅ 正确 - 在 app.ts 中应用中间件
+// src/server/app.ts
+.use('/api/admin/*', captchaMiddleware())
+.route('/api', adminRoutes)
 
 // ❌ 不要使用 any 类型
 export async function createItem(input: any) { ... }

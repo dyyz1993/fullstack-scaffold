@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono'
 import { getCookie, setCookie } from 'hono/cookie'
 
-interface CaptchaConfig {
+export interface CaptchaConfig {
   skipPaths?: string[]
   maxRequests?: number
   windowMs?: number
@@ -129,6 +129,8 @@ export function markCaptchaVerifiedMiddleware(sessionId: string) {
   if (session) {
     session.verified = true
     session.verifiedAt = Date.now()
+    session.requestCount = 0
+    session.windowStart = Date.now()
     captchaSessions.set(sessionId, session)
   }
 }

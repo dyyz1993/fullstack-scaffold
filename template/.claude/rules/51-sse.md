@@ -64,6 +64,97 @@ export const AppSSEProtocolSchema = z.object({
 export type AppSSEProtocol = z.infer<typeof AppSSEProtocolSchema>
 ```
 
+## 🖥️ 服务端 SSE 路由
+
+### 定义 SSE 路由
+
+SSE 路由必须使用 `text/event-stream` content type，框架会自动扫描并注册。
+
+```typescript
+// src/server/module-notifications/routes/notification-routes.ts
+import { createRoute } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+import { getRuntimeAdapter } from '@server/core/runtime'
+import { AppSSEProtocolSchema } from '@shared/schemas'
+
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  tags: ['notifications'],
+  responses: {
+    200: {
+      content: {
+        'text/event-stream': { schema: AppSSEProtocolSchema },
+      },
+      description: 'SSE stream for notifications',
+    },
+  },
+})
+
+export const notificationRoutes = new OpenAPIHono().openapi(streamRoute, async _c => {
+  const adapter = getRuntimeAdapter()
+  if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
+    return (adapter as { handleSSERequest: () => Response | Promise<Response> }).handleSSERequest()
+  }
+  return new Response('SSE not supported', { status: 500 })
+})
+```
+
+### 服务端广播消息
+
+使用 `realtime.broadcast()` 向所有连接的客户端广播消息：
+
+```typescript
+// src/server/module-notifications/services/notification-service.ts
+import { realtime } from '@server/core'
+
+export async function createNotificationAndBroadcast(
+  input: CreateNotificationInput
+): Promise<AppNotification> {
+  const notification = createNotification(input)
+
+  // 广播通知到所有 SSE 客户端
+  await realtime.broadcast('notification', notification)
+
+  return notification
+}
+```
+
+### 服务端 SSE 规则
+
+1. **路由路径必须以 `/stream` 结尾** - 框架通过此命名约定识别 SSE 路由
+2. **不要在 SSE 路由中使用 middleware** - middleware 会影响类型推断，应在 handler 中手动验证
+3. **使用 `realtime.broadcast()` 广播** - 不要手动管理 SSE 客户端连接
+
+```typescript
+// ❌ 禁止 - 手动管理 SSE 客户端
+const sseClients = new Map<string, { send: (data: string) => void }>()
+
+// ❌ 禁止 - 在 SSE 路由中使用 middleware
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  middleware: [authMiddleware()], // ❌ 这会破坏类型推断
+  responses: { ... }
+})
+
+// ✅ 正确 - 在 handler 中手动验证
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  responses: { ... }
+})
+
+export const routes = new OpenAPIHono()
+  .openapi(streamRoute, async c => {
+    const user = getAuthUser(c)
+    if (!user) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    // ... SSE 处理
+  })
+```
+
 ## 🎣 React Hook 使用
 
 ### useSSE Hook
@@ -211,12 +302,14 @@ describe('SSE Tests', () => {
 
 ## 🚫 Anti-Patterns
 
+### 客户端
+
 ```typescript
 // ❌ 不要直接使用 new EventSource()
 const sse = new EventSource('/api/notifications/sse')
 
 // ✅ 应该使用 apiClient
-const sseClient = await apiClient.api.notifications.sse.$sse()
+const sseClient = apiClient.api.notifications.stream.$sse()
 
 // ❌ 不要修改 SSEClient 接口
 interface SSEClient {
@@ -235,7 +328,41 @@ const sseRef = useRef<EventSource | null>(null)
 sseRef.current = new EventSource(url)
 
 // ✅ 应该使用 useSSE Hook
-const { status, connect, client } = useSSE(() => apiClient.api.notifications.sse.$sse())
+const { status, connect, client } = useSSE(() => apiClient.api.notifications.stream.$sse())
+```
+
+### 服务端
+
+```typescript
+// ❌ 不要手动管理 SSE 客户端连接
+const sseClients = new Map<string, { send: (data: string) => void }>()
+sseClients.set(clientId, { send })
+
+// ✅ 应该使用 realtime.broadcast()
+import { realtime } from '@server/core'
+await realtime.broadcast('notification', notification)
+
+// ❌ 不要在 SSE 路由中使用 middleware
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  middleware: [authMiddleware()], // ❌ 破坏类型推断
+  responses: { ... }
+})
+
+// ✅ 应该在 handler 中手动验证
+const streamRoute = createRoute({
+  method: 'get',
+  path: '/notifications/stream',
+  responses: { ... }
+})
+
+export const routes = new OpenAPIHono()
+  .openapi(streamRoute, async c => {
+    const user = getAuthUser(c)
+    if (!user) return c.json({ error: 'Unauthorized' }, 401)
+    // ...
+  })
 ```
 
 ## 📚 相关文档
