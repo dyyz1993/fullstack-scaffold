@@ -154,18 +154,18 @@ app.route('/api', featureRoutes)
 
 ### 6. Create Client Store
 
-`src/client/stores/featureStore.ts`:
+`src/client/stores/todoStore.ts`:
 
 ```typescript
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
 
-export const useFeatureStore = create(set => ({
-  features: [],
-  fetchFeatures: async () => {
-    const response = await apiClient.api.features.$get()
+export const useTodoStore = create(set => ({
+  todos: [],
+  fetchTodos: async () => {
+    const response = await apiClient.api.todos.$get()
     const result = await response.json()
-    set({ features: result.data })
+    set({ todos: result.data })
   },
 }))
 ```
@@ -173,15 +173,15 @@ export const useFeatureStore = create(set => ({
 ### 7. Create UI Component
 
 ```typescript
-import { useFeatureStore } from '@client/stores/featureStore';
+import { useTodoStore } from '@client/stores/todoStore';
 
-export function FeatureList() {
-  const features = useFeatureStore((state) => state.features);
+export function TodoList() {
+  const todos = useTodoStore((state) => state.todos);
 
   return (
     <div>
-      {features.map((feature) => (
-        <div key={feature.id}>{feature.name}</div>
+      {todos.map((todo) => (
+        <div key={todo.id}>{todo.title}</div>
       ))}
     </div>
   );

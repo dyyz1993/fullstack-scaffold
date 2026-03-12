@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, Settings, TestTube } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean
@@ -9,6 +9,7 @@ const menuItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/users', icon: Users, label: 'Users' },
   { path: '/settings', icon: Settings, label: 'Settings' },
+  { path: '/test-captcha', icon: TestTube, label: '测试验证码' },
 ]
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {

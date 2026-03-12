@@ -6,23 +6,12 @@ import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
+import { createRequestInterceptor } from './requestInterceptor'
+import { useCaptchaStore } from '../stores/captchaStore'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
 const TOKEN_KEY = 'admin-storage'
-
-function getStoredToken(): string | null {
-  try {
-    const stored = localStorage.getItem(TOKEN_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      return parsed.state?.token || null
-    }
-  } catch {
-    return null
-  }
-  return null
-}
 
 function clearAuthAndRedirect(): void {
   localStorage.removeItem(TOKEN_KEY)
@@ -31,29 +20,22 @@ function clearAuthAndRedirect(): void {
   }
 }
 
-async function customFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const token = getStoredToken()
+function createCustomFetch() {
+  const showCaptcha = useCaptchaStore.getState().show
 
-  const headers = new Headers(init?.headers)
-
-  if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`)
-  }
-
-  const response = await window.fetch(input, {
-    ...init,
-    headers,
+  return createRequestInterceptor({
+    onShowLogin: clearAuthAndRedirect,
+    onShowCaptcha: async config => {
+      return showCaptcha({
+        type: config.type,
+        captchaUrl: config.captchaUrl,
+      })
+    },
   })
-
-  if (response.status === 401) {
-    clearAuthAndRedirect()
-  }
-
-  return response
 }
 
 export const apiClient = hc<AppType>(baseUrl, {
-  fetch: customFetch,
+  fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url),
   sse: url => new SSEClientImpl(url),
 })

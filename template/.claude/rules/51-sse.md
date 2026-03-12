@@ -240,6 +240,6 @@ const { status, connect, client } = useSSE(() => apiClient.api.notifications.sse
 
 ## 📚 相关文档
 
-- [Client Service 规范](./client-service-rules.md) - API 客户端使用规范
-- [WebSocket 规范](./websocket-rules.md) - WebSocket 开发规范
-- [Shared Types 规范](./shared-types-rules.md) - 协议定义规范
+- [Client Service 规范](./31-client-services.md) - API 客户端使用规范
+- [WebSocket 规范](./50-websocket.md) - WebSocket 开发规范
+- [Shared Types 规范](./40-shared-types.md) - 协议定义规范

@@ -18,6 +18,8 @@ import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
 import { frameworkProtect } from './eslint-rules/framework-protect.js'
 import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
 import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
+import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
+import { requireViteRouteConfig } from './eslint-rules/require-vite-route-config.js'
 
 const localRules = {
   rules: {
@@ -39,6 +41,8 @@ const localRules = {
     'framework-protect': frameworkProtect,
     'prefer-shared-types': preferSharedTypes,
     'no-type-assertion-in-rpc': noTypeAssertionInRpc,
+    'no-direct-fetch': noDirectFetch,
+    'require-vite-route-config': requireViteRouteConfig,
   },
 }
 
@@ -66,13 +70,6 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['error', { allow: ['warn', 'error'] }],
-      'no-restricted-globals': [
-        'error',
-        {
-          name: 'fetch',
-          message: '请使用 AI client 代替 fetch。参考: src/client/lib/ai-client.ts',
-        },
-      ],
       'local-rules/no-ambiguous-file-paths': 'error',
       'local-rules/no-direct-ws-sse': 'error',
     },
@@ -103,13 +100,14 @@ export default tseslint.config(
       'no-console': 'off',
       'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
       'local-rules/no-type-assertion-in-rpc': 'error',
+      'local-rules/no-direct-fetch': 'error',
+      'local-rules/require-vite-route-config': 'warn',
     },
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
     rules: {
       'no-console': 'off',
-      'no-restricted-globals': 'off',
       'local-rules/require-type-safe-test-client': 'error',
     },
   },

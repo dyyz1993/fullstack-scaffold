@@ -122,7 +122,7 @@ import { useUserStore } from '../../stores/userStore'
 
 ## 🧪 测试
 
-详细测试规范请参考 [testing-standards.md](./testing-standards.md)
+详细测试规范请参考 [Testing 规范](./60-testing-standards.md)
 
 快速参考:
 
@@ -141,7 +141,7 @@ import { useUserStore } from '../../stores/userStore'
 
 ## 📚 相关文档
 
-- [Server API 规范](./server-api-validation.md) - 服务端开发规范
-- [Client 组件规范](./client-component-rules.md) - 前端组件开发规范
-- [Shared Types 规范](./shared-types-rules.md) - 共享类型定义规范
-- [Testing 规范](./testing-standards.md) - 测试编写规范
+- [Server API 规范](./20-server-api.md) - 服务端开发规范
+- [Client 组件规范](./30-client-components.md) - 前端组件开发规范
+- [Shared Types 规范](./40-shared-types.md) - 共享类型定义规范
+- [Testing 规范](./60-testing-standards.md) - 测试编写规范

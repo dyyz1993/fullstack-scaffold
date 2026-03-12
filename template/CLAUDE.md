@@ -137,7 +137,7 @@ Global application state in `src/client/stores/`:
 ### Testing Strategy
 
 - **Unit Tests**: `__tests__/*.test.ts` (jsdom for client, node for server)
-- **Integration Tests**: `src/server/integration/*.test.ts`
+- **Integration Tests**: `src/server/__tests__/integration/*.test.ts`
 - **E2E Tests**: `tests/e2e/*.spec.ts` (Playwright)
 - **WebSocket Tests**: Require real server (`createTestServer`)
 - **SSE Tests**: No server needed (`$sse()` works with `app.fetch()`)

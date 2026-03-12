@@ -319,6 +319,6 @@ interface State {
 
 ## 📚 相关文档
 
-- [Client Service 规范](./client-service-rules.md) - API 客户端使用规范
-- [Client 组件规范](./client-component-rules.md) - 组件开发规范
-- [Testing 规范](./testing-standards.md) - 测试编写规范
+- [Client Service 规范](./31-client-services.md) - API 客户端使用规范
+- [Client 组件规范](./30-client-components.md) - 组件开发规范
+- [Testing 规范](./60-testing-standards.md) - 测试编写规范

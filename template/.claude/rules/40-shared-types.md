@@ -444,7 +444,7 @@ export { ProductSchema, type Product } from '../modules/products'
 
 ## 📚 相关文档
 
-- [API 类型推导规范](./api-type-inference-rules.md) - Hono RPC 类型推导
-- [Server API 规范](./server-api-validation.md) - 服务端路由定义
-- [WebSocket 规范](./websocket-rules.md) - WebSocket 协议定义
-- [SSE 规范](./sse-rules.md) - SSE 协议定义
+- [API 类型推导规范](./10-api-type-inference.md) - Hono RPC 类型推导
+- [Server API 规范](./20-server-api.md) - 服务端路由定义
+- [WebSocket 规范](./50-websocket.md) - WebSocket 协议定义
+- [SSE 规范](./51-sse.md) - SSE 协议定义

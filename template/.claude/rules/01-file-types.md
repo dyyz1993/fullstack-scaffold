@@ -12,12 +12,12 @@ paths: src/**/*
 
 ### 必须使用 TypeScript 的场景
 
-| 场景       | 文件类型 | 示例                                 |
-| ---------- | -------- | ------------------------------------ |
-| 源代码     | `.ts`    | `src/client/services/apiClient.ts`   |
-| React 组件 | `.tsx`   | `src/client/components/TodoList.tsx` |
-| 脚本工具   | `.ts`    | `scripts/validate-all.ts`            |
-| 配置文件   | `.ts`    | `vite.config.ts`, `vitest.config.ts` |
+| 场景       | 文件类型 | 示例                                   |
+| ---------- | -------- | -------------------------------------- |
+| 源代码     | `.ts`    | `src/client/services/apiClient.ts`     |
+| React 组件 | `.tsx`   | `src/client/components/Navigation.tsx` |
+| 脚本工具   | `.ts`    | `scripts/validate-all.ts`              |
+| 配置文件   | `.ts`    | `vite.config.ts`, `vitest.config.ts`   |
 
 ### TypeScript 特性要求
 

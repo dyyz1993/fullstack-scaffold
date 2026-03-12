@@ -49,16 +49,21 @@ module-{feature}/
 
 ### Example: Adding a New Module
 
-1. Create directory: `src/server/module-users/`
-2. Add routes: `src/server/module-users/routes/users-routes.ts`
-3. Add service: `src/server/module-users/services/user-service.ts`
-4. Add tests: `src/server/module-users/__tests__/user-service.test.ts`
+1. Create directory: `src/server/module-features/`
+2. Add routes: `src/server/module-features/routes/features-routes.ts`
+3. Add service: `src/server/module-features/services/feature-service.ts`
+4. Add tests: `src/server/module-features/__tests__/feature-service.test.ts`
 5. Register in `src/server/app.ts`:
 
 ```typescript
-import { userRoutes } from './module-users/routes/users-routes'
-app.route('/api', userRoutes)
+import { featureRoutes } from './module-features/routes/features-routes'
+app.route('/api', featureRoutes)
 ```
+
+**参考现有模块**:
+
+- `src/server/module-todos/` - Todo 模块
+- `src/server/module-admin/` - Admin 模块
 
 ## Real-time Architecture
 

@@ -285,6 +285,6 @@ export async function createItem(input: CreateItemInput): Promise<Item> { ... }
 
 ## 📚 相关文档
 
-- [API 类型推导规范](./api-type-inference-rules.md) - Hono RPC 类型推导
-- [Server 入口规范](./server-entrypoint.md) - 应用创建规范
-- [Testing 规范](./testing-standards.md) - 测试编写规范
+- [API 类型推导规范](./10-api-type-inference.md) - Hono RPC 类型推导
+- [Server 入口规范](./21-server-entrypoint.md) - 应用创建规范
+- [Testing 规范](./60-testing-standards.md) - 测试编写规范

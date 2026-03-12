@@ -275,10 +275,5 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
       return c.json({ success: false, error: (error as Error).message }, 404)
     }
   })
-  .doc('/docs', {
-    openapi: '3.0.0',
-    info: {
-      version: '1.0.0',
-      title: 'Admin API',
-    },
-  })
+
+export default adminRoutes

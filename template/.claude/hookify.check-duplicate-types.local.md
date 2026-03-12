@@ -88,7 +88,7 @@ type NewNotification = typeof notifications.$inferInsert
 
 ### 方法 2：查看类型定义文件
 
-- **共享类型**：`src/shared/types.ts`
+- **共享类型**：`src/shared/core/` 和 `src/shared/modules/`
 - **Schema 定义**：`src/shared/schemas/*.ts`
 - **数据库 Schema**：`src/server/db/schema/*.ts`
 
@@ -218,14 +218,14 @@ type TodoStatusInfo = Pick<Todo, 'id' | 'status'>
 
 ## 📚 类型定义位置速查
 
-| 类型类别      | 定义位置                    | 导入路径                  |
-| ------------- | --------------------------- | ------------------------- |
-| 共享业务类型  | `src/shared/types.ts`       | `@shared/types`           |
-| Schema + 类型 | `src/shared/schemas/*.ts`   | `@shared/schemas`         |
-| 数据库表类型  | `src/server/db/schema/*.ts` | `@server/db/schema`       |
-| API 路由类型  | `src/server/index.ts`       | `@server/index` (AppType) |
-| 组件 Props    | 组件文件内定义              | -                         |
-| 页面状态      | Store 文件内定义            | -                         |
+| 类型类别      | 定义位置                                    | 导入路径                          |
+| ------------- | ------------------------------------------- | --------------------------------- |
+| 共享业务类型  | `src/shared/core/` 和 `src/shared/modules/` | `@shared/core`, `@shared/modules` |
+| Schema + 类型 | `src/shared/schemas/*.ts`                   | `@shared/schemas`                 |
+| 数据库表类型  | `src/server/db/schema/*.ts`                 | `@server/db/schema`               |
+| API 路由类型  | `src/server/index.ts`                       | `@server/index` (AppType)         |
+| 组件 Props    | 组件文件内定义                              | -                                 |
+| 页面状态      | Store 文件内定义                            | -                                 |
 
 ## 🚫 常见错误
 

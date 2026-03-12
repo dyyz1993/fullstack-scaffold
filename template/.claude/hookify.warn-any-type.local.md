@@ -180,14 +180,11 @@ const todoCache: any = {}
 const todoCache: Record<number, Todo> = {}
 ```
 
-## 📚 项目类型定义位置
+## 📚 项目类型定义
 
-- **类型导出**：`src/shared/types.ts`
+- **类型导出**：`src/shared/core/` 和 `src/shared/modules/`
 - **Schema 定义**：`src/shared/schemas/`
-  - `common.ts` - 通用 API 响应类型
-  - `todos.ts` - Todo 相关类型
-  - `notifications.ts` - 通知相关类型
-  - `websocket.ts` - WebSocket 消息类型
+  - `index.ts` - 统一导出
 
 ## ⚠️ 特殊情况
 

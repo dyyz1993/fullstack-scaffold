@@ -200,7 +200,7 @@ import { apiClient } from '@client/services/apiClient'
 
 ## 📚 相关文档
 
-- [API 类型推导规范](./api-type-inference-rules.md) - Hono RPC 类型推导
-- [WebSocket 规范](./websocket-rules.md) - WebSocket 开发规范
-- [SSE 规范](./sse-rules.md) - SSE 开发规范
-- [Client 组件规范](./client-component-rules.md) - 组件开发规范
+- [API 类型推导规范](./10-api-type-inference.md) - Hono RPC 类型推导
+- [WebSocket 规范](./50-websocket.md) - WebSocket 开发规范
+- [SSE 规范](./51-sse.md) - SSE 开发规范
+- [Client 组件规范](./30-client-components.md) - 组件开发规范

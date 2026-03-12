@@ -240,6 +240,6 @@ const { status, connect, call } = useWebSocket(apiClient.api.chat.ws)
 
 ## 📚 相关文档
 
-- [Client Service 规范](./client-service-rules.md) - API 客户端使用规范
-- [SSE 规范](./sse-rules.md) - SSE 开发规范
-- [Shared Types 规范](./shared-types-rules.md) - 协议定义规范
+- [Client Service 规范](./31-client-services.md) - API 客户端使用规范
+- [SSE 规范](./51-sse.md) - SSE 开发规范
+- [Shared Types 规范](./40-shared-types.md) - 协议定义规范

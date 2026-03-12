@@ -8,12 +8,12 @@ paths: src/**/*.test.ts, src/**/*.test.tsx, src/**/__tests__/**/*.ts, src/**/__t
 
 ### 测试文件位置
 
-| 测试类型 | 位置                                         | 示例                                              |
-| -------- | -------------------------------------------- | ------------------------------------------------- |
-| 单元测试 | `src/**/__tests__/*.test.ts`                 | `src/client/stores/__tests__/todoStore.test.ts`   |
-| 组件测试 | `src/**/__tests__/*.test.tsx`                | `src/client/components/__tests__/Button.test.tsx` |
-| 集成测试 | `src/server/__tests__/integration/*.test.ts` | `src/server/__tests__/integration/api.test.ts`    |
-| E2E 测试 | `e2e/*.spec.ts`                              | `e2e/app.spec.ts`                                 |
+| 测试类型 | 位置                                         | 示例                                                  |
+| -------- | -------------------------------------------- | ----------------------------------------------------- |
+| 单元测试 | `src/**/__tests__/*.test.ts`                 | `src/client/stores/__tests__/todoStore.test.ts`       |
+| 组件测试 | `src/**/__tests__/*.test.tsx`                | `src/client/components/__tests__/Navigation.test.tsx` |
+| 集成测试 | `src/server/__tests__/integration/*.test.ts` | `src/server/__tests__/integration/todos-api.test.ts`  |
+| E2E 测试 | `e2e/*.spec.ts`                              | `e2e/app.spec.ts`                                     |
 
 **ESLint 规则**: `e2e-test-location`
 
@@ -240,6 +240,6 @@ if (result.success) {
 
 ## 📚 相关文档
 
-- [Hono Testing 最佳实践](./hono-testing-best-practices.md) - Hono 测试详细指南
-- [Server API 规范](./server-api-validation.md) - 服务端开发规范
-- [API 类型推导规范](./api-type-inference-rules.md) - Hono RPC 类型推导
+- [Hono Testing 最佳实践](./61-hono-testing.md) - Hono 测试详细指南
+- [Server API 规范](./20-server-api.md) - 服务端开发规范
+- [API 类型推导规范](./10-api-type-inference.md) - Hono RPC 类型推导

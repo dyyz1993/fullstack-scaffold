@@ -271,6 +271,6 @@ apiClient.api.items[':id'].$get({ param: { id } })
 
 ## 📚 相关文档
 
-- [Server API 规范](./server-api-validation.md) - 服务端路由定义
-- [Shared Types 规范](./shared-types-rules.md) - Schema 定义规范
-- [Testing 规范](./testing-standards.md) - 测试编写规范
+- [Server API 规范](./20-server-api.md) - 服务端路由定义
+- [Shared Types 规范](./40-shared-types.md) - Schema 定义规范
+- [Testing 规范](./60-testing-standards.md) - 测试编写规范

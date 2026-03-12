@@ -3,9 +3,14 @@
  * 1. 中间件必须放在 src/server/middleware/ 目录下
  * 2. 中间件文件必须导出命名函数，函数名以 Middleware 结尾
  * 3. 辅助函数（如 getAuthUser）不以 Middleware 结尾是允许的
+ * 4. 私有方法（以 _ 开头）不以 Middleware 结尾是允许的
  */
 
 const HELPER_FUNCTIONS = ['getAuthUser', 'requireAuth', 'hasPermission']
+
+function isPrivateMethod(name) {
+  return name.startsWith('_')
+}
 
 export const middlewareLocation = {
   meta: {
@@ -31,7 +36,12 @@ export const middlewareLocation = {
 
         if (node.declaration?.type === 'FunctionDeclaration') {
           const name = node.declaration.id?.name
-          if (name && !name.endsWith('Middleware') && !HELPER_FUNCTIONS.includes(name)) {
+          if (
+            name &&
+            !name.endsWith('Middleware') &&
+            !HELPER_FUNCTIONS.includes(name) &&
+            !isPrivateMethod(name)
+          ) {
             context.report({
               node: node.declaration,
               messageId: 'invalidName',
@@ -44,7 +54,11 @@ export const middlewareLocation = {
           for (const decl of node.declaration.declarations) {
             if (decl.id.type === 'Identifier') {
               const name = decl.id.name
-              if (!name.endsWith('Middleware') && !HELPER_FUNCTIONS.includes(name)) {
+              if (
+                !name.endsWith('Middleware') &&
+                !HELPER_FUNCTIONS.includes(name) &&
+                !isPrivateMethod(name)
+              ) {
                 context.report({
                   node: decl,
                   messageId: 'invalidName',
@@ -63,13 +77,21 @@ export const middlewareLocation = {
           if (statement.type === 'ExportNamedDeclaration') {
             if (statement.declaration?.type === 'FunctionDeclaration') {
               const name = statement.declaration.id?.name
-              return name?.endsWith('Middleware') || HELPER_FUNCTIONS.includes(name)
+              return (
+                name?.endsWith('Middleware') ||
+                HELPER_FUNCTIONS.includes(name) ||
+                isPrivateMethod(name)
+              )
             }
             if (statement.declaration?.type === 'VariableDeclaration') {
               return statement.declaration.declarations.some(decl => {
                 if (decl.id.type === 'Identifier') {
                   const name = decl.id.name
-                  return name.endsWith('Middleware') || HELPER_FUNCTIONS.includes(name)
+                  return (
+                    name.endsWith('Middleware') ||
+                    HELPER_FUNCTIONS.includes(name) ||
+                    isPrivateMethod(name)
+                  )
                 }
                 return false
               })

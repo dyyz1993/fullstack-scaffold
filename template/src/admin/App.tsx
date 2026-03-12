@@ -5,7 +5,8 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SettingsPage } from './pages/SettingsPage'
-import { ProtectedRoute } from './components/ProtectedRoute'
+import { TestCaptchaPage } from './pages/TestCaptchaPage'
+import { ProtectedRoute, CaptchaModal } from './components'
 
 export const App: React.FC = () => {
   return (
@@ -29,12 +30,14 @@ export const App: React.FC = () => {
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/test-captcha" element={<TestCaptchaPage />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
             }
           />
         </Routes>
+        <CaptchaModal />
       </BrowserRouter>
     </ConfigProvider>
   )

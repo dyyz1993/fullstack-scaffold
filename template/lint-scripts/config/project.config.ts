@@ -95,9 +95,10 @@ export const sensitiveConfig: SensitiveConfig = {
     /coverage/,
     /\.env\.example$/,
     /__tests__/,
-    /lint-scripts\/(validate|config|watch-validator|test-validators-unit|test-tracker|test-history|post-commit-track|smart-test|dev-server|TESTING|README|quick-test|DIRECTORY_RULES|framework)/,
+    /lint-scripts\/(validate|config|watch-validator|test-validators-unit|test-tracker|test-history|post-commit-track|smart-test|dev-server|TESTING|README|quick-test|DIRECTORY_RULES|framework|check-refs)/,
     /server\/config\.ts/,
     /server\/utils\/logger\.ts/,
+    /admin\/services\/(README|TESTING)\.md/,
   ],
 
   // 检查的文件扩展名

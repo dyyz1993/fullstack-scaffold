@@ -252,6 +252,6 @@ export default app
 
 ## 📚 相关文档
 
-- [Server API 规范](./server-api-validation.md) - 路由定义规范
-- [API 类型推导规范](./api-type-inference-rules.md) - Hono RPC 类型推导
-- [架构规范](./architecture-rules.md) - 模块化架构
+- [Server API 规范](./20-server-api.md) - 路由定义规范
+- [API 类型推导规范](./10-api-type-inference.md) - Hono RPC 类型推导
+- [架构规范](./00-project-config.md) - 模块化架构

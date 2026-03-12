@@ -75,7 +75,7 @@ app.openapi(getTodosRoute, async c => {
 **类型定义位置：**
 
 - Schema 定义：`src/shared/schemas/*.ts`
-- 类型导出：`src/shared/types.ts`
+- 类型导出：`src/shared/core/` 和 `src/shared/modules/`
 
 **已有 Schema：**
 
