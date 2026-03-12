@@ -213,3 +213,25 @@ export interface ClientTestError {
   expectedTest: string
   suggestion: string
 }
+
+// ============================================
+// Vite 路由配置验证配置
+// ============================================
+export interface ViteRoutesConfig {
+  viteConfigPath: string
+  checkDirs: string[]
+  ignoreDirs: string[]
+}
+
+export interface ViteRouteError {
+  file: string
+  line: number
+  routePath: string
+  basename: string | null
+  suggestion: string
+}
+
+export interface ParsedPattern {
+  pattern: string
+  isExact: boolean
+}

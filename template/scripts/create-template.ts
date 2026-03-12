@@ -105,6 +105,8 @@ function ${pascalName}Component() {
 // 2️⃣ 直接使用 apiClient
 import { apiClient } from '@client/services/apiClient'
 
+// ========== 基础 SSE 连接 ==========
+
 const sseClient = await apiClient.api['${kebabName}s'].stream.$sse({ query: {} })
 
 // 监听连接状态
@@ -122,6 +124,40 @@ sseClient.on('message', (event: ${pascalName}Event) => {
 
 // 关闭连接
 sseClient.abort()
+
+// ========== 🔐 带认证的 SSE 连接 ==========
+
+// 方式 1: 使用 header 选项传递认证 token
+const authSseClient = await apiClient.api['${kebabName}s'].stream.$sse({
+  query: {},
+  header: {
+    Authorization: 'Bearer your-token-here',
+  },
+})
+
+// 方式 2: 在创建 apiClient 时配置默认 headers
+// 参考 src/client/services/apiClient.ts
+
+// ========== 🛡️ 需要登录的 SSE 路由示例 ==========
+
+// 假设路由配置了 authMiddleware 中间件：
+// middleware: [authMiddleware()]
+
+// 带认证的 SSE 连接会自动验证 token
+// - 401: 未提供有效的认证 token
+// - 连接会被拒绝
+
+// 示例：用户专属通知流（需要登录）
+const userNotifications = await apiClient.api.notifications.stream.$sse({
+  query: { userId: 'user-1' },
+  header: {
+    Authorization: 'Bearer user-token',
+  },
+})
+
+userNotifications.on('message', (event) => {
+  console.log('收到通知:', event)
+})
 `
   } else if (options.withWebSocket) {
     return `
@@ -189,6 +225,8 @@ function ${pascalName}Component() {
 // 2️⃣ 直接使用 apiClient
 import { apiClient } from '@client/services/apiClient'
 
+// ========== 基础 WebSocket 连接 ==========
+
 const wsClient = apiClient.api['${kebabName}s'].ws.$ws()
 
 // 监听连接状态
@@ -212,6 +250,40 @@ const result = await wsClient.call('echo', { message: 'Hello' })
 
 // 关闭连接
 wsClient.close()
+
+// ========== 🔐 带认证的 WebSocket 连接 ==========
+
+// 方式 1: 使用 header 选项传递认证 token
+const authWsClient = apiClient.api['${kebabName}s'].ws.$ws({
+  header: {
+    Authorization: 'Bearer your-token-here',
+  },
+})
+
+// 方式 2: 在创建 apiClient 时配置默认 headers
+// 参考 src/client/services/apiClient.ts
+
+// ========== 🛡️ 需要登录的 WebSocket 路由示例 ==========
+
+// 假设路由配置了 authMiddleware 中间件：
+// middleware: [authMiddleware()]
+
+// 带认证的 WebSocket 连接会自动验证 token
+// - 连接时验证 token
+// - 无效 token 会导致连接被拒绝
+
+// 示例：聊天室 WebSocket（需要登录）
+const chatWs = apiClient.api.chat.ws.$ws({
+  header: {
+    Authorization: 'Bearer user-token',
+  },
+})
+
+chatWs.on('message', (message) => {
+  console.log('收到消息:', message)
+})
+
+chatWs.emit('message', { id: '1', type: 'chat', payload: { text: 'Hello' } })
 `
   } else {
     return `
@@ -282,6 +354,8 @@ function ${pascalName}Component() {
 import { apiClient } from '@client/services/apiClient'
 import type { ${pascalName}, Create${pascalName}Input } from '@shared/modules/${kebabName}'
 
+// ========== 基础 CRUD 操作 ==========
+
 // 获取列表
 const listRes = await apiClient.api['${kebabName}s'].$get()
 const listData = await listRes.json()
@@ -324,6 +398,65 @@ const deleteRes = await apiClient.api['${kebabName}s'][':id'].$delete({
 const deleteData = await deleteRes.json()
 if (deleteData.success) {
   console.log('删除成功')
+}
+
+// ========== 🔐 带认证的请求（Header 示例） ==========
+
+// 方式 1: 使用 header 选项传递认证 token
+const authRes = await apiClient.api['${kebabName}s'].$get({
+  header: {
+    Authorization: 'Bearer your-token-here',
+  },
+})
+
+// 方式 2: 在创建 apiClient 时配置默认 headers
+// 参考 src/client/services/apiClient.ts
+
+// ========== 🛡️ 需要登录的路由示例 ==========
+
+// 假设路由配置了 authMiddleware 中间件：
+// middleware: [authMiddleware({ requiredRole: 'admin' })]
+
+// 带认证的请求会自动验证 token
+// - 401: 未提供有效的认证 token
+// - 403: 权限不足（如需要 admin 角色但用户是普通用户）
+
+// 示例：获取当前用户信息（需要登录）
+const meRes = await apiClient.api.admin.me.$get({
+  header: {
+    Authorization: 'Bearer admin-token', // 或 'Bearer user-token'
+  },
+})
+const meData = await meRes.json()
+if (meData.success) {
+  console.log('当前用户:', meData.data)
+}
+
+// 示例：管理员操作（需要 admin 角色）
+const adminRes = await apiClient.api.admin.stats.$get({
+  header: {
+    Authorization: 'Bearer admin-token', // 必须是 admin token
+  },
+})
+const adminData = await adminRes.json()
+if (adminData.success) {
+  console.log('系统统计:', adminData.data)
+}
+
+// ========== ⚠️ 错误处理示例 ==========
+
+try {
+  const res = await apiClient.api.admin.stats.$get({
+    header: {
+      Authorization: 'Bearer invalid-token',
+    },
+  })
+  const data = await res.json()
+  if (!data.success) {
+    console.log('错误:', data.error) // "Unauthorized: Invalid authentication token"
+  }
+} catch (error) {
+  console.error('请求失败:', error)
 }
 `
   }
