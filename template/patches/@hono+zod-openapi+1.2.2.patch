@@ -1,5 +1,5 @@
 diff --git a/node_modules/@hono/zod-openapi/dist/index.d.ts b/node_modules/@hono/zod-openapi/dist/index.d.ts
-index 7355946..869a416 100644
+index 7355946..28ef2a1 100644
 --- a/node_modules/@hono/zod-openapi/dist/index.d.ts
 +++ b/node_modules/@hono/zod-openapi/dist/index.d.ts
 @@ -23,7 +23,7 @@ type RequestTypes = {
@@ -11,6 +11,18 @@ index 7355946..869a416 100644
  type RequestPart<R$1 extends RouteConfig, Part extends string> = Part extends keyof R$1["request"] ? R$1["request"][Part] : {};
  type HasUndefined<T$1> = undefined extends T$1 ? true : false;
  type InputTypeBase<R$1 extends RouteConfig, Part extends string, Type extends keyof ValidationTargets> = R$1["request"] extends RequestTypes ? RequestPart<R$1, Part> extends ZodType ? {
+@@ -63,9 +63,9 @@ type ExtractStatusCode<T$1 extends RouteConfigStatusCode> = T$1 extends keyof St
+ type DefinedStatusCodes<R$1 extends RouteConfig> = keyof R$1["responses"] & RouteConfigStatusCode;
+ type RouteConfigToTypedResponse<R$1 extends RouteConfig> = { [Status in DefinedStatusCodes<R$1>]: R$1["responses"][Status] extends {
+   content: infer Content;
+-} ? undefined extends Content ? never : ReturnJsonOrTextOrResponse<keyof R$1["responses"][Status]["content"], ExtractContent<R$1["responses"][Status]["content"]>, Status> : TypedResponse<{}, ExtractStatusCode<Status>, string> }[DefinedStatusCodes<R$1>] | ("default" extends keyof R$1["responses"] ? R$1["responses"]["default"] extends {
++} ? undefined extends Content ? never : ReturnJsonOrTextOrResponse<keyof R$1["responses"][Status]["content"], ExtractContent<R$1["responses"][Status]["content"]>, Status> : TypedResponse<{}, ExtractStatusCode<Status>, "json"> }[DefinedStatusCodes<R$1>] | ("default" extends keyof R$1["responses"] ? R$1["responses"]["default"] extends {
+   content: infer Content;
+-} ? undefined extends Content ? never : ReturnJsonOrTextOrResponse<keyof Content, ExtractContent<Content>, Exclude<StatusCode, ExtractStatusCode<DefinedStatusCodes<R$1>>>> : TypedResponse<{}, Exclude<StatusCode, ExtractStatusCode<DefinedStatusCodes<R$1>>>, string> : never);
++} ? undefined extends Content ? never : ReturnJsonOrTextOrResponse<keyof Content, ExtractContent<Content>, Exclude<StatusCode, ExtractStatusCode<DefinedStatusCodes<R$1>>>> : TypedResponse<{}, Exclude<StatusCode, ExtractStatusCode<DefinedStatusCodes<R$1>>>, "json"> : never);
+ type Hook<T$1, E$1 extends Env, P$1 extends string, R$1> = (result: {
+   target: keyof ValidationTargets;
+ } & ({
 @@ -104,15 +104,7 @@ type OfHandlerType<T$1 extends MiddlewareHandler> = T$1 extends MiddlewareHandle
  type MiddlewareToHandlerType<M extends MiddlewareHandler<any, any, any>[]> = M extends [infer First, infer Second, ...infer Rest] ? First extends MiddlewareHandler<any, any, any> ? Second extends MiddlewareHandler<any, any, any> ? Rest extends MiddlewareHandler<any, any, any>[] ? MiddlewareToHandlerType<[MiddlewareHandler<DeepSimplify<OfHandlerType<First>["env"] & OfHandlerType<Second>["env"]>, OfHandlerType<First>["path"], OfHandlerType<First>["input"]>, ...Rest]> : never : never : never : M extends [infer Last] ? Last : MiddlewareHandler<Env>;
  type RouteMiddlewareParams<R$1 extends RouteConfig> = OfHandlerType<MiddlewareToHandlerType<AsArray<R$1["middleware"]>>>;

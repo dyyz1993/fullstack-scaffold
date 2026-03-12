@@ -297,6 +297,8 @@ const notificationSSERoute = createRoute({
   method: 'get',
   path: '/admin/notifications/stream',
   tags: ['notifications'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   responses: {
     200: {
       content: {
@@ -304,6 +306,7 @@ const notificationSSERoute = createRoute({
       },
       description: 'SSE stream for admin notifications',
     },
+    401: errorResponse('Unauthorized'),
   },
 })
 
@@ -408,12 +411,7 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
     const notification = await adminService.sendTestNotification(type)
     return c.json({ success: true, data: notification })
   })
-  .openapi(notificationSSERoute, async c => {
-    const user = getAuthUser(c)
-    if (!user) {
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
-    }
-
+  .openapi(notificationSSERoute, async _c => {
     const { getRuntimeAdapter } = await import('@server/core/runtime')
     const adapter = getRuntimeAdapter()
     if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
