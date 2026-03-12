@@ -3,6 +3,7 @@ import { apiRoutes } from './module-todos/routes/todos-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
 import { adminRoutes } from './module-admin/routes/admin-routes'
+import { captchaRoutes } from './module-captcha/routes/captcha-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
@@ -20,6 +21,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .route('/api', chatRoutes)
     .route('/api', apiRoutes)
     .route('/api', adminRoutes)
+    .route('/api', captchaRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')

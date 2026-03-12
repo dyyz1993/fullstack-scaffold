@@ -1,17 +1,26 @@
 /**
- * 自定义 ESLint 规则：强制 Hono OpenAPIHono 使用链式语法
+ * 自定义 ESLint 规则：
+ * 1. 禁止使用普通 Hono，必须使用 OpenAPIHono
+ * 2. 强制 OpenAPIHono 使用链式语法
  *
- * 非链式写法会导致 Hono RPC 类型推断丢失
+ * 原因：
+ * - OpenAPIHono 支持 RPC 类型推断
+ * - 非链式写法会导致 Hono RPC 类型推断丢失
  */
 
 export const requireHonoChainSyntax = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Require chain syntax for OpenAPIHono to preserve Hono RPC type inference',
+      description: 'Require OpenAPIHono with chain syntax for Hono RPC type inference',
       recommended: true,
     },
     messages: {
+      noPlainHono:
+        '禁止使用普通 Hono，必须使用 OpenAPIHono。\n' +
+        'OpenAPIHono 支持 RPC 类型推断，确保客户端类型安全。\n\n' +
+        '❌ const routes = new Hono()\n' +
+        '✅ const routes = new OpenAPIHono()',
       nonChainSyntax:
         'OpenAPIHono must use chain syntax. Non-chain syntax breaks Hono RPC type inference.\n' +
         'Use: export const routes = new OpenAPIHono()\n  .openapi(route1, handler1)\n  .openapi(route2, handler2)',
@@ -30,25 +39,32 @@ export const requireHonoChainSyntax = {
           node.init &&
           node.init.type === 'NewExpression' &&
           node.init.callee &&
-          node.init.callee.name === 'OpenAPIHono'
+          node.init.callee.type === 'Identifier'
         ) {
-          if (node.id && node.id.type === 'Identifier') {
-            const isChained =
-              node.parent.parent.type === 'ExportNamedDeclaration' ||
-              (node.init.arguments.length === 0 &&
-                context.sourceCode.getText(node).includes('new OpenAPIHono()\n'))
+          const calleeName = node.init.callee.name
 
-            const fullText = context.sourceCode.getText(node.parent)
-            const hasNextCall = /\)\s*\.\s*(openapi|doc|get|post|put|delete|patch)/.test(
-              fullText.substring(fullText.indexOf(')'))
-            )
+          if (calleeName === 'Hono') {
+            context.report({
+              node,
+              messageId: 'noPlainHono',
+            })
+            return
+          }
 
-            if (!hasNextCall && node.parent.parent.type !== 'ExportNamedDeclaration') {
-              openAPIHonoVariables.add(node.id.name)
-              context.report({
-                node,
-                messageId: 'nonChainSyntax',
-              })
+          if (calleeName === 'OpenAPIHono') {
+            if (node.id && node.id.type === 'Identifier') {
+              const fullText = context.sourceCode.getText(node.parent)
+              const hasNextCall = /\)\s*\.\s*(openapi|doc|get|post|put|delete|patch)/.test(
+                fullText.substring(fullText.indexOf(')'))
+              )
+
+              if (!hasNextCall && node.parent.parent.type !== 'ExportNamedDeclaration') {
+                openAPIHonoVariables.add(node.id.name)
+                context.report({
+                  node,
+                  messageId: 'nonChainSyntax',
+                })
+              }
             }
           }
         }

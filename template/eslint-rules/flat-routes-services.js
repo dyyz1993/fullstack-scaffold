@@ -1,15 +1,14 @@
 /**
- * 限制 routes 和 services 目录结构
+ * 禁止在 routes/ 和 services/ 目录下创建文件
  *
  * 规则：
- * 1. src/server/routes/ 和 src/server/services/ 目录下只允许直接放置文件
- * 2. 不允许创建子目录
- * 3. 文件命名必须以 -routes.ts 或 -service.ts 结尾
+ * 1. src/server/routes/ 和 src/server/services/ 目录不允许放置任何文件
+ * 2. 所有路由和服务必须在 module-* 目录下
  *
  * 原因：
- * - 保持目录结构扁平，便于查找
- * - 模块化的路由和服务应该放在 module-* 目录下
- * - 避免过度嵌套导致导入路径过长
+ * - 强制模块化组织，便于维护
+ * - 每个功能模块独立管理路由、服务和测试
+ * - 避免代码分散难以追踪
  *
  * 参考: .claude/rules/20-server-api.md
  */
@@ -18,47 +17,27 @@ export const flatRoutesServices = {
   meta: {
     type: 'problem',
     docs: {
-      description: '限制 routes 和 services 目录结构为扁平结构',
+      description: '禁止在 routes/services 目录下创建文件，必须在 module-* 目录下',
       recommended: true,
     },
     messages: {
-      noSubdirectory: `禁止在 routes/services 目录下创建子目录。
+      noFilesInRoutesServices: `禁止在 routes/services 目录下创建文件。
 
 当前路径：{{filepath}}
 
-routes/ 和 services/ 目录只允许直接放置文件，不允许创建子目录。
+routes/ 和 services/ 目录不允许放置任何文件。
+所有路由和服务必须在 module-* 目录下。
 
 📋 规则文档: .claude/rules/20-server-api.md
 
 🚀 快速创建模块:
-  npm run create:module <name>    创建完整模块（路由+服务+测试）
-  npm run create:route <name>     创建路由文件
-  npm run create:service <name>   创建服务文件
+  npm run create:module <name>
 
 示例：
-❌ src/server/routes/admin/captcha-routes.ts
-✅ src/server/routes/captcha-routes.ts
-✅ src/server/module-admin/routes/admin-routes.ts
-`,
-      invalidFileName: `文件命名不符合规范。
-
-当前文件：{{filename}}
-
-routes/ 目录下的文件必须以 -routes.ts 结尾
-services/ 目录下的文件必须以 -service.ts 结尾
-
-📋 规则文档: .claude/rules/20-server-api.md
-
-🚀 快速创建:
-  npm run create:route <name>     创建路由文件
-  npm run create:service <name>   创建服务文件
-
-示例：
-❌ src/server/routes/captcha.ts
-✅ src/server/routes/captcha-routes.ts
-
-❌ src/server/services/captcha.ts
-✅ src/server/services/captcha-service.ts
+❌ src/server/routes/user-routes.ts
+❌ src/server/services/user-service.ts
+✅ src/server/module-user/routes/user-routes.ts
+✅ src/server/module-user/services/user-service.ts
 `,
     },
     schema: [],
@@ -71,52 +50,15 @@ services/ 目录下的文件必须以 -service.ts 结尾
 
     if (!isInRoutesDir && !isInServicesDir) return {}
 
-    const relativePath = filename.split('/server/')[1] || ''
-
-    const pathParts = relativePath.split('/')
-    const isFlat = pathParts.length === 2
-
-    if (!isFlat) {
-      return {
-        Program(node) {
-          context.report({
-            node,
-            messageId: 'noSubdirectory',
-            data: { filepath: filename },
-          })
-        },
-      }
+    return {
+      Program(node) {
+        context.report({
+          node,
+          messageId: 'noFilesInRoutesServices',
+          data: { filepath: filename },
+        })
+      },
     }
-
-    const fileName = pathParts[1]
-    const isValidRouteName = fileName.endsWith('-routes.ts') || fileName.endsWith('-route.ts')
-    const isValidServiceName = fileName.endsWith('-service.ts')
-
-    if (isInRoutesDir && !isValidRouteName) {
-      return {
-        Program(node) {
-          context.report({
-            node,
-            messageId: 'invalidFileName',
-            data: { filename: fileName },
-          })
-        },
-      }
-    }
-
-    if (isInServicesDir && !isValidServiceName) {
-      return {
-        Program(node) {
-          context.report({
-            node,
-            messageId: 'invalidFileName',
-            data: { filename: fileName },
-          })
-        },
-      }
-    }
-
-    return {}
   },
 }
 
