@@ -19,7 +19,6 @@ import { frameworkProtect } from './eslint-rules/framework-protect.js'
 import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
 import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
 import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
-import { requireViteRouteConfig } from './eslint-rules/require-vite-route-config.js'
 import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
 
 const localRules = {
@@ -43,7 +42,6 @@ const localRules = {
     'prefer-shared-types': preferSharedTypes,
     'no-type-assertion-in-rpc': noTypeAssertionInRpc,
     'no-direct-fetch': noDirectFetch,
-    'require-vite-route-config': requireViteRouteConfig,
     'flat-routes-services': flatRoutesServices,
   },
 }
@@ -104,7 +102,6 @@ export default tseslint.config(
       'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
       'local-rules/no-type-assertion-in-rpc': 'error',
       'local-rules/no-direct-fetch': 'error',
-      'local-rules/require-vite-route-config': 'warn',
     },
   },
   {

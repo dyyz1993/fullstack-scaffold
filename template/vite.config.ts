@@ -1,6 +1,5 @@
 import path from 'path'
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
 
@@ -13,17 +12,12 @@ export default defineConfig({
     },
   },
   plugins: [
-    react(),
     devServer({
       entry: 'src/server/index.ts',
       exclude: [
         /^\/$/,
         /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|admin\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
-        /^\/todos$/,
-        /^\/notifications$/,
-        /^\/websocket$/,
-        /^\/admin/,
       ],
     }),
     websocketPlugin(),

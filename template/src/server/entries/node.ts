@@ -1,5 +1,8 @@
 /**
  * @framework-baseline 6697f7f963c5f57c
+ * @framework-modify
+ * @reason 添加 SPA 前端路由处理，区分开发/生产环境
+ * @impact 新增前端路由处理逻辑，/admin/* 返回 admin.html，其他路由返回 index.html
  */
 
 import '../config'
@@ -17,10 +20,24 @@ import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 
 const config = getAppConfig()
+const isProduction = process.env.NODE_ENV === 'production'
 const distPath = resolve(process.cwd(), 'dist/client')
-const hasDist = existsSync(distPath)
-const indexHtml = hasDist ? readFileSync(resolve(distPath, 'index.html'), 'utf-8') : null
-const devIndexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf-8')
+const hasDist = isProduction && existsSync(distPath)
+
+// HTML 文件路径
+const indexHtmlPath = hasDist
+  ? resolve(distPath, 'index.html')
+  : resolve(process.cwd(), 'index.html')
+const adminHtmlPath = hasDist
+  ? resolve(distPath, 'admin.html')
+  : resolve(process.cwd(), 'admin.html')
+
+const indexHtml = existsSync(indexHtmlPath)
+  ? readFileSync(indexHtmlPath, 'utf-8')
+  : '<html><body>index.html not found</body></html>'
+const adminHtml = existsSync(adminHtmlPath)
+  ? readFileSync(adminHtmlPath, 'utf-8')
+  : '<html><body>admin.html not found</body></html>'
 
 const log = logger.api()
 
@@ -68,17 +85,20 @@ if (config.enableDocs) {
 }
 
 app
+  // 生产环境：静态资源服务
   .use('/*', async (c, next) => {
     if (hasDist) {
       return serveStatic({ root: distPath })(c, next)
     }
     await next()
   })
+  // Admin 路由返回 admin.html
+  .get('/admin/*', c => {
+    return c.html(adminHtml)
+  })
+  // 其他路由返回 index.html
   .get('*', c => {
-    if (indexHtml) {
-      return c.html(indexHtml)
-    }
-    return c.html(devIndexHtml)
+    return c.html(indexHtml)
   })
   .onError((err, c) => {
     log.error({ err, path: c.req.path }, 'server error')
