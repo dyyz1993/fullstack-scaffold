@@ -1,5 +1,5 @@
 ---
-paths: src/shared/core/ws-client.ts, src/client/hooks/useWebSocket.ts, src/server/core/realtime-core.ts
+paths: src/shared/core/ws-client.ts, src/shared/hooks/useWebSocket.ts, src/server/core/realtime-core.ts
 ---
 
 # WebSocket 开发规范
@@ -13,7 +13,7 @@ paths: src/shared/core/ws-client.ts, src/client/hooks/useWebSocket.ts, src/serve
 | 文件                               | 职责                           |
 | ---------------------------------- | ------------------------------ |
 | `src/shared/core/ws-client.ts`     | WebSocket 客户端实现（框架层） |
-| `src/client/hooks/useWebSocket.ts` | React Hook 封装                |
+| `src/shared/hooks/useWebSocket.ts` | React Hook 封装                |
 | `src/server/core/realtime-core.ts` | 服务端 WebSocket 处理          |
 
 ## 🚫 禁止直接使用 new WebSocket()
@@ -83,7 +83,7 @@ export type ChatProtocol = z.infer<typeof ChatProtocolSchema>
 ### useWebSocket Hook
 
 ```typescript
-// src/client/hooks/useWebSocket.ts
+// src/shared/hooks/useWebSocket.ts
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { WSClient, WSProtocol, WSStatus } from '@shared/schemas'
 

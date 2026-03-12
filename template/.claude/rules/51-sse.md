@@ -1,5 +1,5 @@
 ---
-paths: src/shared/core/sse-client.ts, src/client/hooks/useSSE.ts, src/server/core/realtime-core.ts
+paths: src/shared/core/sse-client.ts, src/shared/hooks/useSSE.ts, src/server/core/realtime-core.ts
 ---
 
 # SSE 开发规范
@@ -13,7 +13,7 @@ paths: src/shared/core/sse-client.ts, src/client/hooks/useSSE.ts, src/server/cor
 | 文件                               | 职责                     |
 | ---------------------------------- | ------------------------ |
 | `src/shared/core/sse-client.ts`    | SSE 客户端实现（框架层） |
-| `src/client/hooks/useSSE.ts`       | React Hook 封装          |
+| `src/shared/hooks/useSSE.ts`       | React Hook 封装          |
 | `src/server/core/realtime-core.ts` | 服务端 SSE 处理          |
 
 ## 🚫 禁止直接使用 new EventSource()
@@ -69,7 +69,7 @@ export type AppSSEProtocol = z.infer<typeof AppSSEProtocolSchema>
 ### useSSE Hook
 
 ```typescript
-// src/client/hooks/useSSE.ts
+// src/shared/hooks/useSSE.ts
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SSEClient, SSEProtocol } from '@shared/schemas'
 

@@ -60,7 +60,7 @@ function generateClientUsageExample(name: string, options: CreateOptions): strin
 // 📡 SSE 客户端使用示例
 
 // 1️⃣ React Hook 方式（推荐）
-import { useSSE } from '@client/hooks/useSSE'
+import { useSSE } from '@shared/hooks'
 import { apiClient } from '@client/services/apiClient'
 import type { ${pascalName}Event, ${pascalName}Subscription } from '@shared/modules/${kebabName}'
 
@@ -128,7 +128,7 @@ sseClient.abort()
 // 🔌 WebSocket 客户端使用示例
 
 // 1️⃣ React Hook 方式（推荐）
-import { useWebSocket } from '@client/hooks/useWebSocket'
+import { useWebSocket } from '@shared/hooks'
 import { apiClient } from '@client/services/apiClient'
 import type { ${pascalName}Message } from '@shared/modules/${kebabName}'
 
@@ -1607,11 +1607,11 @@ function main(): void {
     console.log('   - .claude/rules/31-client-services.md - 客户端服务使用规范')
     if (options.withSSE) {
       console.log('   - .claude/rules/51-sse.md - SSE 开发规范')
-      console.log('   - src/client/hooks/useSSE.ts - React Hook 封装')
+      console.log('   - src/shared/hooks/useSSE.ts - React Hook 封装')
       console.log('   - src/shared/core/sse-client.ts - SSE 客户端实现')
     } else if (options.withWebSocket) {
       console.log('   - .claude/rules/50-websocket.md - WebSocket 开发规范')
-      console.log('   - src/client/hooks/useWebSocket.ts - React Hook 封装')
+      console.log('   - src/shared/hooks/useWebSocket.ts - React Hook 封装')
       console.log('   - src/shared/core/ws-client.ts - WebSocket 客户端实现')
     } else {
       console.log('   - .claude/rules/10-api-type-inference.md - API 类型推导规范')
