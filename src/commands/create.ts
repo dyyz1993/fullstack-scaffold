@@ -49,13 +49,14 @@ export async function createProject(
       const gitignoreContent = await fs.readFile(gitignorePath, "utf-8");
       ignorePatterns = parseGitignore(gitignoreContent);
     }
-    ignorePatterns.push("node_modules", ".wrangler", ".trae");
+    ignorePatterns.push("node_modules", ".wrangler");
     await fs.copy(templateDir, targetDir, {
       filter: (src: string) => {
         const relative = path.relative(templateDir, src);
         if (relative === "") return true;
         return !ignorePatterns.some((pattern) => relative.startsWith(pattern));
       },
+      dereference: false,
     });
     spinner.succeed(chalk.green("Template files copied"));
 
