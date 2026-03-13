@@ -21,6 +21,7 @@ import {
   UserSchema,
   UserListSchema,
   UpdateUserRequestSchema,
+  CreateUserRequestSchema,
   SuccessSchema,
   DownloadTokenSchema,
 } from '@shared/modules/admin'
@@ -243,6 +244,29 @@ const deleteUserRoute = createRoute({
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('User not found'),
+  },
+})
+
+const createUserRoute = createRoute({
+  method: 'post',
+  path: '/admin/users',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: CreateUserRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(UserSchema, 'User created'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    400: errorResponse('Invalid request'),
   },
 })
 
@@ -531,6 +555,15 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
       return c.json({ success: true })
     } catch (error) {
       return c.json({ success: false, error: (error as Error).message }, 404)
+    }
+  })
+  .openapi(createUserRoute, async c => {
+    try {
+      const data = c.req.valid('json')
+      const user = await adminService.createUser(data)
+      return c.json({ success: true, data: user })
+    } catch (error) {
+      return c.json({ success: false, error: (error as Error).message }, 400)
     }
   })
   .openapi(getNotificationsRoute, async c => {

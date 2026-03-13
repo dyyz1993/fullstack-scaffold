@@ -51,7 +51,7 @@ export const UserSchema = z.object({
   username: z.string(),
   email: z.string(),
   role: z.enum(['super_admin', 'customer_service', 'user']),
-  status: z.enum(['active', 'inactive']),
+  status: z.enum(['active', 'inactive', 'locked']),
   avatar: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -63,7 +63,15 @@ export const UpdateUserRequestSchema = z.object({
   username: z.string().optional(),
   email: z.string().email().optional(),
   role: z.enum(['super_admin', 'customer_service', 'user']).optional(),
-  status: z.enum(['active', 'inactive']).optional(),
+  status: z.enum(['active', 'inactive', 'locked']).optional(),
+})
+
+export const CreateUserRequestSchema = z.object({
+  username: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(['super_admin', 'customer_service', 'user']),
+  status: z.enum(['active', 'inactive', 'locked']).optional().default('active'),
 })
 
 export const ClearTodosResultSchema = z.object({
@@ -84,6 +92,7 @@ export type SystemStats = z.infer<typeof SystemStatsSchema>
 export type HealthCheck = z.infer<typeof HealthCheckSchema>
 export type RecentActivityItem = z.infer<typeof RecentActivityItemSchema>
 export type AuthUserResponse = z.infer<typeof AuthUserSchema>
+export type CreateUserRequest = z.infer<typeof CreateUserRequestSchema>
 export type LoginRequest = z.infer<typeof LoginRequestSchema>
 export type LoginResponse = z.infer<typeof LoginResponseSchema>
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>

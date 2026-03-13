@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { PermissionsPage } from './pages/PermissionsPage'
+import { UsersPage } from './pages/UsersPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { TicketsPage } from './pages/TicketsPage'
 import { DisputesPage } from './pages/DisputesPage'
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
                     <Routes>
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/users" element={<UsersPage />} />
                       <Route path="/orders" element={<OrdersPage />} />
                       <Route path="/tickets" element={<TicketsPage />} />
                       <Route path="/disputes" element={<DisputesPage />} />

@@ -12,6 +12,7 @@ import type {
   RegisterRequest,
   User,
   UpdateUserRequest,
+  CreateUserRequest,
 } from '@shared/modules/admin'
 import type {
   AppNotification,
@@ -284,6 +285,28 @@ export async function deleteUser(id: string): Promise<void> {
   }
 
   mockUsers.splice(userIndex, 1)
+}
+
+export async function createUser(data: CreateUserRequest): Promise<User> {
+  const mockUsers = getMockUsers()
+  
+  const existingUser = mockUsers.find(u => u.username === data.username || u.email === data.email)
+  if (existingUser) {
+    throw new Error('User with this username or email already exists')
+  }
+
+  const newUser: User = {
+    id: `user-${Date.now()}`,
+    username: data.username,
+    email: data.email,
+    role: data.role,
+    status: data.status || 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  mockUsers.push(newUser)
+  return newUser
 }
 
 export async function getAllTodos(): Promise<

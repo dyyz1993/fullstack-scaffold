@@ -23,6 +23,10 @@ import {
 } from './validators/test-quality.validator.js'
 import { validateClientTests, formatClientTestErrors } from './validators/client-tests.validator.js'
 import { validateMdRefs, formatMdRefErrors } from './validators/md-refs.validator.js'
+import {
+  validateAPICoverage,
+  formatAPICoverageErrors,
+} from './validators/api-coverage.validator.js'
 import projectConfig from './config/project.config.js'
 
 interface ValidatorResult {
@@ -169,8 +173,22 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.log('  ✅ All client files have tests\n')
   }
 
-  // 10. Markdown 引用路径验证
-  console.log('🔍 [10/10] Checking markdown references...')
+  // 10. API 覆盖率验证
+  console.log('🔍 [10/12] Checking API coverage...')
+  const apiCoverageErrors = validateAPICoverage(projectConfig.moduleTests, rootPath)
+  results.push({
+    name: 'API Coverage',
+    passed: apiCoverageErrors.length === 0,
+    errors: apiCoverageErrors.length,
+  })
+  if (apiCoverageErrors.length > 0) {
+    console.error(formatAPICoverageErrors(apiCoverageErrors))
+  } else {
+    console.log('  ✅ All APIs are covered by tests\n')
+  }
+
+  // 11. Markdown 引用路径验证
+  console.log('🔍 [11/12] Checking markdown references...')
   const mdRefErrors = validateMdRefs(projectConfig.mdRefs, rootPath)
   results.push({
     name: 'Markdown References',

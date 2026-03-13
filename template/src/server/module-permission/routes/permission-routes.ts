@@ -8,6 +8,11 @@ import {
   RoleInfoSchema,
   PermissionInfoSchema,
   UserPermissionsSchema,
+  MenuConfigSchema,
+  PagePermissionsSchema,
+  PermissionCategoriesSchema,
+  RoleLabelsSchema,
+  PermissionLabelsSchema,
   Role,
 } from '@shared/modules/permission'
 
@@ -47,6 +52,66 @@ const getUserPermissionsRoute = createRoute({
   },
 })
 
+const getMenuConfigRoute = createRoute({
+  method: 'get',
+  path: '/permissions/menu-config',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(MenuConfigSchema, 'Get menu configuration'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const getPagePermissionsRoute = createRoute({
+  method: 'get',
+  path: '/permissions/page-permissions',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(PagePermissionsSchema, 'Get page permissions configuration'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const getPermissionCategoriesRoute = createRoute({
+  method: 'get',
+  path: '/permissions/categories',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(PermissionCategoriesSchema, 'Get permission categories'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const getRoleLabelsRoute = createRoute({
+  method: 'get',
+  path: '/permissions/role-labels',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(RoleLabelsSchema, 'Get role labels'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const getPermissionLabelsRoute = createRoute({
+  method: 'get',
+  path: '/permissions/permission-labels',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(PermissionLabelsSchema, 'Get permission labels'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
 export const permissionRoutes = new OpenAPIHono()
   .openapi(getRolesRoute, async c => {
     const roles = permissionService.getAllRoles()
@@ -60,4 +125,24 @@ export const permissionRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
     const permissions = permissionService.getUserPermissions(user.id, user.role as Role)
     return c.json({ success: true, data: permissions })
+  })
+  .openapi(getMenuConfigRoute, async c => {
+    const menuConfig = permissionService.getMenuConfig()
+    return c.json({ success: true, data: menuConfig })
+  })
+  .openapi(getPagePermissionsRoute, async c => {
+    const pagePermissions = permissionService.getPagePermissions()
+    return c.json({ success: true, data: pagePermissions })
+  })
+  .openapi(getPermissionCategoriesRoute, async c => {
+    const categories = permissionService.getPermissionCategories()
+    return c.json({ success: true, data: categories })
+  })
+  .openapi(getRoleLabelsRoute, async c => {
+    const labels = permissionService.getRoleLabels()
+    return c.json({ success: true, data: labels })
+  })
+  .openapi(getPermissionLabelsRoute, async c => {
+    const labels = permissionService.getPermissionLabels()
+    return c.json({ success: true, data: labels })
   })
