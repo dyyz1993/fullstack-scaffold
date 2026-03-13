@@ -20,6 +20,19 @@ function clearAuthAndRedirect(): void {
   }
 }
 
+function getAuthToken(): string | null {
+  try {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return parsed.state?.token || null
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
 function createCustomFetch() {
   const showCaptcha = useCaptchaStore.getState().show
 
@@ -37,5 +50,12 @@ function createCustomFetch() {
 export const apiClient = hc<AppType>(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url),
-  sse: url => new SSEClientImpl(url),
+  sse: url => {
+    const token = getAuthToken()
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    return new SSEClientImpl(url, headers)
+  },
 })

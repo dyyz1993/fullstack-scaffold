@@ -4,8 +4,8 @@
  * 此文件属于框架层代码。如需修改，请添加以下说明：
  *
  * @framework-modify
- * @reason [必填] 修改原因
- * @impact [必填] 影响范围
+ * @reason 使用 fetch API 替代 EventSource，支持自定义 headers（认证）
+ * @impact SSE 客户端现在支持 Authorization header
  */
 
 interface SSEProtocol {
@@ -21,7 +21,7 @@ interface SSEClient<P extends SSEProtocol = SSEProtocol> {
 }
 
 export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSEClient<P> {
-  private eventSource: EventSource | null = null
+  private abortController: AbortController | null = null
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private statusHandlers: ((status: 'connecting' | 'open' | 'closed') => void)[] = []
   private errorHandlers: ((error: Error) => void)[] = []
@@ -30,45 +30,81 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
   private maxReconnectAttempts = 5
   private reconnectDelay = 1000
   private url: string | URL
+  private headers: Record<string, string>
 
-  constructor(url: string | URL) {
+  constructor(url: string | URL, headers: Record<string, string> = {}) {
     this.url = url
-    this.connect(url)
+    this.headers = headers
+    this.connect()
   }
 
   get status() {
     return this._status
   }
 
-  private connect(url: string | URL) {
+  private async connect() {
     this._status = 'connecting'
+    this.abortController = new AbortController()
 
     try {
-      this.eventSource = new EventSource(url.toString())
+      const response = await fetch(this.url.toString(), {
+        headers: {
+          Accept: 'text/event-stream',
+          ...this.headers,
+        },
+        signal: this.abortController.signal,
+      })
 
-      this.eventSource.onopen = () => {
-        this._status = 'open'
-        this.reconnectAttempts = 0
-        this.statusHandlers.forEach(h => h('open'))
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      this.eventSource.onerror = () => {
-        if (this.eventSource?.readyState === EventSource.CLOSED) {
-          this._status = 'closed'
-          this.statusHandlers.forEach(h => h('closed'))
-        } else {
-          const error = new Error('SSE connection error')
-          this.errorHandlers.forEach(h => h(error))
-          this.attemptReconnect()
+      this._status = 'open'
+      this.reconnectAttempts = 0
+      this.statusHandlers.forEach(h => h('open'))
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let eventType = 'message'
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            eventType = line.slice(6).trim()
+          } else if (line.startsWith('data:')) {
+            const data = line.slice(5).trim()
+            this.handleMessage(eventType, data)
+            eventType = 'message'
+          } else if (line === '') {
+            eventType = 'message'
+          }
         }
       }
 
-      this.eventSource.onmessage = event => {
-        this.handleMessage('message', event.data)
-      }
-    } catch (error) {
       this._status = 'closed'
+      this.statusHandlers.forEach(h => h('closed'))
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        this._status = 'closed'
+        this.statusHandlers.forEach(h => h('closed'))
+        return
+      }
+
       this.errorHandlers.forEach(h => h(error as Error))
+      this.attemptReconnect()
     }
   }
 
@@ -76,7 +112,7 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
       setTimeout(() => {
-        this.connect(this.url)
+        this.connect()
       }, this.reconnectDelay * this.reconnectAttempts)
     } else {
       this._status = 'closed'
@@ -97,13 +133,6 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
 
   on<K extends keyof P['events']>(type: K, handler: (payload: P['events'][K]) => void): () => void {
     const eventName = type as string
-
-    if (this.eventSource && eventName !== 'message') {
-      this.eventSource.addEventListener(eventName, (event: MessageEvent) => {
-        this.handleMessage(eventName, event.data)
-      })
-    }
-
     const list = this.handlers.get(eventName) || []
     list.push(handler as (payload: unknown) => void)
     this.handlers.set(eventName, list)
@@ -130,15 +159,18 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
   }
 
   abort(): void {
-    if (this.eventSource) {
-      this.eventSource.close()
-      this.eventSource = null
+    if (this.abortController) {
+      this.abortController.abort()
+      this.abortController = null
     }
     this._status = 'closed'
     this.statusHandlers.forEach(h => h('closed'))
   }
 }
 
-export function createSSEClient<P extends SSEProtocol>(url: string | URL): SSEClient<P> {
-  return new SSEClientImpl<P>(url) as unknown as SSEClient<P>
+export function createSSEClient<P extends SSEProtocol>(
+  url: string | URL,
+  headers: Record<string, string> = {}
+): SSEClient<P> {
+  return new SSEClientImpl<P>(url, headers) as unknown as SSEClient<P>
 }

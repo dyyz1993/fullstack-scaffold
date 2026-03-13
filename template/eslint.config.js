@@ -115,7 +115,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/client/services/wsClient.ts', 'src/client/services/sseClient.ts'],
+    files: ['src/shared/core/ws-client.ts', 'src/shared/core/sse-client.ts'],
     rules: {
       'local-rules/protect-ws-sse-interface': 'error',
     },
