@@ -1,15 +1,37 @@
 import React, { useEffect, useState } from 'react'
-import { Table, Button, Modal, Form, Input, Switch, message, Popconfirm, Space, Tag } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, KeyOutlined } from '@ant-design/icons'
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Switch,
+  message,
+  Popconfirm,
+  Space,
+  Tag,
+  Tabs,
+} from 'antd'
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  KeyOutlined,
+  CodeOutlined,
+  ApartmentOutlined,
+} from '@ant-design/icons'
 import { useRoleStore } from '../hooks/useRoles'
-import { useConfig } from '../hooks/useConfig'
+import { useConfig, usePermissionCategories } from '../hooks/useConfig'
 import type { RoleType } from '@shared/modules/role/schemas'
-import type { PermissionInfo } from '@shared/modules/permission'
+import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
+import { PermissionTree } from '../components/PermissionTree'
+import { apiClient } from '../services/apiClient'
 
 export const RolesPage: React.FC = () => {
   const { roles, loading, fetchRoles, createRole, updateRole, deleteRole, updateRolePermissions } =
     useRoleStore()
   const { permissions } = useConfig()
+  const { categories } = usePermissionCategories()
   const [modalVisible, setModalVisible] = useState(false)
   const [permissionModalVisible, setPermissionModalVisible] = useState(false)
   const [editingRole, setEditingRole] = useState<RoleType | null>(null)
@@ -39,9 +61,25 @@ export const RolesPage: React.FC = () => {
     }
   }
 
-  const handleManagePermissions = (role: RoleType) => {
+  const handleManagePermissions = async (role: RoleType) => {
     setEditingRole(role)
-    setSelectedPermissions([])
+
+    try {
+      const response = await apiClient.api.roles[':id'].$get({
+        param: { id: role.id },
+      })
+      const data = await response.json()
+
+      if (data.success && data.data.permissions) {
+        setSelectedPermissions(data.data.permissions)
+      } else {
+        setSelectedPermissions([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch role permissions:', error)
+      setSelectedPermissions([])
+    }
+
     setPermissionModalVisible(true)
   }
 
@@ -207,33 +245,51 @@ export const RolesPage: React.FC = () => {
         open={permissionModalVisible}
         onOk={handlePermissionSubmit}
         onCancel={() => setPermissionModalVisible(false)}
-        width={800}
-        okText="确定"
+        width={900}
+        okText="保存"
         cancelText="取消"
       >
-        <div>
-          <h3>选择权限</h3>
-          <div style={{ marginTop: '16px' }}>
-            {permissions.map((permission: PermissionInfo) => (
-              <Tag
-                key={permission.permission}
-                color={selectedPermissions.includes(permission.permission) ? 'blue' : 'default'}
-                style={{ margin: '4px', cursor: 'pointer' }}
-                onClick={() => {
-                  if (selectedPermissions.includes(permission.permission)) {
-                    setSelectedPermissions(
-                      selectedPermissions.filter(p => p !== permission.permission)
-                    )
-                  } else {
-                    setSelectedPermissions([...selectedPermissions, permission.permission])
-                  }
-                }}
-              >
-                {permission.label}
-              </Tag>
-            ))}
-          </div>
-        </div>
+        <Tabs
+          defaultActiveKey="tree"
+          items={[
+            {
+              key: 'tree',
+              label: (
+                <span>
+                  <ApartmentOutlined />
+                  树状选择
+                </span>
+              ),
+              children: (
+                <PermissionTree
+                  permissions={permissions}
+                  categories={categories}
+                  selectedPermissions={selectedPermissions}
+                  onSelectionChange={setSelectedPermissions}
+                />
+              ),
+            },
+            {
+              key: 'json',
+              label: (
+                <span>
+                  <CodeOutlined />
+                  JSON编辑
+                </span>
+              ),
+              children: (
+                <PermissionConfigEditor
+                  visible={true}
+                  title=""
+                  permissions={permissions}
+                  selectedPermissions={selectedPermissions}
+                  onCancel={() => {}}
+                  onOk={setSelectedPermissions}
+                />
+              ),
+            },
+          ]}
+        />
       </Modal>
     </div>
   )

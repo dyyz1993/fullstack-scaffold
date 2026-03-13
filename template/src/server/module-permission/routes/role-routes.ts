@@ -13,6 +13,10 @@ import {
   SuccessSchema,
 } from '@shared/modules/role/schemas'
 
+const RoleWithPermissionsSchema = RoleSchema.extend({
+  permissions: z.array(z.string()),
+})
+
 const getRolesRoute = createRoute({
   method: 'get',
   path: '/roles',
@@ -32,7 +36,7 @@ const getRoleRoute = createRoute({
     }),
   },
   responses: {
-    200: successResponse(RoleSchema, 'Get role by ID'),
+    200: successResponse(RoleWithPermissionsSchema, 'Get role by ID'),
     404: errorResponse('Role not found'),
   },
 })
@@ -140,7 +144,15 @@ export const roleRoutes = new OpenAPIHono()
       return c.json({ success: false, error: 'Role not found' }, 404)
     }
 
-    return c.json({ success: true, data: role })
+    const permissions = await permissionService.getRolePermissions(id)
+
+    return c.json({
+      success: true,
+      data: {
+        ...role,
+        permissions: permissions.map(p => p.code),
+      },
+    })
   })
   .openapi(createRoleRoute, async c => {
     const data = c.req.valid('json')
