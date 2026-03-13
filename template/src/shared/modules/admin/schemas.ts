@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi'
+import { RoleEnum, PermissionEnum } from '@shared/modules/permission'
 
 export const SystemStatsSchema = z.object({
   totalTodos: z.number(),
@@ -25,9 +26,9 @@ export const AuthUserSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string(),
-  role: z.enum(['super_admin', 'customer_service', 'user']),
+  role: RoleEnum,
   avatar: z.string().optional(),
-  permissions: z.array(z.string()),
+  permissions: z.array(PermissionEnum),
 })
 
 export const LoginRequestSchema = z.object({
@@ -50,7 +51,7 @@ export const UserSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string(),
-  role: z.enum(['super_admin', 'customer_service', 'user']),
+  role: RoleEnum,
   status: z.enum(['active', 'inactive', 'locked']),
   avatar: z.string().optional(),
   createdAt: z.string(),
@@ -62,7 +63,7 @@ export const UserListSchema = z.array(UserSchema)
 export const UpdateUserRequestSchema = z.object({
   username: z.string().optional(),
   email: z.string().email().optional(),
-  role: z.enum(['super_admin', 'customer_service', 'user']).optional(),
+  role: RoleEnum.optional(),
   status: z.enum(['active', 'inactive', 'locked']).optional(),
 })
 
@@ -70,7 +71,7 @@ export const CreateUserRequestSchema = z.object({
   username: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(['super_admin', 'customer_service', 'user']),
+  role: RoleEnum,
   status: z.enum(['active', 'inactive', 'locked']).optional().default('active'),
 })
 

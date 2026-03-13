@@ -8,6 +8,7 @@ import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { createRequestInterceptor } from './requestInterceptor'
 import { useCaptchaStore } from '../stores/captchaStore'
+import { useLoadingStore } from '../stores/loadingStore'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
@@ -35,6 +36,7 @@ function getAuthToken(): string | null {
 
 function createCustomFetch() {
   const showCaptcha = useCaptchaStore.getState().show
+  const { startLoading, stopLoading } = useLoadingStore.getState()
 
   return createRequestInterceptor({
     onShowLogin: clearAuthAndRedirect,
@@ -43,6 +45,15 @@ function createCustomFetch() {
         type: config.type,
         captchaUrl: config.captchaUrl,
       })
+    },
+    onRequest: () => {
+      startLoading()
+    },
+    onResponse: () => {
+      stopLoading()
+    },
+    onError: () => {
+      stopLoading()
     },
   })
 }

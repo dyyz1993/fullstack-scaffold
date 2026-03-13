@@ -73,13 +73,13 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       const data = await response.json()
 
       if (data.success) {
-        setPermissions(data.data.permissions as Permission[])
-        setRole(data.data.role as Role)
+        setPermissions(data.data.permissions)
+        setRole(data.data.role)
       }
     } catch (error) {
       console.error('Failed to fetch user permissions:', error)
       if (user.role) {
-        const userRole = user.role as Role
+        const userRole = user.role
         setRole(userRole)
         setPermissions(getPermissionsByRole(userRole))
       }

@@ -16,6 +16,9 @@ export interface CaptchaConfig {
 export interface InterceptorCallbacks {
   onShowLogin: () => void
   onShowCaptcha: (config: Omit<CaptchaConfig, 'onSuccess' | 'onCancel'>) => Promise<boolean>
+  onRequest?: () => void
+  onResponse?: () => void
+  onError?: () => void
 }
 
 export class RequestInterceptor {
@@ -33,8 +36,15 @@ export class RequestInterceptor {
       })
     }
 
-    const response = await request()
-    return this.handleResponseStatus(response, request)
+    this.callbacks.onRequest?.()
+    try {
+      const response = await request()
+      this.callbacks.onResponse?.()
+      return this.handleResponseStatus(response, request)
+    } catch (error) {
+      this.callbacks.onError?.()
+      throw error
+    }
   }
 
   private async executeRequest(url: string, init: RequestInit): Promise<Response> {
@@ -87,12 +97,17 @@ export class RequestInterceptor {
       })
 
       if (success) {
+        this.callbacks.onRequest?.()
         const response = await retryRequest()
+        this.callbacks.onResponse?.()
         await this.processPendingRequests()
         return response
       } else {
         throw new Error('Captcha verification failed')
       }
+    } catch (error) {
+      this.callbacks.onError?.()
+      throw error
     } finally {
       this.isShowingCaptcha = false
     }
@@ -105,9 +120,12 @@ export class RequestInterceptor {
     await Promise.all(
       requests.map(async ({ resolve, reject, request }) => {
         try {
+          this.callbacks.onRequest?.()
           const response = await request()
+          this.callbacks.onResponse?.()
           resolve(response)
         } catch (error) {
+          this.callbacks.onError?.()
           reject(error as Error)
         }
       })

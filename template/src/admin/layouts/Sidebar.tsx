@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Users, ShoppingCart, Headphones, FileText, AlertTriangle, Settings, Shield, type LucideIcon } from 'lucide-react'
 import { usePermissions } from '../hooks/usePermissions'
 import { useMenuConfig } from '../hooks/useConfig'
-import type { MenuItem, Permission } from '@shared/modules/permission'
+import type { MenuItem } from '@shared/modules/permission'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -27,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     if (!item.permissions || item.permissions.length === 0) {
       return true
     }
-    return hasAnyPermission(item.permissions as Permission[])
+    return hasAnyPermission(item.permissions)
   })
 
   if (loading) {

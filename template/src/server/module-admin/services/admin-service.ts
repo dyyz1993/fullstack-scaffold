@@ -209,7 +209,14 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     throw new Error('Invalid password')
   }
 
-  const token = `mock-token-${user.id}-${Date.now()}`
+  let token: string
+  if (user.role === Role.SUPER_ADMIN) {
+    token = `test-super-admin-${user.id}`
+  } else if (user.role === Role.CUSTOMER_SERVICE) {
+    token = `test-customer-service-${user.id}`
+  } else {
+    token = `test-user-${user.id}`
+  }
 
   return {
     user: {

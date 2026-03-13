@@ -23,7 +23,7 @@ export const PermissionsPage: React.FC = () => {
       title: '权限',
       dataIndex: 'permission',
       key: 'permission',
-      render: (permission: string) => permissionLabels[permission as Permission] || permission,
+      render: (permission: Permission) => permissionLabels[permission] || permission,
     },
     {
       title: '超级管理员',

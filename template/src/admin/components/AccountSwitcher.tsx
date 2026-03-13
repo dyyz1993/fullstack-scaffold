@@ -63,7 +63,7 @@ export const AccountSwitcher: React.FC = () => {
     }
   }
 
-  const currentRole = user?.role as Role
+  const currentRole = user?.role
   const currentAccount = TEST_ACCOUNTS.find(acc => acc.role === currentRole)
 
   return (

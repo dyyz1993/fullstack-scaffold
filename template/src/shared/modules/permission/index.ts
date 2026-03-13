@@ -1,5 +1,6 @@
 export {
   RoleEnum,
+  PermissionEnum,
   RoleInfoSchema,
   PermissionInfoSchema,
   UserPermissionsSchema,
@@ -15,6 +16,7 @@ export {
   RoleLabelsSchema,
   PermissionLabelsSchema,
   type RoleType,
+  type PermissionType,
   type RoleInfo,
   type PermissionInfo,
   type UserPermissions,
