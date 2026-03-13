@@ -324,8 +324,8 @@ const getAvatarRoute = createRoute({
   responses: {
     200: {
       content: {
-        'image/png': { schema: z.instanceof(Blob) },
-        'image/jpeg': { schema: z.instanceof(Blob) },
+        'image/png': { schema: z.any().openapi({ type: 'string', format: 'binary' }) },
+        'image/jpeg': { schema: z.any().openapi({ type: 'string', format: 'binary' }) },
       },
       description: 'User avatar image',
     },
@@ -367,7 +367,7 @@ const exportTodosRoute = createRoute({
     200: {
       content: {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
-          schema: z.instanceof(Blob),
+          schema: z.any().openapi({ type: 'string', format: 'binary' }),
         },
         'text/csv': { schema: z.string() },
       },
