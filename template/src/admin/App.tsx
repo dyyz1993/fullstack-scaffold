@@ -42,9 +42,11 @@ export const App: React.FC = () => {
                       <Route path="/tickets" element={<TicketsPage />} />
                       <Route path="/disputes" element={<DisputesPage />} />
                       <Route path="/content" element={<ContentPage />} />
-                      <Route path="/settings" element={<SettingsPage />} />
-                      <Route path="/permissions" element={<PermissionsPage />} />
-                      <Route path="/roles" element={<RolesPage />} />
+                      <Route path="/system/settings" element={<SettingsPage />} />
+                      <Route path="/system/logs" element={<div>系统日志页面（待开发）</div>} />
+                      <Route path="/system/monitor" element={<div>系统监控页面（待开发）</div>} />
+                      <Route path="/system/permissions" element={<PermissionsPage />} />
+                      <Route path="/system/roles" element={<RolesPage />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>

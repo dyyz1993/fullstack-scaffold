@@ -13,6 +13,7 @@ export interface MenuItem {
   label: string
   icon: string
   permissions: Permission[]
+  children?: MenuItem[]
 }
 
 export interface PageAction {
@@ -67,22 +68,42 @@ const MENU_CONFIG: MenuItem[] = [
     permissions: [Permission.CONTENT_VIEW],
   },
   {
-    path: '/settings',
-    label: '系统设置',
+    path: '/system',
+    label: '系统管理',
     icon: 'Settings',
-    permissions: [Permission.SYSTEM_SETTINGS],
-  },
-  {
-    path: '/permissions',
-    label: '权限管理',
-    icon: 'Shield',
     permissions: [],
-  },
-  {
-    path: '/roles',
-    label: '角色管理',
-    icon: 'UserCog',
-    permissions: [],
+    children: [
+      {
+        path: '/system/settings',
+        label: '系统设置',
+        icon: 'Settings',
+        permissions: [Permission.SYSTEM_SETTINGS],
+      },
+      {
+        path: '/system/logs',
+        label: '系统日志',
+        icon: 'FileText',
+        permissions: [Permission.SYSTEM_LOGS],
+      },
+      {
+        path: '/system/monitor',
+        label: '系统监控',
+        icon: 'Activity',
+        permissions: [Permission.SYSTEM_MONITOR],
+      },
+      {
+        path: '/system/permissions',
+        label: '权限管理',
+        icon: 'Shield',
+        permissions: [],
+      },
+      {
+        path: '/system/roles',
+        label: '角色管理',
+        icon: 'UserCog',
+        permissions: [],
+      },
+    ],
   },
 ]
 
