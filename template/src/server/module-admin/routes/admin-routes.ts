@@ -531,6 +531,7 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
   })
   .openapi(exportTodosRoute, async _c => {
     const todos = await adminService.getAllTodos()
+    const encoder = new TextEncoder()
 
     const allTodos = [
       ...todos,
@@ -542,15 +543,26 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
       })),
     ]
 
-    const csvContent =
-      'id,title,completed,created_at\n' +
-      allTodos
-        .map(t => `${t.id},"${t.title.replace(/"/g, '""')}",${t.completed},${t.createdAt}`)
-        .join('\n')
-    return new Response(csvContent, {
+    const stream = new ReadableStream({
+      async start(controller) {
+        controller.enqueue(encoder.encode('id,title,completed,created_at\n'))
+
+        for (const todo of allTodos) {
+          const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
+          controller.enqueue(encoder.encode(line))
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+
+        controller.close()
+      },
+    })
+
+    return new Response(stream, {
       headers: {
         'Content-Type': 'text/csv',
         'Content-Disposition': 'attachment; filename="todos.csv"',
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
       },
     })
   })
