@@ -18,6 +18,8 @@ export const MediaTestPage: React.FC = () => {
   const [streamLines, setStreamLines] = useState<string[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [isDirectDownloading, setIsDirectDownloading] = useState(false)
+  const [directProgress, setDirectProgress] = useState(0)
+  const [directSpeed, setDirectSpeed] = useState('')
 
   const handleFetchAvatar = async () => {
     setLoadingAvatar(true)
@@ -159,8 +161,40 @@ export const MediaTestPage: React.FC = () => {
 
   const handleDirectDownload = async () => {
     setIsDirectDownloading(true)
+    setDirectProgress(0)
+    setDirectSpeed('')
+    const startTime = Date.now()
+
     try {
-      const blob = await apiClient.api.admin.todos.export.$download()
+      const response = await apiClient.api.admin.todos.export.$get()
+      const contentLength = parseInt(response.headers.get('Content-Length') || '0')
+      const reader = response.body?.getReader()
+
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      const chunks: Uint8Array[] = []
+      let receivedLength = 0
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        chunks.push(value)
+        receivedLength += value.length
+
+        if (contentLength > 0) {
+          const progress = Math.round((receivedLength / contentLength) * 100)
+          setDirectProgress(progress)
+        }
+
+        const elapsed = (Date.now() - startTime) / 1000
+        const speed = (receivedLength / 1024 / elapsed).toFixed(1)
+        setDirectSpeed(`${speed} KB/s`)
+      }
+
+      const blob = new Blob(chunks)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -332,7 +366,7 @@ export const MediaTestPage: React.FC = () => {
                 onClick={handleDirectDownload}
                 loading={isDirectDownloading}
               >
-                直接下载 (一次性获取)
+                直接下载 (页面内进度)
               </Button>
               {supportsFileSystemAccess ? (
                 <Button
@@ -354,6 +388,13 @@ export const MediaTestPage: React.FC = () => {
                 </Button>
               )}
             </Space>
+
+            {isDirectDownloading && (
+              <div style={{ marginTop: 16 }}>
+                <Progress percent={directProgress} status="active" />
+                <Text type="secondary">下载速度: {directSpeed || '计算中...'}</Text>
+              </div>
+            )}
 
             {isStreaming && (
               <div style={{ marginTop: 16 }}>
