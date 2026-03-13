@@ -17,6 +17,7 @@ export const MediaTestPage: React.FC = () => {
   const [streamProgress, setStreamProgress] = useState(0)
   const [streamLines, setStreamLines] = useState<string[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const [isDirectDownloading, setIsDirectDownloading] = useState(false)
 
   const handleFetchAvatar = async () => {
     setLoadingAvatar(true)
@@ -89,7 +90,72 @@ export const MediaTestPage: React.FC = () => {
     }
   }
 
-  const [isDirectDownloading, setIsDirectDownloading] = useState(false)
+  const handleBrowserStreamDownload = async () => {
+    try {
+      const win = window as unknown as {
+        showSaveFilePicker: (options: {
+          suggestedName: string
+          types: Array<{ description: string; accept: Record<string, string[]> }>
+        }) => Promise<{
+          createWritable: () => Promise<{
+            write: (data: Uint8Array) => Promise<void>
+            close: () => Promise<void>
+          }>
+        }>
+      }
+      const handle = await win.showSaveFilePicker({
+        suggestedName: 'todos-stream.csv',
+        types: [
+          {
+            description: 'CSV File',
+            accept: { 'text/csv': ['.csv'] },
+          },
+        ],
+      })
+
+      const writable = await handle.createWritable()
+      setIsStreaming(true)
+      setStreamProgress(0)
+      setStreamLines([])
+
+      const response = await apiClient.api.admin.todos.export.stream.$get()
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      const decoder = new TextDecoder()
+      let lineCount = 0
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        await writable.write(value)
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n').filter(l => l.trim())
+
+        for (const line of lines) {
+          lineCount++
+          setStreamLines(prev => [...prev, line])
+          setStreamProgress(Math.round((lineCount / TOTAL_LINES) * 100))
+        }
+      }
+
+      await writable.close()
+      message.success('流式导出完成！请在浏览器下载管理器中查看进度')
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        message.info('用户取消了保存')
+      } else {
+        console.error('Failed to stream download:', error)
+        message.error('流式导出失败')
+      }
+    } finally {
+      setIsStreaming(false)
+    }
+  }
 
   const handleDirectDownload = async () => {
     setIsDirectDownloading(true)
@@ -111,6 +177,8 @@ export const MediaTestPage: React.FC = () => {
   }
 
   const availableIcons = ['home', 'settings', 'user', 'bell']
+
+  const supportsFileSystemAccess = 'showSaveFilePicker' in window
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -255,9 +323,9 @@ export const MediaTestPage: React.FC = () => {
           }
         >
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Paragraph>对比两种下载方式：一次性下载 vs 流式下载（带实时进度）。</Paragraph>
+            <Paragraph>对比两种下载方式：一次性下载 vs 流式下载（浏览器原生进度）。</Paragraph>
 
-            <Space>
+            <Space wrap>
               <Button
                 type="primary"
                 icon={<Download size={16} />}
@@ -266,14 +334,25 @@ export const MediaTestPage: React.FC = () => {
               >
                 直接下载 (一次性获取)
               </Button>
-              <Button
-                type="default"
-                icon={<Download size={16} />}
-                onClick={handleStreamDownload}
-                loading={isStreaming}
-              >
-                流式下载 (实时进度显示)
-              </Button>
+              {supportsFileSystemAccess ? (
+                <Button
+                  type="default"
+                  icon={<Download size={16} />}
+                  onClick={handleBrowserStreamDownload}
+                  loading={isStreaming}
+                >
+                  流式下载 (浏览器原生进度)
+                </Button>
+              ) : (
+                <Button
+                  type="default"
+                  icon={<Download size={16} />}
+                  onClick={handleStreamDownload}
+                  loading={isStreaming}
+                >
+                  流式下载 (页面内进度显示)
+                </Button>
+              )}
             </Space>
 
             {isStreaming && (
@@ -285,7 +364,7 @@ export const MediaTestPage: React.FC = () => {
               </div>
             )}
 
-            {streamLines.length > 0 && !isStreaming && (
+            {streamLines.length > 0 && !isStreaming && !supportsFileSystemAccess && (
               <div style={{ marginTop: 16 }}>
                 <Text type="secondary">接收到的数据 ({streamLines.length} 行)：</Text>
                 <div
@@ -323,6 +402,14 @@ export const MediaTestPage: React.FC = () => {
                 </Button>
               </div>
             )}
+
+            {supportsFileSystemAccess && (
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary">
+                  💡 流式下载使用 File System Access API，会在浏览器下载管理器中显示实时进度
+                </Text>
+              </div>
+            )}
           </Space>
         </Card>
 
@@ -346,17 +433,23 @@ const svgString = await apiClient.api.admin.icon[':name'].$svg({
   param: { name: 'home' },
 })
 
-// 流式下载 - 实时进度显示
+// 流式下载 - 使用 File System Access API (浏览器原生进度)
+const handle = await window.showSaveFilePicker({
+  suggestedName: 'todos.csv',
+  types: [{ description: 'CSV', accept: { 'text/csv': ['.csv'] } }],
+})
+const writable = await handle.createWritable()
+
 const response = await apiClient.api.admin.todos.export.stream.$get()
 const reader = response.body?.getReader()
-const decoder = new TextDecoder()
 
 while (true) {
   const { done, value } = await reader.read()
   if (done) break
-  const chunk = decoder.decode(value)
-  // 处理每个数据块...
-}`}
+  await writable.write(value)  // 流式写入，浏览器显示进度
+}
+
+await writable.close()`}
           </pre>
         </Card>
       </Space>
