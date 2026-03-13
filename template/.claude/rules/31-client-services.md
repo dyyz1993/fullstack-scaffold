@@ -276,6 +276,123 @@ const exportTodosRoute = createRoute({
 
 **注意**: 对于二进制类型，使用 `z.any().openapi({ type: 'string', format: 'binary' })` 而不是 `z.instanceof(Blob)`。
 
+## 🌊 流式响应处理
+
+对于大数据量的导出场景，可以使用流式响应来减少内存占用。
+
+### 服务端实现
+
+```typescript
+import { createRoute } from '@hono/zod-openapi'
+
+const exportStreamRoute = createRoute({
+  method: 'get',
+  path: '/admin/todos/export/stream',
+  responses: {
+    200: {
+      content: {
+        'text/csv': { schema: z.string() },
+      },
+      description: 'Stream export todos as CSV',
+    },
+  },
+})
+  // Handler
+  .openapi(exportStreamRoute, async _c => {
+    const todos = await adminService.getAllTodos()
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        // 发送 CSV 头
+        controller.enqueue('id,title,completed,created_at\n')
+
+        // 逐行发送数据
+        for (const todo of todos) {
+          const line = `${todo.id},"${todo.title}",${todo.completed},${todo.createdAt}\n`
+          controller.enqueue(line)
+
+          // 模拟慢速导出（可选）
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+
+        controller.close()
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="todos.csv"',
+      },
+    })
+  })
+```
+
+### 客户端处理
+
+```typescript
+import { apiClient } from '@client/services/apiClient'
+
+// 获取流式响应
+const response = await apiClient.api.admin.todos.export.stream.$get()
+
+// 使用 ReadableStream 读取数据
+const reader = response.body?.getReader()
+if (!reader) {
+  throw new Error('No response body')
+}
+
+const decoder = new TextDecoder()
+let csvContent = ''
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+
+  // 处理每个数据块
+  csvContent += decoder.decode(value)
+  console.log('Received chunk:', value.length, 'bytes')
+}
+
+// 创建下载
+const blob = new Blob([csvContent], { type: 'text/csv' })
+const url = URL.createObjectURL(blob)
+const a = document.createElement('a')
+a.href = url
+a.download = 'todos.csv'
+a.click()
+URL.revokeObjectURL(url)
+```
+
+### 实时进度显示
+
+```typescript
+const reader = response.body?.getReader()
+const contentLength = parseInt(response.headers.get('Content-Length') || '0')
+let receivedLength = 0
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+
+  receivedLength += value.length
+  const progress = contentLength > 0 ? Math.round((receivedLength / contentLength) * 100) : 0
+
+  console.log(`Progress: ${progress}%`)
+}
+```
+
+### 使用场景
+
+| 场景           | 推荐方式      |
+| -------------- | ------------- |
+| 小文件 (< 1MB) | `$download()` |
+| 大文件 (> 1MB) | 流式响应      |
+| 实时进度显示   | 流式响应      |
+| 大数据量导出   | 流式响应      |
+
+**注意**: 流式响应使用 `$get()` 方法，返回 `ClientResponse`，其 `body` 属性是 `ReadableStream | null`。
+
 ## 🛡️ 框架保护
 
 `apiClient.ts` 是框架层文件，带有 `@framework-baseline` 注释：
