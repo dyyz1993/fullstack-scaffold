@@ -545,21 +545,40 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
   })
   .openapi(exportTodosStreamRoute, async _c => {
     const todos = await adminService.getAllTodos()
+    const encoder = new TextEncoder()
+
     const stream = new ReadableStream({
       async start(controller) {
-        controller.enqueue('id,title,completed,created_at\n')
-        for (const todo of todos) {
+        controller.enqueue(encoder.encode('id,title,completed,created_at\n'))
+
+        const allTodos = [
+          ...todos,
+          ...Array.from({ length: 10 }, (_, i) => ({
+            id: 1000 + i,
+            title: `模拟数据 ${i + 1}`,
+            completed: i % 2 === 0,
+            createdAt: new Date().toISOString(),
+          })),
+        ]
+
+        for (let i = 0; i < allTodos.length; i++) {
+          const todo = allTodos[i]
           const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
-          controller.enqueue(line)
-          await new Promise(resolve => setTimeout(resolve, 100))
+          controller.enqueue(encoder.encode(line))
+
+          await new Promise(resolve => setTimeout(resolve, 300))
         }
+
         controller.close()
       },
     })
+
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/csv',
         'Content-Disposition': 'attachment; filename="todos-stream.csv"',
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
       },
     })
   })
