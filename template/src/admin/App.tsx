@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TestCaptchaPage } from './pages/TestCaptchaPage'
+import { MediaTestPage } from './pages/MediaTestPage'
 import { ProtectedRoute, CaptchaModal } from './components'
 
 export const App: React.FC = () => {
@@ -31,6 +32,7 @@ export const App: React.FC = () => {
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/test-captcha" element={<TestCaptchaPage />} />
+                    <Route path="/media-test" element={<MediaTestPage />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
