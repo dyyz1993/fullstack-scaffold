@@ -15,6 +15,7 @@ import type {
   ModuleTestsConfig,
   TestQualityConfig,
   ClientTestsConfig,
+  MdRefsConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -318,6 +319,14 @@ export const clientTestsConfig: ClientTestsConfig = {
 }
 
 // ============================================
+// Markdown 引用路径验证配置
+// ============================================
+export const mdRefsConfig: MdRefsConfig = {
+  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage'],
+  checkDirs: ['.', 'src'],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -330,6 +339,7 @@ export const projectConfig = {
   moduleTests: moduleTestsConfig,
   testQuality: testQualityConfig,
   clientTests: clientTestsConfig,
+  mdRefs: mdRefsConfig,
 } as const
 
 export default projectConfig

@@ -285,6 +285,25 @@ export async function deleteUser(id: string): Promise<void> {
   mockUsers.splice(userIndex, 1)
 }
 
+export async function getAllTodos(): Promise<
+  Array<{
+    id: number
+    title: string
+    completed: boolean
+    createdAt: string
+  }>
+> {
+  const db = await getDb()
+  const results = await db.select().from(todos).orderBy(desc(todos.createdAt))
+
+  return results.map(r => ({
+    id: r.id,
+    title: r.title,
+    completed: r.status === 'completed',
+    createdAt: toISOString(r.createdAt),
+  }))
+}
+
 const avatarCache = new Map<string, { data: Blob; contentType: string }>()
 const iconCache = new Map<string, string>()
 

@@ -357,6 +357,26 @@ const getIconRoute = createRoute({
   },
 })
 
+const exportTodosRoute = createRoute({
+  method: 'get',
+  path: '/admin/todos/export',
+  tags: ['export'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: {
+      content: {
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+          schema: z.instanceof(Blob),
+        },
+        'text/csv': { schema: z.string() },
+      },
+      description: 'Export todos as Excel or CSV',
+    },
+    401: errorResponse('Unauthorized'),
+  },
+})
+
 export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getStatsRoute, async c => {
     const stats = await adminService.getSystemStats()
@@ -489,6 +509,20 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
     return new Response(svg, {
       headers: {
         'Content-Type': 'image/svg+xml',
+      },
+    })
+  })
+  .openapi(exportTodosRoute, async _c => {
+    const todos = await adminService.getAllTodos()
+    const csvContent =
+      'id,title,completed,created_at\n' +
+      todos
+        .map(t => `${t.id},"${t.title.replace(/"/g, '""')}",${t.completed},${t.createdAt}`)
+        .join('\n')
+    return new Response(csvContent, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="todos.csv"',
       },
     })
   })

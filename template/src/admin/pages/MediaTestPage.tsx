@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { apiClient } from '../services/apiClient'
 import { Card, Button, Space, Input, message, Image, Typography, Divider } from 'antd'
-import { Image as ImageIcon, FileCode } from 'lucide-react'
+import { Image as ImageIcon, FileCode, Download } from 'lucide-react'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -12,6 +12,7 @@ export const MediaTestPage: React.FC = () => {
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [loadingAvatar, setLoadingAvatar] = useState(false)
   const [loadingSvg, setLoadingSvg] = useState(false)
+  const [loadingDownload, setLoadingDownload] = useState(false)
 
   const handleFetchAvatar = async () => {
     setLoadingAvatar(true)
@@ -183,6 +184,47 @@ export const MediaTestPage: React.FC = () => {
           </Space>
         </Card>
 
+        <Card
+          title={
+            <Space>
+              <Download size={20} />
+              <span>文件下载测试 ($download)</span>
+            </Space>
+          }
+        >
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Paragraph>
+              使用 <Text code>$download()</Text> 方法下载文件（Excel, PDF 等），返回{' '}
+              <Text code>Promise&lt;Blob&gt;</Text>。
+            </Paragraph>
+            <Button
+              type="primary"
+              icon={<Download size={16} />}
+              onClick={async () => {
+                setLoadingDownload(true)
+                try {
+                  const blob = await apiClient.api.admin.todos.export.$download()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = 'todos.csv'
+                  a.click()
+                  URL.revokeObjectURL(url)
+                  message.success('文件下载成功')
+                } catch (error) {
+                  console.error('Failed to download:', error)
+                  message.error('文件下载失败')
+                } finally {
+                  setLoadingDownload(false)
+                }
+              }}
+              loading={loadingDownload}
+            >
+              导出 Todos 为 CSV
+            </Button>
+          </Space>
+        </Card>
+
         <Card title="代码示例">
           <pre
             style={{
@@ -203,7 +245,16 @@ document.querySelector('img').src = imageUrl
 const svgString = await apiClient.api.admin.icon[':name'].$svg({
   param: { name: 'home' },
 })
-document.querySelector('#icon-container').innerHTML = svgString`}
+document.querySelector('#icon-container').innerHTML = svgString
+
+// 下载文件 (返回 Blob)
+const fileBlob = await apiClient.api.admin.todos.export.$download()
+const url = URL.createObjectURL(fileBlob)
+const a = document.createElement('a')
+a.href = url
+a.download = 'todos.csv'
+a.click()
+URL.revokeObjectURL(url)`}
           </pre>
         </Card>
       </Space>

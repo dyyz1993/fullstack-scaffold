@@ -141,7 +141,7 @@ export const adminRoutes = new OpenAPIHono()
 
 ## 📝 相关文档
 
-- [Server API 规范](../.claude/rules/20-server-api.md#中间件应用位置重要)
+- [Server API 规范](../.claude/rules/00-project-config.md)
 - [API 类型推导规范](../.claude/rules/10-api-type-inference.md)
 
 ## 🧪 测试

@@ -235,3 +235,19 @@ export interface ParsedPattern {
   pattern: string
   isExact: boolean
 }
+
+// ============================================
+// Markdown 引用路径验证配置
+// ============================================
+export interface MdRefsConfig {
+  ignoreDirs: string[]
+  checkDirs: string[]
+}
+
+export interface MdRefError {
+  file: string
+  line: number
+  ref: string
+  resolvedPath: string
+  isGlob: boolean
+}
