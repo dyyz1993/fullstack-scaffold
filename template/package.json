@@ -87,7 +87,7 @@
     "@cloudflare/workers-types": "^4.20241230.0",
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.4",
     "@hono/vite-dev-server": "^0.23.0",
     "@playwright/test": "^1.50.0",
     "@tailwindcss/postcss": "^4.2.1",
