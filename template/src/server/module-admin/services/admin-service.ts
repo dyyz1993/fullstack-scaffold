@@ -284,3 +284,38 @@ export async function deleteUser(id: string): Promise<void> {
 
   mockUsers.splice(userIndex, 1)
 }
+
+const avatarCache = new Map<string, { data: Blob; contentType: string }>()
+const iconCache = new Map<string, string>()
+
+export async function getAvatar(id: string): Promise<{ data: Blob; contentType: string } | null> {
+  if (avatarCache.has(id)) {
+    return avatarCache.get(id)!
+  }
+  const response = await fetch(`https://api.dicebear.com/7.x/avataaars/png?seed=${id}`)
+  if (!response.ok) {
+    return null
+  }
+  const data = await response.blob()
+  const result = { data, contentType: 'image/png' }
+  avatarCache.set(id, result)
+  return result
+}
+
+export async function getIcon(name: string): Promise<string | null> {
+  if (iconCache.has(name)) {
+    return iconCache.get(name)!
+  }
+  const icons: Record<string, string> = {
+    home: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 6 6 6-6 9 9 6-6-9-9z"></path><path d="M9 21l6-6 6 6-6 9 9 6-6 9-9z"></path></svg>`,
+    settings: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 3 3 3 3 3 0 0 6.3 6.3A1.65 1.65 0 0 3 3 3 3 3 0 0 6.3 6.3a1.65 1.65 0 0 3 3 3 3 3 0 0 6.3 6.3z"></path></svg>`,
+    user: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0 1-3 1H4a4 4 0 0 0 1 3v2"></path><circle cx="12" cy="7" r="4"></circle><path d="M16 11.37A4 4 0 1 1.8 2.44L8 2.44A4 4 0 1 1.8 2z"></path></svg>`,
+    bell: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 6c0 1.1.9 2.1 2.1-2 2.1-.9.9-.9 2.1-2 2.1A6 6 0 0 0 6-6 7-9l1-1.1c.7-.7 1.9-2 2.1-.9-.9-.9-2.1-2-2.1A6 6 0 0 0-6 6-7 9l-1 1.1c-.7.7-1.9 2-2.1.9.9.9 2.1 2 2.1z"></path><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="15" y1="12"></line><line x1="15" y1="9"></line></svg>`,
+  }
+  const svg = icons[name]
+  if (!svg) {
+    return null
+  }
+  iconCache.set(name, svg)
+  return svg
+}

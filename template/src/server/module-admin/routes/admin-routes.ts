@@ -310,6 +310,53 @@ const notificationSSERoute = createRoute({
   },
 })
 
+const getAvatarRoute = createRoute({
+  method: 'get',
+  path: '/admin/avatar/:id',
+  tags: ['media'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        'image/png': { schema: z.instanceof(Blob) },
+        'image/jpeg': { schema: z.instanceof(Blob) },
+      },
+      description: 'User avatar image',
+    },
+    401: errorResponse('Unauthorized'),
+    404: errorResponse('Avatar not found'),
+  },
+})
+
+const getIconRoute = createRoute({
+  method: 'get',
+  path: '/admin/icon/:name',
+  tags: ['media'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({
+      name: z.string(),
+    }),
+  },
+  responses: {
+    200: {
+      content: {
+        'image/svg+xml': { schema: z.string() },
+      },
+      description: 'SVG icon',
+    },
+    401: errorResponse('Unauthorized'),
+    404: errorResponse('Icon not found'),
+  },
+})
+
 export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getStatsRoute, async c => {
     const stats = await adminService.getSystemStats()
@@ -420,6 +467,30 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
       ).handleSSERequest()
     }
     return new Response('SSE not supported', { status: 500 })
+  })
+  .openapi(getAvatarRoute, async c => {
+    const { id } = c.req.valid('param')
+    const avatar = await adminService.getAvatar(id)
+    if (!avatar) {
+      return c.json({ success: false, error: 'Avatar not found' }, 404)
+    }
+    return new Response(avatar.data, {
+      headers: {
+        'Content-Type': avatar.contentType,
+      },
+    })
+  })
+  .openapi(getIconRoute, async c => {
+    const { name } = c.req.valid('param')
+    const svg = await adminService.getIcon(name)
+    if (!svg) {
+      return c.json({ success: false, error: 'Icon not found' }, 404)
+    }
+    return new Response(svg, {
+      headers: {
+        'Content-Type': 'image/svg+xml',
+      },
+    })
   })
 
 export default adminRoutes
