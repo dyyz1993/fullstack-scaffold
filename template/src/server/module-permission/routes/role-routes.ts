@@ -196,6 +196,10 @@ export const roleRoutes = new OpenAPIHono()
       return c.json({ success: false, error: 'Role not found' }, 404)
     }
 
+    if (role.code === 'super_admin') {
+      return c.json({ success: false, error: 'Cannot modify super admin permissions' }, 403)
+    }
+
     const currentPermissions = await permissionService.getRolePermissions(id)
     const currentPermissionIds = currentPermissions.map(p => p.id)
 

@@ -157,13 +157,15 @@ export const RolesPage: React.FC = () => {
       key: 'action',
       render: (_: unknown, record: RoleType) => (
         <Space>
-          <Button
-            type="link"
-            icon={<KeyOutlined />}
-            onClick={() => handleManagePermissions(record)}
-          >
-            权限
-          </Button>
+          {record.code !== 'super_admin' && (
+            <Button
+              type="link"
+              icon={<KeyOutlined />}
+              onClick={() => handleManagePermissions(record)}
+            >
+              权限
+            </Button>
+          )}
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>

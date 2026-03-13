@@ -173,6 +173,28 @@ describe('Role Routes', () => {
       expect(data.success).toBe(true)
     })
 
+    it('should not modify super admin permissions', async () => {
+      const client = createTestClient()
+      const res = await client.api.roles[':id'].permissions.$put(
+        {
+          param: { id: 'role_super_admin' },
+          json: {
+            permissionIds: ['perm_user_view'],
+          },
+        },
+        {
+          headers: { Authorization: 'Bearer test-super-admin-1' },
+        }
+      )
+      expect(res.status).toBe(403)
+
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      if (!data.success) {
+        expect(data.error).toBe('Cannot modify super admin permissions')
+      }
+    })
+
     it('should return 404 for non-existent role when updating permissions', async () => {
       const client = createTestClient()
       const res = await client.api.roles[':id'].permissions.$put(
