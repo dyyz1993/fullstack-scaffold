@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { apiClient } from '../services/apiClient'
-import type { MenuItem, PagePermissionConfig, PermissionCategory, Role, Permission } from '@shared/modules/permission'
+import type {
+  MenuItem,
+  PagePermissionConfig,
+  PermissionCategory,
+  Role,
+  Permission,
+  PermissionInfo,
+} from '@shared/modules/permission'
 
 export function useMenuConfig() {
   const [menuConfig, setMenuConfig] = useState<MenuItem[]>([])
@@ -107,7 +114,9 @@ export function useRoleLabels() {
 }
 
 export function usePermissionLabels() {
-  const [permissionLabels, setPermissionLabels] = useState<Record<Permission, string>>({} as Record<Permission, string>)
+  const [permissionLabels, setPermissionLabels] = useState<Record<Permission, string>>(
+    {} as Record<Permission, string>
+  )
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -130,4 +139,30 @@ export function usePermissionLabels() {
   }, [])
 
   return { permissionLabels, loading }
+}
+
+export function useConfig() {
+  const [permissions, setPermissions] = useState<PermissionInfo[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        setLoading(true)
+        const response = await apiClient.api.permissions.$get()
+        const data = await response.json()
+        if (data.success) {
+          setPermissions(data.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch permissions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPermissions()
+  }, [])
+
+  return { permissions, loading }
 }

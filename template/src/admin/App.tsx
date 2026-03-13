@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { PermissionsPage } from './pages/PermissionsPage'
+import { RolesPage } from './pages/RolesPage'
 import { UsersPage } from './pages/UsersPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { TicketsPage } from './pages/TicketsPage'
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
                       <Route path="/content" element={<ContentPage />} />
                       <Route path="/settings" element={<SettingsPage />} />
                       <Route path="/permissions" element={<PermissionsPage />} />
+                      <Route path="/roles" element={<RolesPage />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>

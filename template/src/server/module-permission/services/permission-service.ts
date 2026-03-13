@@ -78,6 +78,12 @@ const MENU_CONFIG: MenuItem[] = [
     icon: 'Shield',
     permissions: [],
   },
+  {
+    path: '/roles',
+    label: '角色管理',
+    icon: 'UserCog',
+    permissions: [],
+  },
 ]
 
 const PAGE_PERMISSIONS: PagePermissionConfig[] = [
@@ -213,7 +219,10 @@ export function getPagePermissions(): PagePermissionConfig[] {
   return PAGE_PERMISSIONS
 }
 
-export function getPermissionCategories(): Record<string, { label: string; permissions: Permission[] }> {
+export function getPermissionCategories(): Record<
+  string,
+  { label: string; permissions: Permission[] }
+> {
   return PERMISSION_CATEGORIES
 }
 
