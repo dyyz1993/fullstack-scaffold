@@ -1,6 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import * as notificationService from '../services/notification-service'
 import type { CreateNotificationInput } from '@shared/schemas'
+
+vi.mock('@server/core', () => ({
+  realtime: {
+    broadcast: vi.fn(),
+  },
+}))
 
 describe('Notification Service', () => {
   beforeEach(() => {
@@ -64,10 +70,14 @@ describe('Notification Service', () => {
     })
 
     it('should filter unread only when unreadOnly is true', () => {
-      notificationService.createNotification({ type: 'info', title: 'Read', message: 'msg1' })
-      notificationService.createNotification({ type: 'info', title: 'Unread', message: 'msg2' })
+      notificationService.createNotification({ type: 'info', title: 'Unread', message: 'msg1' })
+      notificationService.createNotification({ type: 'info', title: 'Read', message: 'msg2' })
 
-      notificationService.markAsRead(notificationService.listNotifications({}).data[0].id)
+      const allNotifications = notificationService.listNotifications({})
+      const readNotification = allNotifications.data.find(n => n.title === 'Read')
+      if (readNotification) {
+        notificationService.markAsRead(readNotification.id)
+      }
 
       const result = notificationService.listNotifications({ unreadOnly: true })
 
@@ -175,6 +185,37 @@ describe('Notification Service', () => {
 
       expect(count).toBe(2)
       expect(notificationService.getUnreadCount()).toBe(0)
+    })
+  })
+
+  describe('clearAllNotifications', () => {
+    it('should clear all notifications', () => {
+      notificationService.createNotification({ type: 'info', title: '1', message: 'msg1' })
+      notificationService.createNotification({ type: 'info', title: '2', message: 'msg2' })
+
+      notificationService.clearAllNotifications()
+
+      expect(notificationService.listNotifications({}).data.length).toBe(0)
+    })
+
+    it('should clear all notifications when empty', () => {
+      notificationService.clearAllNotifications()
+      expect(notificationService.listNotifications({}).data.length).toBe(0)
+    })
+  })
+
+  describe('createNotificationAndBroadcast', () => {
+    it('should create notification and broadcast it', async () => {
+      const input: CreateNotificationInput = {
+        type: 'info',
+        title: 'Broadcast Test',
+        message: 'Test message',
+      }
+      const result = await notificationService.createNotificationAndBroadcast(input)
+
+      expect(result.id).toBeDefined()
+      expect(result.title).toBe('Broadcast Test')
+      expect(result.message).toBe('Test message')
     })
   })
 

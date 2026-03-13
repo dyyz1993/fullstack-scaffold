@@ -73,13 +73,6 @@ export const sensitiveConfig: SensitiveConfig = {
       message: 'Hardcoded secret detected',
       excludePattern: /process\.env\.|jwtSecret/,
     },
-    // Console.log (开发调试遗留)
-    {
-      pattern: /console\.(log|debug)\(/,
-      message: 'console.log detected (remove in production)',
-      excludePattern:
-        /\/\/.*console\.|logger\.|lint-scripts\/(validate|test)|config\.ts|lib\/logger\.ts/,
-    },
     // .env 文件引用
     {
       pattern: /['"`]\.env(?:\.\w+)?['"`]/,
@@ -327,6 +320,25 @@ export const mdRefsConfig: MdRefsConfig = {
 }
 
 // ============================================
+// Console.log 检测配置
+// ============================================
+export const consoleLogConfig: ConsoleLogConfig = {
+  pattern: /console\.(log|debug)\(/,
+  excludePattern: /\/\/.*console\.|logger\./,
+  ignorePatterns: [
+    /node_modules/,
+    /dist/,
+    /.git/,
+    /coverage/,
+    /__tests__/,
+    /lint-scripts/,
+    /server\/utils\/logger\.ts/,
+  ],
+  fileExtensions: ['.ts', '.tsx', '.js', '.jsx'],
+  checkDirs: ['src/server'],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -340,6 +352,7 @@ export const projectConfig = {
   testQuality: testQualityConfig,
   clientTests: clientTestsConfig,
   mdRefs: mdRefsConfig,
+  consoleLog: consoleLogConfig,
 } as const
 
 export default projectConfig

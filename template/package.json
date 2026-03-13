@@ -55,7 +55,10 @@
     "db:studio": "drizzle-kit studio",
     "framework:init": "node --import tsx/esm lint-scripts/framework/init-baseline.ts",
     "framework:update": "node --import tsx/esm lint-scripts/framework/update-baseline.ts",
-    "framework:check": "node --import tsx/esm lint-scripts/framework/check-modify.ts"
+    "framework:check": "node --import tsx/esm lint-scripts/framework/check-modify.ts",
+    "dev:context": "node --import tsx/esm lint-scripts/dev-context-analyzer.ts",
+    "dev:guide": "node --import tsx/esm lint-scripts/dev-guide-generator.ts",
+    "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.4",

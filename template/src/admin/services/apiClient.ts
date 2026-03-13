@@ -7,6 +7,7 @@ import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { createRequestInterceptor } from './requestInterceptor'
+import type { AdminFetchExtendOptions } from './types'
 import { useCaptchaStore } from '../stores/captchaStore'
 import { useLoadingStore } from '../stores/loadingStore'
 
@@ -46,14 +47,21 @@ function createCustomFetch() {
         captchaUrl: config.captchaUrl,
       })
     },
-    onRequest: () => {
-      startLoading()
+    onRequest: (extend?: AdminFetchExtendOptions) => {
+      if (extend?.loading !== false) {
+        const text = typeof extend?.loading === 'string' ? extend.loading : undefined
+        startLoading(text)
+      }
     },
-    onResponse: () => {
-      stopLoading()
+    onResponse: (extend?: AdminFetchExtendOptions) => {
+      if (extend?.loading !== false) {
+        stopLoading()
+      }
     },
-    onError: () => {
-      stopLoading()
+    onError: (extend?: AdminFetchExtendOptions) => {
+      if (extend?.loading !== false) {
+        stopLoading()
+      }
     },
   })
 }

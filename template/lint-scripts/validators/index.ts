@@ -251,3 +251,21 @@ export interface MdRefError {
   resolvedPath: string
   isGlob: boolean
 }
+
+// ============================================
+// Console.log 检测配置
+// ============================================
+export interface ConsoleLogConfig {
+  pattern: RegExp
+  excludePattern?: RegExp
+  ignorePatterns?: RegExp[]
+  fileExtensions: string[]
+  checkDirs: string[]
+}
+
+export interface ConsoleLogError {
+  file: string
+  line: number
+  message: string
+  content: string
+}

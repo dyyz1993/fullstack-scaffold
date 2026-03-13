@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CaptchaType } from '../services/requestInterceptor'
+import type { CaptchaType } from '../services/types'
 
 interface CaptchaState {
   isOpen: boolean

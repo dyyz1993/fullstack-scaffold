@@ -1,25 +1,41 @@
-import { describe, it, expect } from 'bun:test'
+import { describe, it, expect } from 'vitest'
 import * as service from '../services/order-service'
-import type { CreateOrderInput } from '@shared/modules/order'
+import type { CreateOrderInput, UpdateOrderInput } from '@shared/modules/order'
 
 describe('Order Service', () => {
   describe('getOrders', () => {
-    it('should return all orders', async () => {
+    it('should return all orders when no filters provided', async () => {
       const result = await service.getOrders()
-      expect(result).toBeArray()
+      expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeGreaterThan(0)
+    })
+
+    it('should filter orders by status', async () => {
+      const result = await service.getOrders({ status: 'pending' })
+      expect(Array.isArray(result)).toBe(true)
+      result.forEach(order => {
+        expect(order.status).toBe('pending')
+      })
     })
   })
 
   describe('getOrderById', () => {
-    it('should return null for non-existent order', async () => {
-      const result = await service.getOrderById('non-existent')
+    it('should return order when id exists', async () => {
+      const allOrders = await service.getOrders()
+      const firstOrder = allOrders[0]
+      const result = await service.getOrderById(firstOrder.id)
+      expect(result).not.toBeNull()
+      expect(result?.id).toBe(firstOrder.id)
+    })
+
+    it('should return null for non-existent order id', async () => {
+      const result = await service.getOrderById('non-existent-order-id')
       expect(result).toBeNull()
     })
   })
 
   describe('createOrder', () => {
-    it('should create a new order', async () => {
+    it('should create a new order with correct data', async () => {
       const data: CreateOrderInput = {
         customerName: 'Test Customer',
         customerEmail: 'test@example.com',
@@ -27,16 +43,126 @@ describe('Order Service', () => {
         amount: 100,
       }
       const result = await service.createOrder(data)
+
       expect(result).toMatchObject({
         customerName: 'Test Customer',
+        customerEmail: 'test@example.com',
+        productName: 'Test Product',
         amount: 100,
+        status: 'pending',
       })
+      expect(result.id).toBeDefined()
     })
   })
 
   describe('updateOrder', () => {
-    it('should return null for non-existent order', async () => {
-      const result = await service.updateOrder('non-existent', {})
+    it('should update existing order status', async () => {
+      const data: CreateOrderInput = {
+        customerName: 'Update Test',
+        customerEmail: 'update@example.com',
+        productName: 'Update Product',
+        amount: 200,
+      }
+      const created = await service.createOrder(data)
+
+      const updateData: UpdateOrderInput = {
+        status: 'processing',
+      }
+      const result = await service.updateOrder(created.id, updateData)
+
+      expect(result).not.toBeNull()
+      expect(result?.status).toBe('processing')
+    })
+
+    it('should return null when updating non-existent order', async () => {
+      const result = await service.updateOrder('non-existent-order-id', { status: 'completed' })
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('deleteOrder', () => {
+    it('should delete existing order successfully', async () => {
+      const data: CreateOrderInput = {
+        customerName: 'Delete Test',
+        customerEmail: 'delete@example.com',
+        productName: 'Delete Product',
+        amount: 100,
+      }
+      const created = await service.createOrder(data)
+
+      const result = await service.deleteOrder(created.id)
+      expect(result.success).toBe(true)
+
+      const found = await service.getOrderById(created.id)
+      expect(found).toBeNull()
+    })
+
+    it('should return failure when deleting non-existent order', async () => {
+      const result = await service.deleteOrder('non-existent-order-id')
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('processOrder', () => {
+    it('should process a pending order', async () => {
+      const data: CreateOrderInput = {
+        customerName: 'Process Test',
+        customerEmail: 'process@example.com',
+        productName: 'Process Product',
+        amount: 150,
+      }
+      const created = await service.createOrder(data)
+
+      const result = await service.processOrder(created.id)
+      expect(result).not.toBeNull()
+      expect(result?.status).toBe('processing')
+    })
+
+    it('should return null when processing non-existent order', async () => {
+      const result = await service.processOrder('non-existent-order-id')
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('cancelOrder', () => {
+    it('should cancel a pending order', async () => {
+      const data: CreateOrderInput = {
+        customerName: 'Cancel Test',
+        customerEmail: 'cancel@example.com',
+        productName: 'Cancel Product',
+        amount: 200,
+      }
+      const created = await service.createOrder(data)
+
+      const result = await service.cancelOrder(created.id)
+      expect(result).not.toBeNull()
+      expect(result?.status).toBe('cancelled')
+    })
+
+    it('should return null when cancelling non-existent order', async () => {
+      const result = await service.cancelOrder('non-existent-order-id')
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('completeOrder', () => {
+    it('should complete a processing order', async () => {
+      const data: CreateOrderInput = {
+        customerName: 'Complete Test',
+        customerEmail: 'complete@example.com',
+        productName: 'Complete Product',
+        amount: 300,
+      }
+      const created = await service.createOrder(data)
+      await service.processOrder(created.id)
+
+      const result = await service.completeOrder(created.id)
+      expect(result).not.toBeNull()
+      expect(result?.status).toBe('completed')
+    })
+
+    it('should return null when completing non-existent order', async () => {
+      const result = await service.completeOrder('non-existent-order-id')
       expect(result).toBeNull()
     })
   })

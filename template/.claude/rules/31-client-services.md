@@ -1,18 +1,27 @@
 ---
-paths: src/client/services/**/*.ts
+paths: src/client/services/**/*.ts, src/admin/services/**/*.ts, src/cli/rpc/**/*.ts
 ---
 
 # Client Service 开发规范
 
 ## 🎯 核心职责
 
-`src/client/services/` 目录包含 API 客户端和实时通信客户端的配置。
+`src/*/services/` 目录包含 API 客户端和实时通信客户端的配置。
 
 ## 📁 文件结构
 
 ```
-src/client/services/
-└── apiClient.ts    # API 客户端配置
+src/
+├── client/services/
+│   └── apiClient.ts           # 前端 API 客户端（基础版）
+│
+├── admin/services/
+│   ├── apiClient.ts           # 管理后台 API 客户端（完整功能）
+│   ├── requestInterceptor.ts  # 自定义 fetch 实现
+│   └── types.ts               # 扩展参数类型定义
+│
+└── cli/rpc/
+    └── client.ts              # CLI RPC 客户端
 ```
 
 ## 🔧 API 客户端配置
@@ -43,6 +52,182 @@ export const apiClient = hc<AppType>(baseUrl, {
 **ESLint 规则**: `no-ambiguous-file-paths`
 
 **路径**: `src/client/services/apiClient.ts`
+
+## 🚀 扩展参数机制
+
+### 概述
+
+Hono 客户端支持通过 `extend` 参数传递自定义选项，用于控制请求行为。
+
+### 数据流
+
+```
+用户调用
+    ↓
+$get(undefined, { extend: { loading: '加载中...' } })
+    ↓
+Hono 内部透传
+    ↓
+fetch(url, { extend: { loading: '加载中...' } })
+    ↓
+自定义 fetch 处理
+```
+
+### 定义扩展参数类型
+
+```typescript
+// src/admin/services/types.ts
+
+/**
+ * 管理后台请求扩展参数
+ */
+export interface AdminFetchExtendOptions {
+  /** Loading 控制：true 显示默认 loading，string 显示自定义文字 */
+  loading?: boolean | string
+  /** 重试次数 */
+  retry?: number
+  /** 重试延迟 */
+  retryDelay?: number
+  /** 静默错误，不显示错误提示 */
+  silentError?: boolean
+  /** 超时时间 */
+  timeout?: number
+}
+```
+
+### 使用扩展参数
+
+```typescript
+// 管理后台 - 完整功能
+apiClient.api.users.$get(undefined, {
+  extend: {
+    loading: '加载中...', // 自定义 loading 文字
+    retry: 3, // 重试次数
+    silentError: true, // 静默错误
+    timeout: 5000, // 超时时间
+  },
+})
+
+// CLI RPC - 简单功能
+rpcClient.api.users.$get(undefined, {
+  extend: {
+    verbose: true, // 详细日志
+    timeout: 10000, // 超时时间
+  },
+})
+```
+
+## 🔌 自定义 Fetch 实现
+
+### 创建自定义 Fetch
+
+```typescript
+// src/admin/services/requestInterceptor.ts
+import type { AdminFetchExtendOptions, InterceptorCallbacks } from './types'
+
+export class RequestInterceptor {
+  constructor(private callbacks: InterceptorCallbacks) {}
+
+  async intercept(
+    url: string,
+    init: RequestInit & { extend?: AdminFetchExtendOptions }
+  ): Promise<Response> {
+    const extend = init.extend
+
+    // 1. 触发请求开始回调
+    this.callbacks.onRequest?.(extend)
+
+    try {
+      // 2. 添加认证 token
+      const headers = new Headers(init.headers)
+      const token = this.getStoredToken()
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+
+      // 3. 移除 extend 属性，避免传递给原生 fetch
+      const { extend: _extend, ...restInit } = init
+
+      // 4. 发送请求
+      const response = await window.fetch(url, {
+        ...restInit,
+        headers,
+      })
+
+      // 5. 触发响应回调
+      this.callbacks.onResponse?.(extend)
+      return response
+    } catch (error) {
+      // 6. 触发错误回调
+      this.callbacks.onError?.(extend)
+      throw error
+    }
+  }
+
+  private getStoredToken(): string | null {
+    // 从 localStorage 获取 token
+  }
+}
+
+export function createRequestInterceptor(callbacks: InterceptorCallbacks) {
+  const interceptor = new RequestInterceptor(callbacks)
+  return (url: string, init: RequestInit & { extend?: AdminFetchExtendOptions }) =>
+    interceptor.intercept(url, init)
+}
+```
+
+### 配置自定义 Fetch
+
+```typescript
+// src/admin/services/apiClient.ts
+import { createRequestInterceptor } from './requestInterceptor'
+import type { AdminFetchExtendOptions } from './types'
+import { useLoadingStore } from '../stores/loadingStore'
+
+function createCustomFetch() {
+  const { startLoading, stopLoading } = useLoadingStore.getState()
+
+  return createRequestInterceptor({
+    onShowLogin: () => {
+      localStorage.removeItem('admin-storage')
+      window.location.href = '/admin/login'
+    },
+    onShowCaptcha: async config => {
+      return showCaptcha({ type: config.type })
+    },
+    onRequest: (extend?: AdminFetchExtendOptions) => {
+      if (extend?.loading !== false) {
+        const text = typeof extend?.loading === 'string' ? extend.loading : undefined
+        startLoading(text)
+      }
+    },
+    onResponse: (extend?: AdminFetchExtendOptions) => {
+      if (extend?.loading !== false) {
+        stopLoading()
+      }
+    },
+    onError: (extend?: AdminFetchExtendOptions) => {
+      if (extend?.loading !== false) {
+        stopLoading()
+      }
+    },
+  })
+}
+
+export const apiClient = hc<AppType>(baseUrl, {
+  fetch: createCustomFetch() as typeof fetch,
+  webSocket: url => new WSClientImpl(url),
+  sse: url => new SSEClientImpl(url, headers),
+})
+```
+
+## 📋 不同客户端的扩展参数
+
+| 客户端     | 扩展参数                                     | 说明                 |
+| ---------- | -------------------------------------------- | -------------------- |
+| 前端客户端 | 无                                           | 基础功能，不需要扩展 |
+| 管理后台   | `loading`, `retry`, `silentError`, `timeout` | 完整功能             |
+| CLI RPC    | `verbose`, `timeout`                         | 简单功能             |
 
 ## 🚫 禁止直接使用 fetch
 
