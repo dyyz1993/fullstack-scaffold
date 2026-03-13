@@ -89,9 +89,25 @@ export const MediaTestPage: React.FC = () => {
     }
   }
 
-  const handleDirectDownload = () => {
-    window.open('/api/admin/todos/export', '_blank')
-    message.info('下载已开始，请在浏览器下载管理器中查看')
+  const [isDirectDownloading, setIsDirectDownloading] = useState(false)
+
+  const handleDirectDownload = async () => {
+    setIsDirectDownloading(true)
+    try {
+      const blob = await apiClient.api.admin.todos.export.$download()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'todos.csv'
+      a.click()
+      URL.revokeObjectURL(url)
+      message.success('文件下载成功')
+    } catch (error) {
+      console.error('Failed to download:', error)
+      message.error('文件下载失败')
+    } finally {
+      setIsDirectDownloading(false)
+    }
   }
 
   const availableIcons = ['home', 'settings', 'user', 'bell']
@@ -242,8 +258,13 @@ export const MediaTestPage: React.FC = () => {
             <Paragraph>对比两种下载方式：一次性下载 vs 流式下载（带实时进度）。</Paragraph>
 
             <Space>
-              <Button type="primary" icon={<Download size={16} />} onClick={handleDirectDownload}>
-                直接下载 (浏览器下载管理器)
+              <Button
+                type="primary"
+                icon={<Download size={16} />}
+                onClick={handleDirectDownload}
+                loading={isDirectDownloading}
+              >
+                直接下载 (一次性获取)
               </Button>
               <Button
                 type="default"
@@ -251,7 +272,7 @@ export const MediaTestPage: React.FC = () => {
                 onClick={handleStreamDownload}
                 loading={isStreaming}
               >
-                流式下载 (页面内进度显示)
+                流式下载 (实时进度显示)
               </Button>
             </Space>
 
