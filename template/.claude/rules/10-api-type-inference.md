@@ -241,6 +241,99 @@ const itemResponse = await apiClient.api.items[':id'].$get({
 })
 ```
 
+## 🖼️ 媒体类型推导
+
+### Content-Type 到返回类型映射
+
+本项目扩展了 Hono 的类型推导，支持以下媒体类型：
+
+| Content-Type              | 客户端方法                | 返回类型                              |
+| ------------------------- | ------------------------- | ------------------------------------- |
+| `application/json`        | `$get()`, `$post()`, etc. | `Promise<ClientResponse<T>>`          |
+| `text/plain`              | `$get()`                  | `Promise<ClientResponse<string>>`     |
+| `text/event-stream`       | `$sse()`                  | `SSEClient<{ events: ... }>`          |
+| `websocket`               | `$ws()`                   | `WSClient<{ rpc: ..., events: ... }>` |
+| `image/*`                 | `$image()`                | `Promise<Blob>`                       |
+| `image/svg+xml`           | `$svg()`                  | `Promise<string>`                     |
+| `application/*` (非 json) | `$download()`             | `Promise<Blob>`                       |
+
+### 图片类型示例
+
+```typescript
+// 服务端定义
+const getAvatarRoute = createRoute({
+  method: 'get',
+  path: '/avatar/:id',
+  responses: {
+    200: {
+      content: {
+        'image/png': { schema: z.any().openapi({ type: 'string', format: 'binary' }) },
+        'image/jpeg': { schema: z.any().openapi({ type: 'string', format: 'binary' }) },
+      },
+      description: 'User avatar',
+    },
+  },
+})
+
+// 客户端调用 - 自动推导为 Promise<Blob>
+const blob = await apiClient.api.avatar[':id'].$image({ param: { id: '123' } })
+const imageUrl = URL.createObjectURL(blob)
+```
+
+### SVG 类型示例
+
+```typescript
+// 服务端定义
+const getIconRoute = createRoute({
+  method: 'get',
+  path: '/icon/:name',
+  responses: {
+    200: {
+      content: {
+        'image/svg+xml': { schema: z.string() },
+      },
+      description: 'SVG icon',
+    },
+  },
+})
+
+// 客户端调用 - 自动推导为 Promise<string>
+const svgString = await apiClient.api.icon[':name'].$svg({ param: { name: 'home' } })
+document.querySelector('#icon').innerHTML = svgString
+```
+
+### 文件下载示例
+
+```typescript
+// 服务端定义
+const exportRoute = createRoute({
+  method: 'get',
+  path: '/export',
+  responses: {
+    200: {
+      content: {
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+          schema: z.any().openapi({ type: 'string', format: 'binary' }),
+        },
+        'text/csv': { schema: z.string() },
+      },
+      description: 'Export data',
+    },
+  },
+})
+
+// 客户端调用 - 自动推导为 Promise<Blob>
+const blob = await apiClient.api.export.$download()
+const url = URL.createObjectURL(blob)
+const a = document.createElement('a')
+a.href = url
+a.download = 'data.xlsx'
+a.click()
+URL.revokeObjectURL(url)
+```
+
+**注意**: 对于二进制类型，使用 `z.any().openapi({ type: 'string', format: 'binary' })` 而不是 `z.instanceof(Blob)`。
+
 ## 🚫 Anti-Patterns
 
 ```typescript

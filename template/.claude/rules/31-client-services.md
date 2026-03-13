@@ -142,6 +142,140 @@ sseClient.abort()
 
 **路径**: `src/client/**/*.ts`, `src/client/**/*.tsx`
 
+## 🖼️ 媒体类型方法
+
+### 图片获取 ($image)
+
+用于获取 `image/*` 类型的资源，返回 `Promise<Blob>`。
+
+```typescript
+import { apiClient } from '@client/services/apiClient'
+
+// 获取图片
+const blob = await apiClient.api.admin.avatar[':id'].$image({
+  param: { id: 'user-123' },
+})
+
+// 创建图片 URL
+const imageUrl = URL.createObjectURL(blob)
+document.querySelector('img').src = imageUrl
+
+// 记得释放 URL
+URL.revokeObjectURL(imageUrl)
+```
+
+**支持的 Content-Type**:
+
+- `image/png`
+- `image/jpeg`
+- `image/gif`
+- `image/webp`
+- 其他 `image/*` 类型
+
+### SVG 获取 ($svg)
+
+用于获取 `image/svg+xml` 类型的资源，返回 `Promise<string>`。
+
+```typescript
+import { apiClient } from '@client/services/apiClient'
+
+// 获取 SVG 图标
+const svgString = await apiClient.api.admin.icon[':name'].$svg({
+  param: { name: 'home' },
+})
+
+// 直接插入 DOM
+document.querySelector('#icon-container').innerHTML = svgString
+```
+
+**支持的 Content-Type**:
+
+- `image/svg+xml`
+
+### 文件下载 ($download)
+
+用于下载文件（Excel, PDF, ZIP 等），返回 `Promise<Blob>`。
+
+```typescript
+import { apiClient } from '@client/services/apiClient'
+
+// 下载文件
+const blob = await apiClient.api.admin.todos.export.$download()
+
+// 触发浏览器下载
+const url = URL.createObjectURL(blob)
+const a = document.createElement('a')
+a.href = url
+a.download = 'todos.csv'
+a.click()
+URL.revokeObjectURL(url)
+```
+
+**支持的 Content-Type**:
+
+- `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (Excel)
+- `application/vnd.ms-excel` (Excel 97-2003)
+- `application/pdf`
+- `application/zip`
+- `text/csv`
+- 其他 `application/*` 类型
+
+### 服务端定义示例
+
+```typescript
+// src/server/module-admin/routes/admin-routes.ts
+import { createRoute } from '@hono/zod-openapi'
+import { z } from 'zod'
+
+// 图片路由
+const getAvatarRoute = createRoute({
+  method: 'get',
+  path: '/admin/avatar/:id',
+  responses: {
+    200: {
+      content: {
+        'image/png': { schema: z.any().openapi({ type: 'string', format: 'binary' }) },
+        'image/jpeg': { schema: z.any().openapi({ type: 'string', format: 'binary' }) },
+      },
+      description: 'User avatar image',
+    },
+  },
+})
+
+// SVG 路由
+const getIconRoute = createRoute({
+  method: 'get',
+  path: '/admin/icon/:name',
+  responses: {
+    200: {
+      content: {
+        'image/svg+xml': { schema: z.string() },
+      },
+      description: 'SVG icon',
+    },
+  },
+})
+
+// 文件下载路由
+const exportTodosRoute = createRoute({
+  method: 'get',
+  path: '/admin/todos/export',
+  responses: {
+    200: {
+      content: {
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+          schema: z.any().openapi({ type: 'string', format: 'binary' }),
+        },
+        'text/csv': { schema: z.string() },
+      },
+      description: 'Export todos as Excel or CSV',
+    },
+  },
+})
+```
+
+**注意**: 对于二进制类型，使用 `z.any().openapi({ type: 'string', format: 'binary' })` 而不是 `z.instanceof(Blob)`。
+
 ## 🛡️ 框架保护
 
 `apiClient.ts` 是框架层文件，带有 `@framework-baseline` 注释：
