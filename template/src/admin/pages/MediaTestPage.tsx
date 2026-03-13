@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { apiClient } from '../services/apiClient'
-import { Card, Button, Space, Input, message, Image, Typography, Divider } from 'antd'
+import { Card, Button, Space, Input, message, Image, Typography, Divider, Progress } from 'antd'
 import { Image as ImageIcon, FileCode, Download } from 'lucide-react'
 
 const { Title, Paragraph, Text } = Typography
+
+const TOTAL_LINES = 12
 
 export const MediaTestPage: React.FC = () => {
   const [avatarId, setAvatarId] = useState('test-user')
@@ -12,7 +14,9 @@ export const MediaTestPage: React.FC = () => {
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [loadingAvatar, setLoadingAvatar] = useState(false)
   const [loadingSvg, setLoadingSvg] = useState(false)
-  const [loadingDownload, setLoadingDownload] = useState(false)
+  const [streamProgress, setStreamProgress] = useState(0)
+  const [streamLines, setStreamLines] = useState<string[]>([])
+  const [isStreaming, setIsStreaming] = useState(false)
 
   const handleFetchAvatar = async () => {
     setLoadingAvatar(true)
@@ -47,14 +51,56 @@ export const MediaTestPage: React.FC = () => {
     }
   }
 
+  const handleStreamDownload = async () => {
+    setIsStreaming(true)
+    setStreamProgress(0)
+    setStreamLines([])
+
+    try {
+      const response = await apiClient.api.admin.todos.export.stream.$get()
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      const decoder = new TextDecoder()
+      let lineCount = 0
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n').filter(l => l.trim())
+
+        for (const line of lines) {
+          lineCount++
+          setStreamLines(prev => [...prev, line])
+          setStreamProgress(Math.round((lineCount / TOTAL_LINES) * 100))
+        }
+      }
+
+      message.success('流式导出完成！')
+    } catch (error) {
+      console.error('Failed to stream download:', error)
+      message.error('流式导出失败')
+    } finally {
+      setIsStreaming(false)
+    }
+  }
+
+  const handleDirectDownload = () => {
+    window.open('/api/admin/todos/export', '_blank')
+    message.info('下载已开始，请在浏览器下载管理器中查看')
+  }
+
   const availableIcons = ['home', 'settings', 'user', 'bell']
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       <Title level={2}>媒体类型测试</Title>
       <Paragraph>
-        此页面演示如何使用 <Text code>$image()</Text> 和 <Text code>$svg()</Text> 方法获取图片和 SVG
-        图标。
+        此页面演示如何使用 <Text code>$image()</Text>、<Text code>$svg()</Text> 和流式下载方法。
       </Paragraph>
 
       <Divider />
@@ -188,77 +234,74 @@ export const MediaTestPage: React.FC = () => {
           title={
             <Space>
               <Download size={20} />
-              <span>文件下载测试 ($download)</span>
+              <span>文件下载测试</span>
             </Space>
           }
         >
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Paragraph>
-              使用 <Text code>$download()</Text> 方法下载文件（Excel, PDF 等），返回{' '}
-              <Text code>Promise&lt;Blob&gt;</Text>。
-            </Paragraph>
-            <Button
-              type="primary"
-              icon={<Download size={16} />}
-              onClick={async () => {
-                setLoadingDownload(true)
-                try {
-                  const blob = await apiClient.api.admin.todos.export.$download()
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.download = 'todos.csv'
-                  a.click()
-                  URL.revokeObjectURL(url)
-                  message.success('文件下载成功')
-                } catch (error) {
-                  console.error('Failed to download:', error)
-                  message.error('文件下载失败')
-                } finally {
-                  setLoadingDownload(false)
-                }
-              }}
-              loading={loadingDownload}
-            >
-              导出 Todos 为 CSV
-            </Button>
-            <Button
-              type="default"
-              icon={<Download size={16} />}
-              onClick={async () => {
-                setLoadingDownload(true)
-                try {
-                  const response = await apiClient.api.admin.todos.export.stream.$get()
-                  const reader = response.body?.getReader()
-                  if (!reader) {
-                    throw new Error('No response body')
-                  }
-                  const decoder = new TextDecoder()
-                  let csvContent = ''
-                  while (true) {
-                    const { done, value } = await reader.read()
-                    if (done) break
-                    csvContent += decoder.decode(value)
-                  }
-                  const blob = new Blob([csvContent], { type: 'text/csv' })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.download = 'todos-stream.csv'
-                  a.click()
-                  URL.revokeObjectURL(url)
-                  message.success('流式导出成功')
-                } catch (error) {
-                  console.error('Failed to stream download:', error)
-                  message.error('流式导出失败')
-                } finally {
-                  setLoadingDownload(false)
-                }
-              }}
-              loading={loadingDownload}
-            >
-              流式导出 (模拟慢速)
-            </Button>
+            <Paragraph>对比两种下载方式：一次性下载 vs 流式下载（带实时进度）。</Paragraph>
+
+            <Space>
+              <Button type="primary" icon={<Download size={16} />} onClick={handleDirectDownload}>
+                直接下载 (浏览器下载管理器)
+              </Button>
+              <Button
+                type="default"
+                icon={<Download size={16} />}
+                onClick={handleStreamDownload}
+                loading={isStreaming}
+              >
+                流式下载 (页面内进度显示)
+              </Button>
+            </Space>
+
+            {isStreaming && (
+              <div style={{ marginTop: 16 }}>
+                <Progress percent={streamProgress} status="active" />
+                <Text type="secondary">
+                  正在接收数据... {streamLines.length}/{TOTAL_LINES} 行
+                </Text>
+              </div>
+            )}
+
+            {streamLines.length > 0 && !isStreaming && (
+              <div style={{ marginTop: 16 }}>
+                <Text type="secondary">接收到的数据 ({streamLines.length} 行)：</Text>
+                <div
+                  style={{
+                    marginTop: 8,
+                    padding: 12,
+                    background: '#f5f5f5',
+                    borderRadius: 8,
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    maxHeight: 200,
+                    overflow: 'auto',
+                  }}
+                >
+                  {streamLines.map((line, i) => (
+                    <div key={i} style={{ padding: '2px 0' }}>
+                      <Text type="secondary">{i + 1}:</Text> {line}
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  type="link"
+                  onClick={() => {
+                    const csv = streamLines.join('\n')
+                    const blob = new Blob([csv], { type: 'text/csv' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = 'todos-stream.csv'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                >
+                  保存为文件
+                </Button>
+              </div>
+            )}
           </Space>
         </Card>
 
@@ -276,22 +319,23 @@ const blob = await apiClient.api.admin.avatar[':id'].$image({
   param: { id: 'test-user' },
 })
 const imageUrl = URL.createObjectURL(blob)
-document.querySelector('img').src = imageUrl
 
 // 获取 SVG (返回 string)
 const svgString = await apiClient.api.admin.icon[':name'].$svg({
   param: { name: 'home' },
 })
-document.querySelector('#icon-container').innerHTML = svgString
 
-// 下载文件 (返回 Blob)
-const fileBlob = await apiClient.api.admin.todos.export.$download()
-const url = URL.createObjectURL(fileBlob)
-const a = document.createElement('a')
-a.href = url
-a.download = 'todos.csv'
-a.click()
-URL.revokeObjectURL(url)`}
+// 流式下载 - 实时进度显示
+const response = await apiClient.api.admin.todos.export.stream.$get()
+const reader = response.body?.getReader()
+const decoder = new TextDecoder()
+
+while (true) {
+  const { done, value } = await reader.read()
+  if (done) break
+  const chunk = decoder.decode(value)
+  // 处理每个数据块...
+}`}
           </pre>
         </Card>
       </Space>
