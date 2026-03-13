@@ -531,9 +531,20 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
   })
   .openapi(exportTodosRoute, async _c => {
     const todos = await adminService.getAllTodos()
+
+    const allTodos = [
+      ...todos,
+      ...Array.from({ length: 100 }, (_, i) => ({
+        id: 1000 + i,
+        title: `模拟数据 ${i + 1} - 这是一个比较长的标题用于增加数据量`,
+        completed: i % 2 === 0,
+        createdAt: new Date().toISOString(),
+      })),
+    ]
+
     const csvContent =
       'id,title,completed,created_at\n' +
-      todos
+      allTodos
         .map(t => `${t.id},"${t.title.replace(/"/g, '""')}",${t.completed},${t.createdAt}`)
         .join('\n')
     return new Response(csvContent, {

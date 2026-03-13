@@ -192,6 +192,9 @@ export const MediaTestPage: React.FC = () => {
         const elapsed = (Date.now() - startTime) / 1000
         const speed = (receivedLength / 1024 / elapsed).toFixed(1)
         setDirectSpeed(`${speed} KB/s`)
+
+        // 模拟慢速下载，让进度可见
+        await new Promise(resolve => setTimeout(resolve, 50))
       }
 
       const blob = new Blob(chunks)
