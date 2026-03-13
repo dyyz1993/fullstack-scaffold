@@ -222,6 +222,43 @@ export const MediaTestPage: React.FC = () => {
             >
               导出 Todos 为 CSV
             </Button>
+            <Button
+              type="default"
+              icon={<Download size={16} />}
+              onClick={async () => {
+                setLoadingDownload(true)
+                try {
+                  const response = await apiClient.api.admin.todos.export.stream.$get()
+                  const reader = response.body?.getReader()
+                  if (!reader) {
+                    throw new Error('No response body')
+                  }
+                  const decoder = new TextDecoder()
+                  let csvContent = ''
+                  while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) break
+                    csvContent += decoder.decode(value)
+                  }
+                  const blob = new Blob([csvContent], { type: 'text/csv' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = 'todos-stream.csv'
+                  a.click()
+                  URL.revokeObjectURL(url)
+                  message.success('流式导出成功')
+                } catch (error) {
+                  console.error('Failed to stream download:', error)
+                  message.error('流式导出失败')
+                } finally {
+                  setLoadingDownload(false)
+                }
+              }}
+              loading={loadingDownload}
+            >
+              流式导出 (模拟慢速)
+            </Button>
           </Space>
         </Card>
 

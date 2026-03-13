@@ -377,6 +377,23 @@ const exportTodosRoute = createRoute({
   },
 })
 
+const exportTodosStreamRoute = createRoute({
+  method: 'get',
+  path: '/admin/todos/export/stream',
+  tags: ['export'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: {
+      content: {
+        'text/csv': { schema: z.string() },
+      },
+      description: 'Stream export todos as CSV (for large datasets)',
+    },
+    401: errorResponse('Unauthorized'),
+  },
+})
+
 export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getStatsRoute, async c => {
     const stats = await adminService.getSystemStats()
@@ -523,6 +540,26 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
       headers: {
         'Content-Type': 'text/csv',
         'Content-Disposition': 'attachment; filename="todos.csv"',
+      },
+    })
+  })
+  .openapi(exportTodosStreamRoute, async _c => {
+    const todos = await adminService.getAllTodos()
+    const stream = new ReadableStream({
+      async start(controller) {
+        controller.enqueue('id,title,completed,created_at\n')
+        for (const todo of todos) {
+          const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
+          controller.enqueue(line)
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+        controller.close()
+      },
+    })
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="todos-stream.csv"',
       },
     })
   })
