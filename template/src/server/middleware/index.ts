@@ -7,7 +7,8 @@ export {
 } from './error-handler'
 export {
   authMiddleware,
-  requireAdminMiddleware,
+  requireSuperAdminMiddleware,
+  requireCustomerServiceMiddleware,
   requirePermissionsMiddleware,
   type AuthUser,
   type AuthMiddlewareOptions,

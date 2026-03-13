@@ -1,17 +1,20 @@
 import type { MiddlewareHandler } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { createModuleLoggerSync } from '../utils/logger'
+import { Role, Permission, getPermissionsByRole, hasAllPermissions } from '@shared/modules/admin'
+
+export type UserRole = Role.SUPER_ADMIN | Role.CUSTOMER_SERVICE | Role.USER
 
 export interface AuthUser {
   id: string
-  role: 'admin' | 'user'
-  permissions: string[]
+  role: UserRole
+  permissions: Permission[]
 }
 
 export interface AuthMiddlewareOptions {
   secretKey?: string
-  requiredRole?: 'admin' | 'user'
-  requiredPermissions?: string[]
+  requiredRole?: UserRole
+  requiredPermissions?: Permission[]
 }
 
 declare module 'hono' {
@@ -30,32 +33,46 @@ function extractToken(authHeader: string | undefined): string | null {
 
 function verifyToken(token: string, secretKey: string): AuthUser | null {
   if (secretKey === 'dev-secret-key-change-in-production') {
-    if (token === 'admin-token') {
+    if (token === 'admin-token' || token === 'super-admin-token') {
       return {
-        id: 'admin-1',
-        role: 'admin',
-        permissions: ['read', 'write', 'delete', 'manage_users'],
+        id: 'super-admin-1',
+        role: Role.SUPER_ADMIN,
+        permissions: getPermissionsByRole(Role.SUPER_ADMIN),
+      }
+    }
+    if (token === 'customer-service-token') {
+      return {
+        id: 'customer-service-1',
+        role: Role.CUSTOMER_SERVICE,
+        permissions: getPermissionsByRole(Role.CUSTOMER_SERVICE),
       }
     }
     if (token === 'user-token') {
       return {
         id: 'user-1',
-        role: 'user',
-        permissions: ['read', 'write'],
+        role: Role.USER,
+        permissions: getPermissionsByRole(Role.USER),
       }
     }
-    if (token.startsWith('test-admin-')) {
+    if (token.startsWith('test-super-admin-')) {
       return {
         id: token,
-        role: 'admin',
-        permissions: ['read', 'write', 'delete', 'manage_users'],
+        role: Role.SUPER_ADMIN,
+        permissions: getPermissionsByRole(Role.SUPER_ADMIN),
+      }
+    }
+    if (token.startsWith('test-customer-service-')) {
+      return {
+        id: token,
+        role: Role.CUSTOMER_SERVICE,
+        permissions: getPermissionsByRole(Role.CUSTOMER_SERVICE),
       }
     }
     if (token.startsWith('test-user-')) {
       return {
         id: token,
-        role: 'user',
-        permissions: ['read', 'write'],
+        role: Role.USER,
+        permissions: getPermissionsByRole(Role.USER),
       }
     }
   }
@@ -83,22 +100,31 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
       throw new HTTPException(401, { message: 'Unauthorized: Invalid authentication token' })
     }
 
-    if (options.requiredRole && user.role !== options.requiredRole && user.role !== 'admin') {
-      log.warn(
-        {
-          path: c.req.path,
-          method: c.req.method,
-          userRole: user.role,
-          requiredRole: options.requiredRole,
-        },
-        'Insufficient role'
-      )
-      throw new HTTPException(403, { message: 'Forbidden: Insufficient permissions' })
+    if (options.requiredRole) {
+      const roleHierarchy = {
+        [Role.SUPER_ADMIN]: 3,
+        [Role.CUSTOMER_SERVICE]: 2,
+        [Role.USER]: 1,
+      }
+      const userLevel = roleHierarchy[user.role]
+      const requiredLevel = roleHierarchy[options.requiredRole]
+
+      if (userLevel < requiredLevel) {
+        log.warn(
+          {
+            path: c.req.path,
+            method: c.req.method,
+            userRole: user.role,
+            requiredRole: options.requiredRole,
+          },
+          'Insufficient role'
+        )
+        throw new HTTPException(403, { message: 'Forbidden: Insufficient permissions' })
+      }
     }
 
     if (options.requiredPermissions && options.requiredPermissions.length > 0) {
-      const hasAllPermissions = options.requiredPermissions.every(p => user.permissions.includes(p))
-      if (!hasAllPermissions) {
+      if (!hasAllPermissions(user.permissions, options.requiredPermissions)) {
         log.warn(
           {
             path: c.req.path,
@@ -119,10 +145,14 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
   }
 }
 
-export function requireAdminMiddleware(): MiddlewareHandler {
-  return authMiddleware({ requiredRole: 'admin' })
+export function requireSuperAdminMiddleware(): MiddlewareHandler {
+  return authMiddleware({ requiredRole: Role.SUPER_ADMIN })
 }
 
-export function requirePermissionsMiddleware(...permissions: string[]): MiddlewareHandler {
+export function requireCustomerServiceMiddleware(): MiddlewareHandler {
+  return authMiddleware({ requiredRole: Role.CUSTOMER_SERVICE })
+}
+
+export function requirePermissionsMiddleware(...permissions: Permission[]): MiddlewareHandler {
   return authMiddleware({ requiredPermissions: permissions })
 }

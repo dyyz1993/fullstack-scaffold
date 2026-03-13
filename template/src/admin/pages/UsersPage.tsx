@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { PermissionGuard } from '../components/PermissionGuard'
+import { Permission } from '@shared/modules/admin'
 
 interface User {
   id: number
@@ -18,9 +20,11 @@ export const UsersPage: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-          Add User
-        </button>
+        <PermissionGuard permission={Permission.USER_CREATE}>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            Add User
+          </button>
+        </PermissionGuard>
       </div>
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -47,8 +51,12 @@ export const UsersPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{user.role}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <button className="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
-                  <button className="text-red-600 hover:text-red-800">Delete</button>
+                  <PermissionGuard permission={Permission.USER_EDIT}>
+                    <button className="text-blue-600 hover:text-blue-800 mr-3">Edit</button>
+                  </PermissionGuard>
+                  <PermissionGuard permission={Permission.USER_DELETE}>
+                    <button className="text-red-600 hover:text-red-800">Delete</button>
+                  </PermissionGuard>
                 </td>
               </tr>
             ))}

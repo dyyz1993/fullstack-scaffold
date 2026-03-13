@@ -1,19 +1,21 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, Settings, TestTube, Image as ImageIcon } from 'lucide-react'
+import { usePermissions } from '../hooks/usePermissions'
+import { MENU_CONFIG, type MenuItem } from '../config/menuConfig'
 
 interface SidebarProps {
   isOpen: boolean
 }
 
-const menuItems = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/users', icon: Users, label: 'Users' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
-  { path: '/test-captcha', icon: TestTube, label: '测试验证码' },
-  { path: '/media-test', icon: ImageIcon, label: '媒体测试' },
-]
-
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+  const { hasAnyPermission } = usePermissions()
+
+  const filteredMenuItems = MENU_CONFIG.filter((item: MenuItem) => {
+    if (!item.permissions || item.permissions.length === 0) {
+      return true
+    }
+    return hasAnyPermission(item.permissions)
+  })
+
   return (
     <aside
       className={`bg-gray-900 text-white transition-all duration-300 ${
@@ -25,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <h1 className="text-lg font-bold">Admin Panel</h1>
       </div>
       <nav className="p-4">
-        {menuItems.map(item => {
+        {filteredMenuItems.map((item: MenuItem) => {
           const Icon = item.icon
           return (
             <NavLink

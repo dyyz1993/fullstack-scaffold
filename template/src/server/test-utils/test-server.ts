@@ -1,5 +1,8 @@
 /**
  * @framework-baseline bcbd4088a299f939
+ * @framework-modify
+ * @reason 修复 ReadableStream 类型检查，添加 null 检查以避免类型错误
+ * @impact 测试工具中的流式响应处理更加健壮，避免运行时错误
  */
 
 import { createServer, type Server } from 'http'
@@ -70,7 +73,11 @@ export function createTestServer<E extends Env, S extends Schema, BasePath exten
 
             const contentType = response.headers.get('content-type') || ''
             if (contentType.includes('text/event-stream')) {
-              const reader = (response.body as ReadableStream<Uint8Array>).getReader()
+              const reader = (response.body as ReadableStream<Uint8Array> | null)?.getReader()
+              if (!reader) {
+                res.end()
+                return
+              }
               const pump = (): Promise<void> =>
                 reader.read().then(({ done, value }) => {
                   if (done) {

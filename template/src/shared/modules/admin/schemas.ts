@@ -25,7 +25,7 @@ export const AuthUserSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string(),
-  role: z.enum(['admin', 'user', 'guest']),
+  role: z.enum(['super_admin', 'customer_service', 'user']),
   avatar: z.string().optional(),
   permissions: z.array(z.string()),
 })
@@ -50,7 +50,7 @@ export const UserSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string(),
-  role: z.enum(['admin', 'user', 'guest']),
+  role: z.enum(['super_admin', 'customer_service', 'user']),
   status: z.enum(['active', 'inactive']),
   avatar: z.string().optional(),
   createdAt: z.string(),
@@ -62,7 +62,7 @@ export const UserListSchema = z.array(UserSchema)
 export const UpdateUserRequestSchema = z.object({
   username: z.string().optional(),
   email: z.string().email().optional(),
-  role: z.enum(['admin', 'user', 'guest']).optional(),
+  role: z.enum(['super_admin', 'customer_service', 'user']).optional(),
   status: z.enum(['active', 'inactive']).optional(),
 })
 

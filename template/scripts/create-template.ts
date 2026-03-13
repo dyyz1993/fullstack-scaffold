@@ -8,12 +8,15 @@
  *   --with-db       包含数据库操作
  *   --sse           SSE (Server-Sent Events) 模板
  *   --ws            WebSocket 模板
+ *   --admin         创建管理后台模块 (module-admin-xxx)
  *
  * 示例：
  *   npm run create:module product                    # 基础模板（无数据库）
  *   npm run create:module product --with-db          # 数据库模板
  *   npm run create:module notifications --sse        # SSE 模板
  *   npm run create:module chat --ws                  # WebSocket 模板
+ *   npm run create:module users --admin              # 管理后台模块 (module-admin-users)
+ *   npm run create:module reports --admin --with-db  # 管理后台数据库模块
  *
  * 自动操作：
  *   1. 创建模块目录结构
@@ -35,6 +38,7 @@ interface CreateOptions {
   withDatabase: boolean
   withSSE: boolean
   withWebSocket: boolean
+  prefix: string
 }
 
 interface ModifiedFileResult {
@@ -1320,7 +1324,7 @@ function generateModuleIndexTemplate(): string {
 // 更新 app.ts 和 shared/modules/index.ts
 // ============================================
 
-function updateAppTs(name: string): ModifiedFileResult {
+function updateAppTs(name: string, prefix: string = ''): ModifiedFileResult {
   const appPath = path.join(templateDir, 'src/server/app.ts')
   if (!fs.existsSync(appPath)) {
     console.log(`⚠️  app.ts 不存在: ${appPath}`)
@@ -1329,6 +1333,8 @@ function updateAppTs(name: string): ModifiedFileResult {
 
   const camelName = toCamelCase(name)
   const kebabName = toKebabCase(name)
+  const modulePath = prefix ? `module-${prefix}-${kebabName}` : `module-${kebabName}`
+  const routeFileName = prefix ? `${prefix}-${kebabName}-routes` : `${kebabName}-routes`
 
   let content = fs.readFileSync(appPath, 'utf-8')
 
@@ -1344,7 +1350,7 @@ function updateAppTs(name: string): ModifiedFileResult {
   const importRegex = /(import \{[^}]+\} from '\.\/module-[^']+'\n)/
   const lastImportMatch = content.match(importRegex)
 
-  const importLine = `import { ${camelName}Routes } from './module-${kebabName}/routes/${kebabName}-routes'`
+  const importLine = `import { ${camelName}Routes } from './${modulePath}/routes/${routeFileName}'`
 
   if (lastImportMatch) {
     const lastImportIndex = content.lastIndexOf(lastImportMatch[0]) + lastImportMatch[0].length
@@ -1385,11 +1391,12 @@ function updateSharedModulesIndex(name: string, options: CreateOptions): Modifie
 
   const pascalName = toPascalCase(name)
   const kebabName = toKebabCase(name)
+  const moduleExportName = options.prefix ? `${options.prefix}-${kebabName}` : kebabName
 
   let content = fs.readFileSync(indexPath, 'utf-8')
 
-  if (content.includes(`from './${kebabName}'`)) {
-    console.log(`⚠️  shared/modules/index.ts 已经包含 ${kebabName} 模块`)
+  if (content.includes(`from './${moduleExportName}'`)) {
+    console.log(`⚠️  shared/modules/index.ts 已经包含 ${moduleExportName} 模块`)
     return { success: false }
   }
 
@@ -1402,7 +1409,7 @@ export {
   ${pascalName}SubscriptionSchema,
   type ${pascalName}Event,
   type ${pascalName}Subscription,
-} from './${kebabName}'`
+} from './${moduleExportName}'`
   } else if (options.withWebSocket) {
     exports = `
 export {
@@ -1412,7 +1419,7 @@ export {
   type ${pascalName}Message,
   type ${pascalName}Connection,
   type WebSocketStatus,
-} from './${kebabName}'`
+} from './${moduleExportName}'`
   } else {
     exports = `
 export {
@@ -1425,7 +1432,7 @@ export {
   type Create${pascalName}Input,
   type Update${pascalName}Input,
   type DeleteResult,
-} from './${kebabName}'`
+} from './${moduleExportName}'`
   }
 
   const addedLines = exports.split('\n').length
@@ -1446,11 +1453,15 @@ export {
 // ============================================
 
 function createModule(options: CreateOptions): CreatedFile[] {
-  const { name, withDatabase, withSSE, withWebSocket } = options
+  const { name, withDatabase, withSSE, withWebSocket, prefix } = options
   const kebabName = toKebabCase(name)
-  const moduleName = `module-${kebabName}`
+  const moduleName = prefix ? `module-${prefix}-${kebabName}` : `module-${kebabName}`
   const moduleDir = path.join(templateDir, 'src/server', moduleName)
-  const sharedModuleDir = path.join(templateDir, 'src/shared/modules', kebabName)
+  const sharedModuleDir = path.join(
+    templateDir,
+    'src/shared/modules',
+    prefix ? `${prefix}-${kebabName}` : kebabName
+  )
 
   const createdFiles: CreatedFile[] = []
 
@@ -1511,24 +1522,26 @@ function createModule(options: CreateOptions): CreatedFile[] {
   fs.writeFileSync(sharedIndexFile, generateModuleIndexTemplate())
   createdFiles.push({ path: sharedIndexFile, type: 'created' })
 
-  const routeFile = path.join(routesDir, `${kebabName}-routes.ts`)
+  const routeFileName = prefix ? `${prefix}-${kebabName}-routes` : `${kebabName}-routes`
+  const routeFile = path.join(routesDir, `${routeFileName}.ts`)
   fs.writeFileSync(routeFile, routeTemplate)
   createdFiles.push({ path: routeFile, type: 'created' })
 
-  const serviceFile = path.join(servicesDir, `${kebabName}-service.ts`)
+  const serviceFileName = prefix ? `${prefix}-${kebabName}-service` : `${kebabName}-service`
+  const serviceFile = path.join(servicesDir, `${serviceFileName}.ts`)
   fs.writeFileSync(serviceFile, serviceTemplate)
   createdFiles.push({ path: serviceFile, type: 'created' })
 
-  const serviceTestFile = path.join(testsDir, `${kebabName}-service.test.ts`)
+  const serviceTestFile = path.join(testsDir, `${serviceFileName}.test.ts`)
   fs.writeFileSync(serviceTestFile, serviceTestTemplate)
   createdFiles.push({ path: serviceTestFile, type: 'created' })
 
-  const routeTestFile = path.join(testsDir, `${kebabName}-route.test.ts`)
+  const routeTestFile = path.join(testsDir, `${routeFileName}.test.ts`)
   fs.writeFileSync(routeTestFile, routeTestTemplate)
   createdFiles.push({ path: routeTestFile, type: 'created' })
 
   // 更新 app.ts
-  const appResult = updateAppTs(name)
+  const appResult = updateAppTs(name, prefix)
   if (appResult.success) {
     createdFiles.push({
       path: path.join(templateDir, 'src/server/app.ts'),
@@ -1558,6 +1571,7 @@ function parseArgs(args: string[]): CreateOptions {
     withDatabase: false,
     withSSE: false,
     withWebSocket: false,
+    prefix: '',
   }
 
   for (let i = 0; i < args.length; i++) {
@@ -1569,6 +1583,8 @@ function parseArgs(args: string[]): CreateOptions {
       options.withSSE = true
     } else if (arg === '--ws') {
       options.withWebSocket = true
+    } else if (arg === '--admin') {
+      options.prefix = 'admin'
     } else if (!arg.startsWith('--')) {
       options.name = arg
     }
@@ -1589,15 +1605,18 @@ function main(): void {
   --with-db       包含数据库操作
   --sse           SSE (Server-Sent Events) 模板
   --ws            WebSocket 模板
+  --admin         创建管理后台模块 (module-admin-xxx)
 
 示例：
   npm run create:module product                    # 基础模板（无数据库）
   npm run create:module product --with-db          # 数据库模板
   npm run create:module notifications --sse        # SSE 模板
   npm run create:module chat --ws                  # WebSocket 模板
+  npm run create:module users --admin              # 管理后台模块 (module-admin-users)
+  npm run create:module reports --admin --with-db  # 管理后台数据库模块
 
 自动操作：
-  1. 创建模块目录结构 (src/server/module-{name}/)
+  1. 创建模块目录结构 (src/server/module-{name}/ 或 src/server/module-admin-{name}/)
   2. 创建 schema 文件 (src/shared/modules/{name}/schemas.ts)
   3. 更新 app.ts 导入和注册路由
   4. 更新 shared/modules/index.ts 导出
@@ -1632,7 +1651,11 @@ function main(): void {
     if (options.withSSE) templateType = 'SSE 模板'
     if (options.withWebSocket) templateType = 'WebSocket 模板'
 
-    console.log(`\n✅ 模块创建成功！(${templateType})\n`)
+    const moduleType = options.prefix ? `管理后台模块 (${options.prefix})` : '普通模块'
+
+    console.log(`\n✅ 模块创建成功！`)
+    console.log(`   模块类型: ${moduleType}`)
+    console.log(`   模板类型: ${templateType}\n`)
 
     if (created.length > 0) {
       console.log('📄 创建的文件：')

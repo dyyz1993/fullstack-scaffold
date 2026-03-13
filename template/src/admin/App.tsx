@@ -5,9 +5,13 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SettingsPage } from './pages/SettingsPage'
-import { TestCaptchaPage } from './pages/TestCaptchaPage'
-import { MediaTestPage } from './pages/MediaTestPage'
+import { PermissionsPage } from './pages/PermissionsPage'
+import { OrdersPage } from './pages/OrdersPage'
+import { TicketsPage } from './pages/TicketsPage'
+import { DisputesPage } from './pages/DisputesPage'
+import { ContentPage } from './pages/ContentPage'
 import { ProtectedRoute, CaptchaModal } from './components'
+import { PermissionProvider } from './hooks/usePermissions'
 
 export const App: React.FC = () => {
   return (
@@ -18,29 +22,34 @@ export const App: React.FC = () => {
         },
       }}
     >
-      <BrowserRouter basename="/admin">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/test-captcha" element={<TestCaptchaPage />} />
-                    <Route path="/media-test" element={<MediaTestPage />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-        <CaptchaModal />
-      </BrowserRouter>
+      <PermissionProvider>
+        <BrowserRouter basename="/admin">
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/orders" element={<OrdersPage />} />
+                      <Route path="/tickets" element={<TicketsPage />} />
+                      <Route path="/disputes" element={<DisputesPage />} />
+                      <Route path="/content" element={<ContentPage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/permissions" element={<PermissionsPage />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <CaptchaModal />
+        </BrowserRouter>
+      </PermissionProvider>
     </ConfigProvider>
   )
 }

@@ -3,6 +3,7 @@ import { todos } from '../../db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '../../utils/date'
 import { getMockUsers } from '../../utils/auth'
+import { Role, getPermissionsByRole } from '@shared/modules/admin'
 import type {
   SystemStats,
   HealthCheck,
@@ -207,7 +208,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     throw new Error('Invalid password')
   }
 
-  const token = user.role === 'admin' ? 'admin-token' : 'user-token'
+  const token = `mock-token-${user.id}-${Date.now()}`
 
   return {
     user: {
@@ -216,7 +217,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
       email: user.email,
       role: user.role,
       avatar: user.avatar,
-      permissions: user.role === 'admin' ? ['read', 'write', 'delete'] : ['read'],
+      permissions: getPermissionsByRole(user.role as Role),
     },
     token,
   }
@@ -234,7 +235,7 @@ export async function register(data: RegisterRequest): Promise<User> {
     id: String(mockUsers.length + 1),
     username: data.username,
     email: data.email,
-    role: 'user',
+    role: Role.USER,
     status: 'active',
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
     createdAt: new Date().toISOString(),

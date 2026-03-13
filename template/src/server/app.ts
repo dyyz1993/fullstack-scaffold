@@ -1,9 +1,14 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { apiRoutes } from './module-todos/routes/todos-routes'
+import { permissionRoutes } from './module-permission/routes/permission-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
 import { adminRoutes } from './module-admin/routes/admin-routes'
 import { captchaRoutes } from './module-captcha/routes/captcha-routes'
+import { orderRoutes } from './module-order/routes/order-routes'
+import { ticketRoutes } from './module-ticket/routes/ticket-routes'
+import { disputeRoutes } from './module-dispute/routes/dispute-routes'
+import { contentRoutes } from './module-content/routes/content-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
@@ -21,15 +26,20 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .use(
       '/api/admin/*',
       captchaMiddleware({
-        maxRequests: 10,
+        maxRequests: 20,
         windowMs: 60000,
       })
     )
     .route('/api', notificationRoutes)
+    .route('/api', permissionRoutes)
     .route('/api', chatRoutes)
     .route('/api', apiRoutes)
     .route('/api', adminRoutes)
     .route('/api', captchaRoutes)
+    .route('/api', orderRoutes)
+    .route('/api', ticketRoutes)
+    .route('/api', disputeRoutes)
+    .route('/api', contentRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')

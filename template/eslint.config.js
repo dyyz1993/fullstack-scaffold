@@ -18,6 +18,7 @@ import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
 import { frameworkProtect } from './eslint-rules/framework-protect.js'
 import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
 import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
+import { noAnyOnApiclient } from './eslint-rules/no-any-on-apiclient.js'
 import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
 import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
 import { noMiddlewareInRoutes } from './eslint-rules/no-middleware-in-routes.js'
@@ -42,6 +43,7 @@ const localRules = {
     'framework-protect': frameworkProtect,
     'prefer-shared-types': preferSharedTypes,
     'no-type-assertion-in-rpc': noTypeAssertionInRpc,
+    'no-any-on-apiclient': noAnyOnApiclient,
     'no-direct-fetch': noDirectFetch,
     'flat-routes-services': flatRoutesServices,
     'no-middleware-in-routes': noMiddlewareInRoutes,
@@ -105,6 +107,7 @@ export default tseslint.config(
       'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
       'local-rules/no-type-assertion-in-rpc': 'error',
       'local-rules/no-direct-fetch': 'error',
+      'local-rules/no-any-on-apiclient': 'error',
     },
   },
   {
@@ -112,6 +115,7 @@ export default tseslint.config(
     rules: {
       'no-console': 'off',
       'local-rules/require-type-safe-test-client': 'error',
+      'local-rules/require-hono-chain-syntax': 'off',
     },
   },
   {

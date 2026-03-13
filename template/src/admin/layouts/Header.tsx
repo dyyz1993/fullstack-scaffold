@@ -5,6 +5,7 @@ import type { MenuProps } from 'antd'
 import { useAdminStore } from '../stores/adminStore'
 import { useAdminNotifications } from '../hooks/useAdminNotifications'
 import { NotificationDrawer, NotificationBell } from '../components/NotificationDrawer'
+import { AccountSwitcher } from '../components/AccountSwitcher'
 import { useEffect, useState } from 'react'
 
 interface HeaderProps {
@@ -65,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
         <div className="flex items-center gap-4">
           <NotificationBell unreadCount={unreadCount} onClick={() => setDrawerOpen(true)} />
+          <AccountSwitcher />
           <Dropdown menu={{ items: menuItems }} placement="bottomRight" trigger={['click']}>
             <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
               <Avatar
@@ -72,7 +74,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                 src={user?.avatar}
                 icon={!user?.avatar && <User className="w-4 h-4" />}
               />
-              <span className="text-sm font-medium text-gray-700">{user?.username || 'Admin'}</span>
             </button>
           </Dropdown>
         </div>

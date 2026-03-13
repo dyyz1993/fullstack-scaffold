@@ -1,3 +1,8 @@
+/*
+ * @framework-modify
+ * @reason 添加权限管理相关的API路由，支持角色权限体系
+ * @impact 新增权限管理、角色查询、用户权限查询等API端点
+ */
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
@@ -19,6 +24,7 @@ import {
   SuccessSchema,
   DownloadTokenSchema,
 } from '@shared/modules/admin'
+import { Role } from '@shared/modules/admin'
 import {
   NotificationSchema,
   NotificationListSchema,
@@ -61,7 +67,7 @@ const getStatsRoute = createRoute({
   path: '/admin/stats',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(SystemStatsSchema, 'Get system statistics'),
     401: errorResponse('Unauthorized'),
@@ -74,7 +80,7 @@ const getHealthRoute = createRoute({
   path: '/admin/health',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(HealthCheckSchema, 'Get system health'),
     401: errorResponse('Unauthorized'),
@@ -87,7 +93,7 @@ const getRecentActivityRoute = createRoute({
   path: '/admin/activity',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     query: z.object({
       limit: z.string().optional(),
@@ -105,7 +111,7 @@ const clearAllTodosRoute = createRoute({
   path: '/admin/todos/all',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(ClearTodosResultSchema, 'All todos cleared'),
     401: errorResponse('Unauthorized'),
@@ -168,7 +174,7 @@ const getUsersRoute = createRoute({
   path: '/admin/users',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(UserListSchema, 'Get user list'),
     401: errorResponse('Unauthorized'),
@@ -181,7 +187,7 @@ const getUserRoute = createRoute({
   path: '/admin/users/:id',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -200,7 +206,7 @@ const updateUserRoute = createRoute({
   path: '/admin/users/:id',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -226,7 +232,7 @@ const deleteUserRoute = createRoute({
   path: '/admin/users/:id',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -305,7 +311,7 @@ const sendTestNotificationRoute = createRoute({
   path: '/admin/notifications/test',
   tags: ['notifications'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: 'admin' })],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     body: {
       content: {
@@ -721,5 +727,4 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
       },
     })
   })
-
 export default adminRoutes
