@@ -50,7 +50,7 @@ index 3c87c3b..615acdc 100644
      buildSearchParams: buildSearchParamsOption
    });
 diff --git a/node_modules/hono/dist/client/client.js b/node_modules/hono/dist/client/client.js
-index 5bbbe00..824048a 100644
+index 5bbbe00..b391357 100644
 --- a/node_modules/hono/dist/client/client.js
 +++ b/node_modules/hono/dist/client/client.js
 @@ -165,6 +165,46 @@ var hc = (baseUrl, options) => createProxy(function proxyCallback(opts) {
@@ -94,8 +94,8 @@ index 5bbbe00..824048a 100644
 +      buildSearchParams: buildSearchParamsOption
 +    });
 +    options ??= {};
-+    const args = deepMerge(options, { ...opts.args[1] });
-+    return req2.fetch(opts.args[0], args).then((res) => res.blob());
++    const args = deepMerge(options, opts.args?.[1] || {});
++    return req2.fetch(opts.args?.[0], args).then((res) => res.blob());
 +  }
    const req = new ClientRequestImpl(url, method, {
      buildSearchParams: buildSearchParamsOption
