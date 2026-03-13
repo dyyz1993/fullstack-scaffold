@@ -334,6 +334,192 @@ URL.revokeObjectURL(url)
 
 **注意**: 对于二进制类型，使用 `z.any().openapi({ type: 'string', format: 'binary' })` 而不是 `z.instanceof(Blob)`。
 
+## 🔧 类型推导机制
+
+### 核心原理
+
+本项目通过 patch 扩展了 `@hono/zod-openapi` 和 `hono` 的类型定义，实现媒体类型的自动推导。
+
+### 修改的文件
+
+#### 1. `@hono/zod-openapi` - ReturnJsonOrTextOrResponse 类型
+
+**文件**: `node_modules/@hono/zod-openapi/dist/index.d.ts`
+
+**原始类型**:
+
+```typescript
+type ReturnJsonOrTextOrResponse<ContentType, Content, Status> = ContentType extends string
+  ? ContentType extends `application/${infer Start}json${infer _End}`
+    ? TypedResponse<JSONParsed<Content>, Status, 'json'>
+    : ContentType extends `text/plain${infer _Rest}`
+      ? TypedResponse<Content, Status, 'text'>
+      : ContentType extends `text/event-stream`
+        ? TypedResponse<Content, Status, 'sse'>
+        : ContentType extends `websocket`
+          ? TypedResponse<Content, Status, 'ws'>
+          : Response // 其他类型返回通用 Response
+  : never
+```
+
+**扩展后类型**:
+
+```typescript
+type ReturnJsonOrTextOrResponse<ContentType, Content, Status> = ContentType extends string
+  ? ContentType extends `application/${infer Start}json${infer _End}`
+    ? TypedResponse<JSONParsed<Content>, Status, 'json'>
+    : ContentType extends `text/plain${infer _Rest}`
+      ? TypedResponse<Content, Status, 'text'>
+      : ContentType extends `text/event-stream`
+        ? TypedResponse<Content, Status, 'sse'>
+        : ContentType extends `websocket`
+          ? TypedResponse<Content, Status, 'ws'>
+          : ContentType extends `image/svg+xml${infer _Rest}`
+            ? TypedResponse<Content, Status, 'svg'> // 新增
+            : ContentType extends `image/${infer _Type}`
+              ? TypedResponse<Content, Status, 'image'> // 新增
+              : ContentType extends `multipart/form-data${infer _Rest}`
+                ? TypedResponse<Content, Status, 'form'> // 新增
+                : ContentType extends `application/${infer _Rest}`
+                  ? TypedResponse<Content, Status, 'file'> // 新增
+                  : Response
+  : never
+```
+
+#### 2. `hono` - KnownResponseFormat 类型
+
+**文件**: `node_modules/hono/dist/types/types.d.ts`
+
+```typescript
+// 原始
+export type KnownResponseFormat = 'json' | 'text' | 'redirect' | 'ws' | 'sse'
+
+// 扩展后
+export type KnownResponseFormat =
+  | 'json'
+  | 'text'
+  | 'redirect'
+  | 'ws'
+  | 'sse'
+  | 'image'
+  | 'svg'
+  | 'file'
+  | 'form'
+```
+
+#### 3. `hono` - ClientRequest 类型
+
+**文件**: `node_modules/hono/dist/types/client/types.d.ts`
+
+添加客户端方法类型：
+
+```typescript
+// 图片类型 - 返回 Promise<Blob>
+& (S['$get'] extends {
+    outputFormat: infer F;
+    output: infer O;
+} ? 'image' extends F ? S['$get'] extends {
+    input: infer I;
+} ? {
+    $image: (args?: I) => Promise<Blob>;
+} : {} : {} : {})
+
+// SVG 类型 - 返回 Promise<string>
+& (S['$get'] extends {
+    outputFormat: infer F;
+    output: infer O;
+} ? 'svg' extends F ? S['$get'] extends {
+    input: infer I;
+} ? {
+    $svg: (args?: I) => Promise<string>;
+} : {} : {} : {})
+
+// 文件下载 - 返回 Promise<Blob>
+& (S['$get'] extends {
+    outputFormat: infer F;
+    output: infer O;
+} ? 'file' extends F ? S['$get'] extends {
+    input: infer I;
+} ? {
+    $download: (args?: I) => Promise<Blob>;
+} : {} : {} : {})
+```
+
+#### 4. `hono` - 运行时实现
+
+**文件**: `node_modules/hono/dist/client/client.js`
+
+添加运行时方法实现：
+
+```javascript
+// 图片/SVG 处理
+if (method === 'image' || method === 'svg') {
+  const req2 = new ClientRequestImpl(url, 'get', {
+    buildSearchParams: buildSearchParamsOption,
+  })
+  options ??= {}
+  const args = deepMerge(options, opts.args?.[1] || {})
+  return req2.fetch(opts.args?.[0], args).then(res => {
+    if (method === 'svg') {
+      return res.text() // SVG 返回文本
+    }
+    return res.blob() // 图片返回 Blob
+  })
+}
+
+// 文件下载处理
+if (method === 'download') {
+  const req2 = new ClientRequestImpl(url, 'get', {
+    buildSearchParams: buildSearchParamsOption,
+  })
+  options ??= {}
+  const args = deepMerge(options, opts.args?.[1] || {})
+  return req2.fetch(opts.args?.[0], args).then(res => res.blob())
+}
+```
+
+### 类型推导流程
+
+```
+1. 服务端定义路由
+   └─ createRoute() 定义 responses.content
+
+2. OpenAPI Schema 生成
+   └─ Content-Type 被记录到 schema
+
+3. 客户端类型推导
+   └─ ReturnJsonOrTextOrResponse<ContentType, Content, Status>
+       ├─ 'image/png' → TypedResponse<Blob, 200, "image">
+       ├─ 'image/svg+xml' → TypedResponse<string, 200, "svg">
+       └─ 'application/vnd.*' → TypedResponse<Blob, 200, "file">
+
+4. 客户端方法生成
+   └─ ClientRequest 根据 outputFormat 添加方法
+       ├─ 'image' → $image(): Promise<Blob>
+       ├─ 'svg' → $svg(): Promise<string>
+       └─ 'file' → $download(): Promise<Blob>
+
+5. 运行时调用
+   └─ client.js 处理实际请求
+       ├─ $image() → fetch().then(r => r.blob())
+       ├─ $svg() → fetch().then(r => r.text())
+       └─ $download() → fetch().then(r => r.blob())
+```
+
+### Patch 文件位置
+
+```
+template/patches/
+├── @hono+zod-openapi+1.2.2.patch  # 类型推导扩展
+└── hono+4.12.7.patch              # 客户端方法和运行时实现
+```
+
+### 相关文档
+
+- [Client Services 规范](./31-client-services.md) - 客户端方法使用
+- [WebSocket 规范](./50-websocket.md) - WebSocket 类型推导
+- [SSE 规范](./51-sse.md) - SSE 类型推导
+
 ## 🚫 Anti-Patterns
 
 ```typescript
