@@ -1,0 +1,203 @@
+import { createRoute } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+import { z } from '@hono/zod-openapi'
+import { authMiddleware } from '../../middleware/auth'
+import { roleService } from '../services/role-service'
+import { permissionService } from '../services/permission-service-new'
+import { successResponse, errorResponse } from '../../utils/route-helpers'
+import {
+  RoleSchema,
+  CreateRoleSchema,
+  UpdateRoleSchema,
+  UpdateRolePermissionsSchema,
+  SuccessSchema,
+} from '@shared/modules/role/schemas'
+
+const getRolesRoute = createRoute({
+  method: 'get',
+  path: '/roles',
+  tags: ['roles'],
+  responses: {
+    200: successResponse(RoleSchema.array(), 'Get all roles'),
+  },
+})
+
+const getRoleRoute = createRoute({
+  method: 'get',
+  path: '/roles/:id',
+  tags: ['roles'],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: successResponse(RoleSchema, 'Get role by ID'),
+    404: errorResponse('Role not found'),
+  },
+})
+
+const createRoleRoute = createRoute({
+  method: 'post',
+  path: '/roles',
+  tags: ['roles'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: CreateRoleSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(RoleSchema, 'Role created'),
+    401: errorResponse('Unauthorized'),
+    400: errorResponse('Invalid request'),
+  },
+})
+
+const updateRoleRoute = createRoute({
+  method: 'put',
+  path: '/roles/:id',
+  tags: ['roles'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: UpdateRoleSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(RoleSchema, 'Role updated'),
+    401: errorResponse('Unauthorized'),
+    404: errorResponse('Role not found'),
+  },
+})
+
+const deleteRoleRoute = createRoute({
+  method: 'delete',
+  path: '/roles/:id',
+  tags: ['roles'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+  },
+  responses: {
+    200: successResponse(SuccessSchema, 'Role deleted'),
+    401: errorResponse('Unauthorized'),
+    400: errorResponse('Cannot delete system role'),
+  },
+})
+
+const updateRolePermissionsRoute = createRoute({
+  method: 'put',
+  path: '/roles/:id/permissions',
+  tags: ['roles'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({
+      id: z.string(),
+    }),
+    body: {
+      content: {
+        'application/json': {
+          schema: UpdateRolePermissionsSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(SuccessSchema, 'Role permissions updated'),
+    401: errorResponse('Unauthorized'),
+    404: errorResponse('Role not found'),
+  },
+})
+
+export const roleRoutes = new OpenAPIHono()
+  .openapi(getRolesRoute, async c => {
+    const roles = await roleService.getAll()
+    return c.json({ success: true, data: roles })
+  })
+  .openapi(getRoleRoute, async c => {
+    const { id } = c.req.valid('param')
+    const role = await roleService.getById(id)
+
+    if (!role) {
+      return c.json({ success: false, error: 'Role not found' }, 404)
+    }
+
+    return c.json({ success: true, data: role })
+  })
+  .openapi(createRoleRoute, async c => {
+    const data = c.req.valid('json')
+    const role = await roleService.create({
+      id: `role_${Date.now()}`,
+      ...data,
+      sortOrder: data.sortOrder ?? 0,
+    })
+
+    return c.json({ success: true, data: role })
+  })
+  .openapi(updateRoleRoute, async c => {
+    const { id } = c.req.valid('param')
+    const data = c.req.valid('json')
+
+    const role = await roleService.update(id, data)
+
+    if (!role) {
+      return c.json({ success: false, error: 'Role not found' }, 404)
+    }
+
+    return c.json({ success: true, data: role })
+  })
+  .openapi(deleteRoleRoute, async c => {
+    const { id } = c.req.valid('param')
+
+    const success = await roleService.delete(id)
+
+    if (!success) {
+      return c.json({ success: false, error: 'Cannot delete system role or role not found' }, 400)
+    }
+
+    return c.json({ success: true })
+  })
+  .openapi(updateRolePermissionsRoute, async c => {
+    const { id } = c.req.valid('param')
+    const { permissionIds } = c.req.valid('json')
+
+    const role = await roleService.getById(id)
+    if (!role) {
+      return c.json({ success: false, error: 'Role not found' }, 404)
+    }
+
+    const currentPermissions = await permissionService.getRolePermissions(id)
+    const currentPermissionIds = currentPermissions.map(p => p.id)
+
+    for (const permissionId of currentPermissionIds) {
+      if (!permissionIds.includes(permissionId)) {
+        await permissionService.revokePermissionFromRole(id, permissionId)
+      }
+    }
+
+    for (const permissionId of permissionIds) {
+      if (!currentPermissionIds.includes(permissionId)) {
+        await permissionService.assignPermissionToRole(id, permissionId)
+      }
+    }
+
+    return c.json({ success: true })
+  })

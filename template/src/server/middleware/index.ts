@@ -19,4 +19,5 @@ export {
   clearCaptchaSessionMiddleware,
   type CaptchaConfig,
 } from './captcha'
+export { permissionMiddleware } from './permission'
 export { getAuthUser } from '../utils/auth'
