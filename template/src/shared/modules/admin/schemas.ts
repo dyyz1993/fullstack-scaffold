@@ -74,6 +74,12 @@ export const SuccessSchema = z.object({
   success: z.literal(true),
 })
 
+export const DownloadTokenSchema = z.object({
+  token: z.string(),
+  downloadUrl: z.string(),
+  expiresIn: z.number(),
+})
+
 export type SystemStats = z.infer<typeof SystemStatsSchema>
 export type HealthCheck = z.infer<typeof HealthCheckSchema>
 export type RecentActivityItem = z.infer<typeof RecentActivityItemSchema>

@@ -210,6 +210,24 @@ export const MediaTestPage: React.FC = () => {
     }
   }
 
+  const handleBrowserNativeDownload = async () => {
+    try {
+      const response = await apiClient.api.admin.todos.export.token.$post()
+      const data = await response.json()
+
+      if (!data.success || !data.data) {
+        throw new Error('Failed to get download token')
+      }
+
+      const { downloadUrl } = data.data
+      window.open(downloadUrl, '_blank')
+      message.success('下载已开始，请在浏览器下载管理器中查看进度。关闭此页面不会中断下载！')
+    } catch (error) {
+      console.error('Failed to start download:', error)
+      message.error('启动下载失败')
+    }
+  }
+
   const availableIcons = ['home', 'settings', 'user', 'bell']
 
   const supportsFileSystemAccess = 'showSaveFilePicker' in window
@@ -357,7 +375,7 @@ export const MediaTestPage: React.FC = () => {
           }
         >
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Paragraph>对比两种下载方式：一次性下载 vs 流式下载（浏览器原生进度）。</Paragraph>
+            <Paragraph>对比三种下载方式：</Paragraph>
 
             <Space wrap>
               <Button
@@ -368,6 +386,13 @@ export const MediaTestPage: React.FC = () => {
               >
                 直接下载 (页面内进度)
               </Button>
+              <Button
+                type="default"
+                icon={<Download size={16} />}
+                onClick={handleBrowserNativeDownload}
+              >
+                浏览器原生下载 (关闭页面继续)
+              </Button>
               {supportsFileSystemAccess ? (
                 <Button
                   type="default"
@@ -375,7 +400,7 @@ export const MediaTestPage: React.FC = () => {
                   onClick={handleBrowserStreamDownload}
                   loading={isStreaming}
                 >
-                  流式下载 (浏览器原生进度)
+                  流式下载 (选择保存位置)
                 </Button>
               ) : (
                 <Button
@@ -384,7 +409,7 @@ export const MediaTestPage: React.FC = () => {
                   onClick={handleStreamDownload}
                   loading={isStreaming}
                 >
-                  流式下载 (页面内进度显示)
+                  流式下载 (页面内进度)
                 </Button>
               )}
             </Space>
