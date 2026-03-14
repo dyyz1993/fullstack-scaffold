@@ -2,6 +2,9 @@ import { MiddlewareHandler } from 'hono'
 import { getAuthUser } from '../utils/auth'
 import { permissionService } from '../module-permission/services/permission-service-impl'
 import { roleService } from '../module-permission/services/role-service'
+import { logger } from '../utils/logger'
+
+const log = logger.api()
 
 interface RouteConfig {
   path: string
@@ -78,6 +81,7 @@ export function permissionMiddleware(): MiddlewareHandler {
 
     const user = getAuthUser(c)
     if (!user) {
+      log.warn({ path, method }, 'Unauthorized: no user found')
       return c.json({ success: false, error: 'Unauthorized' }, 401)
     }
 
@@ -85,20 +89,31 @@ export function permissionMiddleware(): MiddlewareHandler {
       return next()
     }
 
+    log.info(
+      { path, method, userId: user.id, requiredPermissions: routeConfig.permissions },
+      'Checking permissions'
+    )
+
     const userRoles = await roleService.getUserRoles(user.id)
     const isSuperAdmin = userRoles.some(r => r.code === 'super_admin')
 
     if (isSuperAdmin) {
+      log.info({ userId: user.id }, 'User is super admin, allowing access')
       return next()
     }
 
     for (const permissionCode of routeConfig.permissions) {
       const hasPermission = await permissionService.hasPermission(user.id, permissionCode)
+      log.info({ userId: user.id, permissionCode, hasPermission }, 'Permission check result')
       if (hasPermission) {
         return next()
       }
     }
 
+    log.warn(
+      { path, method, userId: user.id, requiredPermissions: routeConfig.permissions },
+      'Forbidden: no permission'
+    )
     return c.json(
       {
         success: false,
