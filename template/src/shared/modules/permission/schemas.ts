@@ -23,26 +23,22 @@ export const UserPermissionsSchema = z.object({
   permissions: z.array(PermissionEnum),
 })
 
-export const MenuItemSchema: z.ZodType<{
-  path: string
-  label: string
-  icon: string
-  permissions: Permission[]
-  children?: {
-    path: string
-    label: string
-    icon: string
-    permissions: Permission[]
-  }[]
-}> = z.lazy(() =>
-  z.object({
-    path: z.string(),
-    label: z.string(),
-    icon: z.string(),
-    permissions: z.array(PermissionEnum),
-    children: z.array(MenuItemSchema).optional(),
-  })
-)
+export const MenuItemSchema = z.object({
+  path: z.string(),
+  label: z.string(),
+  icon: z.string(),
+  permissions: z.array(PermissionEnum),
+  children: z
+    .array(
+      z.object({
+        path: z.string(),
+        label: z.string(),
+        icon: z.string(),
+        permissions: z.array(PermissionEnum),
+      })
+    )
+    .optional(),
+})
 
 export const PageActionSchema = z.object({
   key: z.string(),
