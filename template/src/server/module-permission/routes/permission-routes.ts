@@ -101,8 +101,11 @@ export const permissionRoutes = new OpenAPIHono()
   })
   .openapi(getUserPermissionsRoute, async c => {
     const user = getAuthUser(c)
-    const permissions = await permissionService.getUserPermissions(user.id, user.role)
-    return c.json({ success: true, data: permissions })
+    const userPermissions = permissionService.getUserPermissions(user.id, user.role)
+    return c.json({
+      success: true,
+      data: userPermissions,
+    })
   })
   .openapi(getMenuConfigRoute, async c => {
     const menuConfig = permissionService.getMenuConfig()

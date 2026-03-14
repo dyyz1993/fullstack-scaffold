@@ -107,6 +107,8 @@ export function dbPlugin(): Plugin {
           log.info({}, 'Initializing database...')
           await getDb()
           await runMigrations()
+          const { initializeDatabase } = await import('./src/server/db/init')
+          await initializeDatabase()
           log.info({}, 'Database ready')
         } catch (err) {
           log.error({ err }, 'Database initialization failed')
