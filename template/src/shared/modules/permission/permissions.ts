@@ -28,6 +28,11 @@ export enum Permission {
   TICKET_VIEW = 'ticket:view',
   TICKET_REPLY = 'ticket:reply',
   TICKET_CLOSE = 'ticket:close',
+
+  ROLE_VIEW = 'role:view',
+  ROLE_CREATE = 'role:create',
+  ROLE_EDIT = 'role:edit',
+  ROLE_DELETE = 'role:delete',
 }
 
 export interface RolePermissions {
@@ -84,6 +89,11 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   [Permission.TICKET_VIEW]: '查看工单',
   [Permission.TICKET_REPLY]: '回复工单',
   [Permission.TICKET_CLOSE]: '关闭工单',
+
+  [Permission.ROLE_VIEW]: '查看角色',
+  [Permission.ROLE_CREATE]: '创建角色',
+  [Permission.ROLE_EDIT]: '编辑角色',
+  [Permission.ROLE_DELETE]: '删除角色',
 }
 
 export const PERMISSION_CATEGORIES = {
@@ -108,6 +118,15 @@ export const PERMISSION_CATEGORIES = {
   system: {
     label: '系统管理',
     permissions: [Permission.SYSTEM_SETTINGS, Permission.SYSTEM_LOGS, Permission.SYSTEM_MONITOR],
+  },
+  role: {
+    label: '角色管理',
+    permissions: [
+      Permission.ROLE_VIEW,
+      Permission.ROLE_CREATE,
+      Permission.ROLE_EDIT,
+      Permission.ROLE_DELETE,
+    ],
   },
   data: {
     label: '数据管理',

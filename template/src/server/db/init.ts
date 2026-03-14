@@ -149,6 +149,38 @@ const initialPermissions = [
     category: 'ticket',
     sortOrder: 3,
   },
+  {
+    id: 'perm_role_view',
+    code: 'role:view',
+    name: '查看角色',
+    label: '查看角色',
+    category: 'role',
+    sortOrder: 1,
+  },
+  {
+    id: 'perm_role_create',
+    code: 'role:create',
+    name: '创建角色',
+    label: '创建角色',
+    category: 'role',
+    sortOrder: 2,
+  },
+  {
+    id: 'perm_role_edit',
+    code: 'role:edit',
+    name: '编辑角色',
+    label: '编辑角色',
+    category: 'role',
+    sortOrder: 3,
+  },
+  {
+    id: 'perm_role_delete',
+    code: 'role:delete',
+    name: '删除角色',
+    label: '删除角色',
+    category: 'role',
+    sortOrder: 4,
+  },
 ]
 
 const initialRoles = [
