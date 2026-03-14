@@ -2,6 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as disputeService from '../services/dispute-service'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { authMiddleware } from '../../middleware/auth'
+import { Permission } from '@shared/modules/permission'
 import {
   DisputeSchema,
   CreateDisputeSchema,
@@ -15,8 +17,12 @@ const listRoute = createRoute({
   method: 'get',
   path: '/disputes',
   tags: ['disputes'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_VIEW] })],
   responses: {
     200: successResponse(DisputeListSchema, 'List all disputes'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -25,11 +31,15 @@ const getRoute = createRoute({
   method: 'get',
   path: '/disputes/{id}',
   tags: ['disputes'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_VIEW] })],
   request: {
     params: DisputeSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(DisputeSchema, 'Get dispute by id'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Dispute not found'),
     500: errorResponse('Internal server error'),
   },
@@ -39,6 +49,8 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/disputes',
   tags: ['disputes'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_CREATE] })],
   request: {
     body: {
       content: {
@@ -50,6 +62,8 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(DisputeSchema, 'Create dispute'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
   },
@@ -59,6 +73,8 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/disputes/{id}',
   tags: ['disputes'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_EDIT] })],
   request: {
     params: DisputeSchema.pick({ id: true }),
     body: {
@@ -71,6 +87,8 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(DisputeSchema, 'Update dispute'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Dispute not found'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
@@ -81,11 +99,15 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/disputes/{id}',
   tags: ['disputes'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_DELETE] })],
   request: {
     params: DisputeSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(DeleteResultSchema, 'Dispute deleted'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Dispute not found'),
     500: errorResponse('Internal server error'),
   },
@@ -95,6 +117,8 @@ const resolveRoute = createRoute({
   method: 'put',
   path: '/disputes/{id}/resolve',
   tags: ['disputes'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_RESOLVE] })],
   request: {
     params: DisputeSchema.pick({ id: true }),
     body: {
@@ -107,6 +131,8 @@ const resolveRoute = createRoute({
   },
   responses: {
     200: successResponse(DisputeSchema, 'Dispute resolved'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Dispute not found'),
     400: errorResponse('Cannot resolve dispute'),
     500: errorResponse('Internal server error'),
