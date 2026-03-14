@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons'
 import { useRoleStore } from '../hooks/useRoles'
 import { useConfig, usePermissionCategories } from '../hooks/useConfig'
+import { usePermissions } from '../hooks/usePermissions'
 import type { RoleType } from '@shared/modules/role/schemas'
 import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
@@ -33,6 +34,7 @@ export const RolesPage: React.FC = () => {
     useRoleStore()
   const { permissions } = useConfig()
   const { categories } = usePermissionCategories()
+  const { refreshPermissions } = usePermissions()
   const [modalVisible, setModalVisible] = useState(false)
   const [permissionModalVisible, setPermissionModalVisible] = useState(false)
   const [editingRole, setEditingRole] = useState<RoleType | null>(null)
@@ -131,6 +133,7 @@ export const RolesPage: React.FC = () => {
     if (success) {
       message.success('权限更新成功')
       setPermissionModalVisible(false)
+      await refreshPermissions()
     }
   }
 
