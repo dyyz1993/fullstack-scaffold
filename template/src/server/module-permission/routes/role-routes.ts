@@ -213,16 +213,23 @@ export const roleRoutes = new OpenAPIHono()
       )
     }
 
+    const permissionObjects = await Promise.all(
+      permissionIds.map(code => permissionService.getByCode(code))
+    )
+    const validPermissionIds = permissionObjects
+      .filter((p): p is NonNullable<typeof p> => p !== undefined)
+      .map(p => p.id)
+
     const currentPermissions = await permissionService.getRolePermissions(id)
     const currentPermissionIds = currentPermissions.map(p => p.id)
 
     for (const permissionId of currentPermissionIds) {
-      if (!permissionIds.includes(permissionId)) {
+      if (!validPermissionIds.includes(permissionId)) {
         await permissionService.revokePermissionFromRole(id, permissionId)
       }
     }
 
-    for (const permissionId of permissionIds) {
+    for (const permissionId of validPermissionIds) {
       if (!currentPermissionIds.includes(permissionId)) {
         await permissionService.assignPermissionToRole(id, permissionId)
       }
