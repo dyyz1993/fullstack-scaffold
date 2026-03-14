@@ -8,7 +8,6 @@ import {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-  getPermissionsByRole,
 } from '@shared/modules/permission'
 import type { RoleInfo, PermissionInfo } from '@shared/modules/permission'
 
@@ -81,7 +80,7 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
       if (user.role) {
         const userRole = user.role
         setRole(userRole)
-        setPermissions(getPermissionsByRole(userRole))
+        setPermissions([])
       }
     } finally {
       setLoading(false)

@@ -1,7 +1,9 @@
 import { eq, and } from 'drizzle-orm'
 import type { Permission, NewPermission } from '../../db/schema/permissions'
+import type { RoleInfo, PermissionInfo } from '@shared/modules/permission'
+import { Permission as PermissionEnum, Role } from '@shared/modules/permission'
 import { getDb } from '../../db'
-import { permissions, rolePermissions } from '../../db/schema'
+import { permissions, rolePermissions, roles } from '../../db/schema'
 import { roleService } from './role-service'
 import { logger } from '../../utils/logger'
 
@@ -12,6 +14,34 @@ export class PermissionService {
     const db = await getDb()
     const rows = await db.select().from(permissions).where(eq(permissions.isActive, true))
     return rows
+  }
+
+  async getAllRoles(): Promise<RoleInfo[]> {
+    const db = await getDb()
+    const roleRows = await db.select().from(roles).where(eq(roles.isActive, true))
+
+    const result: RoleInfo[] = []
+    for (const role of roleRows) {
+      const rolePerms = await this.getRolePermissions(role.id)
+      result.push({
+        role: role.code as Role,
+        label: role.label,
+        permissions: rolePerms.map(p => p.code as PermissionEnum),
+      })
+    }
+
+    return result
+  }
+
+  async getAllPermissions(): Promise<PermissionInfo[]> {
+    const db = await getDb()
+    const rows = await db.select().from(permissions).where(eq(permissions.isActive, true))
+
+    return rows.map(p => ({
+      permission: p.code as PermissionEnum,
+      label: p.label,
+      category: p.category,
+    }))
   }
 
   async getById(id: string): Promise<Permission | undefined> {

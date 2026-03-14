@@ -93,11 +93,11 @@ const getPermissionLabelsRoute = createRoute({
 
 export const permissionRoutes = new OpenAPIHono()
   .openapi(getRolesRoute, async c => {
-    const roles = permissionServiceOld.getAllRoles()
+    const roles = await permissionService.getAllRoles()
     return c.json({ success: true, data: roles })
   })
   .openapi(getPermissionsRoute, async c => {
-    const permissions = permissionServiceOld.getAllPermissions()
+    const permissions = await permissionService.getAllPermissions()
     return c.json({ success: true, data: permissions })
   })
   .openapi(getUserPermissionsRoute, async c => {
