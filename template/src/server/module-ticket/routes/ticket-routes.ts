@@ -2,6 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as ticketService from '../services/ticket-service'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { authMiddleware } from '../../middleware/auth'
+import { Permission } from '@shared/modules/permission'
 import {
   TicketSchema,
   CreateTicketSchema,
@@ -15,8 +17,12 @@ const listRoute = createRoute({
   method: 'get',
   path: '/tickets',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
   responses: {
     200: successResponse(TicketListSchema, 'List all tickets'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -25,11 +31,15 @@ const getRoute = createRoute({
   method: 'get',
   path: '/tickets/{id}',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
   request: {
     params: TicketSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(TicketSchema, 'Get ticket by id'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),
     500: errorResponse('Internal server error'),
   },
@@ -39,6 +49,8 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/tickets',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
   request: {
     body: {
       content: {
@@ -50,6 +62,8 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(TicketSchema, 'Create ticket'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
   },
@@ -59,6 +73,8 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/tickets/{id}',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
   request: {
     params: TicketSchema.pick({ id: true }),
     body: {
@@ -71,6 +87,8 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(TicketSchema, 'Update ticket'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
@@ -81,11 +99,15 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/tickets/{id}',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
   request: {
     params: TicketSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(DeleteResultSchema, 'Ticket deleted'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),
     500: errorResponse('Internal server error'),
   },
@@ -95,6 +117,8 @@ const replyRoute = createRoute({
   method: 'post',
   path: '/tickets/{id}/reply',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_REPLY] })],
   request: {
     params: TicketSchema.pick({ id: true }),
     body: {
@@ -107,6 +131,8 @@ const replyRoute = createRoute({
   },
   responses: {
     200: successResponse(TicketSchema, 'Ticket replied'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),
     400: errorResponse('Cannot reply ticket'),
     500: errorResponse('Internal server error'),
@@ -117,11 +143,15 @@ const closeRoute = createRoute({
   method: 'put',
   path: '/tickets/{id}/close',
   tags: ['tickets'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_CLOSE] })],
   request: {
     params: TicketSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(TicketSchema, 'Ticket closed'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),
     400: errorResponse('Cannot close ticket'),
     500: errorResponse('Internal server error'),

@@ -2,6 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as orderService from '../services/order-service'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { authMiddleware } from '../../middleware/auth'
+import { Permission } from '@shared/modules/permission'
 import {
   OrderSchema,
   CreateOrderSchema,
@@ -14,8 +16,12 @@ const listRoute = createRoute({
   method: 'get',
   path: '/orders',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
   responses: {
     200: successResponse(OrderListSchema, 'List all orders'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -24,11 +30,15 @@ const getRoute = createRoute({
   method: 'get',
   path: '/orders/{id}',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
   request: {
     params: OrderSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(OrderSchema, 'Get order by id'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),
     500: errorResponse('Internal server error'),
   },
@@ -38,6 +48,8 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/orders',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
   request: {
     body: {
       content: {
@@ -49,6 +61,8 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(OrderSchema, 'Create order'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
   },
@@ -58,6 +72,8 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/orders/{id}',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
   request: {
     params: OrderSchema.pick({ id: true }),
     body: {
@@ -70,6 +86,8 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(OrderSchema, 'Update order'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
@@ -80,11 +98,15 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/orders/{id}',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
   request: {
     params: OrderSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(DeleteResultSchema, 'Order deleted'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),
     500: errorResponse('Internal server error'),
   },
@@ -94,11 +116,15 @@ const processRoute = createRoute({
   method: 'put',
   path: '/orders/{id}/process',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_PROCESS] })],
   request: {
     params: OrderSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(OrderSchema, 'Order processed'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),
     400: errorResponse('Cannot process order'),
     500: errorResponse('Internal server error'),
@@ -109,11 +135,15 @@ const cancelRoute = createRoute({
   method: 'put',
   path: '/orders/{id}/cancel',
   tags: ['orders'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_PROCESS] })],
   request: {
     params: OrderSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(OrderSchema, 'Order cancelled'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),
     400: errorResponse('Cannot cancel order'),
     500: errorResponse('Internal server error'),
