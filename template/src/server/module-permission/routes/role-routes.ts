@@ -23,8 +23,12 @@ const getRolesRoute = createRoute({
   method: 'get',
   path: '/roles',
   tags: ['roles'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(RoleSchema.array(), 'Get all roles'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
   },
 })
 
@@ -32,6 +36,8 @@ const getRoleRoute = createRoute({
   method: 'get',
   path: '/roles/:id',
   tags: ['roles'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -39,6 +45,8 @@ const getRoleRoute = createRoute({
   },
   responses: {
     200: successResponse(RoleWithPermissionsSchema, 'Get role by ID'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Role not found'),
   },
 })
