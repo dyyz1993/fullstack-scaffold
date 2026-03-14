@@ -16,6 +16,7 @@ import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
 import { realtimeEnvMiddleware } from './middleware/realtime-env'
 import { captchaMiddleware } from './middleware/captcha'
+import { auditLogMiddleware } from './middleware/audit-log'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 
@@ -25,6 +26,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .use('*', loggerMiddleware())
     .use('*', corsMiddleware())
     .use('*', realtimeEnvMiddleware())
+    .use('/api/*', auditLogMiddleware())
     .use(
       '/api/admin/*',
       captchaMiddleware({

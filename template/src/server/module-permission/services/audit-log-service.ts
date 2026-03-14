@@ -2,46 +2,57 @@ import type {
   PermissionAuditLog,
   NewPermissionAuditLog,
 } from '../../db/schema/permission-audit-logs'
-
-let auditLogs: PermissionAuditLog[] = []
+import { getDb } from '../../db'
+import { permissionAuditLogs } from '../../db/schema'
+import { eq, and, gte, lte, desc } from 'drizzle-orm'
 
 export class AuditLogService {
   async create(data: NewPermissionAuditLog): Promise<PermissionAuditLog> {
-    const log: PermissionAuditLog = {
-      id: data.id,
-      userId: data.userId,
-      action: data.action,
-      resourceType: data.resourceType,
-      resourceId: data.resourceId ?? null,
-      oldValue: data.oldValue ?? null,
-      newValue: data.newValue ?? null,
-      ipAddress: data.ipAddress ?? null,
-      userAgent: data.userAgent ?? null,
-      createdAt: new Date(),
-    }
-    auditLogs.push(log)
-    return log
+    const db = await getDb()
+    const rows = await db
+      .insert(permissionAuditLogs)
+      .values({
+        ...data,
+        createdAt: new Date(),
+      })
+      .returning()
+    return rows[0]
   }
 
   async getAll(limit = 50, offset = 0): Promise<PermissionAuditLog[]> {
-    return auditLogs
-      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
-      .slice(offset, offset + limit)
+    const db = await getDb()
+    const rows = await db
+      .select()
+      .from(permissionAuditLogs)
+      .orderBy(desc(permissionAuditLogs.createdAt))
+      .limit(limit)
+      .offset(offset)
+    return rows
   }
 
   async getByUserId(userId: string, limit = 50): Promise<PermissionAuditLog[]> {
-    return auditLogs
-      .filter(log => log.userId === userId)
-      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
-      .slice(0, limit)
+    const db = await getDb()
+    const rows = await db
+      .select()
+      .from(permissionAuditLogs)
+      .where(eq(permissionAuditLogs.userId, userId))
+      .orderBy(desc(permissionAuditLogs.createdAt))
+      .limit(limit)
+    return rows
   }
 
   async getByResource(resourceType: string, resourceId?: string): Promise<PermissionAuditLog[]> {
-    return auditLogs
-      .filter(
-        log => log.resourceType === resourceType && (!resourceId || log.resourceId === resourceId)
-      )
-      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    const db = await getDb()
+    const conditions = [eq(permissionAuditLogs.resourceType, resourceType)]
+    if (resourceId) {
+      conditions.push(eq(permissionAuditLogs.resourceId, resourceId))
+    }
+    const rows = await db
+      .select()
+      .from(permissionAuditLogs)
+      .where(and(...conditions))
+      .orderBy(desc(permissionAuditLogs.createdAt))
+    return rows
   }
 
   async search(query: {
@@ -51,26 +62,44 @@ export class AuditLogService {
     startDate?: Date
     endDate?: Date
   }): Promise<PermissionAuditLog[]> {
-    return auditLogs
-      .filter(log => {
-        if (query.userId && log.userId !== query.userId) return false
-        if (query.action && log.action !== query.action) return false
-        if (query.resourceType && log.resourceType !== query.resourceType) return false
-        if (query.startDate && log.createdAt && log.createdAt < query.startDate) return false
-        if (query.endDate && log.createdAt && log.createdAt > query.endDate) return false
-        return true
-      })
-      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    const db = await getDb()
+    const conditions = []
+
+    if (query.userId) {
+      conditions.push(eq(permissionAuditLogs.userId, query.userId))
+    }
+    if (query.action) {
+      conditions.push(eq(permissionAuditLogs.action, query.action))
+    }
+    if (query.resourceType) {
+      conditions.push(eq(permissionAuditLogs.resourceType, query.resourceType))
+    }
+    if (query.startDate) {
+      conditions.push(gte(permissionAuditLogs.createdAt, query.startDate))
+    }
+    if (query.endDate) {
+      conditions.push(lte(permissionAuditLogs.createdAt, query.endDate))
+    }
+
+    const rows = await db
+      .select()
+      .from(permissionAuditLogs)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(permissionAuditLogs.createdAt))
+    return rows
   }
 
   async deleteOlderThan(days: number): Promise<number> {
+    const db = await getDb()
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - days)
 
-    const initialLength = auditLogs.length
-    auditLogs = auditLogs.filter(log => log.createdAt && log.createdAt >= cutoff)
+    const rows = await db
+      .delete(permissionAuditLogs)
+      .where(lte(permissionAuditLogs.createdAt, cutoff))
+      .returning()
 
-    return initialLength - auditLogs.length
+    return rows.length
   }
 }
 
