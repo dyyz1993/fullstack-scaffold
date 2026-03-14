@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core'
 
 export const routes = sqliteTable(
   'routes',
@@ -15,7 +15,7 @@ export const routes = sqliteTable(
     updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
   },
   table => ({
-    pathMethodUnique: primaryKey({ columns: [table.path, table.method] }),
+    pathMethodUnique: unique().on(table.path, table.method),
   })
 )
 
