@@ -16,23 +16,37 @@ export function auditLogMiddleware(): MiddlewareHandler {
     const duration = Date.now() - startTime
     const status = c.res.status
 
+    log.info(
+      {
+        path,
+        method,
+        status,
+        duration,
+      },
+      'Audit log middleware checking'
+    )
+
     // 只记录API请求，排除公开API
     if (!path.startsWith('/api/') || path.startsWith('/api/permissions/')) {
+      log.info({ path }, 'Skipping: not API or public API')
       return
     }
 
     // 只记录写操作（POST, PUT, DELETE, PATCH）
     if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      log.info({ method }, 'Skipping: not write operation')
       return
     }
 
     // 只记录成功的操作（2xx）
     if (status < 200 || status >= 300) {
+      log.info({ status }, 'Skipping: not successful operation')
       return
     }
 
     const user = getAuthUser(c)
     if (!user) {
+      log.info({ path }, 'Skipping: no user')
       return
     }
 
@@ -49,8 +63,8 @@ export function auditLogMiddleware(): MiddlewareHandler {
     // 确定资源类型
     const pathParts = path.split('/').filter(Boolean)
     let resourceType = 'unknown'
-    if (pathParts.length >= 3) {
-      resourceType = pathParts[2] // /api/admin/users -> users
+    if (pathParts.length >= 2) {
+      resourceType = pathParts[1] // /api/contents -> contents
     }
 
     try {
@@ -59,7 +73,7 @@ export function auditLogMiddleware(): MiddlewareHandler {
         userId: user.id,
         action,
         resourceType,
-        resourceId: pathParts.length >= 4 ? pathParts[3] : null,
+        resourceId: pathParts.length >= 3 ? pathParts[2] : null,
         oldValue: null,
         newValue: null,
         ipAddress: c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || null,
