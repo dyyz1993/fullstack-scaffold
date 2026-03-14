@@ -3,10 +3,7 @@ import { Tree, Card, Tag, Input, Space, Button, Tooltip } from 'antd'
 import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import type { PermissionInfo, PermissionCategory } from '@shared/modules/permission'
 import type { DataNode } from 'antd/es/tree'
-import {
-  PERMISSION_DEPENDENCIES,
-  getRequiredPermissions,
-} from '@shared/modules/permission/permission-dependencies'
+import { PERMISSION_DEPENDENCIES } from '@shared/modules/permission/permission-dependencies'
 
 interface PermissionTreeProps {
   permissions: PermissionInfo[]
@@ -95,20 +92,9 @@ export const PermissionTree: React.FC<PermissionTreeProps> = ({
     checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }
   ) => {
     const checkedKeys = Array.isArray(checked) ? checked : checked.checked
-    let permissionKeys = checkedKeys.filter(key =>
+    const permissionKeys = checkedKeys.filter(key =>
       permissions.some(p => p.permission === key)
     ) as string[]
-
-    for (const permission of permissionKeys) {
-      const required = getRequiredPermissions(permission)
-      for (const req of required) {
-        if (!permissionKeys.includes(req)) {
-          permissionKeys.push(req)
-        }
-      }
-    }
-
-    permissionKeys = [...new Set(permissionKeys)]
     onSelectionChange(permissionKeys)
   }
 
