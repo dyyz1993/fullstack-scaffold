@@ -111,8 +111,14 @@ export class PermissionService {
   }
 
   async hasPermission(_userId: string, permissionCode: string): Promise<boolean> {
-    const userPermissions = await this.getUserPermissions(_userId)
-    return userPermissions.some(p => p.code === permissionCode)
+    const userRoles = await roleService.getUserRoles(_userId)
+    for (const role of userRoles) {
+      const rolePermissions = await this.getRolePermissions(role.id)
+      if (rolePermissions.some(p => p.code === permissionCode)) {
+        return true
+      }
+    }
+    return false
   }
 
   async assignPermissionToRole(roleId: string, permissionId: string): Promise<void> {
