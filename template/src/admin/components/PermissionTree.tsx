@@ -3,7 +3,10 @@ import { Tree, Card, Tag, Input, Space, Button, Tooltip } from 'antd'
 import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import type { PermissionInfo, PermissionCategory } from '@shared/modules/permission'
 import type { DataNode } from 'antd/es/tree'
-import { PERMISSION_DEPENDENCIES } from '@shared/modules/permission/permission-dependencies'
+import {
+  PERMISSION_DEPENDENCIES,
+  getRequiredPermissions,
+} from '@shared/modules/permission/permission-dependencies'
 
 interface PermissionTreeProps {
   permissions: PermissionInfo[]
@@ -92,10 +95,37 @@ export const PermissionTree: React.FC<PermissionTreeProps> = ({
     checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }
   ) => {
     const checkedKeys = Array.isArray(checked) ? checked : checked.checked
-    const permissionKeys = checkedKeys.filter(key =>
+    const newCheckedPermissions = checkedKeys.filter(key =>
       permissions.some(p => p.permission === key)
     ) as string[]
-    onSelectionChange(permissionKeys)
+
+    const oldCheckedPermissions = selectedPermissions
+    const addedPermissions = newCheckedPermissions.filter(p => !oldCheckedPermissions.includes(p))
+    const removedPermissions = oldCheckedPermissions.filter(p => !newCheckedPermissions.includes(p))
+
+    let finalPermissions = [...newCheckedPermissions]
+
+    for (const permission of addedPermissions) {
+      const required = getRequiredPermissions(permission)
+      for (const req of required) {
+        if (!finalPermissions.includes(req)) {
+          finalPermissions.push(req)
+        }
+      }
+    }
+
+    for (const permission of removedPermissions) {
+      const dependentPermissions = Object.entries(PERMISSION_DEPENDENCIES)
+        .filter(([_, deps]) => deps.includes(permission))
+        .map(([perm]) => perm)
+
+      for (const dep of dependentPermissions) {
+        finalPermissions = finalPermissions.filter(p => p !== dep)
+      }
+    }
+
+    finalPermissions = [...new Set(finalPermissions)]
+    onSelectionChange(finalPermissions)
   }
 
   const handleSelectAll = () => {
