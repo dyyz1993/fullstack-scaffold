@@ -26,6 +26,7 @@ import type { RoleType } from '@shared/modules/role/schemas'
 import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
 import { apiClient } from '../services/apiClient'
+import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
 
 export const RolesPage: React.FC = () => {
   const { roles, loading, fetchRoles, createRole, updateRole, deleteRole, updateRolePermissions } =
@@ -107,6 +108,24 @@ export const RolesPage: React.FC = () => {
 
   const handlePermissionSubmit = async () => {
     if (!editingRole) return
+
+    const validation = validatePermissionDependencies(selectedPermissions)
+    if (!validation.valid) {
+      Modal.error({
+        title: '权限依赖校验失败',
+        content: (
+          <div>
+            <p>以下权限配置存在问题：</p>
+            <ul>
+              {validation.errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        ),
+      })
+      return
+    }
 
     const success = await updateRolePermissions(editingRole.id, selectedPermissions)
     if (success) {

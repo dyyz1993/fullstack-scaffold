@@ -1,8 +1,12 @@
 import React, { useState, useMemo } from 'react'
-import { Tree, Card, Tag, Input, Space, Button } from 'antd'
-import { SearchOutlined } from '@ant-design/icons'
+import { Tree, Card, Tag, Input, Space, Button, Tooltip } from 'antd'
+import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import type { PermissionInfo, PermissionCategory } from '@shared/modules/permission'
 import type { DataNode } from 'antd/es/tree'
+import {
+  PERMISSION_DEPENDENCIES,
+  getRequiredPermissions,
+} from '@shared/modules/permission/permission-dependencies'
 
 interface PermissionTreeProps {
   permissions: PermissionInfo[]
@@ -51,6 +55,11 @@ export const PermissionTree: React.FC<PermissionTreeProps> = ({
             <span style={{ marginLeft: '8px', color: '#666', fontSize: '12px' }}>
               {perm.permission}
             </span>
+            {PERMISSION_DEPENDENCIES[perm.permission] && (
+              <Tooltip title={`需要权限: ${PERMISSION_DEPENDENCIES[perm.permission].join(', ')}`}>
+                <InfoCircleOutlined style={{ marginLeft: '4px', color: '#1890ff' }} />
+              </Tooltip>
+            )}
           </span>
         ),
       })),
@@ -86,9 +95,20 @@ export const PermissionTree: React.FC<PermissionTreeProps> = ({
     checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] }
   ) => {
     const checkedKeys = Array.isArray(checked) ? checked : checked.checked
-    const permissionKeys = checkedKeys.filter(key =>
+    let permissionKeys = checkedKeys.filter(key =>
       permissions.some(p => p.permission === key)
     ) as string[]
+
+    for (const permission of permissionKeys) {
+      const required = getRequiredPermissions(permission)
+      for (const req of required) {
+        if (!permissionKeys.includes(req)) {
+          permissionKeys.push(req)
+        }
+      }
+    }
+
+    permissionKeys = [...new Set(permissionKeys)]
     onSelectionChange(permissionKeys)
   }
 

@@ -12,6 +12,7 @@ import {
   UpdateRolePermissionsSchema,
   SuccessSchema,
 } from '@shared/modules/role/schemas'
+import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
 
 const RoleWithPermissionsSchema = RoleSchema.extend({
   permissions: z.array(z.string()),
@@ -198,6 +199,18 @@ export const roleRoutes = new OpenAPIHono()
 
     if (role.code === 'super_admin') {
       return c.json({ success: false, error: 'Cannot modify super admin permissions' }, 403)
+    }
+
+    const validation = validatePermissionDependencies(permissionIds)
+    if (!validation.valid) {
+      return c.json(
+        {
+          success: false,
+          error: '权限依赖校验失败',
+          details: validation.errors,
+        },
+        400
+      )
     }
 
     const currentPermissions = await permissionService.getRolePermissions(id)
