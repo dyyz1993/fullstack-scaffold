@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { createModuleLoggerSync } from '../utils/logger'
-import { Role, Permission, getPermissionsByRole, hasAllPermissions } from '@shared/modules/admin'
+import { Role, Permission, getPermissionsByRole } from '@shared/modules/admin'
 
 export type UserRole = Role.SUPER_ADMIN | Role.CUSTOMER_SERVICE | Role.USER
 
@@ -100,6 +100,8 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
       throw new HTTPException(401, { message: 'Unauthorized: Invalid authentication token' })
     }
 
+    log.info({ userId: user.id, role: user.role, path: c.req.path }, 'User authenticated')
+
     if (options.requiredRole) {
       const roleHierarchy = {
         [Role.SUPER_ADMIN]: 3,
@@ -124,23 +126,28 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     }
 
     if (options.requiredPermissions && options.requiredPermissions.length > 0) {
-      if (!hasAllPermissions(user.permissions, options.requiredPermissions)) {
-        log.warn(
-          {
-            path: c.req.path,
-            method: c.req.method,
-            userPermissions: user.permissions,
-            requiredPermissions: options.requiredPermissions,
-          },
-          'Missing required permissions'
-        )
-        throw new HTTPException(403, { message: 'Forbidden: Missing required permissions' })
+      // 从数据库读取权限，而不是使用硬编码的权限
+      const { permissionService } =
+        await import('../module-permission/services/permission-service-impl')
+
+      for (const requiredPermission of options.requiredPermissions) {
+        const hasPermission = await permissionService.hasPermission(user.id, requiredPermission)
+        if (!hasPermission) {
+          log.warn(
+            {
+              path: c.req.path,
+              method: c.req.method,
+              userId: user.id,
+              requiredPermission,
+            },
+            'Insufficient permission'
+          )
+          throw new HTTPException(403, { message: 'Forbidden: Insufficient permissions' })
+        }
       }
     }
 
-    c.set('authUser', user)
-    log.info({ userId: user.id, role: user.role, path: c.req.path }, 'User authenticated')
-
+    c.set('user', user)
     await next()
   }
 }

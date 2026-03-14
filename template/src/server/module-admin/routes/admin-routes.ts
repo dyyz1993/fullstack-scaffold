@@ -9,6 +9,7 @@ import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import { getAuthUser } from '../../utils/auth'
 import * as adminService from '../services/admin-service'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { Permission } from '@shared/modules/permission'
 import {
   SystemStatsSchema,
   HealthCheckSchema,
@@ -175,7 +176,7 @@ const getUsersRoute = createRoute({
   path: '/admin/users',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.USER_VIEW] })],
   responses: {
     200: successResponse(UserListSchema, 'Get user list'),
     401: errorResponse('Unauthorized'),
@@ -188,7 +189,7 @@ const getUserRoute = createRoute({
   path: '/admin/users/:id',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.USER_VIEW] })],
   request: {
     params: z.object({
       id: z.string(),
@@ -207,7 +208,7 @@ const updateUserRoute = createRoute({
   path: '/admin/users/:id',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.USER_EDIT] })],
   request: {
     params: z.object({
       id: z.string(),
@@ -233,7 +234,7 @@ const deleteUserRoute = createRoute({
   path: '/admin/users/:id',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.USER_DELETE] })],
   request: {
     params: z.object({
       id: z.string(),
@@ -252,7 +253,7 @@ const createUserRoute = createRoute({
   path: '/admin/users',
   tags: ['admin'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.USER_CREATE] })],
   request: {
     body: {
       content: {

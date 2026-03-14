@@ -81,8 +81,8 @@ export function permissionMiddleware(): MiddlewareHandler {
 
     const user = getAuthUser(c)
     if (!user) {
-      log.warn({ path, method }, 'Unauthorized: no user found')
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
+      // 没有用户信息，跳过权限检查，让路由的认证中间件处理
+      return next()
     }
 
     if (routeConfig.permissions.length === 0) {
