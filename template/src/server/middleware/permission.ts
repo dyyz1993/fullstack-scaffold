@@ -1,6 +1,6 @@
 import { MiddlewareHandler } from 'hono'
 import { getAuthUser } from '../utils/auth'
-import { permissionService } from '../module-permission/services/permission-service-new'
+import { permissionService } from '../module-permission/services/permission-service-impl'
 import { roleService } from '../module-permission/services/role-service'
 
 interface RouteConfig {

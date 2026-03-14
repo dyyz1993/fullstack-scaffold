@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
 import { roleService } from '../services/role-service'
-import { permissionService } from '../services/permission-service-new'
+import { permissionService } from '../services/permission-service-impl'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
 import {
   RoleSchema,

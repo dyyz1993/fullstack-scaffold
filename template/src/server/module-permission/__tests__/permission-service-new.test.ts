@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { PermissionService } from '../services/permission-service-new'
+import { PermissionService } from '../services/permission-service-impl'
 import { roleService } from '../services/role-service'
 
 describe('Permission Service', () => {
