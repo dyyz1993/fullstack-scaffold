@@ -147,7 +147,7 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
       }
     }
 
-    c.set('user', user)
+    c.set('authUser', user)
     await next()
   }
 }
