@@ -2,7 +2,7 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
 import { getAuthUser } from '../../utils/auth'
-import * as permissionService from '../services/permission-service'
+import { permissionService } from '../services/permission-service-impl'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
 import {
   RoleInfoSchema,
@@ -14,6 +14,7 @@ import {
   RoleLabelsSchema,
   PermissionLabelsSchema,
 } from '@shared/modules/permission'
+import * as permissionServiceOld from '../services/permission-service'
 
 const getRolesRoute = createRoute({
   method: 'get',
@@ -92,38 +93,43 @@ const getPermissionLabelsRoute = createRoute({
 
 export const permissionRoutes = new OpenAPIHono()
   .openapi(getRolesRoute, async c => {
-    const roles = permissionService.getAllRoles()
+    const roles = permissionServiceOld.getAllRoles()
     return c.json({ success: true, data: roles })
   })
   .openapi(getPermissionsRoute, async c => {
-    const permissions = permissionService.getAllPermissions()
+    const permissions = permissionServiceOld.getAllPermissions()
     return c.json({ success: true, data: permissions })
   })
   .openapi(getUserPermissionsRoute, async c => {
     const user = getAuthUser(c)
-    const userPermissions = permissionService.getUserPermissions(user.id, user.role)
+    const userPermissions = await permissionService.getUserPermissions(user.id, user.role)
+    const permissionCodes = userPermissions.map(p => p.code)
     return c.json({
       success: true,
-      data: userPermissions,
+      data: {
+        userId: user.id,
+        role: user.role,
+        permissions: permissionCodes,
+      },
     })
   })
   .openapi(getMenuConfigRoute, async c => {
-    const menuConfig = permissionService.getMenuConfig()
+    const menuConfig = permissionServiceOld.getMenuConfig()
     return c.json({ success: true, data: menuConfig })
   })
   .openapi(getPagePermissionsRoute, async c => {
-    const pagePermissions = permissionService.getPagePermissions()
+    const pagePermissions = permissionServiceOld.getPagePermissions()
     return c.json({ success: true, data: pagePermissions })
   })
   .openapi(getPermissionCategoriesRoute, async c => {
-    const categories = permissionService.getPermissionCategories()
+    const categories = permissionServiceOld.getPermissionCategories()
     return c.json({ success: true, data: categories })
   })
   .openapi(getRoleLabelsRoute, async c => {
-    const labels = permissionService.getRoleLabels()
+    const labels = permissionServiceOld.getRoleLabels()
     return c.json({ success: true, data: labels })
   })
   .openapi(getPermissionLabelsRoute, async c => {
-    const labels = permissionService.getPermissionLabels()
+    const labels = permissionServiceOld.getPermissionLabels()
     return c.json({ success: true, data: labels })
   })
