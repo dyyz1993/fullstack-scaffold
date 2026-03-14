@@ -1,5 +1,6 @@
 import type { Permission, NewPermission } from '../../db/schema/permissions'
 import type { RolePermission } from '../../db/schema/role-permissions'
+import { roleService } from './role-service'
 
 interface PermissionData {
   id: string
@@ -283,8 +284,17 @@ export class PermissionService {
     return permissions.filter(p => permissionIds.includes(p.id) && p.isActive)
   }
 
-  async getUserPermissions(_userId: string): Promise<Permission[]> {
-    return permissions.filter(p => p.isActive)
+  async getUserPermissions(_userId: string, roleCode?: string): Promise<Permission[]> {
+    if (!roleCode) {
+      return []
+    }
+
+    const role = await roleService.getByCode(roleCode)
+    if (!role) {
+      return []
+    }
+
+    return this.getRolePermissions(role.id)
   }
 
   async hasPermission(_userId: string, permissionCode: string): Promise<boolean> {
