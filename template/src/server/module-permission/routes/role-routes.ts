@@ -2,6 +2,7 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
+import { Role } from '@shared/modules/permission'
 import { roleService } from '../services/role-service'
 import { permissionService } from '../services/permission-service-impl'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
@@ -47,7 +48,7 @@ const createRoleRoute = createRoute({
   path: '/roles',
   tags: ['roles'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     body: {
       content: {
@@ -60,6 +61,7 @@ const createRoleRoute = createRoute({
   responses: {
     200: successResponse(RoleSchema, 'Role created'),
     401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid request'),
   },
 })
@@ -69,7 +71,7 @@ const updateRoleRoute = createRoute({
   path: '/roles/:id',
   tags: ['roles'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -85,6 +87,7 @@ const updateRoleRoute = createRoute({
   responses: {
     200: successResponse(RoleSchema, 'Role updated'),
     401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Role not found'),
   },
 })
@@ -94,7 +97,7 @@ const deleteRoleRoute = createRoute({
   path: '/roles/:id',
   tags: ['roles'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -103,6 +106,7 @@ const deleteRoleRoute = createRoute({
   responses: {
     200: successResponse(SuccessSchema, 'Role deleted'),
     401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Cannot delete system role'),
   },
 })
@@ -112,7 +116,7 @@ const updateRolePermissionsRoute = createRoute({
   path: '/roles/:id/permissions',
   tags: ['roles'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),
@@ -128,6 +132,7 @@ const updateRolePermissionsRoute = createRoute({
   responses: {
     200: successResponse(SuccessSchema, 'Role permissions updated'),
     401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Role not found'),
   },
 })
