@@ -138,6 +138,8 @@ export async function startServer() {
   try {
     await getDb()
     await runMigrations()
+    const { initializeDatabase } = await import('../db/init')
+    await initializeDatabase()
     bootstrapLog.info({}, 'Database ready')
   } catch (err) {
     bootstrapLog.error({ err }, 'Database initialization failed')

@@ -3,6 +3,9 @@ import type { Permission, NewPermission } from '../../db/schema/permissions'
 import { getDb } from '../../db'
 import { permissions, rolePermissions } from '../../db/schema'
 import { roleService } from './role-service'
+import { logger } from '../../utils/logger'
+
+const log = logger.api()
 
 export class PermissionService {
   async getAll(): Promise<Permission[]> {
@@ -92,16 +95,20 @@ export class PermissionService {
       )
 
     if (existing.length === 0) {
+      log.info({ roleId, permissionId }, 'Assigning permission to role')
       await db.insert(rolePermissions).values({
         roleId,
         permissionId,
         createdAt: new Date(),
       })
+    } else {
+      log.debug({ roleId, permissionId }, 'Permission already assigned to role')
     }
   }
 
   async revokePermissionFromRole(roleId: string, permissionId: string): Promise<void> {
     const db = await getDb()
+    log.info({ roleId, permissionId }, 'Revoking permission from role')
     await db
       .delete(rolePermissions)
       .where(
