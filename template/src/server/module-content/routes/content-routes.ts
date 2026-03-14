@@ -2,6 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as contentService from '../services/content-service'
 import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { authMiddleware } from '../../middleware/auth'
+import { Permission } from '@shared/modules/permission'
 import {
   ContentSchema,
   CreateContentSchema,
@@ -14,8 +16,12 @@ const listRoute = createRoute({
   method: 'get',
   path: '/contents',
   tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_VIEW] })],
   responses: {
     200: successResponse(ContentListSchema, 'List all contents'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -24,11 +30,15 @@ const getRoute = createRoute({
   method: 'get',
   path: '/contents/{id}',
   tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_VIEW] })],
   request: {
     params: ContentSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(ContentSchema, 'Get content by id'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Content not found'),
     500: errorResponse('Internal server error'),
   },
@@ -38,6 +48,8 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/contents',
   tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_CREATE] })],
   request: {
     body: {
       content: {
@@ -49,6 +61,8 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(ContentSchema, 'Create content'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
   },
@@ -58,6 +72,8 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/contents/{id}',
   tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_EDIT] })],
   request: {
     params: ContentSchema.pick({ id: true }),
     body: {
@@ -70,6 +86,8 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(ContentSchema, 'Update content'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Content not found'),
     400: errorResponse('Invalid input'),
     500: errorResponse('Internal server error'),
@@ -80,11 +98,15 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/contents/{id}',
   tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_DELETE] })],
   request: {
     params: ContentSchema.pick({ id: true }),
   },
   responses: {
     200: successResponse(DeleteResultSchema, 'Content deleted'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Content not found'),
     500: errorResponse('Internal server error'),
   },
