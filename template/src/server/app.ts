@@ -2,6 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { apiRoutes } from './module-todos/routes/todos-routes'
 import { permissionRoutes } from './module-permission/routes/permission-routes'
 import { roleRoutes } from './module-permission/routes/role-routes'
+import { auditLogRoutes } from './module-permission/routes/audit-log-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
 import { adminRoutes } from './module-admin/routes/admin-routes'
@@ -34,6 +35,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .route('/api', notificationRoutes)
     .route('/api', permissionRoutes)
     .route('/api', roleRoutes)
+    .route('/api', auditLogRoutes)
     .route('/api', chatRoutes)
     .route('/api', apiRoutes)
     .route('/api', adminRoutes)

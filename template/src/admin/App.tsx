@@ -7,6 +7,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { PermissionsPage } from './pages/PermissionsPage'
 import { RolesPage } from './pages/RolesPage'
+import { SystemLogsPage } from './pages/SystemLogsPage'
 import { UsersPage } from './pages/UsersPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { TicketsPage } from './pages/TicketsPage'
@@ -43,7 +44,7 @@ export const App: React.FC = () => {
                       <Route path="/disputes" element={<DisputesPage />} />
                       <Route path="/content" element={<ContentPage />} />
                       <Route path="/system/settings" element={<SettingsPage />} />
-                      <Route path="/system/logs" element={<div>系统日志页面（待开发）</div>} />
+                      <Route path="/system/logs" element={<SystemLogsPage />} />
                       <Route path="/system/monitor" element={<div>系统监控页面（待开发）</div>} />
                       <Route path="/system/permissions" element={<PermissionsPage />} />
                       <Route path="/system/roles" element={<RolesPage />} />
