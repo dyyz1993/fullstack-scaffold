@@ -19,6 +19,7 @@ const __dirname = path.dirname(__filename)
 const PUBLIC_ROUTES = [
   { path: '/api/admin/login', method: 'POST' },
   { path: '/api/admin/register', method: 'POST' },
+  { path: '/api/admin/todos/export/download/:token', method: 'GET' },
   { path: '/api/captcha', method: 'GET' },
   { path: '/api/verify-captcha', method: 'POST' },
   { path: '/api/permissions', method: 'GET' },

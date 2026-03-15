@@ -8,6 +8,8 @@ import {
   TodoIdResponseSchema,
 } from '@shared/schemas'
 import { successResponse, errorResponse } from '@server/utils/route-helpers'
+import { authMiddleware } from '../../middleware/auth'
+import { Permission } from '@shared/modules/permission'
 
 const TodoListSchema = z.array(TodoSchema)
 
@@ -15,8 +17,12 @@ const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
   responses: {
     200: successResponse(TodoListSchema, 'List all todos'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -25,11 +31,15 @@ const getRoute = createRoute({
   method: 'get',
   path: '/todos/{id}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(TodoSchema, 'Get a todo by ID'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -38,6 +48,8 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/todos',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_CREATE] })],
   request: {
     body: {
       content: { 'application/json': { schema: CreateTodoSchema } },
@@ -45,6 +57,8 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(TodoSchema, 'Create a new todo'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
   },
 })
@@ -53,6 +67,8 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/todos/{id}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_EDIT] })],
   request: {
     params: z.object({ id: z.string() }),
     body: {
@@ -61,6 +77,8 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(TodoSchema, 'Update a todo'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -69,11 +87,15 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/todos/{id}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_DELETE] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(TodoIdResponseSchema, 'Delete a todo'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
