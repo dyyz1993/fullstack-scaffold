@@ -17,18 +17,29 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const PUBLIC_ROUTES = [
-  { path: '/api/admin/login', method: 'POST' },
-  { path: '/api/admin/register', method: 'POST' },
-  { path: '/api/admin/todos/export/download/:token', method: 'GET' },
-  { path: '/api/captcha', method: 'GET' },
-  { path: '/api/verify-captcha', method: 'POST' },
-  { path: '/api/permissions', method: 'GET' },
-  { path: '/api/permissions/roles', method: 'GET' },
-  { path: '/api/permissions/categories', method: 'GET' },
-  { path: '/api/permissions/role-labels', method: 'GET' },
-  { path: '/api/permissions/permission-labels', method: 'GET' },
-  { path: '/api/permissions/menu-config', method: 'GET' },
-  { path: '/api/permissions/page-permissions', method: 'GET' },
+  // 管理员认证
+  { path: '/admin/login', method: 'POST' },
+  { path: '/admin/register', method: 'POST' },
+  { path: '/admin/todos/export/download/:token', method: 'GET' },
+
+  // 验证码
+  { path: '/captcha', method: 'GET' },
+  { path: '/verify-captcha', method: 'POST' },
+
+  // 聊天WebSocket
+  { path: '/chat/ws/status', method: 'GET' },
+  { path: '/chat/ws', method: 'GET' },
+
+  // 权限相关（获取公开信息）
+  { path: '/permissions', method: 'GET' },
+  { path: '/permissions/roles', method: 'GET' },
+  { path: '/permissions/categories', method: 'GET' },
+  { path: '/permissions/role-labels', method: 'GET' },
+  { path: '/permissions/permission-labels', method: 'GET' },
+  { path: '/permissions/menu-config', method: 'GET' },
+  { path: '/permissions/page-permissions', method: 'GET' },
+
+  // 健康检查
   { path: '/health', method: 'GET' },
 ]
 
