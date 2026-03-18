@@ -461,6 +461,132 @@ const exportTodosRoute = createRoute({
 
 **注意**: 对于二进制类型，使用 `z.any().openapi({ type: 'string', format: 'binary' })` 而不是 `z.instanceof(Blob)`。
 
+## 📤 文件上传 (form)
+
+### 客户端上传文件
+
+使用 `form` 属性上传文件，Hono RPC 客户端会自动处理 `multipart/form-data`。
+
+```typescript
+import { apiClient } from '@client/services/apiClient'
+
+// 上传单个文件
+const response = await apiClient.api.todos[':id'].attachments.$post({
+  param: { id: '123' },
+  form: { file },
+})
+
+const result = await response.json()
+if (result.success) {
+  console.log('File uploaded:', result.data)
+}
+```
+
+### 服务端定义
+
+```typescript
+// src/server/module-todos/routes/todos-routes.ts
+import { createRoute, z } from '@hono/zod-openapi'
+
+const UploadFileSchema = z.object({
+  file: z.any().openapi({ type: 'string', format: 'binary' }),
+})
+
+const uploadAttachmentRoute = createRoute({
+  method: 'post',
+  path: '/todos/{id}/attachments',
+  request: {
+    params: z.object({ id: z.string() }),
+    body: {
+      content: {
+        'multipart/form-data': {
+          schema: UploadFileSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: successResponse(AttachmentSchema, 'File uploaded'),
+    400: errorResponse('Invalid file'),
+  },
+})
+  // Handler 中获取文件
+  .openapi(uploadAttachmentRoute, async c => {
+    const { id } = c.req.valid('param')
+    const body = await c.req.valid('form')
+    const file = body['file']
+
+    if (!file || !(file instanceof File)) {
+      return c.json({ success: false, error: 'No file uploaded' }, 400)
+    }
+
+    // 处理文件...
+    const attachment = await uploadAttachment(parseInt(id), file)
+    return c.json({ success: true, data: attachment }, 201)
+  })
+```
+
+### 前端组件示例
+
+```tsx
+import { useRef } from 'react'
+import { useTodoStore } from '../stores/todoStore'
+
+function FileUploadButton({ todoId }: { todoId: number }) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const uploadAttachment = useTodoStore(state => state.uploadAttachment)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      await uploadAttachment(todoId, file)
+      e.target.value = '' // 重置 input
+    }
+  }
+
+  return (
+    <label className="cursor-pointer">
+      <Upload className="w-4 h-4" />
+      Upload
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.pdf,.txt"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </label>
+  )
+}
+```
+
+### 文件上传限制
+
+服务端应验证文件大小和类型：
+
+```typescript
+// 服务端验证
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
+
+if (file.size > MAX_FILE_SIZE) {
+  return c.json({ success: false, error: 'File too large' }, 400)
+}
+
+if (!ALLOWED_TYPES.includes(file.type)) {
+  return c.json({ success: false, error: 'File type not allowed' }, 400)
+}
+```
+
+### 注意事项
+
+| 事项             | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| 使用 `form` 属性 | 不要使用 `body` 属性，Hono 会自动处理 FormData               |
+| 类型定义         | 使用 `z.any().openapi({ type: 'string', format: 'binary' })` |
+| 服务端获取       | 使用 `c.req.valid('form')` 获取文件                          |
+| 禁止直接 fetch   | 必须使用 apiClient RPC 方式                                  |
+
 ## 🌊 流式响应处理
 
 对于大数据量的导出场景，可以使用流式响应来减少内存占用。
