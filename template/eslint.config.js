@@ -26,6 +26,8 @@ import { noMiddlewareInRoutes } from './eslint-rules/no-middleware-in-routes.js'
 import { noDisableDirectFetch } from './eslint-rules/no-disable-direct-fetch.js'
 import { noNewOldServiceNaming } from './eslint-rules/no-new-old-service-naming.js'
 import { noDirectZodImportInFileRoutes } from './eslint-rules/no-direct-zod-import-in-file-routes.js'
+import { requireFileOpenapiProps } from './eslint-rules/require-file-openapi-props.js'
+import { moduleBoundary } from './eslint-rules/module-boundary.js'
 
 const localRules = {
   rules: {
@@ -55,6 +57,8 @@ const localRules = {
     'no-disable-direct-fetch': noDisableDirectFetch,
     'no-new-old-service-naming': noNewOldServiceNaming,
     'no-direct-zod-import-in-file-routes': noDirectZodImportInFileRoutes,
+    'require-file-openapi-props': requireFileOpenapiProps,
+    'module-boundary': moduleBoundary,
   },
 }
 
@@ -110,7 +114,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/client/**/*.ts', 'src/client/**/*.tsx', 'src/admin/**/*.ts', 'src/admin/**/*.tsx'],
+    files: [
+      'src/client/**/*.ts',
+      'src/client/**/*.tsx',
+      'src/admin/**/*.ts',
+      'src/admin/**/*.tsx',
+      'src/cli/**/*.ts',
+    ],
     rules: {
       'no-console': 'off',
       'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
@@ -119,6 +129,7 @@ export default tseslint.config(
       'local-rules/no-any-on-apiclient': 'error',
       'local-rules/no-type-assertion-on-shared-types': 'error',
       'local-rules/no-disable-direct-fetch': 'error',
+      'local-rules/module-boundary': 'error',
     },
   },
   {
@@ -133,6 +144,12 @@ export default tseslint.config(
     files: ['src/server/module-file/routes/file-routes.ts'],
     rules: {
       'local-rules/no-direct-zod-import-in-file-routes': 'error',
+    },
+  },
+  {
+    files: ['src/shared/modules/**/schemas.ts'],
+    rules: {
+      'local-rules/require-file-openapi-props': 'error',
     },
   },
   {
