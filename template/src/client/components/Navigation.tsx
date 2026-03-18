@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { CheckCircle, Bell, Plug, Rocket, Github } from 'lucide-react'
+import { AuthButton } from './AuthButton'
 
 type RouteKey = 'todos' | 'notifications' | 'websocket'
 
@@ -45,15 +46,18 @@ export const Navigation: React.FC = () => {
             })}
           </div>
         </div>
-        <a
-          href="https://github.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid="github-link"
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <Github className="w-5 h-5" />
-        </a>
+        <div className="flex items-center gap-4">
+          <AuthButton />
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="github-link"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <Github className="w-5 h-5" />
+          </a>
+        </div>
       </div>
     </nav>
   )
