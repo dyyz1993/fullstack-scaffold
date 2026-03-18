@@ -10,15 +10,11 @@ import {
 } from '@shared/schemas'
 import { successResponse, errorResponse, listResponse } from '@server/utils/route-helpers'
 import { getRuntimeAdapter } from '@server/core/runtime'
-import { authMiddleware } from '../../middleware/auth'
-import { Permission } from '@shared/modules/permission'
 
 const streamRoute = createRoute({
   method: 'get',
   path: '/notifications/stream',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_VIEW] })],
   responses: {
     200: {
       content: {
@@ -26,8 +22,7 @@ const streamRoute = createRoute({
       },
       description: 'SSE stream for notifications',
     },
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
+    500: errorResponse('Internal server error'),
   },
 })
 
@@ -35,8 +30,6 @@ const listRoute = createRoute({
   method: 'get',
   path: '/notifications',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_VIEW] })],
   request: {
     query: z.object({
       unreadOnly: z.string().optional(),
@@ -46,8 +39,6 @@ const listRoute = createRoute({
   },
   responses: {
     200: listResponse(NotificationSchema, 'List notifications'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -56,12 +47,8 @@ const unreadCountRoute = createRoute({
   method: 'get',
   path: '/notifications/unread-count',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_VIEW] })],
   responses: {
     200: successResponse(UnreadCountSchema, 'Get unread count'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -70,15 +57,11 @@ const getRoute = createRoute({
   method: 'get',
   path: '/notifications/{id}',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_VIEW] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(NotificationSchema, 'Get notification by ID'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Notification not found'),
   },
 })
@@ -87,8 +70,6 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/notifications',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_CREATE] })],
   request: {
     body: {
       content: { 'application/json': { schema: CreateNotificationSchema } },
@@ -96,8 +77,6 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(NotificationSchema, 'Create notification'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
   },
 })
@@ -106,12 +85,8 @@ const markAllReadRoute = createRoute({
   method: 'patch',
   path: '/notifications/read-all',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_EDIT] })],
   responses: {
     200: successResponse(UnreadCountSchema, 'Mark all as read'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -120,15 +95,11 @@ const markReadRoute = createRoute({
   method: 'patch',
   path: '/notifications/{id}/read',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_EDIT] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(NotificationSchema, 'Mark as read'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Notification not found'),
   },
 })
@@ -137,15 +108,11 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/notifications/{id}',
   tags: ['notifications'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.NOTIFICATION_DELETE] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(NotificationIdSchema, 'Delete notification'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Notification not found'),
   },
 })
