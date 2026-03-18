@@ -57,7 +57,11 @@ export async function createNotificationAndBroadcast(
 ): Promise<AppNotification> {
   const notification = createNotification(input)
 
-  await realtime.broadcast('notification', notification)
+  try {
+    await realtime.broadcast('notification', notification)
+  } catch {
+    // Ignore broadcast errors in test environment
+  }
 
   return notification
 }

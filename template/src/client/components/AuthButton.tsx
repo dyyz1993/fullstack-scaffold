@@ -1,13 +1,13 @@
 import { useAuthStore } from '../stores/authStore'
 
 export function AuthButton() {
-  const { isAuthenticated, logout } = useAuthStore()
+  const { isAuthenticated, logout, setToken } = useAuthStore()
 
   const handleLogin = () => {
     // For development, use a test token
     // In production, this should call an actual login API
     const testToken = 'user-token'
-    useAuthStore.getState().setToken(testToken)
+    setToken(testToken)
     window.location.reload()
   }
 
