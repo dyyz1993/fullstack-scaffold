@@ -13,8 +13,6 @@ import {
   AttachmentIdResponseSchema,
 } from '@shared/schemas'
 import { successResponse, errorResponse } from '@server/utils/route-helpers'
-import { authMiddleware } from '../../middleware/auth'
-import { Permission } from '@shared/modules/permission'
 import { getAuthUser } from '../../utils/auth'
 
 const TodoListSchema = z.array(TodoSchema)
@@ -23,12 +21,8 @@ const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
   responses: {
     200: successResponse(TodoListSchema, 'List all todos'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -37,15 +31,11 @@ const getRoute = createRoute({
   method: 'get',
   path: '/todos/{id}',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(TodoSchema, 'Get a todo by ID'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -54,8 +44,6 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/todos',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_CREATE] })],
   request: {
     body: {
       content: { 'application/json': { schema: CreateTodoSchema } },
@@ -63,8 +51,6 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(TodoSchema, 'Create a new todo'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
   },
 })
@@ -73,8 +59,6 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/todos/{id}',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_EDIT] })],
   request: {
     params: z.object({ id: z.string() }),
     body: {
@@ -83,8 +67,6 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(TodoSchema, 'Update a todo'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -93,15 +75,11 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/todos/{id}',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_DELETE] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(TodoIdResponseSchema, 'Delete a todo'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -110,8 +88,6 @@ const uploadAttachmentRoute = createRoute({
   method: 'post',
   path: '/todos/{id}/attachments',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_FILE_UPLOAD] })],
   request: {
     params: z.object({ id: z.string() }),
     body: {
@@ -124,8 +100,6 @@ const uploadAttachmentRoute = createRoute({
   },
   responses: {
     201: successResponse(TodoAttachmentSchema, 'File uploaded successfully'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
     400: errorResponse('Invalid file or file too large'),
   },
@@ -135,15 +109,11 @@ const listAttachmentsRoute = createRoute({
   method: 'get',
   path: '/todos/{id}/attachments',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(TodoAttachmentListSchema, 'List attachments'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -152,15 +122,11 @@ const getTodoWithAttachmentsRoute = createRoute({
   method: 'get',
   path: '/todos/{id}/with-attachments',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
   request: {
     params: z.object({ id: z.string() }),
   },
   responses: {
     200: successResponse(TodoWithAttachmentsSchema, 'Get todo with attachments'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Todo not found'),
   },
 })
@@ -169,8 +135,6 @@ const deleteAttachmentRoute = createRoute({
   method: 'delete',
   path: '/todos/{todoId}/attachments/{attachmentId}',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_FILE_DELETE] })],
   request: {
     params: z.object({
       todoId: z.string(),
@@ -179,8 +143,6 @@ const deleteAttachmentRoute = createRoute({
   },
   responses: {
     200: successResponse(AttachmentIdResponseSchema, 'Attachment deleted'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Attachment not found'),
   },
 })

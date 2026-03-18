@@ -6,7 +6,6 @@ import { mkdir, rm } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-const AUTH_HEADER = 'Bearer admin-token'
 const testUploadDir = join(process.cwd(), 'uploads', 'todos')
 
 interface UploadResponse {
@@ -91,7 +90,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
-        headers: { Authorization: AUTH_HEADER },
         body: formData,
       })
 
@@ -113,7 +111,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
-        headers: { Authorization: AUTH_HEADER },
         body: formData,
       })
 
@@ -131,7 +128,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request('/api/todos/99999/attachments', {
         method: 'POST',
-        headers: { Authorization: AUTH_HEADER },
         body: formData,
       })
 
@@ -146,7 +142,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
-        headers: { Authorization: AUTH_HEADER },
         body: formData,
       })
 
@@ -163,7 +158,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
-        headers: { Authorization: AUTH_HEADER },
         body: formData,
       })
 
@@ -178,7 +172,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const listRes = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'GET',
-        headers: { Authorization: AUTH_HEADER },
       })
 
       expect(listRes.status).toBe(200)
@@ -191,7 +184,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const listRes = await app.request('/api/todos/99999/attachments', {
         method: 'GET',
-        headers: { Authorization: AUTH_HEADER },
       })
 
       expect(listRes.status).toBe(404)
@@ -205,7 +197,6 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments/99999`, {
         method: 'DELETE',
-        headers: { Authorization: AUTH_HEADER },
       })
 
       expect(res.status).toBe(404)

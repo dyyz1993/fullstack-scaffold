@@ -3,8 +3,6 @@ import { createTestClient } from '../../test-utils/test-client'
 import { getRawClient, getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
-const AUTH_HEADER = { Authorization: 'Bearer admin-token' }
-
 describe('Todo Routes - Business Logic Tests', () => {
   beforeAll(async () => {
     await setupTestDatabase()
@@ -28,12 +26,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject POST with empty title', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: { title: '' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: { title: '' },
+      })
 
       expect(res.status).toBe(400)
     })
@@ -41,12 +36,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject POST with missing title', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: {} as { title: string },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: {} as { title: string },
+      })
 
       expect(res.status).toBe(400)
     })
@@ -54,12 +46,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject POST with title longer than 255 characters', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: { title: 'a'.repeat(256) },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: { title: 'a'.repeat(256) },
+      })
 
       expect(res.status).toBe(400)
     })
@@ -67,23 +56,17 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject PUT with invalid status', async () => {
       const client = createTestClient()
 
-      const createRes = await client.api.todos.$post(
-        {
-          json: { title: 'Test Todo' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
       const createData = await createRes.json()
       expect(createData.success).toBe(true)
 
       if (createData.success) {
-        const res = await client.api.todos[':id'].$put(
-          {
-            param: { id: String(createData.data.id) },
-            json: { status: 'invalid_status' as 'pending' },
-          },
-          { headers: AUTH_HEADER }
-        )
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(createData.data.id) },
+          json: { status: 'invalid_status' as 'pending' },
+        })
 
         expect(res.status).toBe(400)
       }
@@ -92,23 +75,17 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject PUT with empty title', async () => {
       const client = createTestClient()
 
-      const createRes = await client.api.todos.$post(
-        {
-          json: { title: 'Test Todo' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
       const createData = await createRes.json()
       expect(createData.success).toBe(true)
 
       if (createData.success) {
-        const res = await client.api.todos[':id'].$put(
-          {
-            param: { id: String(createData.data.id) },
-            json: { title: '' },
-          },
-          { headers: AUTH_HEADER }
-        )
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(createData.data.id) },
+          json: { title: '' },
+        })
 
         expect(res.status).toBe(400)
       }
@@ -117,23 +94,17 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject PUT with title longer than 255 characters', async () => {
       const client = createTestClient()
 
-      const createRes = await client.api.todos.$post(
-        {
-          json: { title: 'Test Todo' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const createRes = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
       const createData = await createRes.json()
       expect(createData.success).toBe(true)
 
       if (createData.success) {
-        const res = await client.api.todos[':id'].$put(
-          {
-            param: { id: String(createData.data.id) },
-            json: { title: 'a'.repeat(256) },
-          },
-          { headers: AUTH_HEADER }
-        )
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(createData.data.id) },
+          json: { title: 'a'.repeat(256) },
+        })
 
         expect(res.status).toBe(400)
       }
@@ -142,12 +113,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return 500 for GET with non-numeric id (parseInt returns NaN)', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$get(
-        {
-          param: { id: 'not-a-number' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$get({
+        param: { id: 'not-a-number' },
+      })
 
       expect(res.status).toBe(500)
     })
@@ -155,12 +123,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return 500 for DELETE with non-numeric id (parseInt returns NaN)', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$delete(
-        {
-          param: { id: 'not-a-number' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$delete({
+        param: { id: 'not-a-number' },
+      })
 
       expect(res.status).toBe(500)
     })
@@ -170,12 +135,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should create todo with default status "pending"', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: { title: 'Test Todo' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: { title: 'Test Todo' },
+      })
 
       expect(res.status).toBe(201)
       const data = await res.json()
@@ -188,15 +150,12 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should create todo with description', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: {
-            title: 'Test Todo',
-            description: 'This is a detailed description',
-          },
+      const res = await client.api.todos.$post({
+        json: {
+          title: 'Test Todo',
+          description: 'This is a detailed description',
         },
-        { headers: AUTH_HEADER }
-      )
+      })
 
       expect(res.status).toBe(201)
       const data = await res.json()
@@ -209,12 +168,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should create todo without description (optional field)', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: { title: 'No Description Todo' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: { title: 'No Description Todo' },
+      })
 
       expect(res.status).toBe(201)
       const data = await res.json()
@@ -227,18 +183,12 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should generate unique id for each todo', async () => {
       const client = createTestClient()
 
-      const res1 = await client.api.todos.$post(
-        {
-          json: { title: 'Todo 1' },
-        },
-        { headers: AUTH_HEADER }
-      )
-      const res2 = await client.api.todos.$post(
-        {
-          json: { title: 'Todo 2' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res1 = await client.api.todos.$post({
+        json: { title: 'Todo 1' },
+      })
+      const res2 = await client.api.todos.$post({
+        json: { title: 'Todo 2' },
+      })
 
       const data1 = await res1.json()
       const data2 = await res2.json()
@@ -253,12 +203,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should set createdAt and updatedAt timestamps', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: { title: 'Timestamped Todo' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: { title: 'Timestamped Todo' },
+      })
 
       const data = await res.json()
 
@@ -274,12 +221,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should reject title longer than max length', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$post(
-        {
-          json: { title: 'a'.repeat(256) },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos.$post({
+        json: { title: 'a'.repeat(256) },
+      })
 
       expect(res.status).toBe(400)
     })
@@ -304,13 +248,10 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$put(
-        {
-          param: { id: String(todoId) },
-          json: { title: 'Updated Title' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { title: 'Updated Title' },
+      })
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -325,13 +266,10 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$put(
-        {
-          param: { id: String(todoId) },
-          json: { status: 'completed' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { status: 'completed' },
+      })
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -355,13 +293,10 @@ describe('Todo Routes - Business Logic Tests', () => {
         const todoId = (result.rows[0] as unknown as { id: number }).id
 
         const client = createTestClient()
-        const res = await client.api.todos[':id'].$put(
-          {
-            param: { id: String(todoId) },
-            json: { status: 'pending' },
-          },
-          { headers: AUTH_HEADER }
-        )
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(todoId) },
+          json: { status: 'pending' },
+        })
 
         expect(res.status).toBe(200)
         const data = await res.json()
@@ -389,13 +324,10 @@ describe('Todo Routes - Business Logic Tests', () => {
         const client = createTestClient()
         await new Promise(resolve => setTimeout(resolve, 100))
 
-        const res = await client.api.todos[':id'].$put(
-          {
-            param: { id: String(row.id) },
-            json: { title: 'Updated Todo' },
-          },
-          { headers: AUTH_HEADER }
-        )
+        const res = await client.api.todos[':id'].$put({
+          param: { id: String(row.id) },
+          json: { title: 'Updated Todo' },
+        })
 
         const data = await res.json()
         expect(data.success).toBe(true)
@@ -410,17 +342,14 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$put(
-        {
-          param: { id: String(todoId) },
-          json: {
-            title: 'Multi Update',
-            description: 'New description',
-            status: 'completed',
-          },
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: {
+          title: 'Multi Update',
+          description: 'New description',
+          status: 'completed',
         },
-        { headers: AUTH_HEADER }
-      )
+      })
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -436,13 +365,10 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$put(
-        {
-          param: { id: String(todoId) },
-          json: { status: 'invalid_status' as 'pending' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { status: 'invalid_status' as 'pending' },
+      })
 
       expect(res.status).toBe(400)
     })
@@ -450,13 +376,10 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return 404 when updating non-existent todo', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$put(
-        {
-          param: { id: '99999' },
-          json: { title: 'Updated' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$put({
+        param: { id: '99999' },
+        json: { title: 'Updated' },
+      })
 
       expect(res.status).toBe(404)
     })
@@ -480,7 +403,7 @@ describe('Todo Routes - Business Logic Tests', () => {
       await createMultipleTodos(3)
       const client = createTestClient()
 
-      const res = await client.api.todos.$get(undefined, { headers: AUTH_HEADER })
+      const res = await client.api.todos.$get()
       const data = await res.json()
 
       expect(data.success).toBe(true)
@@ -496,7 +419,7 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return empty array when no todos exist', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos.$get(undefined, { headers: AUTH_HEADER })
+      const res = await client.api.todos.$get()
       const data = await res.json()
 
       expect(data.success).toBe(true)
@@ -525,12 +448,9 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$delete(
-        {
-          param: { id: String(todoId) },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$delete({
+        param: { id: String(todoId) },
+      })
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -543,12 +463,9 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return 404 when deleting non-existent todo', async () => {
       const client = createTestClient()
 
-      const res = await client.api.todos[':id'].$delete(
-        {
-          param: { id: '99999' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$delete({
+        param: { id: '99999' },
+      })
 
       expect(res.status).toBe(404)
     })
@@ -557,19 +474,13 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      await client.api.todos[':id'].$delete(
-        {
-          param: { id: String(todoId) },
-        },
-        { headers: AUTH_HEADER }
-      )
+      await client.api.todos[':id'].$delete({
+        param: { id: String(todoId) },
+      })
 
-      const res = await client.api.todos[':id'].$get(
-        {
-          param: { id: String(todoId) },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$get({
+        param: { id: String(todoId) },
+      })
 
       expect(res.status).toBe(404)
     })
@@ -578,20 +489,14 @@ describe('Todo Routes - Business Logic Tests', () => {
       const todoId = await createTestTodo()
       const client = createTestClient()
 
-      await client.api.todos[':id'].$delete(
-        {
-          param: { id: String(todoId) },
-        },
-        { headers: AUTH_HEADER }
-      )
+      await client.api.todos[':id'].$delete({
+        param: { id: String(todoId) },
+      })
 
-      const res = await client.api.todos[':id'].$put(
-        {
-          param: { id: String(todoId) },
-          json: { title: 'Updated' },
-        },
-        { headers: AUTH_HEADER }
-      )
+      const res = await client.api.todos[':id'].$put({
+        param: { id: String(todoId) },
+        json: { title: 'Updated' },
+      })
 
       expect(res.status).toBe(404)
     })
@@ -601,27 +506,21 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return todo with all fields', async () => {
       const client = createTestClient()
 
-      const createRes = await client.api.todos.$post(
-        {
-          json: {
-            title: 'Full Todo',
-            description: 'Full description',
-          },
+      const createRes = await client.api.todos.$post({
+        json: {
+          title: 'Full Todo',
+          description: 'Full description',
         },
-        { headers: AUTH_HEADER }
-      )
+      })
 
       const createData = await createRes.json()
       expect(createData.success).toBe(true)
       if (createData.success) {
         const todoId = createData.data.id
 
-        const getRes = await client.api.todos[':id'].$get(
-          {
-            param: { id: String(todoId) },
-          },
-          { headers: AUTH_HEADER }
-        )
+        const getRes = await client.api.todos[':id'].$get({
+          param: { id: String(todoId) },
+        })
 
         const getData = await getRes.json()
         expect(getData.success).toBe(true)
