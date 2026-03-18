@@ -2,17 +2,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { AuthButton } from '../AuthButton'
 
+const mockSetToken = vi.fn()
+const mockLogout = vi.fn()
+
 // Mock zustand
 vi.mock('../../stores/authStore', () => ({
-  useAuthStore: vi.fn(),
+  useAuthStore: vi.fn(selector => {
+    // Return different values based on selector
+    const state = {
+      isAuthenticated: false,
+      token: null,
+      logout: mockLogout,
+      setToken: mockSetToken,
+    }
+    if (selector) {
+      return selector(state)
+    }
+    return state
+  }),
 }))
 
 import { useAuthStore } from '../../stores/authStore'
 
 describe('AuthButton', () => {
-  const mockSetToken = vi.fn()
-  const mockLogout = vi.fn()
-
   beforeEach(() => {
     vi.clearAllMocks()
     // Mock window.location.reload
@@ -23,10 +35,15 @@ describe('AuthButton', () => {
   })
 
   it('should show login button when not authenticated', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: false,
-      logout: mockLogout,
-    } as unknown as ReturnType<typeof useAuthStore>)
+    vi.mocked(useAuthStore).mockImplementation(selector => {
+      const state = {
+        isAuthenticated: false,
+        token: null,
+        logout: mockLogout,
+        setToken: mockSetToken,
+      }
+      return selector ? selector(state) : state
+    })
 
     render(<AuthButton />)
 
@@ -35,10 +52,15 @@ describe('AuthButton', () => {
   })
 
   it('should show logout button when authenticated', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: true,
-      logout: mockLogout,
-    } as unknown as ReturnType<typeof useAuthStore>)
+    vi.mocked(useAuthStore).mockImplementation(selector => {
+      const state = {
+        isAuthenticated: true,
+        token: 'user-token',
+        logout: mockLogout,
+        setToken: mockSetToken,
+      }
+      return selector ? selector(state) : state
+    })
 
     render(<AuthButton />)
 
@@ -48,11 +70,15 @@ describe('AuthButton', () => {
   })
 
   it('should call setToken and reload on login', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: false,
-      logout: mockLogout,
-      setToken: mockSetToken,
-    } as unknown as ReturnType<typeof useAuthStore>)
+    vi.mocked(useAuthStore).mockImplementation(selector => {
+      const state = {
+        isAuthenticated: false,
+        token: null,
+        logout: mockLogout,
+        setToken: mockSetToken,
+      }
+      return selector ? selector(state) : state
+    })
 
     render(<AuthButton />)
 
@@ -63,10 +89,15 @@ describe('AuthButton', () => {
   })
 
   it('should call logout and reload on logout', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: true,
-      logout: mockLogout,
-    } as unknown as ReturnType<typeof useAuthStore>)
+    vi.mocked(useAuthStore).mockImplementation(selector => {
+      const state = {
+        isAuthenticated: true,
+        token: 'user-token',
+        logout: mockLogout,
+        setToken: mockSetToken,
+      }
+      return selector ? selector(state) : state
+    })
 
     render(<AuthButton />)
 

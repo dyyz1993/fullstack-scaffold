@@ -28,6 +28,18 @@ function formatZodError(error: ZodError): ZodIssueFormatted[] {
   }))
 }
 
+function createErrorResponse(status: number, message: string, details?: unknown) {
+  const response: { success: false; error: string; status: number; details?: unknown } = {
+    success: false,
+    error: message,
+    status,
+  }
+  if (details) {
+    response.details = details
+  }
+  return response
+}
+
 export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): MiddlewareHandler {
   const mergedOptions = { ...defaultErrorHandlerOptions, ...options }
   const log = createModuleLoggerSync('api')
@@ -36,6 +48,9 @@ export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): Middl
     try {
       await next()
     } catch (error) {
+      // Always return JSON response
+      c.res.headers.set('Content-Type', 'application/json')
+
       if (error instanceof ZodError) {
         const formattedErrors = formatZodError(error)
 
@@ -49,14 +64,7 @@ export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): Middl
           log.warn(fields, 'Validation error')
         }
 
-        return c.json(
-          {
-            success: false,
-            error: 'Validation failed',
-            details: formattedErrors,
-          },
-          400
-        )
+        return c.json(createErrorResponse(400, 'Validation failed', formattedErrors), 400)
       }
 
       if (error instanceof HTTPException) {
@@ -72,14 +80,10 @@ export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): Middl
           log.warn(fields, 'HTTP exception')
         }
 
-        return c.json(
-          {
-            success: false,
-            error: error.message,
-            status: error.status,
-          },
-          error.status
-        )
+        // Ensure we always return JSON even if HTTPException has a text response
+        const status = error.status || 500
+        const message = error.message || 'Internal server error'
+        return c.json(createErrorResponse(status, message), status)
       }
 
       if (mergedOptions.logErrors) {
@@ -94,9 +98,10 @@ export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): Middl
       }
 
       const message = error instanceof Error ? error.message : 'Internal server error'
-      const response: { success: false; error: string; stack?: string } = {
+      const response: { success: false; error: string; status: number; stack?: string } = {
         success: false,
         error: message,
+        status: 500,
       }
 
       if (mergedOptions.includeStackTrace && error instanceof Error && error.stack) {

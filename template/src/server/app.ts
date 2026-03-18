@@ -1,4 +1,6 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
+import { ZodError } from 'zod'
 import { apiRoutes } from './module-todos/routes/todos-routes'
 import { permissionRoutes } from './module-permission/routes/permission-routes'
 import { roleRoutes } from './module-permission/routes/role-routes'
@@ -18,8 +20,92 @@ import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './midd
 import { realtimeEnvMiddleware } from './middleware/realtime-env'
 import { captchaMiddleware } from './middleware/captcha'
 import { auditLogMiddleware } from './middleware/audit-log'
+import { createModuleLoggerSync } from './utils/logger'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
+
+// Global error handler that ensures JSON responses
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function globalErrorHandler(err: Error, c: any) {
+  const log = createModuleLoggerSync('api')
+
+  // Always set JSON content type
+  c.res.headers.set('Content-Type', 'application/json')
+
+  // Handle Zod validation errors
+  if (err instanceof ZodError) {
+    const formattedErrors = err.issues.map(issue => ({
+      field: issue.path.join('.'),
+      message: issue.message,
+      code: issue.code,
+    }))
+
+    log.warn(
+      {
+        errorType: 'ZodError',
+        errors: formattedErrors,
+        path: c.req.path,
+        method: c.req.method,
+      },
+      'Validation error'
+    )
+
+    return c.json(
+      {
+        success: false,
+        error: 'Validation failed',
+        status: 400,
+        details: formattedErrors,
+      },
+      400
+    )
+  }
+
+  // Handle HTTP exceptions (including auth errors)
+  if (err instanceof HTTPException) {
+    log.warn(
+      {
+        errorType: 'HTTPException',
+        error: err.message,
+        status: err.status,
+        path: c.req.path,
+        method: c.req.method,
+      },
+      'HTTP exception'
+    )
+
+    const statusCode = err.status || 500
+    return c.json(
+      {
+        success: false,
+        error: err.message,
+        status: statusCode,
+      },
+      statusCode
+    )
+  }
+
+  // Handle all other errors
+  log.error(
+    {
+      errorType: 'UnknownError',
+      error: err.message,
+      stack: err.stack,
+      path: c.req.path,
+      method: c.req.method,
+    },
+    'Unhandled error'
+  )
+
+  return c.json(
+    {
+      success: false,
+      error: err.message || 'Internal server error',
+      status: 500,
+    },
+    500
+  )
+}
 
 export function createApp<T extends AppBindings = AppBindings>(_options: CreateAppOptions = {}) {
   const app = new OpenAPIHono<{ Bindings: T }>()
@@ -68,6 +154,8 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ success: false, message: 'Failed to cleanup database' }, 500)
       }
     })
+    // Register global error handler to ensure JSON responses
+    .onError(globalErrorHandler)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   autoRegisterRealtime(app as any)

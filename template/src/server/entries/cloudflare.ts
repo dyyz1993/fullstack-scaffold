@@ -1,5 +1,8 @@
 /**
  * @framework-baseline b31e6f04a2d9c702
+ * @framework-modify
+ * @reason 统一错误响应格式为 JSON，确保所有错误都返回结构化数据
+ * @impact 影响 Cloudflare Workers 环境的错误响应格式
  */
 
 import { createApp } from '../app'
@@ -33,7 +36,13 @@ const wrappedApp = app
   )
   .onError((err, c) => {
     console.error('Server error:', err)
-    return c.json({ success: false, error: err.message || 'Internal server error' }, 500)
+    // Always return JSON response
+    c.res.headers.set('Content-Type', 'application/json')
+    const statusCode =
+      err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+    const message = err.message || 'Internal server error'
+    const responseStatus = statusCode || 500
+    return c.json({ success: false, error: message, status: responseStatus }, responseStatus as 500)
   })
 
 export default {

@@ -102,7 +102,13 @@ app
   })
   .onError((err, c) => {
     log.error({ err, path: c.req.path }, 'server error')
-    return c.json({ success: false, error: err.message || 'Internal server error' }, 500)
+    // Always return JSON response
+    c.res.headers.set('Content-Type', 'application/json')
+    const statusCode =
+      err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+    const message = err.message || 'Internal server error'
+    const responseStatus = statusCode || 500
+    return c.json({ success: false, error: message, status: responseStatus }, responseStatus as 500)
   })
 
 export default app
