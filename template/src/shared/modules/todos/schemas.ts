@@ -30,8 +30,36 @@ export const TodoIdResponseSchema = z.object({
   id: z.number(),
 })
 
+export const TodoAttachmentSchema = z.object({
+  id: z.number().int().positive(),
+  todoId: z.number().int().positive(),
+  fileName: z.string(),
+  originalName: z.string(),
+  mimeType: z.string(),
+  size: z.number().int().positive(),
+  path: z.string(),
+  uploadedBy: z.string().optional(),
+  createdAt: z.string().datetime(),
+})
+
+export const TodoAttachmentListSchema = z.array(TodoAttachmentSchema)
+
+export const TodoWithAttachmentsSchema = TodoSchema.extend({
+  attachments: TodoAttachmentListSchema,
+})
+
+export const UploadFileSchema = z.object({
+  file: z.any().openapi({ type: 'string', format: 'binary' }),
+})
+
+export const AttachmentIdResponseSchema = z.object({
+  id: z.number(),
+})
+
 export type TodoStatus = z.infer<typeof TodoStatusSchema>
 export type Todo = z.infer<typeof TodoSchema>
 export type CreateTodoInput = z.infer<typeof CreateTodoSchema>
 export type UpdateTodoInput = z.infer<typeof UpdateTodoSchema>
 export type TodoIdResponse = z.infer<typeof TodoIdResponseSchema>
+export type TodoAttachment = z.infer<typeof TodoAttachmentSchema>
+export type TodoWithAttachments = z.infer<typeof TodoWithAttachmentsSchema>

@@ -32,11 +32,18 @@ export {
   UpdateTodoSchema,
   TodoIdSchema,
   TodoIdResponseSchema,
+  TodoAttachmentSchema,
+  TodoAttachmentListSchema,
+  TodoWithAttachmentsSchema,
+  UploadFileSchema,
+  AttachmentIdResponseSchema,
   type Todo,
   type TodoStatus,
   type CreateTodoInput,
   type UpdateTodoInput,
   type TodoIdResponse,
+  type TodoAttachment,
+  type TodoWithAttachments,
 } from '../modules/todos'
 export {
   NotificationSchema,

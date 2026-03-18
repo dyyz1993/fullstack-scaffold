@@ -1,0 +1,214 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
+import { createApp } from '../../app'
+import { getRawClient, getDb } from '../../db'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { mkdir, rm } from 'fs/promises'
+import { join } from 'path'
+import { existsSync } from 'fs'
+
+const AUTH_HEADER = 'Bearer admin-token'
+const testUploadDir = join(process.cwd(), 'uploads', 'todos')
+
+interface UploadResponse {
+  success: boolean
+  data?: {
+    id: number
+    originalName: string
+    mimeType: string
+    size: number
+    todoId: number
+  }
+  error?: string
+}
+
+interface ListResponse {
+  success: boolean
+  data: Array<{
+    id: number
+    originalName: string
+    mimeType: string
+    size: number
+  }>
+}
+
+describe('Todo File Upload API', () => {
+  const app = createApp()
+
+  beforeAll(async () => {
+    await setupTestDatabase()
+    const db = await getDb()
+    expect(db).toBeDefined()
+    if (!existsSync(testUploadDir)) {
+      await mkdir(testUploadDir, { recursive: true })
+    }
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+    if (existsSync(testUploadDir)) {
+      await rm(testUploadDir, { recursive: true, force: true })
+    }
+  })
+
+  beforeEach(async () => {
+    const client = await getRawClient()
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM todo_attachments')
+      await client.execute('DELETE FROM todos')
+    }
+  })
+
+  afterEach(async () => {
+    const client = await getRawClient()
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM todo_attachments')
+      await client.execute('DELETE FROM todos')
+    }
+  })
+
+  async function createTestTodo(title: string = 'Test Todo'): Promise<number> {
+    const client = await getRawClient()
+    if (client && 'execute' in client) {
+      const now = Date.now()
+      await client.execute({
+        sql: `INSERT INTO todos (title, status, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+        args: [title, 'pending', now, now],
+      })
+      const result = await client.execute('SELECT id FROM todos WHERE title = ?', [title])
+      return (result.rows[0] as unknown as { id: number }).id
+    }
+    throw new Error('Failed to create test todo')
+  }
+
+  describe('POST /api/todos/:id/attachments', () => {
+    it('should upload a text file successfully', async () => {
+      const todoId = await createTestTodo()
+
+      const formData = new FormData()
+      const blob = new Blob(['Hello, this is a test file content'], { type: 'text/plain' })
+      formData.append('file', blob, 'test.txt')
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const res = await app.request(`/api/todos/${todoId}/attachments`, {
+        method: 'POST',
+        headers: { Authorization: AUTH_HEADER },
+        body: formData,
+      })
+
+      expect(res.status).toBe(201)
+      const data = (await res.json()) as UploadResponse
+      expect(data.success).toBe(true)
+      expect(data.data?.originalName).toBe('test.txt')
+      expect(data.data?.mimeType).toBe('text/plain')
+      expect(data.data?.todoId).toBe(todoId)
+    })
+
+    it('should upload an image file successfully', async () => {
+      const todoId = await createTestTodo()
+
+      const formData = new FormData()
+      const blob = new Blob(['fake image content'], { type: 'image/png' })
+      formData.append('file', blob, 'test.png')
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const res = await app.request(`/api/todos/${todoId}/attachments`, {
+        method: 'POST',
+        headers: { Authorization: AUTH_HEADER },
+        body: formData,
+      })
+
+      expect(res.status).toBe(201)
+      const data = (await res.json()) as UploadResponse
+      expect(data.success).toBe(true)
+      expect(data.data?.mimeType).toBe('image/png')
+    })
+
+    it('should reject upload to non-existent todo', async () => {
+      const formData = new FormData()
+      const blob = new Blob(['test'], { type: 'text/plain' })
+      formData.append('file', blob, 'test.txt')
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const res = await app.request('/api/todos/99999/attachments', {
+        method: 'POST',
+        headers: { Authorization: AUTH_HEADER },
+        body: formData,
+      })
+
+      expect(res.status).toBe(404)
+    })
+
+    it('should reject upload without file', async () => {
+      const todoId = await createTestTodo()
+
+      const formData = new FormData()
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const res = await app.request(`/api/todos/${todoId}/attachments`, {
+        method: 'POST',
+        headers: { Authorization: AUTH_HEADER },
+        body: formData,
+      })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('should reject disallowed file type', async () => {
+      const todoId = await createTestTodo()
+
+      const formData = new FormData()
+      const blob = new Blob(['executable'], { type: 'application/x-executable' })
+      formData.append('file', blob, 'malware.exe')
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const res = await app.request(`/api/todos/${todoId}/attachments`, {
+        method: 'POST',
+        headers: { Authorization: AUTH_HEADER },
+        body: formData,
+      })
+
+      expect(res.status).toBe(400)
+    })
+  })
+
+  describe('GET /api/todos/:id/attachments', () => {
+    it('should return empty array for todo without attachments', async () => {
+      const todoId = await createTestTodo()
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const listRes = await app.request(`/api/todos/${todoId}/attachments`, {
+        method: 'GET',
+        headers: { Authorization: AUTH_HEADER },
+      })
+
+      expect(listRes.status).toBe(200)
+      const listData = (await listRes.json()) as ListResponse
+      expect(listData.success).toBe(true)
+      expect(listData.data).toEqual([])
+    })
+
+    it('should return 404 for non-existent todo', async () => {
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const listRes = await app.request('/api/todos/99999/attachments', {
+        method: 'GET',
+        headers: { Authorization: AUTH_HEADER },
+      })
+
+      expect(listRes.status).toBe(404)
+    })
+  })
+
+  describe('DELETE /api/todos/:todoId/attachments/:attachmentId', () => {
+    it('should return 404 for non-existent attachment', async () => {
+      const todoId = await createTestTodo()
+
+      // eslint-disable-next-line local-rules/require-type-safe-test-client
+      const res = await app.request(`/api/todos/${todoId}/attachments/99999`, {
+        method: 'DELETE',
+        headers: { Authorization: AUTH_HEADER },
+      })
+
+      expect(res.status).toBe(404)
+    })
+  })
+})

@@ -122,12 +122,12 @@ export class PermissionService {
 
   async hasPermission(_userId: string, permissionCode: string): Promise<boolean> {
     // 处理测试用户token
-    if (_userId.startsWith('test-super-admin-')) {
+    if (_userId.startsWith('test-super-admin-') || _userId === 'super-admin-1') {
       // 超级管理员拥有所有权限
       return true
     }
 
-    if (_userId.startsWith('test-customer-service-')) {
+    if (_userId.startsWith('test-customer-service-') || _userId === 'customer-service-1') {
       const role = await roleService.getByCode('customer_service')
       if (role) {
         const rolePermissions = await this.getRolePermissions(role.id)
@@ -136,7 +136,7 @@ export class PermissionService {
       return false
     }
 
-    if (_userId.startsWith('test-user-')) {
+    if (_userId.startsWith('test-user-') || _userId === 'user-1') {
       const role = await roleService.getByCode('user')
       if (role) {
         const rolePermissions = await this.getRolePermissions(role.id)

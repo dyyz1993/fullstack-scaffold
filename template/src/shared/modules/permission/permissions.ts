@@ -44,6 +44,8 @@ export enum Permission {
   TODO_CREATE = 'todo:create',
   TODO_EDIT = 'todo:edit',
   TODO_DELETE = 'todo:delete',
+  TODO_FILE_UPLOAD = 'todo:file_upload',
+  TODO_FILE_DELETE = 'todo:file_delete',
 
   CHAT_VIEW = 'chat:view',
   CHAT_SEND = 'chat:send',
@@ -124,6 +126,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   [Permission.TODO_CREATE]: '创建待办',
   [Permission.TODO_EDIT]: '编辑待办',
   [Permission.TODO_DELETE]: '删除待办',
+  [Permission.TODO_FILE_UPLOAD]: '上传文件',
+  [Permission.TODO_FILE_DELETE]: '删除文件',
 
   [Permission.CHAT_VIEW]: '查看聊天',
   [Permission.CHAT_SEND]: '发送消息',
@@ -204,6 +208,8 @@ export const PERMISSION_CATEGORIES = {
       Permission.TODO_CREATE,
       Permission.TODO_EDIT,
       Permission.TODO_DELETE,
+      Permission.TODO_FILE_UPLOAD,
+      Permission.TODO_FILE_DELETE,
     ],
   },
   chat: {

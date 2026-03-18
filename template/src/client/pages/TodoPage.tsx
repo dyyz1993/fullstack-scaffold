@@ -3,8 +3,8 @@
  * Demonstrates CRUD operations with Hono RPC
  */
 
-import { useState, useEffect } from 'react'
-import { Plus, Trash2, CheckCircle, Circle, Clock } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Trash2, CheckCircle, Circle, Clock, Paperclip, X, Upload } from 'lucide-react'
 import { useTodoStore } from '../stores/todoStore'
 import { LoadingSpinner, EmptyState } from '@client/components'
 import type { Todo } from '@shared/schemas'
@@ -15,14 +15,20 @@ export const TodoPage: React.FC = () => {
   const todos = useTodoStore(state => state.todos)
   const loading = useTodoStore(state => state.loading)
   const error = useTodoStore(state => state.error)
+  const attachments = useTodoStore(state => state.attachments)
   const fetchTodos = useTodoStore(state => state.fetchTodos)
   const createTodo = useTodoStore(state => state.createTodo)
   const updateTodo = useTodoStore(state => state.updateTodo)
   const deleteTodo = useTodoStore(state => state.deleteTodo)
+  const uploadAttachment = useTodoStore(state => state.uploadAttachment)
+  const fetchAttachments = useTodoStore(state => state.fetchAttachments)
+  const deleteAttachment = useTodoStore(state => state.deleteAttachment)
 
   const [newTodoTitle, setNewTodoTitle] = useState('')
   const [newTodoDescription, setNewTodoDescription] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
+  const [expandedTodoId, setExpandedTodoId] = useState<number | null>(null)
+  const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map())
 
   useEffect(() => {
     fetchTodos()
@@ -47,6 +53,35 @@ export const TodoPage: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     await deleteTodo(id)
+  }
+
+  const handleToggleExpand = async (todoId: number) => {
+    if (expandedTodoId === todoId) {
+      setExpandedTodoId(null)
+    } else {
+      setExpandedTodoId(todoId)
+      if (!attachments.has(todoId)) {
+        await fetchAttachments(todoId)
+      }
+    }
+  }
+
+  const handleFileUpload = async (todoId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      await uploadAttachment(todoId, file)
+      e.target.value = ''
+    }
+  }
+
+  const handleDeleteAttachment = async (todoId: number, attachmentId: number) => {
+    await deleteAttachment(todoId, attachmentId)
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   const filteredTodos = todos.filter(todo => {
@@ -227,6 +262,18 @@ export const TodoPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleToggleExpand(todo.id)}
+                    data-testid="toggle-attachments-button"
+                    className={`p-2 rounded-lg transition-colors ${
+                      expandedTodoId === todo.id
+                        ? 'text-blue-500 bg-blue-50'
+                        : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'
+                    }`}
+                    title="Toggle attachments"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </button>
                   <StatusIcon className={`w-6 h-6 ${statusConfig[todo.status].color}`} />
                   <button
                     onClick={() => handleDelete(todo.id)}
@@ -237,6 +284,64 @@ export const TodoPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {expandedTodoId === todo.id && (
+                <div
+                  className="mt-4 pt-4 border-t border-gray-100"
+                  data-testid="attachments-section"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-medium text-gray-700">Attachments</h4>
+                    <label
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-500 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors"
+                      data-testid="upload-button"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload
+                      <input
+                        ref={el => {
+                          if (el) fileInputRefs.current.set(todo.id, el)
+                        }}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt,.csv,.json,.xlsx,.docx"
+                        onChange={e => handleFileUpload(todo.id, e)}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {attachments.get(todo.id)?.length ? (
+                    <div className="space-y-2">
+                      {attachments.get(todo.id)?.map(attachment => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                          data-testid="attachment-item"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Paperclip className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 truncate">
+                              {attachment.originalName}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              ({formatFileSize(attachment.size)})
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteAttachment(todo.id, attachment.id)}
+                            className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
+                            data-testid="delete-attachment-button"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">No attachments yet</p>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}

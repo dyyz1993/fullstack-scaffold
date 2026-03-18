@@ -6,10 +6,16 @@ import {
   CreateTodoSchema,
   UpdateTodoSchema,
   TodoIdResponseSchema,
+  TodoAttachmentSchema,
+  TodoAttachmentListSchema,
+  TodoWithAttachmentsSchema,
+  UploadFileSchema,
+  AttachmentIdResponseSchema,
 } from '@shared/schemas'
 import { successResponse, errorResponse } from '@server/utils/route-helpers'
 import { authMiddleware } from '../../middleware/auth'
 import { Permission } from '@shared/modules/permission'
+import { getAuthUser } from '../../utils/auth'
 
 const TodoListSchema = z.array(TodoSchema)
 
@@ -100,6 +106,85 @@ const deleteRoute = createRoute({
   },
 })
 
+const uploadAttachmentRoute = createRoute({
+  method: 'post',
+  path: '/todos/{id}/attachments',
+  tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_FILE_UPLOAD] })],
+  request: {
+    params: z.object({ id: z.string() }),
+    body: {
+      content: {
+        'multipart/form-data': {
+          schema: UploadFileSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: successResponse(TodoAttachmentSchema, 'File uploaded successfully'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Todo not found'),
+    400: errorResponse('Invalid file or file too large'),
+  },
+})
+
+const listAttachmentsRoute = createRoute({
+  method: 'get',
+  path: '/todos/{id}/attachments',
+  tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
+  request: {
+    params: z.object({ id: z.string() }),
+  },
+  responses: {
+    200: successResponse(TodoAttachmentListSchema, 'List attachments'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Todo not found'),
+  },
+})
+
+const getTodoWithAttachmentsRoute = createRoute({
+  method: 'get',
+  path: '/todos/{id}/with-attachments',
+  tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_VIEW] })],
+  request: {
+    params: z.object({ id: z.string() }),
+  },
+  responses: {
+    200: successResponse(TodoWithAttachmentsSchema, 'Get todo with attachments'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Todo not found'),
+  },
+})
+
+const deleteAttachmentRoute = createRoute({
+  method: 'delete',
+  path: '/todos/{todoId}/attachments/{attachmentId}',
+  tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TODO_FILE_DELETE] })],
+  request: {
+    params: z.object({
+      todoId: z.string(),
+      attachmentId: z.string(),
+    }),
+  },
+  responses: {
+    200: successResponse(AttachmentIdResponseSchema, 'Attachment deleted'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Attachment not found'),
+  },
+})
+
 export const apiRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const todos = await todoService.listTodos()
@@ -133,6 +218,71 @@ export const apiRoutes = new OpenAPIHono()
     const result = await todoService.deleteTodo(numericId)
     if (!result) {
       return c.json({ success: false, error: 'Todo not found' }, 404)
+    }
+    return c.json({ success: true, data: { id: numericId } })
+  })
+  .openapi(uploadAttachmentRoute, async c => {
+    const { id } = c.req.valid('param')
+    const todoId = parseInt(id)
+
+    const todo = await todoService.getTodo(todoId)
+    if (!todo) {
+      return c.json({ success: false, error: 'Todo not found' }, 404)
+    }
+
+    const body = await c.req.valid('form')
+    const file = body['file']
+
+    if (!file || !(file instanceof File)) {
+      return c.json({ success: false, error: 'No file uploaded' }, 400)
+    }
+
+    const user = getAuthUser(c)
+    const arrayBuffer = await file.arrayBuffer()
+
+    try {
+      const attachment = await todoService.uploadAttachment(
+        todoId,
+        {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: arrayBuffer,
+        },
+        user?.id
+      )
+
+      return c.json({ success: true, data: attachment }, 201)
+    } catch (error) {
+      return c.json({ success: false, error: (error as Error).message }, 400)
+    }
+  })
+  .openapi(listAttachmentsRoute, async c => {
+    const { id } = c.req.valid('param')
+    const todoId = parseInt(id)
+
+    const todo = await todoService.getTodo(todoId)
+    if (!todo) {
+      return c.json({ success: false, error: 'Todo not found' }, 404)
+    }
+
+    const attachments = await todoService.listAttachments(todoId)
+    return c.json({ success: true, data: attachments })
+  })
+  .openapi(getTodoWithAttachmentsRoute, async c => {
+    const { id } = c.req.valid('param')
+    const todo = await todoService.getTodoWithAttachments(parseInt(id))
+    if (!todo) {
+      return c.json({ success: false, error: 'Todo not found' }, 404)
+    }
+    return c.json({ success: true, data: todo })
+  })
+  .openapi(deleteAttachmentRoute, async c => {
+    const { attachmentId } = c.req.valid('param')
+    const numericId = parseInt(attachmentId)
+    const result = await todoService.deleteAttachment(numericId)
+    if (!result) {
+      return c.json({ success: false, error: 'Attachment not found' }, 404)
     }
     return c.json({ success: true, data: { id: numericId } })
   })
