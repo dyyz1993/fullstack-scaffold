@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { createTestClient } from '../../test-utils/test-client'
 
 describe('Order Routes', () => {
+  const authHeaders = { Authorization: 'Bearer admin-token' }
+
   describe('GET /api/orders', () => {
     it('should return list of orders', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api['orders'].$get()
       expect(res.status).toBe(200)
 
@@ -18,7 +20,7 @@ describe('Order Routes', () => {
 
   describe('GET /api/orders/:id', () => {
     it('should fetch order by id', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const createRes = await client.api['orders'].$post({
         json: {
@@ -44,7 +46,7 @@ describe('Order Routes', () => {
     })
 
     it('should return 404 for non-existent order', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api['orders'][':id'].$get({
         param: { id: 'non-existent' },
       })
@@ -54,7 +56,7 @@ describe('Order Routes', () => {
 
   describe('POST /api/orders', () => {
     it('should create a new order', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api['orders'].$post({
         json: {
           customerName: 'Test Customer',
@@ -76,7 +78,7 @@ describe('Order Routes', () => {
 
   describe('PUT /api/orders/:id', () => {
     it('should update an order status', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const createRes = await client.api['orders'].$post({
         json: {
@@ -102,7 +104,7 @@ describe('Order Routes', () => {
 
   describe('DELETE /api/orders/:id', () => {
     it('should delete an order', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const createRes = await client.api['orders'].$post({
         json: {
@@ -127,7 +129,7 @@ describe('Order Routes', () => {
 
   describe('PUT /api/orders/:id/process', () => {
     it('should process an order', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const createRes = await client.api['orders'].$post({
         json: {
@@ -152,7 +154,7 @@ describe('Order Routes', () => {
 
   describe('PUT /api/orders/:id/cancel', () => {
     it('should cancel an order', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const createRes = await client.api['orders'].$post({
         json: {

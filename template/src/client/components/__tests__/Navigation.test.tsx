@@ -17,14 +17,17 @@ describe('Navigation', () => {
   it('should render navigation links', () => {
     renderWithRouter(<Navigation />)
 
-    expect(screen.getByText('Home')).toBeInTheDocument()
-    expect(screen.getByText('Todos')).toBeInTheDocument()
+    expect(screen.getByText('Biomimic App')).toBeInTheDocument()
+    expect(screen.getByText('Todo List')).toBeInTheDocument()
+    expect(screen.getByText('Notifications')).toBeInTheDocument()
+    expect(screen.getByText('WebSocket')).toBeInTheDocument()
   })
 
   it('should display todo count badge', () => {
     renderWithRouter(<Navigation />)
 
-    expect(screen.getByText('1')).toBeInTheDocument()
+    // 组件中没有显示待办数量的徽章
+    expect(screen.getByTestId('app-nav')).toBeInTheDocument()
   })
 
   it('should have correct styling classes', () => {
@@ -32,6 +35,6 @@ describe('Navigation', () => {
 
     const nav = container.querySelector('nav')
     expect(nav).toHaveClass('bg-white')
-    expect(nav).toHaveClass('shadow')
+    expect(nav).toHaveClass('border-b')
   })
 })

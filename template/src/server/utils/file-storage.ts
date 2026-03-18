@@ -1,7 +1,7 @@
-import { mkdir, writeFile, unlink, stat, readdir, rm } from 'fs/promises'
+import { mkdir, writeFile, unlink, stat, readdir, rm, readFile } from 'fs/promises'
 import { join, extname } from 'path'
 import { existsSync } from 'fs'
-import { randomUUID } from 'crypto'
+import { randomUUID, createHmac, timingSafeEqual } from 'crypto'
 import { isCloudflare } from './env'
 
 export interface FileUploadConfig {
@@ -24,6 +24,20 @@ export interface FileStorageConfig {
   baseDir: string
   tempDir: string
   tempFileTTL: number
+  privateUrlExpiry: number
+  secretKey: string
+}
+
+export interface FileAccessOptions {
+  isPrivate?: boolean
+  expirySeconds?: number
+}
+
+export interface SignedUrlParams {
+  namespace: string
+  filename: string
+  expiry: number
+  signature: string
 }
 
 const DEFAULT_MIME_TYPES = [
@@ -61,11 +75,15 @@ export function getFileStorageConfig(): FileStorageConfig {
   const baseDir = process.env.FILE_STORAGE_PATH || join(process.cwd(), 'uploads')
   const tempDir = process.env.FILE_TEMP_PATH || join(baseDir, 'temp')
   const tempFileTTL = parseInt(process.env.FILE_TEMP_TTL || '3600000', 10)
+  const privateUrlExpiry = parseInt(process.env.FILE_PRIVATE_URL_EXPIRY || '3600', 10)
+  const secretKey = process.env.FILE_SECRET_KEY || 'default-secret-key-change-in-production'
 
   storageConfig = {
     baseDir,
     tempDir,
     tempFileTTL,
+    privateUrlExpiry,
+    secretKey,
   }
 
   return storageConfig
@@ -192,6 +210,36 @@ export async function saveToTemp(
   }
 }
 
+export async function readFileData(filePath: string): Promise<Buffer> {
+  if (isCloudflare) {
+    throw new Error('Local file storage is not supported in Cloudflare environment.')
+  }
+
+  if (!existsSync(filePath)) {
+    throw new Error('File not found')
+  }
+
+  return readFile(filePath)
+}
+
+export async function getFileStream(filePath: string): Promise<ReadableStream> {
+  if (isCloudflare) {
+    throw new Error('Local file storage is not supported in Cloudflare environment.')
+  }
+
+  if (!existsSync(filePath)) {
+    throw new Error('File not found')
+  }
+
+  const file = await readFile(filePath)
+  return new ReadableStream({
+    start(controller) {
+      controller.enqueue(file)
+      controller.close()
+    },
+  })
+}
+
 export async function deleteFile(filePath: string): Promise<boolean> {
   if (isCloudflare) {
     throw new Error('Local file storage is not supported in Cloudflare environment.')
@@ -283,9 +331,125 @@ export async function clearNamespace(
   return { deleted, errors }
 }
 
-export function getFileUrl(namespace: string, filename: string, baseUrl?: string): string {
+export function getFilePath(namespace: string, filename: string): string {
+  const config = getFileStorageConfig()
+  return join(config.baseDir, namespace, filename)
+}
+
+export function getPublicFileUrl(namespace: string, filename: string, baseUrl?: string): string {
   if (baseUrl) {
-    return `${baseUrl}/${namespace}/${filename}`
+    return `${baseUrl}/files/public/${namespace}/${filename}`
   }
-  return `/uploads/${namespace}/${filename}`
+  return `/files/public/${namespace}/${filename}`
+}
+
+export function getPublicFilePath(namespace: string, filename: string): string {
+  return `/files/public/${namespace}/${filename}`
+}
+
+export function generateSignature(namespace: string, filename: string, expiry: number): string {
+  const config = getFileStorageConfig()
+  const data = `${namespace}:${filename}:${expiry}`
+  return createHmac('sha256', config.secretKey).update(data).digest('hex')
+}
+
+export function verifySignature(
+  namespace: string,
+  filename: string,
+  expiry: number,
+  signature: string
+): boolean {
+  const expectedSignature = generateSignature(namespace, filename, expiry)
+  try {
+    const sigBuffer = Buffer.from(signature, 'hex')
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex')
+    return sigBuffer.length === expectedBuffer.length && timingSafeEqual(sigBuffer, expectedBuffer)
+  } catch {
+    return false
+  }
+}
+
+export function getPrivateFileUrl(
+  namespace: string,
+  filename: string,
+  expirySeconds?: number,
+  baseUrl?: string
+): { url: string; expiry: number } {
+  const config = getFileStorageConfig()
+  const expiry = Math.floor(Date.now() / 1000) + (expirySeconds || config.privateUrlExpiry)
+  const signature = generateSignature(namespace, filename, expiry)
+
+  const url = baseUrl
+    ? `${baseUrl}/files/private/${namespace}/${filename}?expiry=${expiry}&signature=${signature}`
+    : `/files/private/${namespace}/${filename}?expiry=${expiry}&signature=${signature}`
+
+  return { url, expiry }
+}
+
+export function parseSignedUrl(path: string): SignedUrlParams | null {
+  const match = path.match(/\/files\/private\/([^/]+)\/(.+)$/)
+  if (!match) return null
+
+  return {
+    namespace: match[1],
+    filename: match[2],
+    expiry: 0,
+    signature: '',
+  }
+}
+
+export function getFileUrl(
+  namespace: string,
+  filename: string,
+  options?: FileAccessOptions,
+  baseUrl?: string
+): { url: string; isPrivate: boolean; expiry?: number } {
+  if (options?.isPrivate) {
+    const { url, expiry } = getPrivateFileUrl(namespace, filename, options.expirySeconds, baseUrl)
+    return { url, isPrivate: true, expiry }
+  }
+  return { url: getPublicFileUrl(namespace, filename, baseUrl), isPrivate: false }
+}
+
+export async function fileExists(namespace: string, filename: string): Promise<boolean> {
+  const filePath = getFilePath(namespace, filename)
+  return existsSync(filePath)
+}
+
+export async function getFileInfo(
+  namespace: string,
+  filename: string
+): Promise<{ size: number; mimeType: string; lastModified: Date } | null> {
+  const filePath = getFilePath(namespace, filename)
+
+  if (!existsSync(filePath)) {
+    return null
+  }
+
+  try {
+    const stats = await stat(filePath)
+    const ext = extname(filename).toLowerCase()
+
+    const mimeTypeMap: Record<string, string> = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp',
+      '.pdf': 'application/pdf',
+      '.txt': 'text/plain',
+      '.csv': 'text/csv',
+      '.json': 'application/json',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    }
+
+    return {
+      size: stats.size,
+      mimeType: mimeTypeMap[ext] || 'application/octet-stream',
+      lastModified: stats.mtime,
+    }
+  } catch {
+    return null
+  }
 }

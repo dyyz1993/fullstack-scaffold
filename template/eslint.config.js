@@ -23,6 +23,8 @@ import { noTypeAssertionOnSharedTypes } from './eslint-rules/no-type-assertion-o
 import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
 import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
 import { noMiddlewareInRoutes } from './eslint-rules/no-middleware-in-routes.js'
+import { noDisableDirectFetch } from './eslint-rules/no-disable-direct-fetch.js'
+import { noNewOldServiceNaming } from './eslint-rules/no-new-old-service-naming.js'
 
 const localRules = {
   rules: {
@@ -49,6 +51,8 @@ const localRules = {
     'no-direct-fetch': noDirectFetch,
     'flat-routes-services': flatRoutesServices,
     'no-middleware-in-routes': noMiddlewareInRoutes,
+    'no-disable-direct-fetch': noDisableDirectFetch,
+    'no-new-old-service-naming': noNewOldServiceNaming,
   },
 }
 
@@ -93,6 +97,7 @@ export default tseslint.config(
       'local-rules/enforce-valid-method': 'error',
       'local-rules/flat-routes-services': 'error',
       'local-rules/no-middleware-in-routes': 'error',
+      'local-rules/no-new-old-service-naming': 'error',
     },
   },
   {
@@ -111,6 +116,7 @@ export default tseslint.config(
       'local-rules/no-direct-fetch': 'error',
       'local-rules/no-any-on-apiclient': 'error',
       'local-rules/no-type-assertion-on-shared-types': 'error',
+      'local-rules/no-disable-direct-fetch': 'error',
     },
   },
   {

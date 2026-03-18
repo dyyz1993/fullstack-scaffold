@@ -11,6 +11,7 @@ import { orderRoutes } from './module-order/routes/order-routes'
 import { ticketRoutes } from './module-ticket/routes/ticket-routes'
 import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
+import { fileRoutes } from './module-file/routes/file-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
@@ -46,6 +47,8 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .route('/api', ticketRoutes)
     .route('/api', disputeRoutes)
     .route('/api', contentRoutes)
+    .route('/files', fileRoutes)
+    .route('/api', fileRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')

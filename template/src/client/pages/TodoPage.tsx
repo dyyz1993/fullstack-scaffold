@@ -4,7 +4,17 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, CheckCircle, Circle, Clock, Paperclip, X, Upload } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  CheckCircle,
+  Circle,
+  Clock,
+  Paperclip,
+  X,
+  Upload,
+  Download,
+} from 'lucide-react'
 import { useTodoStore } from '../stores/todoStore'
 import { LoadingSpinner, EmptyState } from '@client/components'
 import type { Todo } from '@shared/schemas'
@@ -318,22 +328,39 @@ export const TodoPage: React.FC = () => {
                           className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                           data-testid="attachment-item"
                         >
-                          <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <Paperclip className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                            <span className="text-sm text-gray-700 truncate">
+                            <a
+                              href={`/files/public/todos/${attachment.fileName}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate flex-1"
+                              title={attachment.originalName}
+                            >
                               {attachment.originalName}
-                            </span>
-                            <span className="text-xs text-gray-400">
+                            </a>
+                            <span className="text-xs text-gray-400 flex-shrink-0">
                               ({formatFileSize(attachment.size)})
                             </span>
                           </div>
-                          <button
-                            onClick={() => handleDeleteAttachment(todo.id, attachment.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
-                            data-testid="delete-attachment-button"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <a
+                              href={`/files/public/todos/${attachment.fileName}`}
+                              download={attachment.originalName}
+                              className="p-1 text-gray-400 hover:text-blue-500 rounded transition-colors"
+                              title="Download"
+                              data-testid="download-attachment-button"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                            <button
+                              onClick={() => handleDeleteAttachment(todo.id, attachment.id)}
+                              className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
+                              data-testid="delete-attachment-button"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

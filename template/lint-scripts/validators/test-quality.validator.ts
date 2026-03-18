@@ -51,7 +51,23 @@ function parseTestFile(filePath: string, config: TestQualityConfig): ParsedTestF
       currentSuite = suiteMatch[1]
     }
 
-    const testMatch = line.match(/(?:it|test)\s*\(\s*['"`]([^'"`]+)['"`]/)
+    // Support both single-line and multi-line test definitions
+    // Single-line: it('name', () => { })
+    // Multi-line: it(\n  'name',\n  () => { }
+    let testMatch = line.match(/(?:it|test)\s*\(\s*['"`]([^'"`]+)['"`]/)
+
+    // If no match and line ends with '(', check next line for test name
+    if (!testMatch && /(?:it|test)\s*\(\s*$/.test(line)) {
+      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+        const nextLine = lines[j].trim()
+        const multiLineMatch = nextLine.match(/^['"`]([^'"`]+)['"`]/)
+        if (multiLineMatch) {
+          testMatch = multiLineMatch
+          break
+        }
+      }
+    }
+
     if (testMatch) {
       if (currentTest) {
         testCases.push(currentTest)
@@ -128,7 +144,10 @@ function findTestFiles(rootPath: string, config: TestQualityConfig): string[] {
         if (!config.ignoreDirs.includes(entry.name)) {
           scanDir(fullPath)
         }
-      } else if (entry.isFile() && (entry.name.endsWith('.test.ts') || entry.name.endsWith('.spec.ts'))) {
+      } else if (
+        entry.isFile() &&
+        (entry.name.endsWith('.test.ts') || entry.name.endsWith('.spec.ts'))
+      ) {
         testFiles.push(fullPath)
       }
     }

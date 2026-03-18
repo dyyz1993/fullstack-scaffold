@@ -1,11 +1,22 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createTestClient } from '../../test-utils/test-client'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Role Routes', () => {
+  const authHeaders = { Authorization: 'Bearer test-super-admin-1' }
+
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
   describe('GET /api/roles', () => {
     it('should get all roles', async () => {
-      const client = createTestClient()
-      const res = await client.api.roles.$get()
+      const client = createTestClient(undefined, { headers: authHeaders })
+      const res = await client.api.roles.$get(undefined, { headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -17,8 +28,8 @@ describe('Role Routes', () => {
     })
 
     it('should return roles with correct structure', async () => {
-      const client = createTestClient()
-      const res = await client.api.roles.$get()
+      const client = createTestClient(undefined, { headers: authHeaders })
+      const res = await client.api.roles.$get(undefined, { headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -35,10 +46,13 @@ describe('Role Routes', () => {
 
   describe('GET /api/roles/:id', () => {
     it('should get role by id', async () => {
-      const client = createTestClient()
-      const res = await client.api.roles[':id'].$get({
-        param: { id: 'role_super_admin' },
-      })
+      const client = createTestClient(undefined, { headers: authHeaders })
+      const res = await client.api.roles[':id'].$get(
+        {
+          param: { id: 'role_super_admin' },
+        },
+        { headers: authHeaders }
+      )
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -50,17 +64,20 @@ describe('Role Routes', () => {
     })
 
     it('should return 404 for non-existent role', async () => {
-      const client = createTestClient()
-      const res = await client.api.roles[':id'].$get({
-        param: { id: 'non-existent-role' },
-      })
+      const client = createTestClient(undefined, { headers: authHeaders })
+      const res = await client.api.roles[':id'].$get(
+        {
+          param: { id: 'non-existent-role' },
+        },
+        { headers: authHeaders }
+      )
       expect(res.status).toBe(404)
     })
   })
 
   describe('POST /api/roles', () => {
     it('should create a new role', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles.$post(
         {
           json: {
@@ -69,9 +86,7 @@ describe('Role Routes', () => {
             label: 'Test Role',
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(200)
 
@@ -86,7 +101,7 @@ describe('Role Routes', () => {
 
   describe('PUT /api/roles/:id', () => {
     it('should update role', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].$put(
         {
           param: { id: 'role_user' },
@@ -95,9 +110,7 @@ describe('Role Routes', () => {
             label: 'Updated User',
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(200)
 
@@ -109,7 +122,7 @@ describe('Role Routes', () => {
     })
 
     it('should return 404 for non-existent role', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].$put(
         {
           param: { id: 'non-existent-role' },
@@ -117,9 +130,7 @@ describe('Role Routes', () => {
             name: 'Updated Name',
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(404)
     })
@@ -127,27 +138,23 @@ describe('Role Routes', () => {
 
   describe('DELETE /api/roles/:id', () => {
     it('should not delete system role', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].$delete(
         {
           param: { id: 'role_super_admin' },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(400)
     })
 
     it('should return 404 for non-existent role', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].$delete(
         {
           param: { id: 'non-existent-role' },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(400)
     })
@@ -155,7 +162,7 @@ describe('Role Routes', () => {
 
   describe('PUT /api/roles/:id/permissions', () => {
     it('should update role permissions', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].permissions.$put(
         {
           param: { id: 'role_user' },
@@ -163,9 +170,7 @@ describe('Role Routes', () => {
             permissionIds: ['perm_user_view', 'perm_content_view'],
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(200)
 
@@ -174,7 +179,7 @@ describe('Role Routes', () => {
     })
 
     it('should not modify super admin permissions', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].permissions.$put(
         {
           param: { id: 'role_super_admin' },
@@ -182,9 +187,7 @@ describe('Role Routes', () => {
             permissionIds: ['perm_user_view'],
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(403)
 
@@ -196,7 +199,7 @@ describe('Role Routes', () => {
     })
 
     it('should return 404 for non-existent role when updating permissions', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.roles[':id'].permissions.$put(
         {
           param: { id: 'non-existent-role' },
@@ -204,9 +207,7 @@ describe('Role Routes', () => {
             permissionIds: ['perm_user_view'],
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
+        { headers: authHeaders }
       )
       expect(res.status).toBe(404)
     })

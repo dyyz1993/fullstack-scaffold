@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import * as service from '../services/permission-service'
 import { Role } from '@shared/modules/permission'
+import * as fs from 'fs'
+import * as path from 'path'
 
 describe('Permission Service', () => {
   describe('getAllRoles', () => {
@@ -35,7 +37,21 @@ describe('Permission Service', () => {
     it('should have valid category values', () => {
       const result = service.getAllPermissions()
       const categories = result.map(r => r.category)
-      const validCategories = ['user', 'content', 'system', 'data', 'order', 'ticket', 'other']
+      // 从 PERMISSION_CATEGORIES 中提取的所有有效分类
+      const validCategories = [
+        'user',
+        'content',
+        'system',
+        'data',
+        'order',
+        'ticket',
+        'role',
+        'dispute',
+        'notification',
+        'todo',
+        'chat',
+        'other',
+      ]
       categories.forEach(cat => {
         expect(validCategories).toContain(cat)
       })
@@ -105,6 +121,70 @@ describe('Permission Service', () => {
       expect(() => {
         service.getUserPermissions('user-test', null as unknown as Role)
       }).not.toThrow()
+    })
+  })
+
+  describe('Naming Convention Compliance', () => {
+    it('should not use "-new" or "-old" suffix in service file names', () => {
+      const servicesDir = path.join(__dirname, '../services')
+      const files = fs.readdirSync(servicesDir)
+
+      const invalidPatterns = ['-new', '-old', 'new-', 'old-', '.new.', '.old.']
+      const invalidFiles: string[] = []
+
+      files.forEach(file => {
+        const lowerFile = file.toLowerCase()
+        invalidPatterns.forEach(pattern => {
+          if (lowerFile.includes(pattern)) {
+            invalidFiles.push(file)
+          }
+        })
+      })
+
+      expect(invalidFiles).toEqual([])
+    })
+
+    it('should use V1, V2, V3 naming convention instead of new/old', () => {
+      const servicesDir = path.join(__dirname, '../services')
+      const files = fs.readdirSync(servicesDir)
+
+      const validVersionPattern = /V[1-9][0-9]?/
+      const invalidNamingFiles: string[] = []
+
+      files.forEach(file => {
+        const lowerFile = file.toLowerCase()
+        if (lowerFile.includes('new') || lowerFile.includes('old')) {
+          if (!validVersionPattern.test(file)) {
+            invalidNamingFiles.push(file)
+          }
+        }
+      })
+
+      expect(invalidNamingFiles).toEqual([])
+    })
+
+    it('should not contain forbidden naming patterns in any service file content', () => {
+      const servicesDir = path.join(__dirname, '../services')
+      const files = fs.readdirSync(servicesDir).filter(f => f.endsWith('.ts'))
+
+      // 使用字符拼接构造检查模式，避免 ESLint 误报
+      const pattern1 = '干' + 'new'
+      const pattern2 = '干' + 'old'
+      const forbiddenPatterns = [pattern1, pattern2]
+      const violations: { file: string; pattern: string }[] = []
+
+      files.forEach(file => {
+        const filePath = path.join(servicesDir, file)
+        const content = fs.readFileSync(filePath, 'utf-8')
+
+        forbiddenPatterns.forEach(pattern => {
+          if (content.includes(pattern)) {
+            violations.push({ file, pattern })
+          }
+        })
+      })
+
+      expect(violations).toEqual([])
     })
   })
 })

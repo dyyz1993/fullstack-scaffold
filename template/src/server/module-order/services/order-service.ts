@@ -45,7 +45,8 @@ function randomElement<T>(array: readonly T[]): T {
   return array[Math.floor(Math.random() * array.length)]
 }
 
-const MOCK_ORDERS: Order[] = Array.from({ length: 25 }, (_, index) => {
+// 使用 let 而不是 const，允许在测试中重置
+let MOCK_ORDERS: Order[] = Array.from({ length: 25 }, (_, index) => {
   const customer = randomElement(CUSTOMERS)
   const product = randomElement(PRODUCTS)
   const status = randomElement(ORDER_STATUSES)
@@ -63,6 +64,28 @@ const MOCK_ORDERS: Order[] = Array.from({ length: 25 }, (_, index) => {
     updatedAt: randomDate(new Date(createdAt), new Date()),
   }
 })
+
+// 用于测试的重置函数
+export function resetMockOrders(): void {
+  MOCK_ORDERS = Array.from({ length: 25 }, (_, index) => {
+    const customer = randomElement(CUSTOMERS)
+    const product = randomElement(PRODUCTS)
+    const status = randomElement(ORDER_STATUSES)
+    const createdAt = randomDate(new Date('2024-01-01'), new Date())
+
+    return {
+      id: `order-${index + 1}`,
+      orderNo: generateOrderNo(),
+      customerName: customer.name,
+      customerEmail: customer.email,
+      productName: product,
+      amount: Math.floor(Math.random() * 10000) + 100,
+      status,
+      createdAt,
+      updatedAt: randomDate(new Date(createdAt), new Date()),
+    }
+  })
+}
 
 export async function getOrders(filters?: {
   status?: OrderStatus

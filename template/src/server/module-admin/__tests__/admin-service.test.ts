@@ -1,8 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
 import * as adminService from '../services/admin-service'
 import { getRawClient } from '../../db'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Admin Service', () => {
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
   beforeEach(async () => {
     const rawClient = await getRawClient()
     if (rawClient && 'execute' in rawClient) {
@@ -79,6 +88,7 @@ describe('Admin Service', () => {
       const activity = await adminService.getRecentActivity(3)
 
       expect(activity.length).toBeLessThanOrEqual(3)
+      expect(Array.isArray(activity)).toBe(true)
     })
 
     it('should return activity with correct fields', async () => {
@@ -224,6 +234,7 @@ describe('Admin Service', () => {
       }
       const count = adminService.getUnreadCount()
       expect(count).toBe(0)
+      expect(typeof count).toBe('number')
     })
   })
 })

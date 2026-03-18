@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import * as service from '../services/content-service'
+import { resetMockContents } from '../services/content-service'
 
 describe('Admin Content Service', () => {
+  beforeEach(() => {
+    // 重置 mock contents 以确保测试隔离
+    resetMockContents()
+  })
   describe('getContents', () => {
     it('should return all contents', () => {
       const result = service.getContents()
@@ -38,6 +43,7 @@ describe('Admin Content Service', () => {
     it('should return null for non-existent content', () => {
       const result = service.getContentById('non-existent-content-id-xyz')
       expect(result).toBeNull()
+      expect(result).toBeFalsy()
     })
   })
 
@@ -84,6 +90,7 @@ describe('Admin Content Service', () => {
     it('should return null for non-existent content', () => {
       const result = service.updateContent('non-existent-content-id-xyz', { title: 'New Title' })
       expect(result).toBeNull()
+      expect(result).toBeFalsy()
     })
   })
 
@@ -105,6 +112,7 @@ describe('Admin Content Service', () => {
     it('should return false for non-existent content', () => {
       const result = service.deleteContent('non-existent-content-id-xyz')
       expect(result).toBe(false)
+      expect(result).toBeFalsy()
     })
   })
 
@@ -126,6 +134,7 @@ describe('Admin Content Service', () => {
     it('should return null for non-existent content', () => {
       const result = service.publishContent('non-existent-content-id-xyz')
       expect(result).toBeNull()
+      expect(result).toBeFalsy()
     })
   })
 
@@ -147,6 +156,7 @@ describe('Admin Content Service', () => {
     it('should return null for non-existent content', () => {
       const result = service.archiveContent('non-existent-content-id-xyz')
       expect(result).toBeNull()
+      expect(result).toBeFalsy()
     })
   })
 })

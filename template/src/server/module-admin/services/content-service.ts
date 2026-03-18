@@ -49,7 +49,8 @@ function randomElement<T>(array: readonly T[]): T {
   return array[Math.floor(Math.random() * array.length)]
 }
 
-export const MOCK_CONTENTS: Content[] = Array.from({ length: 20 }, (_, index) => {
+// 使用 let 而不是 const，允许在测试中重置
+export let MOCK_CONTENTS: Content[] = Array.from({ length: 20 }, (_, index) => {
   const category = randomElement(CATEGORIES)
   const status = randomElement(STATUSES)
   const createdAt = randomDate(new Date('2024-01-01'), new Date())
@@ -70,6 +71,31 @@ export const MOCK_CONTENTS: Content[] = Array.from({ length: 20 }, (_, index) =>
     publishedAt: isPublished ? randomDate(new Date(createdAt), new Date()) : undefined,
   }
 })
+
+// 用于测试的重置函数
+export function resetMockContents(): void {
+  MOCK_CONTENTS = Array.from({ length: 20 }, (_, index) => {
+    const category = randomElement(CATEGORIES)
+    const status = randomElement(STATUSES)
+    const createdAt = randomDate(new Date('2024-01-01'), new Date())
+    const isPublished = status === 'published'
+
+    return {
+      id: `content-${index + 1}`,
+      title: TITLES[index % TITLES.length],
+      content: `这是${TITLES[index % TITLES.length]}的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
+      category,
+      status,
+      author: randomElement(AUTHORS),
+      tags: TAGS[index % TAGS.length],
+      viewCount: Math.floor(Math.random() * 1000),
+      likeCount: Math.floor(Math.random() * 100),
+      createdAt,
+      updatedAt: randomDate(new Date(createdAt), new Date()),
+      publishedAt: isPublished ? randomDate(new Date(createdAt), new Date()) : undefined,
+    }
+  })
+}
 
 export function getContents(filters?: {
   category?: Content['category']

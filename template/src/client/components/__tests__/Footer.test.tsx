@@ -6,8 +6,10 @@ describe('Footer', () => {
   it('should render footer with copyright text', () => {
     render(<Footer />)
 
-    expect(screen.getByText(/Biomimic Todo App/i)).toBeInTheDocument()
-    expect(screen.getByText(/©/i)).toBeInTheDocument()
+    expect(screen.getByText(/Built with/i)).toBeInTheDocument()
+    expect(screen.getByText(/Hono RPC/i)).toBeInTheDocument()
+    expect(screen.getByText(/React/i)).toBeInTheDocument()
+    expect(screen.getByText(/TypeScript/i)).toBeInTheDocument()
   })
 
   it('should have correct styling classes', () => {

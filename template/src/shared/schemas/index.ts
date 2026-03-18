@@ -26,6 +26,15 @@ export {
   type WebSocketStatus,
 } from '../modules/chat'
 export {
+  FileDownloadSchema,
+  PrivateFileQuerySchema,
+  PublicFileUrlSchema,
+  PrivateFileUrlSchema,
+  GenerateUrlRequestSchema,
+  FileUrlResponseSchema,
+  EmptySchema,
+} from '../modules/files'
+export {
   TodoSchema,
   TodoStatusSchema,
   CreateTodoSchema,

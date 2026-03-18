@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { permissionService } from '../services/permission-service-impl'
 import { roleService } from '../services/role-service'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Permission Middleware Integration', () => {
   beforeAll(async () => {
-    // 确保数据库已初始化
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
   })
 
   describe('hasPermission', () => {

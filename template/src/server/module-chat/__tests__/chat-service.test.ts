@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import * as chatService from '../services/chat-service'
+
+// Initialize runtime adapter before tests
+setRuntimeAdapter(getNodeRuntimeAdapter())
 
 describe('Chat Service', () => {
   beforeEach(() => {

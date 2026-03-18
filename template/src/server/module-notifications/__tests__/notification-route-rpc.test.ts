@@ -9,6 +9,8 @@ import type { AppNotification } from '@shared/schemas'
 setRuntimeAdapter(getNodeRuntimeAdapter())
 
 describe('Notification Routes with Type-Safe Test Client', () => {
+  const authHeaders = { Authorization: 'Bearer admin-token' }
+
   beforeAll(() => {})
 
   beforeEach(() => {
@@ -21,7 +23,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
   describe('Invalid Parameter Tests - Zod Validation', () => {
     it('should reject POST with missing title', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -34,7 +36,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject POST with missing message', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -47,7 +49,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject POST with invalid type', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -61,7 +63,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject POST with empty title', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -75,7 +77,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject POST with empty message', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -89,7 +91,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject GET with invalid limit parameter', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$get({
         query: { limit: 'invalid' },
@@ -99,7 +101,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject GET with invalid unreadOnly parameter', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$get({
         query: { unreadOnly: 'invalid' },
@@ -111,7 +113,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
   describe('GET /api/notifications', () => {
     it('should return empty array', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$get({
         query: {},
@@ -138,7 +140,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
         message: 'Message 2',
       })
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications.$get({
         query: { limit: '1' },
       })
@@ -166,7 +168,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
         message: 'Not read yet',
       })
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications.$get({
         query: { unreadOnly: 'true' },
       })
@@ -183,7 +185,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
   describe('POST /api/notifications', () => {
     it('should create a notification with type safety', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -208,7 +210,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should reject invalid type', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications.$post({
         json: {
@@ -224,7 +226,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
 
   describe('GET /api/notifications/:id', () => {
     it('should return 404 for non-existent notification', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications[':id'].$get({
         param: { id: 'non-existent-id' },
@@ -239,7 +241,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
         message: 'Test',
       })
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications[':id'].$get({
         param: { id: notif.id },
       })
@@ -263,7 +265,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
       })
       expect(notif.read).toBe(false)
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications[':id'].read.$patch({
         param: { id: notif.id },
       })
@@ -277,7 +279,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should return 404 for non-existent notification', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications[':id'].read.$patch({
         param: { id: 'non-existent-id' },
@@ -299,7 +301,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
         message: 'Test',
       })
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications['read-all'].$patch()
       expect(res.status).toBe(200)
 
@@ -319,7 +321,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
         message: 'Test',
       })
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications[':id'].$delete({
         param: { id: notif.id },
       })
@@ -336,7 +338,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
     })
 
     it('should return 404 for non-existent notification', async () => {
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.notifications[':id'].$delete({
         param: { id: 'non-existent-id' },
@@ -359,7 +361,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
       })
       readNotif.read = true
 
-      const client = createTestClient()
+      const client = createTestClient(undefined, { headers: authHeaders })
       const res = await client.api.notifications['unread-count'].$get()
       expect(res.status).toBe(200)
 
