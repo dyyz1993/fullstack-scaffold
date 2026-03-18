@@ -29,7 +29,7 @@ app.get('/api/todos', async c => {
 
 ```typescript
 // ✅ 使用 Zod schema 定义类型
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 import { TodoSchema } from '@shared/schemas/todos'
 
 // 定义响应类型

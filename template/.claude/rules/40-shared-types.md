@@ -73,7 +73,7 @@ export type ApiSuccess<T> = { success: true; data: T }
 
 ```typescript
 // src/shared/modules/todos/schemas.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const TodoSchema = z.object({
   id: z.number().int().positive(),
@@ -90,7 +90,7 @@ export type Todo = z.infer<typeof TodoSchema>
 
 ```typescript
 // ✅ 正确 - 使用 Zod
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const TodoSchema = z.object({
   id: z.number().int().positive(),
@@ -251,7 +251,7 @@ export function successResponse<T extends z.ZodTypeAny>(schema: T, description: 
 
 ```typescript
 // src/shared/modules/chat/index.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ChatProtocolSchema = z.object({
   rpc: z.object({
@@ -348,7 +348,7 @@ import { useTodoStore } from '@client/stores/todoStore'
 import { createTodo } from '@server/module-todos/services/todo-service'
 
 // ✅ 正确 - shared 只依赖外部库
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 ```
 
 ### 2. 禁止包含运行时逻辑
@@ -403,7 +403,7 @@ npm run typecheck
 
 ```typescript
 // 1. src/shared/modules/products/schemas.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ProductSchema = z.object({
   id: z.number(),

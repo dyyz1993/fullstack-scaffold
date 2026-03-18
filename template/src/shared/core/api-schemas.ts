@@ -8,7 +8,7 @@
  * @impact [必填] 影响范围
  */
 
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({

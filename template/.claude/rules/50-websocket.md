@@ -50,7 +50,7 @@ const wsClient: WSClient<ChatProtocol> = apiClient.api.chat.ws.$ws()
 
 ```typescript
 // src/shared/modules/chat/index.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ChatProtocolSchema = z.object({
   rpc: z.object({

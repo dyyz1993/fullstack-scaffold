@@ -50,7 +50,7 @@ const sseClient: SSEClient<AppSSEProtocol> = await apiClient.api.notifications.s
 
 ```typescript
 // src/shared/modules/notifications/schemas.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 import { NotificationSchema } from './schemas'
 
 export const AppSSEProtocolSchema = z.object({

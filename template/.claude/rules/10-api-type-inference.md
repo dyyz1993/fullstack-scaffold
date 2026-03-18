@@ -41,7 +41,7 @@ app.openapi(createRoute, async c => { ... });
 ```typescript
 // ✅ 正确 - 在 shared/modules 中定义
 // src/shared/modules/{module}/schemas.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ItemSchema = z.object({
   id: z.number().int().positive(),

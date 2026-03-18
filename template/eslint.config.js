@@ -25,6 +25,7 @@ import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
 import { noMiddlewareInRoutes } from './eslint-rules/no-middleware-in-routes.js'
 import { noDisableDirectFetch } from './eslint-rules/no-disable-direct-fetch.js'
 import { noNewOldServiceNaming } from './eslint-rules/no-new-old-service-naming.js'
+import { noDirectZodImportInFileRoutes } from './eslint-rules/no-direct-zod-import-in-file-routes.js'
 
 const localRules = {
   rules: {
@@ -53,6 +54,7 @@ const localRules = {
     'no-middleware-in-routes': noMiddlewareInRoutes,
     'no-disable-direct-fetch': noDisableDirectFetch,
     'no-new-old-service-naming': noNewOldServiceNaming,
+    'no-direct-zod-import-in-file-routes': noDirectZodImportInFileRoutes,
   },
 }
 
@@ -125,6 +127,12 @@ export default tseslint.config(
       'no-console': 'off',
       'local-rules/require-type-safe-test-client': 'error',
       'local-rules/require-hono-chain-syntax': 'off',
+    },
+  },
+  {
+    files: ['src/server/module-file/routes/file-routes.ts'],
+    rules: {
+      'local-rules/no-direct-zod-import-in-file-routes': 'error',
     },
   },
   {

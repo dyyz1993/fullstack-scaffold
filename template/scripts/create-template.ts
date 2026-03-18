@@ -441,7 +441,7 @@ function toKebabCase(str: string): string {
 function generateBasicSchema(name: string): string {
   const pascalName = toPascalCase(name)
 
-  return `import { z } from 'zod'
+  return `import { z } from '@hono/zod-openapi'
 
 export const ${pascalName}Schema = z.object({
   id: z.string(),
@@ -468,7 +468,7 @@ export type DeleteResult = z.infer<typeof DeleteResultSchema>
 function generateSSESchema(name: string): string {
   const pascalName = toPascalCase(name)
 
-  return `import { z } from 'zod'
+  return `import { z } from '@hono/zod-openapi'
 
 export const ${pascalName}EventSchema = z.object({
   id: z.string(),
@@ -493,7 +493,7 @@ export type ${pascalName}SSEProtocol = z.infer<typeof ${pascalName}SSEProtocolSc
 function generateWebSocketSchema(name: string): string {
   const pascalName = toPascalCase(name)
 
-  return `import { z } from 'zod'
+  return `import { z } from '@hono/zod-openapi'
 
 export const ${pascalName}MessageSchema = z.object({
   id: z.string(),

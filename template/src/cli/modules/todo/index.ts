@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { registerAutoCommand, type RouteConfig } from '../../utils/auto-command'
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 const TodoStatusSchema = z.enum(['pending', 'in_progress', 'completed'])
 

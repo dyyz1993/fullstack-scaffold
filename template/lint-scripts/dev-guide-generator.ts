@@ -441,7 +441,7 @@ class DevelopmentGuideGenerator {
 
   private getSchemaExample(feature: string): string {
     return `// src/shared/modules/${feature}/schemas.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ${feature}Schema = z.object({
   id: z.number(),
@@ -634,7 +634,7 @@ export function ${feature.charAt(0).toUpperCase() + feature.slice(1)}Page() {
 
   private getWebSocketProtocolExample(feature: string): string {
     return `// src/shared/modules/${feature}/index.ts
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const ${feature}MessageSchema = z.object({
   type: z.literal('${feature}'),

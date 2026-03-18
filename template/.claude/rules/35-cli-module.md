@@ -48,7 +48,7 @@ biomimic todo create --title "x"   # 执行命令
 // src/cli/modules/todo/index.ts
 import { Command } from 'commander'
 import { registerAutoCommand, type RouteConfig } from '../../utils/auto-command'
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 const todoRoutes: RouteConfig[] = [
   {

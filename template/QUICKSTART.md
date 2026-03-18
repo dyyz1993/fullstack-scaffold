@@ -98,7 +98,7 @@ mkdir -p src/server/module-{feature}/__tests__
 Add to `src/shared/modules/{feature}/schemas.ts`:
 
 ```typescript
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 export const NewFeatureSchema = z.object({
   id: z.string().uuid(),

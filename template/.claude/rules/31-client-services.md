@@ -410,7 +410,7 @@ URL.revokeObjectURL(url)
 ```typescript
 // src/server/module-admin/routes/admin-routes.ts
 import { createRoute } from '@hono/zod-openapi'
-import { z } from 'zod'
+import { z } from '@hono/zod-openapi'
 
 // 图片路由
 const getAvatarRoute = createRoute({
