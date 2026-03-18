@@ -91,6 +91,7 @@ const uploadAttachmentRoute = createRoute({
   request: {
     params: z.object({ id: z.string() }),
     body: {
+      required: true,
       content: {
         'multipart/form-data': {
           schema: UploadFileSchema,
@@ -192,7 +193,7 @@ export const apiRoutes = new OpenAPIHono()
       return c.json({ success: false, error: 'Todo not found' }, 404)
     }
 
-    const body = await c.req.valid('form')
+    const body = c.req.valid('form')
     const file = body['file']
 
     if (!file || !(file instanceof File)) {

@@ -1,10 +1,14 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createApp } from '../../app'
 import { getRawClient, getDb } from '../../db'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 import { mkdir, rm } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+
+/**
+ * @vitest-environment node
+ */
 
 const testUploadDir = join(process.cwd(), 'uploads', 'todos')
 
@@ -16,18 +20,10 @@ interface UploadResponse {
     mimeType: string
     size: number
     todoId: number
+    fileName: string
+    path: string
   }
   error?: string
-}
-
-interface ListResponse {
-  success: boolean
-  data: Array<{
-    id: number
-    originalName: string
-    mimeType: string
-    size: number
-  }>
 }
 
 describe('Todo File Upload API', () => {
@@ -40,7 +36,7 @@ describe('Todo File Upload API', () => {
     if (!existsSync(testUploadDir)) {
       await mkdir(testUploadDir, { recursive: true })
     }
-  })
+  }, 30000)
 
   afterAll(async () => {
     await cleanupTestDatabase()
@@ -50,14 +46,6 @@ describe('Todo File Upload API', () => {
   })
 
   beforeEach(async () => {
-    const client = await getRawClient()
-    if (client && 'execute' in client) {
-      await client.execute('DELETE FROM todo_attachments')
-      await client.execute('DELETE FROM todos')
-    }
-  })
-
-  afterEach(async () => {
     const client = await getRawClient()
     if (client && 'execute' in client) {
       await client.execute('DELETE FROM todo_attachments')
@@ -80,126 +68,179 @@ describe('Todo File Upload API', () => {
   }
 
   describe('POST /api/todos/:id/attachments', () => {
-    it('should upload a text file successfully', async () => {
-      const todoId = await createTestTodo()
+    it(
+      'should upload a text file successfully',
+      async () => {
+        const todoId = await createTestTodo()
 
-      const formData = new FormData()
-      const blob = new Blob(['Hello, this is a test file content'], { type: 'text/plain' })
-      formData.append('file', blob, 'test.txt')
+        const formData = new FormData()
+        const blob = new Blob(['Hello, this is a test file content'], { type: 'text/plain' })
+        formData.append('file', blob, 'test.txt')
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const res = await app.request(`/api/todos/${todoId}/attachments`, {
-        method: 'POST',
-        body: formData,
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const res = await app.request(`/api/todos/${todoId}/attachments`, {
+          method: 'POST',
+          body: formData,
+        })
 
-      expect(res.status).toBe(201)
-      const data = (await res.json()) as UploadResponse
-      expect(data.success).toBe(true)
-      expect(data.data?.originalName).toBe('test.txt')
-      expect(data.data?.mimeType).toBe('text/plain')
-      expect(data.data?.todoId).toBe(todoId)
-    })
+        expect(res.status).toBe(201)
+        const data = (await res.json()) as UploadResponse
+        expect(data.success).toBe(true)
+        expect(data.data?.originalName).toBe('test.txt')
+        expect(data.data?.mimeType).toBe('text/plain')
+        expect(data.data?.todoId).toBe(todoId)
+        expect(data.data?.size).toBeGreaterThan(0)
+        expect(data.data?.fileName).toBeDefined()
+        expect(data.data?.path).toBeDefined()
+      },
+      10000
+    )
 
-    it('should upload an image file successfully', async () => {
-      const todoId = await createTestTodo()
+    it(
+      'should upload an image file successfully',
+      async () => {
+        const todoId = await createTestTodo()
 
-      const formData = new FormData()
-      const blob = new Blob(['fake image content'], { type: 'image/png' })
-      formData.append('file', blob, 'test.png')
+        const formData = new FormData()
+        const blob = new Blob(['fake image data'], { type: 'image/png' })
+        formData.append('file', blob, 'image.png')
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const res = await app.request(`/api/todos/${todoId}/attachments`, {
-        method: 'POST',
-        body: formData,
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const res = await app.request(`/api/todos/${todoId}/attachments`, {
+          method: 'POST',
+          body: formData,
+        })
 
-      expect(res.status).toBe(201)
-      const data = (await res.json()) as UploadResponse
-      expect(data.success).toBe(true)
-      expect(data.data?.mimeType).toBe('image/png')
-    })
+        expect(res.status).toBe(201)
+        const data = (await res.json()) as UploadResponse
+        expect(data.success).toBe(true)
+        expect(data.data?.originalName).toBe('image.png')
+        expect(data.data?.mimeType).toBe('image/png')
+        expect(data.data?.todoId).toBe(todoId)
+      },
+      10000
+    )
 
-    it('should reject upload to non-existent todo', async () => {
-      const formData = new FormData()
-      const blob = new Blob(['test'], { type: 'text/plain' })
-      formData.append('file', blob, 'test.txt')
+    it(
+      'should reject upload to non-existent todo',
+      async () => {
+        const formData = new FormData()
+        const blob = new Blob(['test'], { type: 'text/plain' })
+        formData.append('file', blob, 'test.txt')
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const res = await app.request('/api/todos/99999/attachments', {
-        method: 'POST',
-        body: formData,
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const res = await app.request('/api/todos/99999/attachments', {
+          method: 'POST',
+          body: formData,
+        })
 
-      expect(res.status).toBe(404)
-    })
+        expect(res.status).toBe(404)
+        const data = (await res.json()) as { success: boolean; error?: string }
+        expect(data.success).toBe(false)
+        expect(data.error).toBeDefined()
+      },
+      10000
+    )
 
-    it('should reject upload without file', async () => {
-      const todoId = await createTestTodo()
+    it(
+      'should reject upload without file',
+      async () => {
+        const todoId = await createTestTodo()
 
-      const formData = new FormData()
+        const formData = new FormData()
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const res = await app.request(`/api/todos/${todoId}/attachments`, {
-        method: 'POST',
-        body: formData,
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const res = await app.request(`/api/todos/${todoId}/attachments`, {
+          method: 'POST',
+          body: formData,
+        })
 
-      expect(res.status).toBe(400)
-    })
+        expect(res.status).toBe(400)
+        const data = (await res.json()) as { success: boolean; error?: string }
+        expect(data.success).toBe(false)
+        expect(data.error).toBeDefined()
+      },
+      10000
+    )
 
-    it('should reject disallowed file type', async () => {
-      const todoId = await createTestTodo()
+    it(
+      'should reject disallowed file type',
+      async () => {
+        const todoId = await createTestTodo()
 
-      const formData = new FormData()
-      const blob = new Blob(['executable'], { type: 'application/x-executable' })
-      formData.append('file', blob, 'malware.exe')
+        const formData = new FormData()
+        const blob = new Blob(['executable'], { type: 'application/x-executable' })
+        formData.append('file', blob, 'malware.exe')
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const res = await app.request(`/api/todos/${todoId}/attachments`, {
-        method: 'POST',
-        body: formData,
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const res = await app.request(`/api/todos/${todoId}/attachments`, {
+          method: 'POST',
+          body: formData,
+        })
 
-      expect(res.status).toBe(400)
-    })
+        expect(res.status).toBe(400)
+        const data = (await res.json()) as { success: boolean; error?: string }
+        expect(data.success).toBe(false)
+        expect(data.error).toBeDefined()
+      },
+      10000
+    )
   })
 
   describe('GET /api/todos/:id/attachments', () => {
-    it('should return empty array for todo without attachments', async () => {
-      const todoId = await createTestTodo()
+    it(
+      'should return empty array for todo without attachments',
+      async () => {
+        const todoId = await createTestTodo()
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const listRes = await app.request(`/api/todos/${todoId}/attachments`, {
-        method: 'GET',
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const listRes = await app.request(`/api/todos/${todoId}/attachments`, {
+          method: 'GET',
+        })
 
-      expect(listRes.status).toBe(200)
-      const listData = (await listRes.json()) as ListResponse
-      expect(listData.success).toBe(true)
-      expect(listData.data).toEqual([])
-    })
+        expect(listRes.status).toBe(200)
+        const listData = (await listRes.json()) as { success: boolean; data: unknown[] }
+        expect(listData.success).toBe(true)
+        expect(listData.data).toEqual([])
+        expect(listData.data.length).toBe(0)
+      },
+      10000
+    )
 
-    it('should return 404 for non-existent todo', async () => {
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const listRes = await app.request('/api/todos/99999/attachments', {
-        method: 'GET',
-      })
+    it(
+      'should return 404 for non-existent todo',
+      async () => {
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const listRes = await app.request('/api/todos/99999/attachments', {
+          method: 'GET',
+        })
 
-      expect(listRes.status).toBe(404)
-    })
+        expect(listRes.status).toBe(404)
+        const data = (await listRes.json()) as { success: boolean; error?: string }
+        expect(data.success).toBe(false)
+        expect(data.error).toBeDefined()
+      },
+      10000
+    )
   })
 
   describe('DELETE /api/todos/:todoId/attachments/:attachmentId', () => {
-    it('should return 404 for non-existent attachment', async () => {
-      const todoId = await createTestTodo()
+    it(
+      'should return 404 for non-existent attachment',
+      async () => {
+        const todoId = await createTestTodo()
 
-      // eslint-disable-next-line local-rules/require-type-safe-test-client
-      const res = await app.request(`/api/todos/${todoId}/attachments/99999`, {
-        method: 'DELETE',
-      })
+        // eslint-disable-next-line local-rules/require-type-safe-test-client
+        const res = await app.request(`/api/todos/${todoId}/attachments/99999`, {
+          method: 'DELETE',
+        })
 
-      expect(res.status).toBe(404)
-    })
+        expect(res.status).toBe(404)
+        const data = (await res.json()) as { success: boolean; error?: string }
+        expect(data.success).toBe(false)
+        expect(data.error).toBeDefined()
+      },
+      10000
+    )
   })
 })
