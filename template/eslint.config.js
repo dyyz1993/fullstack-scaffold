@@ -28,6 +28,7 @@ import { noNewOldServiceNaming } from './eslint-rules/no-new-old-service-naming.
 import { noDirectZodImportInFileRoutes } from './eslint-rules/no-direct-zod-import-in-file-routes.js'
 import { requireFileOpenapiProps } from './eslint-rules/require-file-openapi-props.js'
 import { moduleBoundary } from './eslint-rules/module-boundary.js'
+import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 
 const localRules = {
   rules: {
@@ -59,6 +60,7 @@ const localRules = {
     'no-direct-zod-import-in-file-routes': noDirectZodImportInFileRoutes,
     'require-file-openapi-props': requireFileOpenapiProps,
     'module-boundary': moduleBoundary,
+    'limit-type-complexity': limitTypeComplexity,
   },
 }
 
@@ -104,6 +106,7 @@ export default tseslint.config(
       'local-rules/flat-routes-services': 'error',
       'local-rules/no-middleware-in-routes': 'error',
       'local-rules/no-new-old-service-naming': 'error',
+      'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
     },
   },
   {

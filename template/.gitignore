@@ -61,3 +61,4 @@ Thumbs.db
 *.tsbuildinfo
 .pi/
 uploads/**/
+!settings.json

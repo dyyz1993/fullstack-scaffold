@@ -11,7 +11,14 @@ import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
 import type { SSEClient } from '@shared/schemas'
 
-// @ts-expect-error - Type instantiation is excessively deep due to complex route types
+/**
+ * 测试客户端类型
+ *
+ * 注意：此项目通过 patch-package 修改了 TypeScript 的类型实例化深度限制
+ * 从默认的 100 增加到 500，以支持复杂的路由类型推导。
+ *
+ * 参见：patches/typescript+5.8.3.patch
+ */
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {
@@ -20,6 +27,9 @@ export interface TestClientOptions {
   headers?: Record<string, string>
 }
 
+/**
+ * 创建测试客户端
+ */
 export function createTestClient(baseUrl?: string, options?: TestClientOptions): TestClient {
   const app = createApp()
   const defaultHeaders = {

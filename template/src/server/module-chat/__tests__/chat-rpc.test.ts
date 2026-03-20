@@ -155,7 +155,7 @@ describe('Chat Routes with Type-Safe Test Client', () => {
           })
         })
 
-        const result = await wsClient.call('invalidMethod', {})
+        const result = await wsClient.call('invalidMethod' as 'echo', { message: 'test' })
         expect(result).toBeNull()
       } catch (error) {
         // 预期会抛出错误

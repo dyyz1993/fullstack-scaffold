@@ -66,7 +66,6 @@ function createCustomFetch() {
   })
 }
 
-// @ts-expect-error - Type instantiation is excessively deep due to complex route types
 export const apiClient = hc<AdminApiType>(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url),

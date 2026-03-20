@@ -252,7 +252,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       const conn = client.api.notifications.stream.$sse()
 
       let received = false
-      const unsubscribe = conn.on('nonExistentEvent', () => {
+      const unsubscribe = conn.on('nonExistentEvent' as 'notification', () => {
         received = true
       })
 
