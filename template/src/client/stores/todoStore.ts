@@ -30,7 +30,9 @@ export const useTodoStore = create<TodoState>(set => ({
       const response = await apiClient.api.todos.$get()
       const result = await response.json()
       if (result.success) {
-        set({ todos: result.data, loading: false })
+        const data = result.data as Todo[] | { items: Todo[] }
+        const items = Array.isArray(data) ? data : data.items || []
+        set({ todos: items, loading: false })
       } else {
         set({ error: result.error, loading: false })
       }
@@ -160,7 +162,9 @@ export const useTodoStore = create<TodoState>(set => ({
       if (result.success) {
         set(state => {
           const newAttachments = new Map(state.attachments)
-          newAttachments.set(todoId, result.data)
+          const data = result.data as TodoAttachment[] | { items: TodoAttachment[] }
+          const items = Array.isArray(data) ? data : data.items || []
+          newAttachments.set(todoId, items)
           return { attachments: newAttachments }
         })
       }

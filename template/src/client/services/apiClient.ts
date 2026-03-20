@@ -16,7 +16,15 @@ const TOKEN_KEY = 'auth-token'
 
 function getAuthToken(): string | null {
   try {
-    return localStorage.getItem(TOKEN_KEY)
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (typeof parsed === 'string') {
+        return parsed
+      }
+      return parsed.state?.token || null
+    }
+    return null
   } catch {
     return null
   }

@@ -78,7 +78,8 @@ export function websocketPlugin(): Plugin {
               }
             }
 
-            if (runtime && runtime.hasWSPath(req.url)) {
+            const urlObj = new URL(req.url!, 'http://localhost')
+            if (runtime && runtime.hasWSPath(urlObj.pathname)) {
               const { WebSocketServer } = await import('ws')
               const wssInstance = new WebSocketServer({ noServer: true })
               wssInstance.handleUpgrade(req, socket, head, ws => {
