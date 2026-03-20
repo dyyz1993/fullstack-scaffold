@@ -16,7 +16,6 @@ export default defineConfig({
       entry: 'src/server/index.ts',
       exclude: [
         /^\/$/,
-        /^\/(?!api|health).*/, // 不匹配 /api 或 /health 开头的路径，让它们由后端处理
         /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|admin\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
