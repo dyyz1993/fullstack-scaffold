@@ -11,6 +11,7 @@ import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
 import type { SSEClient } from '@shared/schemas'
 
+// @ts-expect-error - Type instantiation is excessively deep due to complex route types
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {

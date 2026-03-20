@@ -44,7 +44,11 @@ const log = logger.api()
 const runtimeAdapter = getNodeRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
-const app = createApp().use('*', async (c, next) => {
+// 先创建基础应用
+const baseApp = createApp()
+
+// 添加日志中间件
+const app = baseApp.use('*', async (c, next) => {
   const start = Date.now()
   await next()
   const ms = Date.now() - start
@@ -84,32 +88,41 @@ if (config.enableDocs) {
   )
 }
 
-app
-  // 生产环境：静态资源服务
-  .use('/*', async (c, next) => {
-    if (hasDist) {
-      return serveStatic({ root: distPath })(c, next)
+// 生产环境：静态资源服务
+if (hasDist) {
+  app.use('/*', async (c, next) => {
+    // API 路由不走静态资源
+    if (c.req.path.startsWith('/api/') || c.req.path.startsWith('/files/')) {
+      return await next()
     }
-    await next()
+    return serveStatic({ root: distPath })(c, next)
   })
-  // Admin 路由返回 admin.html
-  .get('/admin/*', c => {
-    return c.html(adminHtml)
-  })
-  // 其他路由返回 index.html
-  .get('*', c => {
-    return c.html(indexHtml)
-  })
-  .onError((err, c) => {
-    log.error({ err, path: c.req.path }, 'server error')
-    // Always return JSON response
-    c.res.headers.set('Content-Type', 'application/json')
-    const statusCode =
-      err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
-    const message = err.message || 'Internal server error'
-    const responseStatus = statusCode || 500
-    return c.json({ success: false, error: message, status: responseStatus }, responseStatus as 500)
-  })
+}
+
+// Admin 路由返回 admin.html
+app.get('/admin/*', c => {
+  return c.html(adminHtml)
+})
+
+// 其他非 API 路由返回 index.html
+app.get('*', c => {
+  // 如果路径以 /api/ 或 /files/ 开头，让 Hono 继续处理（可能会返回 404）
+  if (c.req.path.startsWith('/api/') || c.req.path.startsWith('/files/')) {
+    return c.notFound()
+  }
+  return c.html(indexHtml)
+})
+
+app.onError((err, c) => {
+  log.error({ err, path: c.req.path }, 'server error')
+  // Always return JSON response
+  c.res.headers.set('Content-Type', 'application/json')
+  const statusCode =
+    err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+  const message = err.message || 'Internal server error'
+  const responseStatus = statusCode || 500
+  return c.json({ success: false, error: message, status: responseStatus }, responseStatus as 500)
+})
 
 export default app
 export type AppType = typeof app

@@ -155,7 +155,6 @@ describe('Chat Routes with Type-Safe Test Client', () => {
           })
         })
 
-        // @ts-expect-error - 测试无效方法
         const result = await wsClient.call('invalidMethod', {})
         expect(result).toBeNull()
       } catch (error) {

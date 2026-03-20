@@ -8,13 +8,13 @@
 import { createApp } from '../app'
 import type { AppBindings } from '../types/bindings'
 import { getDb } from '../db/driver-cloudflare'
-import { NotificationDurableObject } from '@server/core'
+import { RealtimeDurableObject } from '@server/core'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getCloudflareRuntimeAdapter } from '@server/core/runtime-cloudflare'
 
 export interface CloudflareBindings extends AppBindings {
   DB: D1Database
-  NOTIFICATION_DO: DurableObjectNamespace
+  REALTIME_DO: DurableObjectNamespace
 }
 
 const runtimeAdapter = getCloudflareRuntimeAdapter()
@@ -47,6 +47,10 @@ const wrappedApp = app
 
 export default {
   fetch: async (request: Request, env: CloudflareBindings, ctx: ExecutionContext) => {
+    // Set DB binding to globalThis before handling the request
+    // This ensures getDb() can access the database
+    ;(globalThis as unknown as { DB: D1Database }).DB = env.DB
+
     const url = new URL(request.url)
 
     if (url.pathname.startsWith('/api/') || url.pathname === '/health') {
@@ -64,5 +68,5 @@ export default {
   },
 }
 
-export { NotificationDurableObject, getDb }
+export { RealtimeDurableObject, getDb }
 export type AppType = typeof wrappedApp

@@ -25,25 +25,31 @@ const adminHtml = existsSync(adminHtmlPath)
   ? readFileSync(adminHtmlPath, 'utf-8')
   : '<html><body>admin.html not found</body></html>'
 
-// 创建 Hono 应用并添加前端路由处理
+// 创建 Hono 应用
 const app = createApp()
-  .get('/admin/*', c => {
-    return c.html(adminHtml)
-  })
-  .get('*', c => {
-    return c.html(indexHtml)
-  })
+
+// 添加 Admin 路由
+app.get('/admin/*', c => {
+  return c.html(adminHtml)
+})
+
+// SPA fallback - 使用中间件方式，确保 API 路由已经注册后才添加
+app.use('*', async (c, next) => {
+  await next()
+
+  // 如果响应已经是 404，且路径不是 API 或文件路径，则返回 index.html
+  if (c.res.status === 404) {
+    const path = c.req.path
+    if (!path.startsWith('/api/') && !path.startsWith('/files/')) {
+      c.res = c.html(indexHtml)
+    }
+  }
+})
 
 export default app
 
-export {
-  createApp,
-  apiRoutes,
-  notificationRoutes,
-  chatRoutes,
-  adminRoutes,
-  type AppType,
-} from './app'
+export { createApp } from './app'
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 export { getAppConfig, getDatabaseConfig, type AppConfig, type DatabaseConfig } from './config'
 export { createServer, startServer } from './entries/node'
+export type { ClientApiType, AdminApiType, AppType } from './app'

@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from 'hono'
-import { HTTPException } from 'hono/http-exception'
 import { createModuleLoggerSync } from '../utils/logger'
 import { Role, Permission, getPermissionsByRole } from '@shared/modules/admin'
+import { AuthenticationError, AuthorizationError } from '../utils/app-error'
 
 export type UserRole = Role.SUPER_ADMIN | Role.CUSTOMER_SERVICE | Role.USER
 
@@ -90,14 +90,14 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
 
     if (!token) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Missing auth token')
-      throw new HTTPException(401, { message: 'Unauthorized: Missing authentication token' })
+      throw AuthenticationError.tokenMissing()
     }
 
     const user = verifyToken(token, secretKey)
 
     if (!user) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Invalid auth token')
-      throw new HTTPException(401, { message: 'Unauthorized: Invalid authentication token' })
+      throw AuthenticationError.tokenInvalid()
     }
 
     log.info({ userId: user.id, role: user.role, path: c.req.path }, 'User authenticated')
@@ -121,7 +121,7 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
           },
           'Insufficient role'
         )
-        throw new HTTPException(403, { message: 'Forbidden: Insufficient permissions' })
+        throw AuthorizationError.insufficientRole(user.role, options.requiredRole)
       }
     }
 
@@ -142,7 +142,7 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
             },
             'Insufficient permission'
           )
-          throw new HTTPException(403, { message: 'Forbidden: Insufficient permissions' })
+          throw AuthorizationError.permissionDenied(requiredPermission)
         }
       }
     }

@@ -46,17 +46,23 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       const receivedPings: AppSSEProtocol['events']['ping'][] = []
       const receivedConnected: AppSSEProtocol['events']['connected'][] = []
 
-      const unsubscribeNotification = conn.on('notification', notification => {
-        receivedNotifications.push(notification)
-      })
+      const unsubscribeNotification = conn.on(
+        'notification',
+        (notification: (typeof receivedNotifications)[0]) => {
+          receivedNotifications.push(notification)
+        }
+      )
 
-      const unsubscribePing = conn.on('ping', ping => {
+      const unsubscribePing = conn.on('ping', (ping: (typeof receivedPings)[0]) => {
         receivedPings.push(ping)
       })
 
-      const unsubscribeConnected = conn.on('connected', connected => {
-        receivedConnected.push(connected)
-      })
+      const unsubscribeConnected = conn.on(
+        'connected',
+        (connected: (typeof receivedConnected)[0]) => {
+          receivedConnected.push(connected)
+        }
+      )
 
       await new Promise(resolve => setTimeout(resolve, 2000))
 
@@ -75,9 +81,12 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       const receivedNotifications: AppSSEProtocol['events']['notification'][] = []
 
-      const unsubscribe = conn.on('notification', notification => {
-        receivedNotifications.push(notification)
-      })
+      const unsubscribe = conn.on(
+        'notification',
+        (notification: (typeof receivedNotifications)[0]) => {
+          receivedNotifications.push(notification)
+        }
+      )
 
       await new Promise(resolve => setTimeout(resolve, 2000))
 
@@ -99,7 +108,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       const receivedPings: AppSSEProtocol['events']['ping'][] = []
 
-      const unsubscribe = conn.on('ping', ping => {
+      const unsubscribe = conn.on('ping', (ping: (typeof receivedPings)[0]) => {
         receivedPings.push(ping)
       })
 
@@ -119,7 +128,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       const receivedConnected: AppSSEProtocol['events']['connected'][] = []
 
-      const unsubscribe = conn.on('connected', connected => {
+      const unsubscribe = conn.on('connected', (connected: (typeof receivedConnected)[0]) => {
         receivedConnected.push(connected)
       })
 
@@ -139,7 +148,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       const statusHistory: ('connecting' | 'open' | 'closed')[] = []
 
-      const unsubscribe = conn.onStatusChange(status => {
+      const unsubscribe = conn.onStatusChange((status: (typeof statusHistory)[0]) => {
         statusHistory.push(status)
       })
 
@@ -157,7 +166,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     it('should handle errors gracefully', async () => {
       const conn = client.api.notifications.stream.$sse()
 
-      const unsubscribe = conn.onError(error => {
+      const unsubscribe = conn.onError((error: Error) => {
         console.error('SSE error:', error)
       })
 
@@ -175,7 +184,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       const conn = client.api.notifications.stream.$sse()
 
       const receivedEvents: unknown[] = []
-      const unsubscribe = conn.on('notification', event => {
+      const unsubscribe = conn.on('notification', (event: unknown) => {
         receivedEvents.push(event)
       })
 
@@ -220,7 +229,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       const conn = client.api.notifications.stream.$sse()
 
       let errorReceived = false
-      const unsubscribe = conn.onError(error => {
+      const unsubscribe = conn.onError((error: Error) => {
         console.error('SSE error:', error)
         errorReceived = true
       })
@@ -243,7 +252,6 @@ describe('SSE Routes with Type-Safe Test Client', () => {
       const conn = client.api.notifications.stream.$sse()
 
       let received = false
-      // @ts-expect-error - 测试无效事件类型
       const unsubscribe = conn.on('nonExistentEvent', () => {
         received = true
       })

@@ -19,20 +19,20 @@ export interface RealtimeService {
   broadcast(event: string, data: unknown): Promise<void>
 }
 
-let _env: { NOTIFICATION_DO?: DurableObjectNamespace } | null = null
+let _env: { REALTIME_DO?: DurableObjectNamespace } | null = null
 let _realtimeService: RealtimeService | null = null
 
-export function setRealtimeEnv(env: { NOTIFICATION_DO?: DurableObjectNamespace }): void {
+export function setRealtimeEnv(env: { REALTIME_DO?: DurableObjectNamespace }): void {
   _env = env
   _realtimeService = null
 }
 
 function createRealtimeService(): RealtimeService {
-  if (isCloudflare && _env?.NOTIFICATION_DO) {
+  if (isCloudflare && _env?.REALTIME_DO) {
     return {
       async broadcast(event: string, data: unknown): Promise<void> {
-        const id = _env!.NOTIFICATION_DO!.idFromName('global')
-        const stub = _env!.NOTIFICATION_DO!.get(id)
+        const id = _env!.REALTIME_DO!.idFromName('global')
+        const stub = _env!.REALTIME_DO!.get(id)
         await stub.fetch(
           new Request('https://internal/broadcast', {
             method: 'POST',
@@ -65,7 +65,7 @@ export const realtime: RealtimeService = new Proxy({} as RealtimeService, {
   },
 })
 
-export { NotificationDurableObject } from './durable-objects/NotificationDO'
+export { RealtimeDurableObject } from './durable-objects/RealtimeDO'
 export type { RealtimeCore, RPCHandler, EventHandler } from './realtime-core'
 export { createRealtimeCore, createWSMessageHandler } from './realtime-core'
 

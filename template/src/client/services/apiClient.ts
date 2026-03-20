@@ -6,11 +6,10 @@
  */
 
 import { hc } from 'hono/client'
-import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
+import { ClientApiType } from '@server/app'
 
-// Use environment variable for API base URL if available, otherwise use window.location.origin
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
 const TOKEN_KEY = 'auth-token'
@@ -37,7 +36,7 @@ const authenticatedFetch = (url: string | URL | Request, init?: RequestInit): Pr
   })
 }
 
-export const apiClient = hc<AppType>(baseUrl, {
+export const apiClient = hc<ClientApiType>(baseUrl, {
   fetch: authenticatedFetch as typeof fetch,
   webSocket: url => {
     const token = getAuthToken()

@@ -71,6 +71,7 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
       const decoder = new TextDecoder()
       let buffer = ''
       let eventType = 'message'
+      let dataBuffer = ''
 
       while (true) {
         const { done, value } = await reader.read()
@@ -78,18 +79,26 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
 
         buffer += decoder.decode(value, { stream: true })
 
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
+        // Process complete messages (separated by \n\n)
+        const messages = buffer.split('\n\n')
+        // Keep the last incomplete message in buffer
+        buffer = messages.pop() || ''
 
-        for (const line of lines) {
-          if (line.startsWith('event:')) {
-            eventType = line.slice(6).trim()
-          } else if (line.startsWith('data:')) {
-            const data = line.slice(5).trim()
-            this.handleMessage(eventType, data)
-            eventType = 'message'
-          } else if (line === '') {
-            eventType = 'message'
+        for (const message of messages) {
+          const lines = message.split('\n')
+          eventType = 'message'
+          dataBuffer = ''
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              eventType = line.slice(6).trim()
+            } else if (line.startsWith('data:')) {
+              dataBuffer = line.slice(5).trim()
+            }
+          }
+
+          if (dataBuffer) {
+            this.handleMessage(eventType, dataBuffer)
           }
         }
       }

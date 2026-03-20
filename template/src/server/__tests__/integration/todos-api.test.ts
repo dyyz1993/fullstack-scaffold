@@ -98,7 +98,7 @@ describe('Integration: Todos API (Real Database)', () => {
       )
 
       const results = await Promise.all(promises)
-      results.forEach(res => {
+      results.forEach((res: { status: number }) => {
         expect(res.status).toBe(201)
       })
 

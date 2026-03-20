@@ -1,8 +1,9 @@
-/*
+/**
  * @framework-modify
  * @reason 添加权限管理相关的API路由，支持角色权限体系
  * @impact 新增权限管理、角色查询、用户权限查询等API端点
  */
+
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
@@ -596,15 +597,30 @@ export const adminRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
     const notification = await adminService.sendTestNotification(type)
     return c.json({ success: true, data: notification })
   })
-  .openapi(notificationSSERoute, async _c => {
+  .openapi(notificationSSERoute, async c => {
+    // In Cloudflare environment, route SSE to Durable Object for proper broadcast support
+    const env = c.env as { REALTIME_DO?: DurableObjectNamespace } | undefined
+    if (env?.REALTIME_DO) {
+      const id = env.REALTIME_DO.idFromName('global')
+      const stub = env.REALTIME_DO.get(id)
+      // Forward the SSE request to the Durable Object
+      const doRequest = new Request(c.req.url, {
+        method: c.req.method,
+        headers: c.req.raw.headers,
+      })
+      return stub.fetch(doRequest)
+    }
+
+    // Fallback for Node environment
     const { getRuntimeAdapter } = await import('@server/core/runtime')
     const adapter = getRuntimeAdapter()
     if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
-      return (
+      const response = await (
         adapter as { handleSSERequest: () => Response | Promise<Response> }
       ).handleSSERequest()
+      return response
     }
-    return new Response('SSE not supported', { status: 500 })
+    return c.json({ success: false, error: 'SSE not supported' }, 500)
   })
   .openapi(getAvatarRoute, async c => {
     const { id } = c.req.valid('param')

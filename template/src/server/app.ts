@@ -1,19 +1,6 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
-import { apiRoutes } from './module-todos/routes/todos-routes'
-import { permissionRoutes } from './module-permission/routes/permission-routes'
-import { roleRoutes } from './module-permission/routes/role-routes'
-import { auditLogRoutes } from './module-permission/routes/audit-log-routes'
-import { notificationRoutes } from './module-notifications/routes/notification-routes'
-import { chatRoutes } from './module-chat/routes/chat-routes'
-import { adminRoutes } from './module-admin/routes/admin-routes'
-import { captchaRoutes } from './module-captcha/routes/captcha-routes'
-import { orderRoutes } from './module-order/routes/order-routes'
-import { ticketRoutes } from './module-ticket/routes/ticket-routes'
-import { disputeRoutes } from './module-dispute/routes/dispute-routes'
-import { contentRoutes } from './module-content/routes/content-routes'
-import { fileRoutes } from './module-file/routes/file-routes'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
@@ -21,18 +8,60 @@ import { realtimeEnvMiddleware } from './middleware/realtime-env'
 import { captchaMiddleware } from './middleware/captcha'
 import { auditLogMiddleware } from './middleware/audit-log'
 import { createModuleLoggerSync } from './utils/logger'
+import { AppError, toAppError } from './utils/app-error'
+import { adminApiRoutes, clientApiRoutes } from './route-registry'
+import { fileRoutes } from './module-file/routes/file-routes'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 
-// Global error handler that ensures JSON responses
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function globalErrorHandler(err: Error, c: any) {
   const log = createModuleLoggerSync('api')
 
-  // Always set JSON content type
   c.res.headers.set('Content-Type', 'application/json')
 
-  // Handle Zod validation errors
+  if (AppError.isAppError(err)) {
+    const logData = {
+      errorType: err.name,
+      code: err.code,
+      message: err.message,
+      status: err.statusCode,
+      details: err.details,
+      path: c.req.path,
+      method: c.req.method,
+    }
+
+    switch (err.logLevel) {
+      case 'debug':
+        log.debug(logData, err.message)
+        break
+      case 'info':
+        log.info(logData, err.message)
+        break
+      case 'warn':
+        log.warn(logData, err.message)
+        break
+      case 'error':
+        log.error({ ...logData, stack: err.stack, cause: err.cause }, err.message)
+        break
+    }
+
+    const isProduction = process.env.NODE_ENV === 'production'
+    const shouldHideDetails = isProduction && err.statusCode >= 500
+
+    return c.json(
+      {
+        success: false,
+        error: shouldHideDetails ? 'Internal server error' : err.message,
+        code: err.code,
+        status: err.statusCode,
+        details: shouldHideDetails ? undefined : err.details,
+        timestamp: err.timestamp,
+      },
+      err.statusCode
+    )
+  }
+
   if (err instanceof ZodError) {
     const formattedErrors = err.issues.map(issue => ({
       field: issue.path.join('.'),
@@ -54,6 +83,7 @@ function globalErrorHandler(err: Error, c: any) {
       {
         success: false,
         error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
         status: 400,
         details: formattedErrors,
       },
@@ -61,7 +91,6 @@ function globalErrorHandler(err: Error, c: any) {
     )
   }
 
-  // Handle HTTP exceptions (including auth errors)
   if (err instanceof HTTPException) {
     log.warn(
       {
@@ -79,13 +108,14 @@ function globalErrorHandler(err: Error, c: any) {
       {
         success: false,
         error: err.message,
+        code: 'HTTP_EXCEPTION',
         status: statusCode,
       },
       statusCode
     )
   }
 
-  // Handle all other errors
+  const appError = toAppError(err)
   log.error(
     {
       errorType: 'UnknownError',
@@ -97,11 +127,14 @@ function globalErrorHandler(err: Error, c: any) {
     'Unhandled error'
   )
 
+  const isProduction = process.env.NODE_ENV === 'production'
   return c.json(
     {
       success: false,
-      error: err.message || 'Internal server error',
+      error: isProduction ? 'Internal server error' : appError.message,
+      code: appError.code,
       status: 500,
+      timestamp: appError.timestamp,
     },
     500
   )
@@ -121,20 +154,9 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         windowMs: 60000,
       })
     )
-    .route('/api', notificationRoutes)
-    .route('/api', permissionRoutes)
-    .route('/api', roleRoutes)
-    .route('/api', auditLogRoutes)
-    .route('/api', chatRoutes)
-    .route('/api', apiRoutes)
-    .route('/api', adminRoutes)
-    .route('/api', captchaRoutes)
-    .route('/api', orderRoutes)
-    .route('/api', ticketRoutes)
-    .route('/api', disputeRoutes)
-    .route('/api', contentRoutes)
+    .route('/', clientApiRoutes)
+    .route('/', adminApiRoutes)
     .route('/files', fileRoutes)
-    .route('/api', fileRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')
@@ -154,7 +176,6 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ success: false, message: 'Failed to cleanup database' }, 500)
       }
     })
-    // Register global error handler to ensure JSON responses
     .onError(globalErrorHandler)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -162,7 +183,6 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
   return app
 }
-
+export type AdminApiType = typeof adminApiRoutes
+export type ClientApiType = typeof clientApiRoutes
 export type AppType = ReturnType<typeof createApp>
-
-export { apiRoutes, notificationRoutes, chatRoutes, adminRoutes }

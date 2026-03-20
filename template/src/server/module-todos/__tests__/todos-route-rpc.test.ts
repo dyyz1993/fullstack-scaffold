@@ -442,9 +442,11 @@ describe('Todo Routes - Business Logic Tests', () => {
       const data = await res.json()
 
       expect(data.success).toBe(true)
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
         expect(data.data).toHaveLength(3)
-        const timestamps = data.data.map(t => new Date(t.createdAt).getTime())
+        const timestamps = data.data.map((t: { createdAt: string }) =>
+          new Date(t.createdAt).getTime()
+        )
         for (let i = 0; i < timestamps.length - 1; i++) {
           expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i + 1])
         }

@@ -3,7 +3,7 @@ import { setRealtimeEnv } from '../core/index'
 
 export function realtimeEnvMiddleware(): MiddlewareHandler {
   return async (c, next) => {
-    const env = c.env as { NOTIFICATION_DO?: DurableObjectNamespace } | undefined
+    const env = c.env as { REALTIME_DO?: DurableObjectNamespace } | undefined
     if (env) {
       setRealtimeEnv(env)
     }

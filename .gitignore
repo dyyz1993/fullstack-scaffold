@@ -8,3 +8,4 @@ lib/**.trae/
 .trae/documents/
 /template/.trae/documents/
 my-biomimic-app
+.wrangler/

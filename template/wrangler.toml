@@ -12,12 +12,16 @@ database_name = "biomimic-todo-db"
 database_id = "e4253b7e-be6b-4ca7-bf19-7c3725f8e32c"
 
 [[durable_objects.bindings]]
-name = "NOTIFICATION_DO"
-class_name = "NotificationDurableObject"
+name = "REALTIME_DO"
+class_name = "RealtimeDurableObject"
 
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["NotificationDurableObject"]
+
+[[migrations]]
+tag = "v2"
+renamed_classes = [{ from = "NotificationDurableObject", to = "RealtimeDurableObject" }]
 
 [assets]
 directory = "./dist/client"

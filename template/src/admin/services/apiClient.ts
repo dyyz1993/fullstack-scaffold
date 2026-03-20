@@ -3,13 +3,13 @@
  */
 
 import { hc } from 'hono/client'
-import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { createRequestInterceptor } from './requestInterceptor'
 import type { AdminFetchExtendOptions } from './types'
 import { useCaptchaStore } from '../stores/captchaStore'
 import { useLoadingStore } from '../stores/loadingStore'
+import type { AdminApiType } from '@server/index'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
@@ -66,7 +66,8 @@ function createCustomFetch() {
   })
 }
 
-export const apiClient = hc<AppType>(baseUrl, {
+// @ts-expect-error - Type instantiation is excessively deep due to complex route types
+export const apiClient = hc<AdminApiType>(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url),
   sse: url => {

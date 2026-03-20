@@ -36,7 +36,7 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
     isNode: false,
   }
 
-  private core: RealtimeCore
+  readonly core: RealtimeCore
   private wsPaths = new Set<string>()
   private ssePaths = new Set<string>()
 
@@ -61,6 +61,9 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
   }
 
   broadcast(event: string, data: unknown, exclude: string[] = []): void {
+    console.warn(
+      `[Broadcast] event: ${event}, data: ${JSON.stringify(data)}, exclude: ${exclude}, sseClients: ${this.core.sseClients.size}`
+    )
     this.core.broadcast(data, exclude, event)
   }
 
@@ -114,6 +117,30 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
 
   async handleSSERequest(): Promise<Response> {
     const clientId = crypto.randomUUID()
+    let keepAliveTimeout: ReturnType<typeof setTimeout> | null = null
+    let isActive = true
+
+    console.warn(
+      `[SSE] New connection, clientId: ${clientId}, current sseClients: ${this.core.sseClients.size}`
+    )
+
+    const scheduleKeepAlive = (controller: ReadableStreamDefaultController) => {
+      if (!isActive) return
+
+      keepAliveTimeout = setTimeout(() => {
+        if (!isActive) return
+
+        try {
+          controller.enqueue(new TextEncoder().encode(':ping\n\n'))
+          // Schedule next ping
+          scheduleKeepAlive(controller)
+        } catch {
+          // Connection closed, clean up
+          isActive = false
+          this.core.sseClients.delete(clientId)
+        }
+      }, 30000)
+    }
 
     const stream = new ReadableStream({
       start: controller => {
@@ -128,10 +155,22 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
           },
         })
 
+        console.warn(`[SSE] Client added, total sseClients: ${this.core.sseClients.size}`)
+
+        // Send initial connected event
         const connectMsg = `event: connected\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`
         controller.enqueue(new TextEncoder().encode(connectMsg))
+
+        // Start keep-alive pings using recursive setTimeout
+        scheduleKeepAlive(controller)
       },
       cancel: () => {
+        console.warn(`[SSE] Connection cancelled, clientId: ${clientId}`)
+        isActive = false
+        if (keepAliveTimeout) {
+          clearTimeout(keepAliveTimeout)
+          keepAliveTimeout = null
+        }
         this.core.sseClients.delete(clientId)
       },
     })
@@ -139,8 +178,9 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         Connection: 'keep-alive',
+        'X-Accel-Buffering': 'no',
       },
     })
   }

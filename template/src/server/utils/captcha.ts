@@ -10,6 +10,9 @@ interface CaptchaData {
 const captchaStore = new Map<string, CaptchaData>()
 
 export function generateCaptcha(): { id: string; image: string } {
+  // Cleanup expired captchas on each generation (since setInterval is not allowed in CF Workers)
+  cleanupExpiredCaptchas()
+
   const id = Math.random().toString(36).substring(2) + Date.now().toString(36)
   const code = Math.random().toString(36).substring(2, 7).toUpperCase()
 
@@ -20,10 +23,6 @@ export function generateCaptcha(): { id: string; image: string } {
   })
 
   const image = generateCaptchaSVG(code)
-
-  setTimeout(() => {
-    captchaStore.delete(id)
-  }, CAPTCHA_EXPIRY)
 
   return { id, image }
 }
@@ -116,4 +115,5 @@ export function cleanupExpiredCaptchas(): void {
   }
 }
 
-setInterval(cleanupExpiredCaptchas, 60000)
+// Note: setInterval is not allowed in Cloudflare Workers global scope
+// Cleanup is triggered on each generateCaptcha call instead

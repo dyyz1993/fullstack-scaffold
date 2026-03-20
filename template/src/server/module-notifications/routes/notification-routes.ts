@@ -118,14 +118,29 @@ const deleteRoute = createRoute({
 })
 
 export const notificationRoutes = new OpenAPIHono()
-  .openapi(streamRoute, async _c => {
+  .openapi(streamRoute, async c => {
+    // In Cloudflare environment, route SSE to Durable Object for proper broadcast support
+    const env = c.env as { REALTIME_DO?: DurableObjectNamespace } | undefined
+    if (env?.REALTIME_DO) {
+      const id = env.REALTIME_DO.idFromName('global')
+      const stub = env.REALTIME_DO.get(id)
+      // Forward the SSE request to the Durable Object
+      const doRequest = new Request(c.req.url, {
+        method: c.req.method,
+        headers: c.req.raw.headers,
+      })
+      return stub.fetch(doRequest)
+    }
+
+    // Fallback for Node environment
     const adapter = getRuntimeAdapter()
     if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
-      return (
+      const response = await (
         adapter as { handleSSERequest: () => Response | Promise<Response> }
       ).handleSSERequest()
+      return response
     }
-    return new Response('SSE not supported', { status: 500 })
+    return c.json({ success: false, error: 'SSE not supported' }, 500)
   })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')

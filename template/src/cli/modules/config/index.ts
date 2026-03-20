@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { getClient, getBaseUrl, setBaseUrl } from '../../utils/api'
+import { getBaseUrl, setBaseUrl, getClient } from '../../utils/api'
 import { getLogger } from '../../utils/logger'
 import fs from 'fs'
 import path from 'path'
@@ -98,7 +98,8 @@ export function registerConfigCommands(program: Command) {
       const client = getClient()
 
       try {
-        const res = await client.health.$get()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res = await (client as any).health.$get()
         const data = await res.json()
         logger.success('Server is reachable')
         logger.info(JSON.stringify(data, null, 2))
