@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppBindings } from '../../types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
 import { ChatProtocolSchema, WebSocketStatusSchema } from '@shared/modules/chat'
-import { successResponse } from '@server/utils/route-helpers'
+import { successResponse, success } from '@server/utils/route-helpers'
 import '../services/chat-service'
 
 const statusRoute = createRoute({
@@ -33,7 +33,7 @@ const wsRoute = createRoute({
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
   .openapi(statusRoute, async c => {
-    return c.json({ success: true, data: { connectedClients: 0 } })
+    return c.json(success({ connectedClients: 0 }))
   })
   .openapi(wsRoute, async _c => {
     const adapter = getRuntimeAdapter()

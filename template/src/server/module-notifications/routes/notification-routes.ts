@@ -8,7 +8,14 @@ import {
   UnreadCountSchema,
   NotificationIdSchema,
 } from '@shared/schemas'
-import { successResponse, errorResponse, listResponse } from '@server/utils/route-helpers'
+import {
+  successResponse,
+  errorResponse,
+  listResponse,
+  success,
+  created,
+} from '@server/utils/route-helpers'
+import { NotFoundError } from '@server/utils/app-error'
 import { getRuntimeAdapter } from '@server/core/runtime'
 
 const streamRoute = createRoute({
@@ -149,43 +156,37 @@ export const notificationRoutes = new OpenAPIHono()
       limit: query.limit ? parseInt(query.limit) : 20,
       cursor: query.cursor,
     })
-    return c.json({ success: true, data: { items: result.data, nextCursor: result.nextCursor } })
+    return c.json(success({ items: result.data, nextCursor: result.nextCursor }))
   })
   .openapi(unreadCountRoute, async c => {
     const count = notificationService.getUnreadCount()
-    return c.json({ success: true, data: { count } })
+    return c.json(success({ count }))
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const notification = notificationService.getNotification(id)
-    if (!notification) {
-      return c.json({ success: false, error: 'Notification not found' }, 404)
-    }
-    return c.json({ success: true, data: notification })
+    if (!notification) throw new NotFoundError('Notification', id)
+    return c.json(success(notification))
   })
   .openapi(createRouteDef, async c => {
     const data = c.req.valid('json')
     const notification = await notificationService.createNotificationAndBroadcast(data)
 
-    return c.json({ success: true, data: notification }, 201)
+    return c.json(created(notification), 201)
   })
   .openapi(markAllReadRoute, async c => {
     const count = notificationService.markAllAsRead()
-    return c.json({ success: true, data: { count } })
+    return c.json(success({ count }))
   })
   .openapi(markReadRoute, async c => {
     const { id } = c.req.valid('param')
     const notification = notificationService.markAsRead(id)
-    if (!notification) {
-      return c.json({ success: false, error: 'Notification not found' }, 404)
-    }
-    return c.json({ success: true, data: notification })
+    if (!notification) throw new NotFoundError('Notification', id)
+    return c.json(success(notification))
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const deleted = notificationService.deleteNotification(id)
-    if (!deleted) {
-      return c.json({ success: false, error: 'Notification not found' }, 404)
-    }
-    return c.json({ success: true, data: { id } })
+    if (!deleted) throw new NotFoundError('Notification', id)
+    return c.json(success({ id }))
   })

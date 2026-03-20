@@ -1,7 +1,8 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as contentService from '../services/content-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success, created } from '../../utils/route-helpers'
+import { NotFoundError } from '@server/utils/app-error'
 import { authMiddleware } from '../../middleware/auth'
 import { Permission } from '@shared/modules/permission'
 import {
@@ -115,35 +116,29 @@ const deleteRoute = createRoute({
 export const contentRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const result = await contentService.getContents()
-    return c.json({ success: true, data: result })
+    return c.json(success(result))
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await contentService.getContentById(id)
-    if (!result) {
-      return c.json({ success: false, error: 'Content not found' }, 404)
-    }
-    return c.json({ success: true, data: result })
+    if (!result) throw new NotFoundError('Content', id)
+    return c.json(success(result))
   })
   .openapi(createRouteDef, async c => {
     const body = c.req.valid('json')
     const result = await contentService.createContent(body)
-    return c.json({ success: true, data: result }, 201)
+    return c.json(created(result), 201)
   })
   .openapi(updateRoute, async c => {
     const { id } = c.req.valid('param')
     const body = c.req.valid('json')
     const result = await contentService.updateContent(id, body)
-    if (!result) {
-      return c.json({ success: false, error: 'Content not found' }, 404)
-    }
-    return c.json({ success: true, data: result })
+    if (!result) throw new NotFoundError('Content', id)
+    return c.json(success(result))
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await contentService.deleteContent(id)
-    if (!result) {
-      return c.json({ success: false, error: 'Content not found' }, 404)
-    }
-    return c.json({ success: true, data: { message: 'Deleted successfully' } })
+    if (!result) throw new NotFoundError('Content', id)
+    return c.json(success({ message: 'Deleted successfully' }))
   })

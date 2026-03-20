@@ -7,6 +7,8 @@ import {
   defineDeleteResponses,
   idRequest,
   bodyRequest,
+  success,
+  created,
 } from '../../utils/route-helpers'
 import { authMiddleware } from '../../middleware/auth'
 import { Permission } from '@shared/modules/permission'
@@ -94,36 +96,36 @@ const resolveRoute = createRoute({
 export const disputeRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const result = await disputeService.getDisputes()
-    return c.json({ success: true, data: result })
+    return c.json(success(result))
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await disputeService.getDisputeById(id)
     if (!result) throw NotFoundError.dispute(id)
-    return c.json({ success: true, data: result })
+    return c.json(success(result))
   })
   .openapi(createRouteDef, async c => {
     const body = c.req.valid('json')
     const result = await disputeService.createDispute(body)
-    return c.json({ success: true, data: result }, 201)
+    return c.json(created(result), 201)
   })
   .openapi(updateRoute, async c => {
     const { id } = c.req.valid('param')
     const body = c.req.valid('json')
     const result = await disputeService.updateDispute(id, body)
     if (!result) throw NotFoundError.dispute(id)
-    return c.json({ success: true, data: result })
+    return c.json(success(result))
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await disputeService.deleteDispute(id)
     if (!result.success) throw NotFoundError.dispute(id)
-    return c.json({ success: true, data: { message: 'Deleted successfully' } })
+    return c.json(success({ message: 'Deleted successfully' }))
   })
   .openapi(resolveRoute, async c => {
     const { id } = c.req.valid('param')
     const body = c.req.valid('json')
     const result = await disputeService.resolveDispute(id, body)
     if (!result) throw new BusinessError('Cannot resolve dispute in current state')
-    return c.json({ success: true, data: result })
+    return c.json(success(result))
   })

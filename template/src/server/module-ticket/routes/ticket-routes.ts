@@ -1,7 +1,8 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as ticketService from '../services/ticket-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success, created } from '../../utils/route-helpers'
+import { NotFoundError } from '@server/utils/app-error'
 import { authMiddleware } from '../../middleware/auth'
 import { Permission } from '@shared/modules/permission'
 import {
@@ -161,52 +162,42 @@ const closeRoute = createRoute({
 export const ticketRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const result = await ticketService.getTickets()
-    return c.json({ success: true, data: result })
+    return c.json(success(result))
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await ticketService.getTicketById(id)
-    if (!result) {
-      return c.json({ success: false, error: 'Ticket not found' }, 404)
-    }
-    return c.json({ success: true, data: result })
+    if (!result) throw new NotFoundError('Ticket', id)
+    return c.json(success(result))
   })
   .openapi(createRouteDef, async c => {
     const body = c.req.valid('json')
     const result = await ticketService.createTicket(body)
-    return c.json({ success: true, data: result }, 201)
+    return c.json(created(result), 201)
   })
   .openapi(updateRoute, async c => {
     const { id } = c.req.valid('param')
     const body = c.req.valid('json')
     const result = await ticketService.updateTicket(id, body)
-    if (!result) {
-      return c.json({ success: false, error: 'Ticket not found' }, 404)
-    }
-    return c.json({ success: true, data: result })
+    if (!result) throw new NotFoundError('Ticket', id)
+    return c.json(success(result))
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await ticketService.deleteTicket(id)
-    if (!result.success) {
-      return c.json({ success: false, error: 'Ticket not found' }, 404)
-    }
-    return c.json({ success: true, data: { message: 'Deleted successfully' } })
+    if (!result.success) throw new NotFoundError('Ticket', id)
+    return c.json(success({ message: 'Deleted successfully' }))
   })
   .openapi(replyRoute, async c => {
     const { id } = c.req.valid('param')
     const body = c.req.valid('json')
     const result = await ticketService.replyTicket(id, body)
-    if (!result) {
-      return c.json({ success: false, error: 'Cannot reply ticket' }, 400)
-    }
-    return c.json({ success: true, data: result })
+    if (!result) throw new NotFoundError('Ticket', id)
+    return c.json(success(result))
   })
   .openapi(closeRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await ticketService.closeTicket(id)
-    if (!result) {
-      return c.json({ success: false, error: 'Cannot close ticket' }, 400)
-    }
-    return c.json({ success: true, data: result })
+    if (!result) throw new NotFoundError('Ticket', id)
+    return c.json(success(result))
   })

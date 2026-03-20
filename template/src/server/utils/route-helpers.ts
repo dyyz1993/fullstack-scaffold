@@ -194,3 +194,7 @@ export function bodyRequest<T extends z.ZodTypeAny>(schema: T) {
 export function queryRequest<T extends z.ZodObject<Record<string, z.ZodTypeAny>>>(schema: T) {
   return { query: schema }
 }
+
+// ==================== 统一响应辅助函数 ====================
+
+export { success, created, list, deleted } from './response'

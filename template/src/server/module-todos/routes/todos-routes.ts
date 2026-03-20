@@ -12,8 +12,9 @@ import {
   UploadFileSchema,
   AttachmentIdResponseSchema,
 } from '@shared/schemas'
-import { successResponse, errorResponse } from '@server/utils/route-helpers'
+import { successResponse, errorResponse, success, list, created } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
+import { NotFoundError, ValidationError } from '@server/utils/app-error'
 
 const TodoListSchema = z.array(TodoSchema)
 
@@ -151,53 +152,45 @@ const deleteAttachmentRoute = createRoute({
 export const apiRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const todos = await todoService.listTodos()
-    return c.json({ success: true, data: todos })
+    return c.json(list(todos))
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const todo = await todoService.getTodo(parseInt(id))
-    if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404)
-    }
-    return c.json({ success: true, data: todo })
+    if (!todo) throw new NotFoundError('Todo', id)
+    return c.json(success(todo))
   })
   .openapi(createRouteDef, async c => {
     const data = c.req.valid('json')
     const todo = await todoService.createTodo(data)
-    return c.json({ success: true, data: todo }, 201)
+    return c.json(created(todo), 201)
   })
   .openapi(updateRoute, async c => {
     const { id } = c.req.valid('param')
     const data = c.req.valid('json')
     const todo = await todoService.updateTodo(parseInt(id), data)
-    if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404)
-    }
-    return c.json({ success: true, data: todo })
+    if (!todo) throw new NotFoundError('Todo', id)
+    return c.json(success(todo))
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const numericId = parseInt(id)
     const result = await todoService.deleteTodo(numericId)
-    if (!result) {
-      return c.json({ success: false, error: 'Todo not found' }, 404)
-    }
-    return c.json({ success: true, data: { id: numericId } })
+    if (!result) throw new NotFoundError('Todo', id)
+    return c.json(success({ id: numericId }))
   })
   .openapi(uploadAttachmentRoute, async c => {
     const { id } = c.req.valid('param')
     const todoId = parseInt(id)
 
     const todo = await todoService.getTodo(todoId)
-    if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404)
-    }
+    if (!todo) throw new NotFoundError('Todo', id)
 
     const body = c.req.valid('form')
     const file = body['file']
 
     if (!file || !(file instanceof File)) {
-      return c.json({ success: false, error: 'No file uploaded' }, 400)
+      throw new ValidationError('No file uploaded')
     }
 
     const user = getAuthUser(c)
@@ -215,9 +208,9 @@ export const apiRoutes = new OpenAPIHono()
         user?.id
       )
 
-      return c.json({ success: true, data: attachment }, 201)
+      return c.json(created(attachment), 201)
     } catch (error) {
-      return c.json({ success: false, error: (error as Error).message }, 400)
+      throw new ValidationError((error as Error).message)
     }
   })
   .openapi(listAttachmentsRoute, async c => {
@@ -225,29 +218,23 @@ export const apiRoutes = new OpenAPIHono()
     const todoId = parseInt(id)
 
     const todo = await todoService.getTodo(todoId)
-    if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404)
-    }
+    if (!todo) throw new NotFoundError('Todo', id)
 
     const attachments = await todoService.listAttachments(todoId)
-    return c.json({ success: true, data: attachments })
+    return c.json(list(attachments))
   })
   .openapi(getTodoWithAttachmentsRoute, async c => {
     const { id } = c.req.valid('param')
     const todo = await todoService.getTodoWithAttachments(parseInt(id))
-    if (!todo) {
-      return c.json({ success: false, error: 'Todo not found' }, 404)
-    }
-    return c.json({ success: true, data: todo })
+    if (!todo) throw new NotFoundError('Todo', id)
+    return c.json(success(todo))
   })
   .openapi(deleteAttachmentRoute, async c => {
     const { attachmentId } = c.req.valid('param')
     const numericId = parseInt(attachmentId)
     const result = await todoService.deleteAttachment(numericId)
-    if (!result) {
-      return c.json({ success: false, error: 'Attachment not found' }, 404)
-    }
-    return c.json({ success: true, data: { id: numericId } })
+    if (!result) throw new NotFoundError('Attachment', attachmentId)
+    return c.json(success({ id: numericId }))
   })
   .doc('/docs', {
     openapi: '3.0.0',
