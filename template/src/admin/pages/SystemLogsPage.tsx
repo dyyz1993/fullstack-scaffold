@@ -3,37 +3,27 @@ import { Table, Card, Input, Select, Space, Tag, Button, Descriptions, Modal } f
 import { SearchOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useAuditLogStore } from '../hooks/useAuditLogs'
 import type { AuditLogType } from '@shared/modules/audit'
+import {
+  RESOURCE_TYPES,
+  RESOURCE_LABELS,
+  ACTION_TYPES,
+  ACTION_LABELS,
+  ACTION_COLORS,
+  type ResourceType,
+  type ActionType,
+} from '@shared/constants'
 
 const { Option } = Select
-
-const ACTION_COLORS: Record<string, string> = {
-  create: 'green',
-  update: 'blue',
-  delete: 'red',
-  assign: 'cyan',
-  revoke: 'orange',
-}
-
-const ACTION_LABELS: Record<string, string> = {
-  create: '创建',
-  update: '更新',
-  delete: '删除',
-  assign: '分配',
-  revoke: '撤销',
-}
-
-const RESOURCE_LABELS: Record<string, string> = {
-  role: '角色',
-  permission: '权限',
-  user: '用户',
-  route: '路由',
-}
 
 export const SystemLogsPage: React.FC = () => {
   const { logs, loading, fetchLogs } = useAuditLogStore()
   const [selectedLog, setSelectedLog] = useState<AuditLogType | null>(null)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    userId: string
+    action: ActionType | ''
+    resourceType: ResourceType | ''
+  }>({
     userId: '',
     action: '',
     resourceType: '',
@@ -44,7 +34,11 @@ export const SystemLogsPage: React.FC = () => {
   }, [fetchLogs])
 
   const handleSearch = () => {
-    fetchLogs(filters)
+    fetchLogs({
+      userId: filters.userId || undefined,
+      action: filters.action || undefined,
+      resourceType: filters.resourceType || undefined,
+    })
   }
 
   const handleReset = () => {
@@ -76,7 +70,7 @@ export const SystemLogsPage: React.FC = () => {
       dataIndex: 'action',
       key: 'action',
       width: 100,
-      render: (action: string) => (
+      render: (action: ActionType) => (
         <Tag color={ACTION_COLORS[action] || 'default'}>{ACTION_LABELS[action] || action}</Tag>
       ),
     },
@@ -85,7 +79,7 @@ export const SystemLogsPage: React.FC = () => {
       dataIndex: 'resourceType',
       key: 'resourceType',
       width: 120,
-      render: (type: string) => RESOURCE_LABELS[type] || type,
+      render: (type: ResourceType) => RESOURCE_LABELS[type] || type,
     },
     {
       title: '资源ID',
@@ -133,27 +127,30 @@ export const SystemLogsPage: React.FC = () => {
           <Select
             placeholder="操作类型"
             value={filters.action || undefined}
-            onChange={value => setFilters({ ...filters, action: value || '' })}
+            onChange={value => setFilters({ ...filters, action: (value || '') as ActionType | '' })}
             style={{ width: 120 }}
             allowClear
           >
-            <Option value="create">创建</Option>
-            <Option value="update">更新</Option>
-            <Option value="delete">删除</Option>
-            <Option value="assign">分配</Option>
-            <Option value="revoke">撤销</Option>
+            {Object.entries(ACTION_TYPES).map(([key, value]) => (
+              <Option key={key} value={value}>
+                {ACTION_LABELS[value]}
+              </Option>
+            ))}
           </Select>
           <Select
             placeholder="资源类型"
             value={filters.resourceType || undefined}
-            onChange={value => setFilters({ ...filters, resourceType: value || '' })}
+            onChange={value =>
+              setFilters({ ...filters, resourceType: (value || '') as ResourceType | '' })
+            }
             style={{ width: 120 }}
             allowClear
           >
-            <Option value="role">角色</Option>
-            <Option value="permission">权限</Option>
-            <Option value="user">用户</Option>
-            <Option value="route">路由</Option>
+            {Object.entries(RESOURCE_TYPES).map(([key, value]) => (
+              <Option key={key} value={value}>
+                {RESOURCE_LABELS[value]}
+              </Option>
+            ))}
           </Select>
           <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
             搜索

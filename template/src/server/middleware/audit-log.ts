@@ -2,6 +2,12 @@ import type { MiddlewareHandler } from 'hono'
 import { getAuthUser } from '../utils/auth'
 import { auditLogService } from '../module-permission/services/audit-log-service'
 import { logger } from '../utils/logger'
+import {
+  PATH_TO_RESOURCE_TYPE,
+  ACTION_TYPES,
+  type ResourceType,
+  type ActionType,
+} from '@shared/constants'
 
 const log = logger.api()
 
@@ -26,19 +32,16 @@ export function auditLogMiddleware(): MiddlewareHandler {
       'Audit log middleware checking'
     )
 
-    // 只记录API请求，排除公开API
     if (!path.startsWith('/api/') || path.startsWith('/api/permissions/')) {
       log.info({ path }, 'Skipping: not API or public API')
       return
     }
 
-    // 只记录写操作（POST, PUT, DELETE, PATCH）
     if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
       log.info({ method }, 'Skipping: not write operation')
       return
     }
 
-    // 只记录成功的操作（2xx）
     if (status < 200 || status >= 300) {
       log.info({ status }, 'Skipping: not successful operation')
       return
@@ -50,21 +53,20 @@ export function auditLogMiddleware(): MiddlewareHandler {
       return
     }
 
-    // 确定操作类型
-    let action = 'unknown'
+    let action: ActionType = ACTION_TYPES.CREATE
     if (method === 'POST') {
-      action = 'create'
+      action = ACTION_TYPES.CREATE
     } else if (method === 'PUT' || method === 'PATCH') {
-      action = 'update'
+      action = ACTION_TYPES.UPDATE
     } else if (method === 'DELETE') {
-      action = 'delete'
+      action = ACTION_TYPES.DELETE
     }
 
-    // 确定资源类型
     const pathParts = path.split('/').filter(Boolean)
-    let resourceType = 'unknown'
+    let resourceType: ResourceType = 'user' as ResourceType
     if (pathParts.length >= 2) {
-      resourceType = pathParts[1] // /api/contents -> contents
+      const pathSegment = pathParts[1]
+      resourceType = PATH_TO_RESOURCE_TYPE[pathSegment] || ('unknown' as ResourceType)
     }
 
     try {

@@ -1,12 +1,17 @@
 import { create } from 'zustand'
 import { apiClient } from '../services/apiClient'
 import type { AuditLogType } from '@shared/modules/audit'
+import { type ResourceType, type ActionType } from '@shared/constants'
 
 interface AuditLogState {
   logs: AuditLogType[]
   loading: boolean
   error: string | null
-  fetchLogs: (params?: { userId?: string; action?: string; resourceType?: string }) => Promise<void>
+  fetchLogs: (params?: {
+    userId?: string
+    action?: ActionType
+    resourceType?: ResourceType
+  }) => Promise<void>
 }
 
 export const useAuditLogStore = create<AuditLogState>(set => ({

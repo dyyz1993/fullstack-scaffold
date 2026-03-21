@@ -3,6 +3,7 @@ import { getDb } from '../../db'
 import { permissionAuditLogs } from '../../db/schema'
 import { eq, and, gte, lte, desc } from 'drizzle-orm'
 import { transformAuditLog } from '../../utils/date'
+import { type ResourceType, type ActionType } from '@shared/constants'
 
 export class AuditLogService {
   async create(data: NewPermissionAuditLog): Promise<ReturnType<typeof transformAuditLog>> {
@@ -40,7 +41,7 @@ export class AuditLogService {
   }
 
   async getByResource(
-    resourceType: string,
+    resourceType: ResourceType,
     resourceId?: string
   ): Promise<ReturnType<typeof transformAuditLog>[]> {
     const db = await getDb()
@@ -58,8 +59,8 @@ export class AuditLogService {
 
   async search(query: {
     userId?: string
-    action?: string
-    resourceType?: string
+    action?: ActionType
+    resourceType?: ResourceType
     startDate?: Date
     endDate?: Date
   }): Promise<ReturnType<typeof transformAuditLog>[]> {

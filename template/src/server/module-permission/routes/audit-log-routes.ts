@@ -4,7 +4,7 @@ import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
 import { auditLogService } from '../services/audit-log-service'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
-import { AuditLogSchema } from '@shared/modules/audit'
+import { AuditLogSchema, ResourceTypeSchema, ActionTypeSchema } from '@shared/modules/audit'
 
 const getAuditLogsRoute = createRoute({
   method: 'get',
@@ -17,8 +17,8 @@ const getAuditLogsRoute = createRoute({
       limit: z.string().optional(),
       offset: z.string().optional(),
       userId: z.string().optional(),
-      action: z.string().optional(),
-      resourceType: z.string().optional(),
+      action: ActionTypeSchema.optional(),
+      resourceType: ResourceTypeSchema.optional(),
     }),
   },
   responses: {
