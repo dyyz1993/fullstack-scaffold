@@ -66,8 +66,6 @@ function createCustomFetch() {
   })
 }
 
-// @ts-expect-error TypeScript 类型实例化过深，这是 Hono RPC 类型的已知限制
-// 当路由数量较多时，类型推导会超出 TypeScript 的递归限制
 export const apiClient = hc<AdminApiType>(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url),
