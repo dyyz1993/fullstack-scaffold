@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, waitFor, cleanup } from '@testing-library/react'
 import {
-  PermissionProvider,
+  usePermissionStore,
   usePermissions,
   useHasPermission,
   useHasAnyPermission,
@@ -11,11 +11,18 @@ import {
 } from '../usePermissions'
 import { Permission, Role } from '@shared/modules/permission'
 
+const mockAdminState = {
+  user: { id: 'test-user-1', role: Role.CUSTOMER_SERVICE },
+  isAuthenticated: true,
+}
+
 vi.mock('../../stores/adminStore', () => ({
-  useAdminStore: vi.fn(() => ({
-    user: { id: 'test-user-1', role: Role.CUSTOMER_SERVICE },
-    isAuthenticated: true,
-  })),
+  useAdminStore: Object.assign(
+    vi.fn(() => mockAdminState),
+    {
+      getState: () => mockAdminState,
+    }
+  ),
 }))
 
 const mockInitData = {
@@ -102,27 +109,47 @@ const TestComponent = () => {
   )
 }
 
-describe('usePermissions', () => {
+describe('usePermissions (Zustand)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    usePermissionStore.setState({
+      permissions: [],
+      role: null,
+      roles: [],
+      allPermissions: [],
+      menuConfig: [],
+      pagePermissions: [],
+      loading: false,
+      initialized: false,
+    })
   })
 
-  it('should throw error when used outside PermissionProvider', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+  afterEach(() => {
+    cleanup()
+  })
 
-    expect(() => {
-      render(<TestComponent />)
-    }).toThrow('usePermissions must be used within a PermissionProvider')
+  it('should have correct initial state', () => {
+    const state = usePermissionStore.getState()
+    expect(state.permissions).toEqual([])
+    expect(state.role).toBeNull()
+    expect(state.loading).toBe(false)
+    expect(state.initialized).toBe(false)
+  })
 
-    consoleError.mockRestore()
+  it('should initialize permissions', async () => {
+    const { initPermissions } = usePermissionStore.getState()
+    await initPermissions()
+
+    const state = usePermissionStore.getState()
+    expect(state.permissions).toContain(Permission.USER_VIEW)
+    expect(state.role).toBe(Role.CUSTOMER_SERVICE)
+    expect(state.initialized).toBe(true)
   })
 
   it('should provide permission context values', async () => {
-    render(
-      <PermissionProvider>
-        <TestComponent />
-      </PermissionProvider>
-    )
+    await usePermissionStore.getState().initPermissions()
+
+    render(<TestComponent />)
 
     await waitFor(() => {
       expect(screen.getByTestId('initialized').textContent).toBe('true')
@@ -135,11 +162,9 @@ describe('usePermissions', () => {
   })
 
   it('should correctly check hasPermission', async () => {
-    render(
-      <PermissionProvider>
-        <TestComponent />
-      </PermissionProvider>
-    )
+    await usePermissionStore.getState().initPermissions()
+
+    render(<TestComponent />)
 
     await waitFor(() => {
       expect(screen.getByTestId('initialized').textContent).toBe('true')
@@ -150,11 +175,9 @@ describe('usePermissions', () => {
   })
 
   it('should correctly check hasAnyPermission', async () => {
-    render(
-      <PermissionProvider>
-        <TestComponent />
-      </PermissionProvider>
-    )
+    await usePermissionStore.getState().initPermissions()
+
+    render(<TestComponent />)
 
     await waitFor(() => {
       expect(screen.getByTestId('initialized').textContent).toBe('true')
@@ -164,17 +187,24 @@ describe('usePermissions', () => {
   })
 
   it('should correctly check hasAllPermissions', async () => {
-    render(
-      <PermissionProvider>
-        <TestComponent />
-      </PermissionProvider>
-    )
+    await usePermissionStore.getState().initPermissions()
+
+    render(<TestComponent />)
 
     await waitFor(() => {
       expect(screen.getByTestId('initialized').textContent).toBe('true')
     })
 
     expect(screen.getByTestId('has-all').textContent).toBe('true')
+  })
+
+  it('should reset state', async () => {
+    await usePermissionStore.getState().initPermissions()
+    expect(usePermissionStore.getState().initialized).toBe(true)
+
+    usePermissionStore.getState().reset()
+    expect(usePermissionStore.getState().initialized).toBe(false)
+    expect(usePermissionStore.getState().permissions).toEqual([])
   })
 })
 
@@ -184,12 +214,12 @@ describe('useHasPermission', () => {
     return <div data-testid="has-permission">{hasPermission.toString()}</div>
   }
 
+  beforeEach(async () => {
+    await usePermissionStore.getState().initPermissions()
+  })
+
   it('should return correct permission check result', async () => {
-    render(
-      <PermissionProvider>
-        <TestHasPermissionComponent permission={Permission.USER_VIEW} />
-      </PermissionProvider>
-    )
+    render(<TestHasPermissionComponent permission={Permission.USER_VIEW} />)
 
     await waitFor(() => {
       expect(screen.getByTestId('has-permission').textContent).toBe('true')
@@ -203,13 +233,13 @@ describe('useHasAnyPermission', () => {
     return <div data-testid="has-any-permission">{hasAny.toString()}</div>
   }
 
+  beforeEach(async () => {
+    await usePermissionStore.getState().initPermissions()
+  })
+
   it('should return true when user has any of the permissions', async () => {
     render(
-      <PermissionProvider>
-        <TestHasAnyPermissionComponent
-          permissions={[Permission.USER_VIEW, Permission.USER_DELETE]}
-        />
-      </PermissionProvider>
+      <TestHasAnyPermissionComponent permissions={[Permission.USER_VIEW, Permission.USER_DELETE]} />
     )
 
     await waitFor(() => {
@@ -224,13 +254,15 @@ describe('useHasAllPermissions', () => {
     return <div data-testid="has-all-permissions">{hasAll.toString()}</div>
   }
 
+  beforeEach(async () => {
+    await usePermissionStore.getState().initPermissions()
+  })
+
   it('should return true when user has all permissions', async () => {
     render(
-      <PermissionProvider>
-        <TestHasAllPermissionsComponent
-          permissions={[Permission.USER_VIEW, Permission.CONTENT_VIEW]}
-        />
-      </PermissionProvider>
+      <TestHasAllPermissionsComponent
+        permissions={[Permission.USER_VIEW, Permission.CONTENT_VIEW]}
+      />
     )
 
     await waitFor(() => {
@@ -251,12 +283,12 @@ describe('useMenuConfig', () => {
     )
   }
 
-  it('should return menu config from context', async () => {
-    render(
-      <PermissionProvider>
-        <TestMenuConfigComponent />
-      </PermissionProvider>
-    )
+  beforeEach(async () => {
+    await usePermissionStore.getState().initPermissions()
+  })
+
+  it('should return menu config from store', async () => {
+    render(<TestMenuConfigComponent />)
 
     await waitFor(() => {
       expect(screen.getByTestId('menu-initialized').textContent).toBe('true')
@@ -279,12 +311,12 @@ describe('usePagePermissions', () => {
     )
   }
 
-  it('should return page permissions from context', async () => {
-    render(
-      <PermissionProvider>
-        <TestPagePermissionsComponent />
-      </PermissionProvider>
-    )
+  beforeEach(async () => {
+    await usePermissionStore.getState().initPermissions()
+  })
+
+  it('should return page permissions from store', async () => {
+    render(<TestPagePermissionsComponent />)
 
     await waitFor(() => {
       expect(screen.getByTestId('page-initialized').textContent).toBe('true')

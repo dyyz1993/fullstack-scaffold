@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
+import { usePermissionStore } from '../hooks/usePermissions'
 import { Role } from '@shared/modules/admin'
 
 interface ProtectedRouteProps {
@@ -10,6 +12,14 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const location = useLocation()
   const { isAuthenticated, user } = useAdminStore()
+  const { initialized, initPermissions, fetchStaticData } = usePermissionStore()
+
+  useEffect(() => {
+    if (isAuthenticated && !initialized) {
+      initPermissions()
+      fetchStaticData()
+    }
+  }, [isAuthenticated, initialized, initPermissions, fetchStaticData])
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />

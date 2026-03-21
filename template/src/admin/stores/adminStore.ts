@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiClient } from '../services/apiClient'
 import type { SystemStats, AuthUserResponse, LoginResponse } from '@shared/modules/admin'
+import { usePermissionStore } from '../hooks/usePermissions'
 
 interface AdminState {
   user: AuthUserResponse | null
@@ -40,6 +41,7 @@ export const useAdminStore = create<AdminState>()(
               isAuthenticated: true,
               loading: false,
             })
+            usePermissionStore.getState().initPermissions()
             return result.data
           }
           throw new Error(result.error || 'Login failed')
@@ -56,6 +58,7 @@ export const useAdminStore = create<AdminState>()(
           isAuthenticated: false,
           stats: null,
         })
+        usePermissionStore.getState().reset()
       },
 
       fetchStats: async () => {
