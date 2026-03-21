@@ -2,24 +2,20 @@ import { Modal, Input, Button, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import { useCaptchaStore } from '../stores/captchaStore'
-
-interface CaptchaData {
-  id: string
-  image: string
-}
+import type { CaptchaResponse } from '@shared/modules/captcha'
 
 export const CaptchaModal: React.FC = () => {
   const { isOpen, resolve } = useCaptchaStore()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
-  const [captchaData, setCaptchaData] = useState<CaptchaData | null>(null)
+  const [captchaData, setCaptchaData] = useState<CaptchaResponse | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchCaptcha = async () => {
     setRefreshing(true)
     try {
       const response = await window.fetch('/api/captcha')
-      const result = (await response.json()) as { success: boolean; data?: CaptchaData }
+      const result = (await response.json()) as { success: boolean; data?: CaptchaResponse }
 
       if (result.success && result.data) {
         setCaptchaData(result.data)

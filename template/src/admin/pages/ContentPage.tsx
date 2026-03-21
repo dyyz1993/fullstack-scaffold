@@ -4,19 +4,7 @@ import { Plus, Edit, Delete } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/admin'
 import { apiClient } from '../services/apiClient'
-
-interface Content {
-  id: string
-  title: string
-  content: string
-  category: 'article' | 'announcement' | 'tutorial' | 'news' | 'policy'
-  status: 'draft' | 'published' | 'archived'
-  author: string
-  tags: string[]
-  viewCount: number
-  likeCount: number
-  createdAt: string
-}
+import type { Content } from '@shared/modules/content'
 
 const CATEGORY_LABELS = {
   article: '文章',

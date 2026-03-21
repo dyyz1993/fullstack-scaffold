@@ -1,30 +1,32 @@
 import { useState, useEffect } from 'react'
-import { Table, Card, Button, Modal, Form, Input, Select, Tag, Space, message, Popconfirm } from 'antd'
-import { PlusOutlined, EditOutlined, LockOutlined, UnlockOutlined, DeleteOutlined } from '@ant-design/icons'
+import {
+  Table,
+  Card,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Tag,
+  Space,
+  message,
+  Popconfirm,
+} from 'antd'
+import {
+  PlusOutlined,
+  EditOutlined,
+  LockOutlined,
+  UnlockOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { apiClient } from '../services/apiClient'
 import { useRoleLabels } from '../hooks/useConfig'
 import { Permission, Role } from '@shared/modules/permission'
 import { PermissionGuard } from '../components/PermissionGuard'
+import type { User, CreateUserRequest } from '@shared/modules/admin'
 
-interface User {
-  id: string
-  username: string
-  email: string
-  role: Role
-  status: 'active' | 'inactive' | 'locked'
-  createdAt: string
-  updatedAt: string
-  avatar?: string
-}
-
-interface UserFormData {
-  username: string
-  email: string
-  password?: string
-  role: Role
-  status: 'active' | 'inactive' | 'locked'
-}
+type UserFormData = CreateUserRequest & { password?: string }
 
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([])
@@ -40,7 +42,7 @@ export const UsersPage: React.FC = () => {
       const response = await apiClient.api.admin.users.$get()
       const result = await response.json()
       if (result.success) {
-        setUsers(result.data as User[])
+        setUsers(result.data)
       }
     } catch {
       message.error('获取用户列表失败')
@@ -182,11 +184,7 @@ export const UsersPage: React.FC = () => {
       render: (_: unknown, record: User) => (
         <Space>
           <PermissionGuard permission={Permission.USER_EDIT}>
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-            >
+            <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
               编辑
             </Button>
           </PermissionGuard>
@@ -207,11 +205,7 @@ export const UsersPage: React.FC = () => {
               okText="确定"
               cancelText="取消"
             >
-              <Button
-                type="link"
-                icon={<DeleteOutlined />}
-                danger
-              >
+              <Button type="link" icon={<DeleteOutlined />} danger>
                 删除
               </Button>
             </Popconfirm>
@@ -227,22 +221,13 @@ export const UsersPage: React.FC = () => {
         title="用户管理"
         extra={
           <PermissionGuard permission={Permission.USER_CREATE}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
               创建用户
             </Button>
           </PermissionGuard>
         }
       >
-        <Table
-          columns={columns}
-          dataSource={users}
-          rowKey="id"
-          loading={loading}
-        />
+        <Table columns={columns} dataSource={users} rowKey="id" loading={loading} />
       </Card>
 
       <Modal
@@ -252,11 +237,7 @@ export const UsersPage: React.FC = () => {
         onOk={() => form.submit()}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="username"
             label="用户名"
@@ -283,22 +264,14 @@ export const UsersPage: React.FC = () => {
               <Input.Password placeholder="请输入密码" />
             </Form.Item>
           )}
-          <Form.Item
-            name="role"
-            label="角色"
-            rules={[{ required: true, message: '请选择角色' }]}
-          >
+          <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
             <Select placeholder="请选择角色">
               <Select.Option value={Role.SUPER_ADMIN}>超级管理员</Select.Option>
               <Select.Option value={Role.CUSTOMER_SERVICE}>客服人员</Select.Option>
               <Select.Option value={Role.USER}>普通用户</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item
-            name="status"
-            label="状态"
-            rules={[{ required: true, message: '请选择状态' }]}
-          >
+          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
             <Select placeholder="请选择状态">
               <Select.Option value="active">正常</Select.Option>
               <Select.Option value="inactive">未激活</Select.Option>

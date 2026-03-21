@@ -2,9 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as disputeService from '../services/dispute-service'
 import {
-  defineResponses,
-  defineCreateResponses,
-  defineDeleteResponses,
+  successResponse,
+  errorResponse,
   idRequest,
   bodyRequest,
   success,
@@ -21,17 +20,19 @@ import {
 } from '@shared/modules/dispute'
 import { NotFoundError, BusinessError } from '../../utils/app-error'
 
-// 列表路由 - 无特殊业务错误
 const listRoute = createRoute({
   method: 'get',
   path: '/disputes',
   tags: ['disputes'],
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_VIEW] })],
-  responses: defineResponses(DisputeListSchema, 'List all disputes'),
+  responses: {
+    200: successResponse(DisputeListSchema, 'List all disputes'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+  },
 })
 
-// 获取单个 - 可能 404
 const getRoute = createRoute({
   method: 'get',
   path: '/disputes/{id}',
@@ -39,12 +40,14 @@ const getRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_VIEW] })],
   request: { params: DisputeSchema.pick({ id: true }) },
-  responses: defineResponses(DisputeSchema, 'Get dispute by id', {
-    notFound: 'Dispute not found',
-  }),
+  responses: {
+    200: successResponse(DisputeSchema, 'Get dispute by id'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Dispute not found'),
+  },
 })
 
-// 创建路由 - 201
 const createRouteDef = createRoute({
   method: 'post',
   path: '/disputes',
@@ -52,10 +55,13 @@ const createRouteDef = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_CREATE] })],
   request: bodyRequest(CreateDisputeSchema),
-  responses: defineCreateResponses(DisputeSchema, 'Create dispute'),
+  responses: {
+    201: successResponse(DisputeSchema, 'Create dispute'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+  },
 })
 
-// 更新路由 - 可能 404
 const updateRoute = createRoute({
   method: 'put',
   path: '/disputes/{id}',
@@ -63,12 +69,14 @@ const updateRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_EDIT] })],
   request: { params: DisputeSchema.pick({ id: true }), ...bodyRequest(UpdateDisputeSchema) },
-  responses: defineResponses(DisputeSchema, 'Update dispute', {
-    notFound: 'Dispute not found',
-  }),
+  responses: {
+    200: successResponse(DisputeSchema, 'Update dispute'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Dispute not found'),
+  },
 })
 
-// 删除路由 - 可能 404
 const deleteRoute = createRoute({
   method: 'delete',
   path: '/disputes/{id}',
@@ -76,10 +84,14 @@ const deleteRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_DELETE] })],
   request: idRequest,
-  responses: defineDeleteResponses({ notFound: 'Dispute not found' }),
+  responses: {
+    200: successResponse(DisputeSchema, 'Delete dispute'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Dispute not found'),
+  },
 })
 
-// 解决争议 - 可能 404 或 422（业务规则）
 const resolveRoute = createRoute({
   method: 'put',
   path: '/disputes/{id}/resolve',
@@ -87,10 +99,13 @@ const resolveRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_RESOLVE] })],
   request: { params: DisputeSchema.pick({ id: true }), ...bodyRequest(ResolveDisputeSchema) },
-  responses: defineResponses(DisputeSchema, 'Dispute resolved', {
-    notFound: 'Dispute not found',
-    businessError: 'Cannot resolve dispute in current state',
-  }),
+  responses: {
+    200: successResponse(DisputeSchema, 'Dispute resolved'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+    404: errorResponse('Dispute not found'),
+    422: errorResponse('Cannot resolve dispute in current state'),
+  },
 })
 
 export const disputeRoutes = new OpenAPIHono()

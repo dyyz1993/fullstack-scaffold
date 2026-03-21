@@ -1,21 +1,9 @@
 import { create } from 'zustand'
 import { apiClient } from '../services/apiClient'
-
-interface AuditLog {
-  id: string
-  userId: string
-  action: string
-  resourceType: string
-  resourceId: string | null
-  oldValue: string | null
-  newValue: string | null
-  ipAddress: string | null
-  userAgent: string | null
-  createdAt: string
-}
+import type { AuditLogType } from '@shared/modules/audit'
 
 interface AuditLogState {
-  logs: AuditLog[]
+  logs: AuditLogType[]
   loading: boolean
   error: string | null
   fetchLogs: (params?: { userId?: string; action?: string; resourceType?: string }) => Promise<void>

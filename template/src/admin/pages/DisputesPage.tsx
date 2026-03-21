@@ -4,21 +4,7 @@ import { Eye, AlertTriangle, CheckCircle } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/admin'
 import { apiClient } from '../services/apiClient'
-
-interface Dispute {
-  id: string
-  disputeNo: string
-  orderNo: string
-  customerName: string
-  customerEmail: string
-  type: 'refund' | 'product_quality' | 'service_quality' | 'delivery' | 'other'
-  status: 'pending' | 'investigating' | 'resolved' | 'rejected'
-  description: string
-  resolution?: string
-  amount: number
-  createdAt: string
-  updatedAt: string
-}
+import type { Dispute } from '@shared/modules/dispute'
 
 const TYPE_LABELS = {
   refund: '退款争议',
@@ -58,7 +44,7 @@ export const DisputesPage: React.FC = () => {
       const response = await apiClient.api.disputes.$get()
       const result = await response.json()
       if (result.success) {
-        setDisputes(result.data as unknown as Dispute[])
+        setDisputes(result.data)
       }
     } catch {
       message.error('获取争议列表失败')

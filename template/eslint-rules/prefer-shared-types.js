@@ -1,5 +1,5 @@
-import { readFileSync, existsSync } from 'fs'
-import { resolve, dirname } from 'path'
+import { readFileSync, existsSync, readdirSync, statSync } from 'fs'
+import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -10,9 +10,9 @@ const CACHE_TTL = 5000
 
 function extractFieldNamesFromZodObject(node) {
   const fields = new Set()
-  
+
   if (node.type !== 'CallExpression') return null
-  
+
   const { callee } = node
   if (
     callee.type !== 'MemberExpression' ||
@@ -23,56 +23,87 @@ function extractFieldNamesFromZodObject(node) {
   ) {
     return null
   }
-  
+
   const args = node.arguments
   if (!args || args.length === 0) return null
-  
+
   const objectArg = args[0]
   if (objectArg.type !== 'ObjectExpression') return null
-  
+
   for (const prop of objectArg.properties) {
     if (prop.type === 'Property' && prop.key?.type === 'Identifier') {
       fields.add(prop.key.name)
     }
   }
-  
+
   return fields
 }
 
 function parseSchemaFile(content) {
   const schemaMap = new Map()
-  
+
   const schemaVarMatch = content.matchAll(
     /export\s+const\s+(\w+Schema)\s*=\s*z\.object\s*\(\s*\{([^}]+)\}/gs
   )
-  
+
   for (const match of schemaVarMatch) {
     const schemaName = match[1]
     const fieldsBlock = match[2]
-    
+
     const fields = new Set()
     const fieldMatches = fieldsBlock.matchAll(/(\w+)\s*:/g)
     for (const fm of fieldMatches) {
       fields.add(fm[1])
     }
-    
+
     if (fields.size > 0) {
       schemaMap.set(schemaName, fields)
     }
   }
-  
+
   const typeExportMatch = content.matchAll(
     /export\s+type\s+(\w+)\s*=\s*z\.infer<typeof\s+(\w+Schema)>/g
   )
-  
+
   const typeToSchema = new Map()
   for (const match of typeExportMatch) {
     const typeName = match[1]
     const schemaName = match[2]
     typeToSchema.set(typeName, schemaName)
   }
-  
+
   return { schemaMap, typeToSchema }
+}
+
+function discoverSchemaFiles(cwd) {
+  const schemaFiles = []
+  const modulesDir = resolve(cwd, 'src/shared/modules')
+
+  if (!existsSync(modulesDir)) {
+    return schemaFiles
+  }
+
+  try {
+    const modules = readdirSync(modulesDir)
+    for (const moduleName of modules) {
+      const modulePath = join(modulesDir, moduleName)
+      if (!statSync(modulePath).isDirectory()) continue
+
+      const schemaPath = join(modulePath, 'schemas.ts')
+      if (existsSync(schemaPath)) {
+        schemaFiles.push(schemaPath)
+      }
+
+      const indexPath = join(modulePath, 'index.ts')
+      if (existsSync(indexPath)) {
+        schemaFiles.push(indexPath)
+      }
+    }
+  } catch {
+    // ignore read errors
+  }
+
+  return schemaFiles
 }
 
 function getSharedTypes(context) {
@@ -80,31 +111,27 @@ function getSharedTypes(context) {
   if (SHARED_TYPES_CACHE.size > 0 && now - cacheTimestamp < CACHE_TTL) {
     return SHARED_TYPES_CACHE
   }
-  
+
   SHARED_TYPES_CACHE.clear()
-  
+
   const cwd = context.cwd || process.cwd()
-  
-  const schemaFiles = [
-    resolve(cwd, 'src/shared/modules/todos/schemas.ts'),
-    resolve(cwd, 'src/shared/modules/notifications/schemas.ts'),
-    resolve(cwd, 'src/shared/modules/chat/index.ts'),
-  ]
-  
+
+  const schemaFiles = discoverSchemaFiles(cwd)
+
   const allTypeToSchema = new Map()
   const allSchemaFields = new Map()
-  
+
   for (const filePath of schemaFiles) {
     if (!existsSync(filePath)) continue
-    
+
     try {
       const content = readFileSync(filePath, 'utf-8')
       const { schemaMap, typeToSchema } = parseSchemaFile(content)
-      
+
       for (const [typeName, schemaName] of typeToSchema) {
         allTypeToSchema.set(typeName, schemaName)
       }
-      
+
       for (const [schemaName, fields] of schemaMap) {
         allSchemaFields.set(schemaName, fields)
       }
@@ -112,7 +139,7 @@ function getSharedTypes(context) {
       // ignore read errors
     }
   }
-  
+
   for (const [typeName, schemaName] of allTypeToSchema) {
     const fields = allSchemaFields.get(schemaName)
     if (fields) {
@@ -122,44 +149,44 @@ function getSharedTypes(context) {
       })
     }
   }
-  
+
   cacheTimestamp = now
   return SHARED_TYPES_CACHE
 }
 
 function calculateSimilarity(fields1, fields2) {
   if (fields1.size === 0 || fields2.size === 0) return 0
-  
+
   const set1 = new Set(fields1)
   const set2 = new Set(fields2)
-  
+
   const intersection = new Set([...set1].filter(x => set2.has(x)))
   const union = new Set([...set1, ...set2])
-  
+
   return intersection.size / union.size
 }
 
 function extractFieldsFromTSInterface(node) {
   const fields = new Set()
-  
+
   if (node.type !== 'TSInterfaceDeclaration') return null
-  
+
   for (const member of node.body.body) {
     if (member.type === 'TSPropertySignature' && member.key?.type === 'Identifier') {
       fields.add(member.key.name)
     }
   }
-  
+
   return fields
 }
 
 function extractFieldsFromTSTypeAlias(node, context) {
   const fields = new Set()
-  
+
   if (node.type !== 'TSTypeAliasDeclaration') return null
-  
+
   const typeAnnotation = node.typeAnnotation
-  
+
   if (typeAnnotation?.type === 'TSTypeLiteral') {
     for (const member of typeAnnotation.members) {
       if (member.type === 'TSPropertySignature' && member.key?.type === 'Identifier') {
@@ -167,7 +194,7 @@ function extractFieldsFromTSTypeAlias(node, context) {
       }
     }
   }
-  
+
   return fields.size > 0 ? fields : null
 }
 
@@ -209,25 +236,27 @@ export const preferSharedTypes = {
     const options = context.options[0] || {}
     const similarityThreshold = options.similarityThreshold ?? 0.6
     const checkClientOnly = options.checkClientOnly ?? true
-    
+
     const filename = context.filename || context.getFilename?.() || ''
-    
+
     const isClientFile = filename.includes('/src/client/')
+    const isAdminFile = filename.includes('/src/admin/')
+    const isCliFile = filename.includes('/src/cli/')
     const isSharedFile = filename.includes('/src/shared/')
-    
-    if (checkClientOnly && !isClientFile) return {}
+
+    if (checkClientOnly && !isClientFile && !isAdminFile && !isCliFile) return {}
     if (isSharedFile) return {}
-    
+
     const sharedTypes = getSharedTypes(context)
-    
+
     return {
       TSInterfaceDeclaration(node) {
         const typeName = node.id?.name
         if (!typeName) return
-        
+
         const fields = extractFieldsFromTSInterface(node)
         if (!fields || fields.size === 0) return
-        
+
         if (sharedTypes.has(typeName)) {
           context.report({
             node,
@@ -236,11 +265,11 @@ export const preferSharedTypes = {
           })
           return
         }
-        
+
         for (const [sharedTypeName, info] of sharedTypes) {
           const sharedFields = new Set(info.fields)
           const similarity = calculateSimilarity(fields, sharedFields)
-          
+
           if (similarity >= similarityThreshold) {
             context.report({
               node,
@@ -249,7 +278,8 @@ export const preferSharedTypes = {
                 typeName,
                 fields: [...fields].slice(0, 5).join(', ') + (fields.size > 5 ? '...' : ''),
                 sharedTypeName,
-                sharedFields: [...sharedFields].slice(0, 5).join(', ') + (sharedFields.size > 5 ? '...' : ''),
+                sharedFields:
+                  [...sharedFields].slice(0, 5).join(', ') + (sharedFields.size > 5 ? '...' : ''),
                 similarity: Math.round(similarity * 100),
               },
             })
@@ -257,14 +287,14 @@ export const preferSharedTypes = {
           }
         }
       },
-      
+
       TSTypeAliasDeclaration(node) {
         const typeName = node.id?.name
         if (!typeName) return
-        
+
         const fields = extractFieldsFromTSTypeAlias(node, context)
         if (!fields || fields.size === 0) return
-        
+
         if (sharedTypes.has(typeName)) {
           context.report({
             node,
@@ -273,11 +303,11 @@ export const preferSharedTypes = {
           })
           return
         }
-        
+
         for (const [sharedTypeName, info] of sharedTypes) {
           const sharedFields = new Set(info.fields)
           const similarity = calculateSimilarity(fields, sharedFields)
-          
+
           if (similarity >= similarityThreshold) {
             context.report({
               node,
@@ -286,7 +316,8 @@ export const preferSharedTypes = {
                 typeName,
                 fields: [...fields].slice(0, 5).join(', ') + (fields.size > 5 ? '...' : ''),
                 sharedTypeName,
-                sharedFields: [...sharedFields].slice(0, 5).join(', ') + (sharedFields.size > 5 ? '...' : ''),
+                sharedFields:
+                  [...sharedFields].slice(0, 5).join(', ') + (sharedFields.size > 5 ? '...' : ''),
                 similarity: Math.round(similarity * 100),
               },
             })

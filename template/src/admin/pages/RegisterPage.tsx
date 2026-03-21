@@ -3,11 +3,9 @@ import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons'
 import { useNavigate, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { apiClient } from '../services/apiClient'
+import type { RegisterRequest } from '@shared/modules/admin'
 
-interface RegisterForm {
-  username: string
-  email: string
-  password: string
+interface RegisterForm extends RegisterRequest {
   confirmPassword: string
 }
 

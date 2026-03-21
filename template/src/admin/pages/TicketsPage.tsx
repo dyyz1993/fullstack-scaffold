@@ -4,31 +4,7 @@ import { Eye, MessageCircle, CheckCircle, AlertCircle, Clock } from 'lucide-reac
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/admin'
 import { apiClient } from '../services/apiClient'
-
-interface TicketReply {
-  id: string
-  ticketId: string
-  content: string
-  author: string
-  isCustomer: boolean
-  createdAt: string
-}
-
-interface Ticket {
-  id: string
-  ticketNo: string
-  customerName: string
-  customerEmail: string
-  subject: string
-  description: string
-  status: 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  category: 'technical' | 'billing' | 'feature_request' | 'bug_report' | 'general'
-  assignedTo?: string
-  createdAt: string
-  updatedAt: string
-  replies: TicketReply[]
-}
+import type { Ticket } from '@shared/modules/ticket'
 
 const PRIORITY_COLORS = {
   low: 'default',

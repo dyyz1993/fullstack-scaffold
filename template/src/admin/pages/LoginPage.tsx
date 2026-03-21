@@ -3,13 +3,9 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
 import { Role } from '@shared/modules/permission'
+import type { LoginRequest } from '@shared/modules/admin'
 
-interface LoginForm {
-  username: string
-  password: string
-}
-
-interface QuickLoginAccount {
+interface QuickLoginAccount extends LoginRequest {
   username: string
   password: string
   role: Role
@@ -18,8 +14,20 @@ interface QuickLoginAccount {
 }
 
 const QUICK_LOGIN_ACCOUNTS: QuickLoginAccount[] = [
-  { username: 'superadmin', password: '123456', role: Role.SUPER_ADMIN, label: '超级管理员', color: 'red' },
-  { username: 'customerservice', password: '123456', role: Role.CUSTOMER_SERVICE, label: '客服人员', color: 'blue' },
+  {
+    username: 'superadmin',
+    password: '123456',
+    role: Role.SUPER_ADMIN,
+    label: '超级管理员',
+    color: 'red',
+  },
+  {
+    username: 'customerservice',
+    password: '123456',
+    role: Role.CUSTOMER_SERVICE,
+    label: '客服人员',
+    color: 'blue',
+  },
   { username: 'user1', password: '123456', role: Role.USER, label: '普通用户', color: 'green' },
 ]
 
@@ -28,7 +36,7 @@ export const LoginPage: React.FC = () => {
   const [form] = Form.useForm()
   const { login, loading } = useAdminStore()
 
-  const handleSubmit = async (values: LoginForm) => {
+  const handleSubmit = async (values: LoginRequest) => {
     try {
       await login(values.username, values.password)
       message.success('登录成功！')
@@ -53,16 +61,10 @@ export const LoginPage: React.FC = () => {
       <Card className="w-full max-w-md" title="管理后台登录">
         <Spin spinning={loading}>
           <Form form={form} onFinish={handleSubmit} layout="vertical">
-            <Form.Item
-              name="username"
-              rules={[{ required: true, message: '请输入用户名！' }]}
-            >
+            <Form.Item name="username" rules={[{ required: true, message: '请输入用户名！' }]}>
               <Input prefix={<UserOutlined />} placeholder="用户名" size="large" />
             </Form.Item>
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: '请输入密码！' }]}
-            >
+            <Form.Item name="password" rules={[{ required: true, message: '请输入密码！' }]}>
               <Input.Password prefix={<LockOutlined />} placeholder="密码" size="large" />
             </Form.Item>
             <Form.Item>

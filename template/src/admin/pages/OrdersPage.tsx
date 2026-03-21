@@ -4,18 +4,7 @@ import { Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/admin'
 import { apiClient } from '../services/apiClient'
-
-interface Order {
-  id: string
-  orderNo: string
-  customerName: string
-  customerEmail: string
-  productName: string
-  amount: number
-  status: 'pending' | 'processing' | 'completed' | 'cancelled' | 'disputed'
-  createdAt: string
-  updatedAt: string
-}
+import type { Order } from '@shared/modules/order'
 
 const STATUS_COLORS = {
   pending: 'orange',

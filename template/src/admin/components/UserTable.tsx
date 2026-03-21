@@ -1,15 +1,7 @@
 import { Table, Button, Space, Tag, Avatar } from 'antd'
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-
-interface User {
-  id: string
-  username: string
-  email: string
-  role: string
-  status: 'active' | 'inactive'
-  createdAt: string
-}
+import type { User } from '@shared/modules/admin'
 
 interface UserTableProps {
   data: User[]

@@ -1,11 +1,7 @@
 import { Form, Input, Modal, Select, Switch } from 'antd'
+import type { CreateUserRequest } from '@shared/modules/admin'
 
-interface UserFormData {
-  username: string
-  email: string
-  role: string
-  status: boolean
-}
+type UserFormData = Omit<CreateUserRequest, 'password'> & { status: boolean }
 
 interface UserFormModalProps {
   open: boolean
