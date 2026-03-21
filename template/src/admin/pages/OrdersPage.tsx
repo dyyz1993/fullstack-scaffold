@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Table, Card, Tag, Button, Space, Modal, Select, message, Descriptions } from 'antd'
 import { Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
-import { Permission } from '@shared/modules/admin'
+import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Order } from '@shared/modules/order'
 

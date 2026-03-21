@@ -6,7 +6,7 @@ import {
   requirePermissionsMiddleware,
   type AuthUser,
 } from '../auth'
-import { Permission, Role } from '@shared/modules/admin'
+import { Permission, Role } from '@shared/modules/permission'
 
 describe('Auth Middleware', () => {
   let app: Hono<{ Variables: { authUser: AuthUser } }>

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
 import { usePermissionStore } from '../hooks/usePermissions'
-import { Role } from '@shared/modules/admin'
+import { Role } from '@shared/modules/permission'
 
 interface ProtectedRouteProps {
   children: React.ReactNode

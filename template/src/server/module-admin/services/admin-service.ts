@@ -3,7 +3,7 @@ import { todos } from '../../db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '../../utils/date'
 import { getMockUsers } from '../../utils/auth'
-import { Role, getPermissionsByRole } from '@shared/modules/admin'
+import { Role, getPermissionsByRole } from '@shared/modules/permission'
 import type {
   SystemStats,
   HealthCheck,

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Table, Card, Tag, Button, Space, Modal, message, Descriptions } from 'antd'
 import { Eye, MessageCircle, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
-import { Permission } from '@shared/modules/admin'
+import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Ticket } from '@shared/modules/ticket'
 

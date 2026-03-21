@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Hono } from 'hono'
 import { authMiddleware } from '../auth'
-import { Role } from '@shared/modules/admin'
+import { Role } from '@shared/modules/permission'
 
 describe('Auth Middleware Simple Test', () => {
   describe('Success Scenarios', () => {

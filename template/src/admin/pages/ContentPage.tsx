@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Table, Card, Tag, Button, Space, Modal, Form, Input, Select, message } from 'antd'
 import { Plus, Edit, Delete } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
-import { Permission } from '@shared/modules/admin'
+import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Content, CreateContentInput } from '@shared/modules/content'
 

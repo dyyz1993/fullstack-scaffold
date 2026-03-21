@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from 'hono'
 import { createModuleLoggerSync } from '../utils/logger'
-import { Role, Permission, getPermissionsByRole } from '@shared/modules/admin'
+import { Role, Permission, getPermissionsByRole } from '@shared/modules/permission'
 import { AuthenticationError, AuthorizationError } from '../utils/app-error'
 
 export type UserRole = Role
@@ -28,67 +28,90 @@ declare module 'hono' {
 
 const defaultSecretKey = 'dev-secret-key-change-in-production'
 
+const isDevTokensEnabled = (): boolean => {
+  const nodeEnv = process.env.NODE_ENV
+  const enableDevTokens = process.env.ENABLE_DEV_TOKENS
+
+  if (enableDevTokens === 'true') return true
+  if (enableDevTokens === 'false') return false
+
+  return nodeEnv === 'development' || nodeEnv === 'test'
+}
+
 function extractToken(authHeader: string | undefined): string | null {
   if (!authHeader) return null
   if (!authHeader.startsWith('Bearer ')) return null
   return authHeader.slice(7)
 }
 
+function verifyDevToken(token: string): AuthUser | null {
+  if (token === 'admin-token' || token === 'super-admin-token') {
+    return {
+      id: 'super-admin-1',
+      username: 'superadmin',
+      email: 'superadmin@example.com',
+      role: Role.SUPER_ADMIN,
+      permissions: getPermissionsByRole(Role.SUPER_ADMIN),
+    }
+  }
+  if (token === 'customer-service-token') {
+    return {
+      id: 'customer-service-1',
+      username: 'customerservice',
+      email: 'cs@example.com',
+      role: Role.CUSTOMER_SERVICE,
+      permissions: getPermissionsByRole(Role.CUSTOMER_SERVICE),
+    }
+  }
+  if (token === 'user-token') {
+    return {
+      id: 'user-1',
+      username: 'user',
+      email: 'user@example.com',
+      role: Role.USER,
+      permissions: getPermissionsByRole(Role.USER),
+    }
+  }
+  if (token.startsWith('test-super-admin-')) {
+    return {
+      id: token,
+      username: `superadmin-${token}`,
+      email: `superadmin-${token}@example.com`,
+      role: Role.SUPER_ADMIN,
+      permissions: getPermissionsByRole(Role.SUPER_ADMIN),
+    }
+  }
+  if (token.startsWith('test-customer-service-')) {
+    return {
+      id: token,
+      username: `cs-${token}`,
+      email: `cs-${token}@example.com`,
+      role: Role.CUSTOMER_SERVICE,
+      permissions: getPermissionsByRole(Role.CUSTOMER_SERVICE),
+    }
+  }
+  if (token.startsWith('test-user-')) {
+    return {
+      id: token,
+      username: `user-${token}`,
+      email: `user-${token}@example.com`,
+      role: Role.USER,
+      permissions: getPermissionsByRole(Role.USER),
+    }
+  }
+  return null
+}
+
 function verifyToken(token: string, secretKey: string): AuthUser | null {
-  if (secretKey === 'dev-secret-key-change-in-production') {
-    if (token === 'admin-token' || token === 'super-admin-token') {
-      return {
-        id: 'super-admin-1',
-        username: 'superadmin',
-        email: 'superadmin@example.com',
-        role: Role.SUPER_ADMIN,
-        permissions: getPermissionsByRole(Role.SUPER_ADMIN),
-      }
-    }
-    if (token === 'customer-service-token') {
-      return {
-        id: 'customer-service-1',
-        username: 'customerservice',
-        email: 'cs@example.com',
-        role: Role.CUSTOMER_SERVICE,
-        permissions: getPermissionsByRole(Role.CUSTOMER_SERVICE),
-      }
-    }
-    if (token === 'user-token') {
-      return {
-        id: 'user-1',
-        username: 'user',
-        email: 'user@example.com',
-        role: Role.USER,
-        permissions: getPermissionsByRole(Role.USER),
-      }
-    }
-    if (token.startsWith('test-super-admin-')) {
-      return {
-        id: token,
-        username: `superadmin-${token}`,
-        email: `superadmin-${token}@example.com`,
-        role: Role.SUPER_ADMIN,
-        permissions: getPermissionsByRole(Role.SUPER_ADMIN),
-      }
-    }
-    if (token.startsWith('test-customer-service-')) {
-      return {
-        id: token,
-        username: `cs-${token}`,
-        email: `cs-${token}@example.com`,
-        role: Role.CUSTOMER_SERVICE,
-        permissions: getPermissionsByRole(Role.CUSTOMER_SERVICE),
-      }
-    }
-    if (token.startsWith('test-user-')) {
-      return {
-        id: token,
-        username: `user-${token}`,
-        email: `user-${token}@example.com`,
-        role: Role.USER,
-        permissions: getPermissionsByRole(Role.USER),
-      }
+  if (secretKey === defaultSecretKey && isDevTokensEnabled()) {
+    const devUser = verifyDevToken(token)
+    if (devUser) {
+      const log = createModuleLoggerSync('auth')
+      log.warn(
+        { userId: devUser.id, role: devUser.role },
+        'DEV TOKEN USED - This should not appear in production!'
+      )
+      return devUser
     }
   }
 

@@ -1,8 +1,12 @@
 /**
  * @framework-baseline e350401421193896
  * @framework-modify
- * @reason 统一错误响应格式为 JSON，确保所有错误都返回结构化数据
+ * @reason 统一错误响应格式为 JSON，确保所有错误都返回结构化数据；移除冗余的 globalThis 设置
  * @impact 影响 Cloudflare Workers 环境的错误响应格式
+ *
+ * Note: In Cloudflare Workers, each request runs in its own isolate,
+ * so globalThis is request-scoped and there's no race condition risk.
+ * The middleware sets the DB binding for each request.
  */
 
 import { createApp } from '../app'
@@ -36,7 +40,6 @@ const wrappedApp = app
   )
   .onError((err, c) => {
     console.error('Server error:', err)
-    // Always return JSON response
     c.res.headers.set('Content-Type', 'application/json')
     const statusCode =
       err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
@@ -47,10 +50,6 @@ const wrappedApp = app
 
 export default {
   fetch: async (request: Request, env: CloudflareBindings, ctx: ExecutionContext) => {
-    // Set DB binding to globalThis before handling the request
-    // This ensures getDb() can access the database
-    ;(globalThis as unknown as { DB: D1Database }).DB = env.DB
-
     const url = new URL(request.url)
 
     if (url.pathname.startsWith('/api/') || url.pathname === '/health') {

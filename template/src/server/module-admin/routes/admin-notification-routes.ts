@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as adminService from '../services/admin-service'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
-import { Role } from '@shared/modules/admin'
+import { Role } from '@shared/modules/permission'
 import {
   NotificationSchema,
   NotificationListSchema,

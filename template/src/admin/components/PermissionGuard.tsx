@@ -1,6 +1,6 @@
 import React from 'react'
 import { usePermissions } from '../hooks/usePermissions'
-import { Permission } from '@shared/modules/admin'
+import { Permission } from '@shared/modules/permission'
 
 interface PermissionGuardProps {
   permissions?: Permission[]

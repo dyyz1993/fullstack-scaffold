@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createTestClient } from '../../test-utils/test-client'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 import { getRawClient } from '../../db'
-import { Role } from '@shared/modules/admin'
+import { Role } from '@shared/modules/permission'
 
 describe('Admin Routes', () => {
   beforeAll(async () => {
