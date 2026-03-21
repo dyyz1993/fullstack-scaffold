@@ -15,6 +15,7 @@ export {
   PermissionCategoriesSchema,
   RoleLabelsSchema,
   PermissionLabelsSchema,
+  PermissionInitSchema,
   type RoleType,
   type PermissionType,
   type RoleInfo,
@@ -24,6 +25,7 @@ export {
   type PageAction,
   type PagePermissionConfig,
   type PermissionCategory,
+  type PermissionInit,
 } from './schemas'
 
 export {

@@ -9,14 +9,22 @@ import {
   hasAnyPermission,
   hasAllPermissions,
 } from '@shared/modules/permission'
-import type { RoleInfo, PermissionInfo } from '@shared/modules/permission'
+import type {
+  RoleInfo,
+  PermissionInfo,
+  MenuItem,
+  PagePermissionConfig,
+} from '@shared/modules/permission'
 
 interface PermissionContextValue {
   permissions: Permission[]
   role: Role | null
   roles: RoleInfo[]
   allPermissions: PermissionInfo[]
+  menuConfig: MenuItem[]
+  pagePermissions: PagePermissionConfig[]
   loading: boolean
+  initialized: boolean
   hasPermission: (permission: Permission) => boolean
   hasAnyPermission: (permissions: Permission[]) => boolean
   hasAllPermissions: (permissions: Permission[]) => boolean
@@ -26,17 +34,18 @@ interface PermissionContextValue {
 const PermissionContext = createContext<PermissionContextValue | null>(null)
 
 export function PermissionProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAdminStore()
+  const { user, isAuthenticated } = useAdminStore()
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [role, setRole] = useState<Role | null>(null)
   const [roles, setRoles] = useState<RoleInfo[]>([])
   const [allPermissions, setAllPermissions] = useState<PermissionInfo[]>([])
+  const [menuConfig, setMenuConfig] = useState<MenuItem[]>([])
+  const [pagePermissions, setPagePermissions] = useState<PagePermissionConfig[]>([])
   const [loading, setLoading] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
-  const fetchRolesAndPermissions = useCallback(async () => {
+  const fetchStaticData = useCallback(async () => {
     try {
-      setLoading(true)
-
       const [rolesRes, permissionsRes] = await Promise.all([
         apiClient.api.permissions.roles.$get(),
         apiClient.api.permissions.$get(),
@@ -53,43 +62,46 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
         setAllPermissions(permissionsData.data)
       }
     } catch (error) {
-      console.error('Failed to fetch roles and permissions:', error)
-    } finally {
-      setLoading(false)
+      console.error('Failed to fetch static data:', error)
     }
   }, [])
 
   const refreshPermissions = useCallback(async () => {
-    if (!user) {
+    if (!isAuthenticated || !user) {
       setPermissions([])
       setRole(null)
+      setMenuConfig([])
+      setPagePermissions([])
+      setInitialized(true)
       return
     }
 
     try {
       setLoading(true)
-      const response = await apiClient.api.permissions.me.$get()
+      const response = await apiClient.api.permissions.init.$get()
       const data = await response.json()
 
       if (data.success) {
         setPermissions(data.data.permissions)
         setRole(data.data.role)
+        setMenuConfig(data.data.menuConfig)
+        setPagePermissions(data.data.pagePermissions)
       }
     } catch (error) {
       console.error('Failed to fetch user permissions:', error)
       if (user.role) {
-        const userRole = user.role
-        setRole(userRole)
+        setRole(user.role)
         setPermissions([])
       }
     } finally {
       setLoading(false)
+      setInitialized(true)
     }
-  }, [user])
+  }, [isAuthenticated, user])
 
   useEffect(() => {
-    fetchRolesAndPermissions()
-  }, [fetchRolesAndPermissions])
+    fetchStaticData()
+  }, [fetchStaticData])
 
   useEffect(() => {
     refreshPermissions()
@@ -121,7 +133,10 @@ export function PermissionProvider({ children }: { children: React.ReactNode }) 
     role,
     roles,
     allPermissions,
+    menuConfig,
+    pagePermissions,
     loading,
+    initialized,
     hasPermission: checkPermission,
     hasAnyPermission: checkAnyPermission,
     hasAllPermissions: checkAllPermissions,
@@ -152,4 +167,14 @@ export function useHasAnyPermission(permissions: Permission[]): boolean {
 export function useHasAllPermissions(permissions: Permission[]): boolean {
   const { hasAllPermissions } = usePermissions()
   return hasAllPermissions(permissions)
+}
+
+export function useMenuConfig() {
+  const { menuConfig, loading, initialized } = usePermissions()
+  return { menuConfig, loading, initialized }
+}
+
+export function usePagePermissions() {
+  const { pagePermissions, loading, initialized } = usePermissions()
+  return { pagePermissions, loading, initialized }
 }

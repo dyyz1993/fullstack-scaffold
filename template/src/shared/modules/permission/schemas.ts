@@ -73,6 +73,13 @@ export const RoleLabelsSchema = z.record(RoleEnum, z.string())
 
 export const PermissionLabelsSchema = z.record(PermissionEnum, z.string())
 
+export const PermissionInitSchema = z.object({
+  permissions: z.array(PermissionEnum),
+  menuConfig: MenuConfigSchema,
+  pagePermissions: PagePermissionsSchema,
+  role: RoleEnum,
+})
+
 export type RoleType = z.infer<typeof RoleEnum>
 export type PermissionType = z.infer<typeof PermissionEnum>
 export type RoleInfo = z.infer<typeof RoleInfoSchema>
@@ -82,3 +89,4 @@ export type MenuItem = z.infer<typeof MenuItemSchema>
 export type PageAction = z.infer<typeof PageActionSchema>
 export type PagePermissionConfig = z.infer<typeof PagePermissionConfigSchema>
 export type PermissionCategory = z.infer<typeof PermissionCategorySchema>
+export type PermissionInit = z.infer<typeof PermissionInitSchema>

@@ -1,11 +1,12 @@
 import { eq, and } from 'drizzle-orm'
 import type { Permission, NewPermission } from '../../db/schema/permissions'
-import type { RoleInfo, PermissionInfo } from '@shared/modules/permission'
+import type { RoleInfo, PermissionInfo, MenuItem } from '@shared/modules/permission'
 import { Permission as PermissionEnum, Role } from '@shared/modules/permission'
 import { getDb } from '../../db'
 import { permissions, rolePermissions, roles } from '../../db/schema'
 import { roleService } from './role-service'
 import { logger } from '../../utils/logger'
+import { MENU_CONFIG, PAGE_PERMISSIONS, type PagePermissionConfig } from './permission-service'
 
 const log = logger.api()
 
@@ -189,6 +190,53 @@ export class PermissionService {
       .where(
         and(eq(rolePermissions.roleId, roleId), eq(rolePermissions.permissionId, permissionId))
       )
+  }
+
+  async getUserMenuConfig(userId: string, roleCode?: string): Promise<MenuItem[]> {
+    const userPermissions = await this.getUserPermissions(userId, roleCode)
+    const permissionCodes = new Set(userPermissions.map(p => p.code))
+
+    const hasAnyPermission = (perms: PermissionEnum[]): boolean => {
+      if (!perms || perms.length === 0) return true
+      return perms.some(p => permissionCodes.has(p))
+    }
+
+    const filterMenuItems = (items: MenuItem[]): MenuItem[] => {
+      return items
+        .filter(item => hasAnyPermission(item.permissions))
+        .map(item => {
+          if (item.children && item.children.length > 0) {
+            const visibleChildren = item.children.filter(child =>
+              hasAnyPermission(child.permissions)
+            )
+            if (visibleChildren.length === 0) {
+              return null
+            }
+            return { ...item, children: visibleChildren }
+          }
+          return item
+        })
+        .filter((item): item is MenuItem => item !== null)
+    }
+
+    return filterMenuItems(MENU_CONFIG)
+  }
+
+  async getUserPagePermissions(userId: string, roleCode?: string): Promise<PagePermissionConfig[]> {
+    const userPermissions = await this.getUserPermissions(userId, roleCode)
+    const permissionCodes = new Set(userPermissions.map(p => p.code))
+
+    const hasAllPermissions = (perms: PermissionEnum[]): boolean => {
+      if (!perms || perms.length === 0) return true
+      return perms.every(p => permissionCodes.has(p))
+    }
+
+    return PAGE_PERMISSIONS.filter(page => hasAllPermissions(page.requiredPermissions)).map(
+      page => ({
+        ...page,
+        actions: page.actions.filter(action => hasAllPermissions(action.permissions)),
+      })
+    )
   }
 }
 

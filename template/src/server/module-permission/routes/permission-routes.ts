@@ -14,6 +14,7 @@ import {
   RoleLabelsSchema,
   PermissionLabelsSchema,
   Permission,
+  PermissionInitSchema,
 } from '@shared/modules/permission'
 import * as permissionServiceOld from '../services/permission-service'
 
@@ -92,6 +93,30 @@ const getPermissionLabelsRoute = createRoute({
   },
 })
 
+const getMyMenuRoute = createRoute({
+  method: 'get',
+  path: '/permissions/my-menu',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(MenuConfigSchema, 'Get user menu configuration'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+const getPermissionInitRoute = createRoute({
+  method: 'get',
+  path: '/permissions/init',
+  tags: ['permissions'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(PermissionInitSchema, 'Get permission initialization data'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
 export const permissionRoutes = new OpenAPIHono()
   .openapi(getRolesRoute, async c => {
     const roles = await permissionService.getAllRoles()
@@ -133,4 +158,27 @@ export const permissionRoutes = new OpenAPIHono()
   .openapi(getPermissionLabelsRoute, async c => {
     const labels = permissionServiceOld.getPermissionLabels()
     return c.json(success(labels), 200)
+  })
+  .openapi(getMyMenuRoute, async c => {
+    const user = getAuthUser(c)
+    const menuConfig = await permissionService.getUserMenuConfig(user.id, user.role)
+    return c.json(success(menuConfig), 200)
+  })
+  .openapi(getPermissionInitRoute, async c => {
+    const user = getAuthUser(c)
+    const [userPermissions, menuConfig, pagePermissions] = await Promise.all([
+      permissionService.getUserPermissions(user.id, user.role),
+      permissionService.getUserMenuConfig(user.id, user.role),
+      permissionService.getUserPagePermissions(user.id, user.role),
+    ])
+    const permissionCodes = userPermissions.map(p => p.code) as Permission[]
+    return c.json(
+      success({
+        permissions: permissionCodes,
+        menuConfig,
+        pagePermissions,
+        role: user.role,
+      }),
+      200
+    )
   })

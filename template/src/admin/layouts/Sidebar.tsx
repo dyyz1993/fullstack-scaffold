@@ -16,7 +16,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { usePermissions } from '../hooks/usePermissions'
-import { useMenuConfig } from '../hooks/useConfig'
 import type { MenuItem } from '@shared/modules/permission'
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -43,26 +42,10 @@ interface MenuItemComponentProps {
 
 const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }) => {
   const [expanded, setExpanded] = useState(false)
-  const { hasAnyPermission } = usePermissions()
   const Icon = ICON_MAP[item.icon] || LayoutDashboard
   const hasChildren = item.children && item.children.length > 0
 
-  if (item.permissions && item.permissions.length > 0 && !hasAnyPermission(item.permissions)) {
-    return null
-  }
-
   if (hasChildren) {
-    const visibleChildren = item.children!.filter(child => {
-      if (!child.permissions || child.permissions.length === 0) {
-        return true
-      }
-      return hasAnyPermission(child.permissions)
-    })
-
-    if (visibleChildren.length === 0) {
-      return null
-    }
-
     return (
       <div>
         <button
@@ -77,7 +60,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }
         </button>
         {expanded && (
           <div className="ml-4">
-            {visibleChildren.map(child => (
+            {item.children!.map(child => (
               <MenuItemComponent key={child.path} item={child} level={level + 1} />
             ))}
           </div>
@@ -102,9 +85,9 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
-  const { menuConfig, loading } = useMenuConfig()
+  const { menuConfig, loading, initialized } = usePermissions()
 
-  if (loading) {
+  if (loading || !initialized) {
     return (
       <aside className="bg-gray-900 text-white w-64 overflow-hidden" data-testid="admin-sidebar">
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">

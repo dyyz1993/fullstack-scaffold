@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createTestClient } from '../../test-utils/test-client'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import type { MenuItem } from '@shared/modules/permission'
 
 describe('Permission Routes', () => {
   const authHeaders = { Authorization: 'Bearer test-super-admin-1' }
@@ -202,6 +203,127 @@ describe('Permission Routes', () => {
       // 测试未授权访问需要认证的路由
       const res = await client.api.permissions.me.$get()
       // 应该返回 401
+      expect(res.status).toBe(401)
+    })
+  })
+
+  describe('GET /api/permissions/my-menu', () => {
+    it('should return filtered menu for super admin', async () => {
+      const client = createTestClient(undefined, { headers: authHeaders })
+      const res = await client.api.permissions['my-menu'].$get(undefined, { headers: authHeaders })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+        expect(data.data.length).toBeGreaterThan(0)
+      }
+    })
+
+    it('should return filtered menu for customer service', async () => {
+      const csAuthHeaders = { Authorization: 'Bearer test-customer-service-1' }
+      const client = createTestClient(undefined, { headers: csAuthHeaders })
+      const res = await client.api.permissions['my-menu'].$get(undefined, {
+        headers: csAuthHeaders,
+      })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+        const menuPaths = data.data.flatMap((item: MenuItem) =>
+          item.children ? item.children.map(c => c.path) : [item.path]
+        )
+        expect(menuPaths).toContain('/dashboard')
+        expect(menuPaths).toContain('/users')
+        expect(menuPaths).not.toContain('/system/settings')
+      }
+    })
+
+    it('should return filtered menu for regular user', async () => {
+      const userAuthHeaders = { Authorization: 'Bearer test-user-1' }
+      const client = createTestClient(undefined, { headers: userAuthHeaders })
+      const res = await client.api.permissions['my-menu'].$get(undefined, {
+        headers: userAuthHeaders,
+      })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+        const menuPaths = data.data.flatMap((item: MenuItem) =>
+          item.children ? item.children.map(c => c.path) : [item.path]
+        )
+        expect(menuPaths).toContain('/dashboard')
+        expect(menuPaths).not.toContain('/users')
+      }
+    })
+
+    it('should require authentication', async () => {
+      const client = createTestClient()
+      const res = await client.api.permissions['my-menu'].$get()
+      expect(res.status).toBe(401)
+    })
+  })
+
+  describe('GET /api/permissions/init', () => {
+    it('should return all permission data for super admin', async () => {
+      const client = createTestClient(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.init.$get(undefined, { headers: authHeaders })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(data.data).toHaveProperty('permissions')
+        expect(data.data).toHaveProperty('menuConfig')
+        expect(data.data).toHaveProperty('pagePermissions')
+        expect(data.data).toHaveProperty('role')
+        expect(Array.isArray(data.data.permissions)).toBe(true)
+        expect(Array.isArray(data.data.menuConfig)).toBe(true)
+        expect(Array.isArray(data.data.pagePermissions)).toBe(true)
+        expect(data.data.role).toBe('super_admin')
+      }
+    })
+
+    it('should return filtered data for customer service', async () => {
+      const csAuthHeaders = { Authorization: 'Bearer test-customer-service-1' }
+      const client = createTestClient(undefined, { headers: csAuthHeaders })
+      const res = await client.api.permissions.init.$get(undefined, { headers: csAuthHeaders })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(data.data.role).toBe('customer_service')
+        expect(data.data.permissions).toContain('user:view')
+        expect(data.data.permissions).not.toContain('user:delete')
+        expect(data.data.permissions).not.toContain('system:settings')
+      }
+    })
+
+    it('should return filtered data for regular user', async () => {
+      const userAuthHeaders = { Authorization: 'Bearer test-user-1' }
+      const client = createTestClient(undefined, { headers: userAuthHeaders })
+      const res = await client.api.permissions.init.$get(undefined, { headers: userAuthHeaders })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(data.data.role).toBe('user')
+        expect(data.data.permissions).toContain('content:view')
+        expect(data.data.permissions).toContain('order:view')
+        expect(data.data.permissions).not.toContain('user:view')
+      }
+    })
+
+    it('should require authentication', async () => {
+      const client = createTestClient()
+      const res = await client.api.permissions.init.$get()
       expect(res.status).toBe(401)
     })
   })

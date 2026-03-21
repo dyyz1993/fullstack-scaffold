@@ -30,7 +30,7 @@ export interface PagePermissionConfig {
   actions: PageAction[]
 }
 
-const MENU_CONFIG: MenuItem[] = [
+export const MENU_CONFIG: MenuItem[] = [
   {
     path: '/dashboard',
     label: '仪表盘',
@@ -107,7 +107,7 @@ const MENU_CONFIG: MenuItem[] = [
   },
 ]
 
-const PAGE_PERMISSIONS: PagePermissionConfig[] = [
+export const PAGE_PERMISSIONS: PagePermissionConfig[] = [
   {
     path: '/users',
     label: '用户管理',
