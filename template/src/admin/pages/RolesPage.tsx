@@ -23,19 +23,13 @@ import {
 import { useRoleStore } from '../hooks/useRoles'
 import { useConfig, usePermissionCategories } from '../hooks/useConfig'
 import { usePermissions } from '../hooks/usePermissions'
-import type { RoleType } from '@shared/modules/role/schemas'
+import type { RoleType, CreateRoleType } from '@shared/modules/role/schemas'
 import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
 import { apiClient } from '../services/apiClient'
 import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
 
-// RoleFormValues 用于编辑角色（包含 isActive），与 CreateRoleType（用于创建，包含 sortOrder）不同
-// eslint-disable-next-line local-rules/prefer-shared-types
-interface RoleFormValues {
-  code: string
-  name: string
-  label: string
-  description?: string | null
+type RoleFormValues = Pick<CreateRoleType, 'code' | 'name' | 'label' | 'description'> & {
   isActive?: boolean | null
 }
 

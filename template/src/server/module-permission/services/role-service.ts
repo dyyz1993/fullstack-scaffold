@@ -7,6 +7,12 @@ import { transformRole } from '../../utils/date'
 export class RoleService {
   async getAll(): Promise<ReturnType<typeof transformRole>[]> {
     const db = await getDb()
+    const result = await db.select().from(roles)
+    return result.map(transformRole)
+  }
+
+  async getActive(): Promise<ReturnType<typeof transformRole>[]> {
+    const db = await getDb()
     const result = await db.select().from(roles).where(eq(roles.isActive, true))
     return result.map(transformRole)
   }

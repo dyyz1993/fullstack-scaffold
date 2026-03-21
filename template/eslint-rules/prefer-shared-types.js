@@ -1,8 +1,8 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs'
 import { resolve, dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { URL } from 'url'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __dirname = dirname(new URL(import.meta.url).pathname)
 
 const SHARED_TYPES_CACHE = new Map()
 let cacheTimestamp = 0
@@ -166,6 +166,39 @@ function calculateSimilarity(fields1, fields2) {
   return intersection.size / union.size
 }
 
+function generatePickOmitSuggestion(typeName, localFields, sharedTypeName, sharedFields) {
+  const localSet = new Set(localFields)
+  const sharedSet = new Set(sharedFields)
+
+  const intersection = [...localSet].filter(f => sharedSet.has(f))
+  const onlyInLocal = [...localSet].filter(f => !sharedSet.has(f))
+  const onlyInShared = [...sharedSet].filter(f => !localSet.has(f))
+
+  const suggestions = []
+
+  if (intersection.length === localSet.size && onlyInLocal.length === 0) {
+    suggestions.push(`import type { ${sharedTypeName} } from '@shared/schemas'`)
+  } else if (intersection.length > 0) {
+    if (onlyInShared.length <= 2 && onlyInLocal.length <= 2) {
+      const pickFields = intersection.map(f => `'${f}'`).join(', ')
+      const extraFields = onlyInLocal.map(f => `${f}: <type>`).join('; ')
+      suggestions.push(
+        `type ${typeName} = Pick<${sharedTypeName}, ${pickFields}>` +
+          (onlyInLocal.length > 0 ? ` & { ${extraFields} }` : '')
+      )
+    } else if (onlyInShared.length < intersection.length) {
+      const omitFields = onlyInShared.map(f => `'${f}'`).join(' | ')
+      const extraFields = onlyInLocal.map(f => `${f}: <type>`).join('; ')
+      suggestions.push(
+        `type ${typeName} = Omit<${sharedTypeName}, ${omitFields}>` +
+          (onlyInLocal.length > 0 ? ` & { ${extraFields} }` : '')
+      )
+    }
+  }
+
+  return suggestions
+}
+
 function extractFieldsFromTSInterface(node) {
   const fields = new Set()
 
@@ -202,13 +235,14 @@ export const preferSharedTypes = {
   meta: {
     type: 'suggestion',
     docs: {
-      description: '检测与 @shared/schemas 中结构相似的类型定义，建议直接导入',
+      description: '检测与 @shared/schemas 中结构相似的类型定义，建议直接导入或使用 Pick/Omit 派生',
       recommended: true,
     },
     messages: {
       similarTypeDetected:
         '类型 "{{typeName}}" 的结构 (字段: {{fields}}) 与 @shared/schemas 中的 "{{sharedTypeName}}" (字段: {{sharedFields}}) 相似度 {{similarity}}%。\n' +
-        '建议直接导入: `import type { {{sharedTypeName}} } from "@shared/schemas"`',
+        '建议使用 Pick/Omit 派生类型:\n' +
+        '{{suggestions}}',
       duplicateTypeDetected:
         '类型 "{{typeName}}" 已存在于 @shared/schemas 中。\n' +
         '请直接导入: `import type { {{typeName}} } from "@shared/schemas"`',
@@ -271,6 +305,13 @@ export const preferSharedTypes = {
           const similarity = calculateSimilarity(fields, sharedFields)
 
           if (similarity >= similarityThreshold) {
+            const suggestions = generatePickOmitSuggestion(
+              typeName,
+              fields,
+              sharedTypeName,
+              sharedFields
+            )
+
             context.report({
               node,
               messageId: 'similarTypeDetected',
@@ -281,6 +322,7 @@ export const preferSharedTypes = {
                 sharedFields:
                   [...sharedFields].slice(0, 5).join(', ') + (sharedFields.size > 5 ? '...' : ''),
                 similarity: Math.round(similarity * 100),
+                suggestions: suggestions.length > 0 ? suggestions.join('\n') : '直接导入共享类型',
               },
             })
             break
@@ -309,6 +351,13 @@ export const preferSharedTypes = {
           const similarity = calculateSimilarity(fields, sharedFields)
 
           if (similarity >= similarityThreshold) {
+            const suggestions = generatePickOmitSuggestion(
+              typeName,
+              fields,
+              sharedTypeName,
+              sharedFields
+            )
+
             context.report({
               node,
               messageId: 'similarTypeDetected',
@@ -319,6 +368,7 @@ export const preferSharedTypes = {
                 sharedFields:
                   [...sharedFields].slice(0, 5).join(', ') + (sharedFields.size > 5 ? '...' : ''),
                 similarity: Math.round(similarity * 100),
+                suggestions: suggestions.length > 0 ? suggestions.join('\n') : '直接导入共享类型',
               },
             })
             break
