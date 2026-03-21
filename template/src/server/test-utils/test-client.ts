@@ -14,10 +14,8 @@ import type { SSEClient } from '@shared/schemas'
 /**
  * 测试客户端类型
  *
- * 注意：此项目通过 patch-package 修改了 TypeScript 的类型实例化深度限制
- * 从默认的 100 增加到 500，以支持复杂的路由类型推导。
- *
- * 参见：patches/typescript+5.8.3.patch
+ * 注意：TypeScript 5.8+ 和 Hono 4.12+ 已优化类型推导性能，
+ * 无需修改 TypeScript 的类型实例化深度限制即可正常工作。
  */
 export type TestClient = ReturnType<typeof hc<AppType>>
 
