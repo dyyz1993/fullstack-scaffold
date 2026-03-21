@@ -167,7 +167,7 @@ describe('Permission Service', () => {
     it('should return same permissions as getRolePermissions', async () => {
       const role = await roleService.getByCode('customer_service')
       const userPermissions = await service.getUserPermissions('user-123', 'customer_service')
-      const rolePermissions = await service.getRolePermissions(role!.id)
+      const rolePermissions = await service.getRolePermissions(role?.id as string)
       expect(userPermissions.length).toBe(rolePermissions.length)
     })
 

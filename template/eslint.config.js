@@ -1,3 +1,7 @@
+/**
+ * @framework-baseline 99945e0fd966c3a7
+ */
+
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
@@ -87,6 +91,7 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/prefer-ts-expect-error': 'off',
       'no-console': ['error', { allow: ['warn', 'error'] }],
       'local-rules/no-ambiguous-file-paths': 'error',
       'local-rules/no-direct-ws-sse': 'error',
@@ -203,7 +208,13 @@ export default tseslint.config(
       'src/server/test-utils/**/*.ts',
       'src/server/index.ts',
       'src/client/services/**/*.ts',
+      'eslint-rules/**/*.js',
+      'eslint.config.js',
+      'patches/**/*',
     ],
+    plugins: {
+      'local-rules': localRules,
+    },
     rules: {
       'local-rules/framework-protect': 'error',
     },

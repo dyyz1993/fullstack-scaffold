@@ -79,9 +79,7 @@ export const ClearTodosResultSchema = z.object({
   deletedCount: z.number(),
 })
 
-export const SuccessSchema = z.object({
-  success: z.literal(true),
-})
+export const SuccessSchema = z.object({})
 
 export const DownloadTokenSchema = z.object({
   token: z.string(),

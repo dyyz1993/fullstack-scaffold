@@ -1,5 +1,5 @@
 /**
- * @framework-baseline ab16e97716a7556e
+ * @framework-baseline 5517d7521a8bb458
  * @framework-modify
  * @reason 添加客户端认证支持，自动在请求头中携带 Authorization token
  * @impact 影响所有客户端 API 请求，需要用户登录后才能访问受保护的接口

@@ -2,7 +2,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import { Permission } from '@shared/modules/permission'
 import {
   UserSchema,
@@ -115,41 +115,29 @@ const createUserRoute = createRoute({
 export const userManagementRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getUsersRoute, async c => {
     const users = await adminService.getUsers()
-    return c.json({ success: true, data: users })
+    return c.json(success(users), 200)
   })
   .openapi(getUserRoute, async c => {
     const { id } = c.req.valid('param')
     const user = await adminService.getUserById(id)
     if (!user) {
-      return c.json({ success: false, error: 'User not found' }, 404)
+      return c.json({ success: false as const, error: 'User not found' }, 404)
     }
-    return c.json({ success: true, data: user })
+    return c.json(success(user), 200)
   })
   .openapi(updateUserRoute, async c => {
-    try {
-      const { id } = c.req.valid('param')
-      const data = c.req.valid('json')
-      const user = await adminService.updateUser(id, data)
-      return c.json({ success: true, data: user })
-    } catch (error) {
-      return c.json({ success: false, error: (error as Error).message }, 404)
-    }
+    const { id } = c.req.valid('param')
+    const data = c.req.valid('json')
+    const user = await adminService.updateUser(id, data)
+    return c.json(success(user), 200)
   })
   .openapi(deleteUserRoute, async c => {
-    try {
-      const { id } = c.req.valid('param')
-      await adminService.deleteUser(id)
-      return c.json({ success: true })
-    } catch (error) {
-      return c.json({ success: false, error: (error as Error).message }, 404)
-    }
+    const { id } = c.req.valid('param')
+    await adminService.deleteUser(id)
+    return c.json(success({}), 200)
   })
   .openapi(createUserRoute, async c => {
-    try {
-      const data = c.req.valid('json')
-      const user = await adminService.createUser(data)
-      return c.json({ success: true, data: user })
-    } catch (error) {
-      return c.json({ success: false, error: (error as Error).message }, 400)
-    }
+    const data = c.req.valid('json')
+    const user = await adminService.createUser(data)
+    return c.json(success(user), 200)
   })

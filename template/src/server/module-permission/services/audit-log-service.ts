@@ -1,13 +1,11 @@
-import type {
-  PermissionAuditLog,
-  NewPermissionAuditLog,
-} from '../../db/schema/permission-audit-logs'
+import type { NewPermissionAuditLog } from '../../db/schema/permission-audit-logs'
 import { getDb } from '../../db'
 import { permissionAuditLogs } from '../../db/schema'
 import { eq, and, gte, lte, desc } from 'drizzle-orm'
+import { transformAuditLog } from '../../utils/date'
 
 export class AuditLogService {
-  async create(data: NewPermissionAuditLog): Promise<PermissionAuditLog> {
+  async create(data: NewPermissionAuditLog): Promise<ReturnType<typeof transformAuditLog>> {
     const db = await getDb()
     const rows = await db
       .insert(permissionAuditLogs)
@@ -16,10 +14,10 @@ export class AuditLogService {
         createdAt: new Date(),
       })
       .returning()
-    return rows[0]
+    return transformAuditLog(rows[0])
   }
 
-  async getAll(limit = 50, offset = 0): Promise<PermissionAuditLog[]> {
+  async getAll(limit = 50, offset = 0): Promise<ReturnType<typeof transformAuditLog>[]> {
     const db = await getDb()
     const rows = await db
       .select()
@@ -27,10 +25,10 @@ export class AuditLogService {
       .orderBy(desc(permissionAuditLogs.createdAt))
       .limit(limit)
       .offset(offset)
-    return rows
+    return rows.map(transformAuditLog)
   }
 
-  async getByUserId(userId: string, limit = 50): Promise<PermissionAuditLog[]> {
+  async getByUserId(userId: string, limit = 50): Promise<ReturnType<typeof transformAuditLog>[]> {
     const db = await getDb()
     const rows = await db
       .select()
@@ -38,10 +36,13 @@ export class AuditLogService {
       .where(eq(permissionAuditLogs.userId, userId))
       .orderBy(desc(permissionAuditLogs.createdAt))
       .limit(limit)
-    return rows
+    return rows.map(transformAuditLog)
   }
 
-  async getByResource(resourceType: string, resourceId?: string): Promise<PermissionAuditLog[]> {
+  async getByResource(
+    resourceType: string,
+    resourceId?: string
+  ): Promise<ReturnType<typeof transformAuditLog>[]> {
     const db = await getDb()
     const conditions = [eq(permissionAuditLogs.resourceType, resourceType)]
     if (resourceId) {
@@ -52,7 +53,7 @@ export class AuditLogService {
       .from(permissionAuditLogs)
       .where(and(...conditions))
       .orderBy(desc(permissionAuditLogs.createdAt))
-    return rows
+    return rows.map(transformAuditLog)
   }
 
   async search(query: {
@@ -61,7 +62,7 @@ export class AuditLogService {
     resourceType?: string
     startDate?: Date
     endDate?: Date
-  }): Promise<PermissionAuditLog[]> {
+  }): Promise<ReturnType<typeof transformAuditLog>[]> {
     const db = await getDb()
     const conditions = []
 
@@ -86,7 +87,7 @@ export class AuditLogService {
       .from(permissionAuditLogs)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(permissionAuditLogs.createdAt))
-    return rows
+    return rows.map(transformAuditLog)
   }
 
   async deleteOlderThan(days: number): Promise<number> {

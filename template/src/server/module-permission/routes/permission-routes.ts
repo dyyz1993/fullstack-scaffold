@@ -13,6 +13,7 @@ import {
   PermissionCategoriesSchema,
   RoleLabelsSchema,
   PermissionLabelsSchema,
+  Permission,
 } from '@shared/modules/permission'
 import * as permissionServiceOld from '../services/permission-service'
 
@@ -94,41 +95,42 @@ const getPermissionLabelsRoute = createRoute({
 export const permissionRoutes = new OpenAPIHono()
   .openapi(getRolesRoute, async c => {
     const roles = await permissionService.getAllRoles()
-    return c.json(success(roles))
+    return c.json(success(roles), 200)
   })
   .openapi(getPermissionsRoute, async c => {
     const permissions = await permissionService.getAllPermissions()
-    return c.json(success(permissions))
+    return c.json(success(permissions), 200)
   })
   .openapi(getUserPermissionsRoute, async c => {
     const user = getAuthUser(c)
     const userPermissions = await permissionService.getUserPermissions(user.id, user.role)
-    const permissionCodes = userPermissions.map(p => p.code)
+    const permissionCodes = userPermissions.map(p => p.code) as Permission[]
     return c.json(
       success({
         userId: user.id,
         role: user.role,
         permissions: permissionCodes,
-      })
+      }),
+      200
     )
   })
   .openapi(getMenuConfigRoute, async c => {
     const menuConfig = permissionServiceOld.getMenuConfig()
-    return c.json(success(menuConfig))
+    return c.json(success(menuConfig), 200)
   })
   .openapi(getPagePermissionsRoute, async c => {
     const pagePermissions = permissionServiceOld.getPagePermissions()
-    return c.json(success(pagePermissions))
+    return c.json(success(pagePermissions), 200)
   })
   .openapi(getPermissionCategoriesRoute, async c => {
     const categories = permissionServiceOld.getPermissionCategories()
-    return c.json(success(categories))
+    return c.json(success(categories), 200)
   })
   .openapi(getRoleLabelsRoute, async c => {
     const labels = permissionServiceOld.getRoleLabels()
-    return c.json(success(labels))
+    return c.json(success(labels), 200)
   })
   .openapi(getPermissionLabelsRoute, async c => {
     const labels = permissionServiceOld.getPermissionLabels()
-    return c.json(success(labels))
+    return c.json(success(labels), 200)
   })

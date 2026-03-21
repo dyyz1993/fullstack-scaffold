@@ -8,13 +8,12 @@ import {
   getPublicFileUrl,
   getPrivateFileUrl,
 } from '../../utils/file-storage'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import {
   FileDownloadSchema,
   PrivateFileQuerySchema,
   GenerateUrlRequestSchema,
   FileUrlResponseSchema,
-  EmptySchema,
 } from '@shared/schemas'
 
 const FileContentSchema = z.any()
@@ -89,7 +88,14 @@ const checkFileRoute = createRoute({
     params: FileDownloadSchema,
   },
   responses: {
-    200: successResponse(EmptySchema, 'File exists'),
+    200: {
+      description: 'File exists',
+      content: {
+        'application/octet-stream': {
+          schema: z.null(),
+        },
+      },
+    },
     404: errorResponse('File not found'),
   },
 })
@@ -103,7 +109,14 @@ const checkPrivateFileRoute = createRoute({
     query: PrivateFileQuerySchema,
   },
   responses: {
-    200: successResponse(EmptySchema, 'File exists'),
+    200: {
+      description: 'File exists',
+      content: {
+        'application/octet-stream': {
+          schema: z.null(),
+        },
+      },
+    },
     403: errorResponse('Invalid or expired signature'),
     404: errorResponse('File not found'),
   },
@@ -115,7 +128,7 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false, error: 'File not found' }, 404)
+      return c.json({ success: false as const, error: 'File not found' }, 404)
     }
 
     const filePath = getFilePath(namespace, filename)
@@ -135,16 +148,16 @@ export const fileRoutes = new OpenAPIHono()
 
     const now = Math.floor(Date.now() / 1000)
     if (now > expiry) {
-      return c.json({ success: false, error: 'URL has expired' }, 403)
+      return c.json({ success: false as const, error: 'URL has expired' }, 403)
     }
 
     if (!verifySignature(namespace, filename, expiry, signature)) {
-      return c.json({ success: false, error: 'Invalid signature' }, 403)
+      return c.json({ success: false as const, error: 'Invalid signature' }, 403)
     }
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false, error: 'File not found' }, 404)
+      return c.json({ success: false as const, error: 'File not found' }, 404)
     }
 
     const filePath = getFilePath(namespace, filename)
@@ -162,31 +175,25 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false, error: 'File not found' }, 404)
+      return c.json({ success: false as const, error: 'File not found' }, 404)
     }
 
     const baseUrl = process.env.PUBLIC_URL || ''
 
     if (isPrivate) {
       const { url, expiry } = getPrivateFileUrl(namespace, filename, expirySeconds, baseUrl)
-      return c.json({
-        success: true,
-        data: { url, expiry },
-      })
+      return c.json(success({ url, expiry }), 200)
     }
 
     const url = getPublicFileUrl(namespace, filename, baseUrl)
-    return c.json({
-      success: true,
-      data: { url },
-    })
+    return c.json(success({ url }), 200)
   })
   .openapi(checkFileRoute, async c => {
     const { namespace, filename } = c.req.valid('param')
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false, error: 'File not found' }, 404)
+      return c.json({ success: false as const, error: 'File not found' }, 404)
     }
 
     c.header('Content-Type', fileInfo.mimeType)
@@ -201,16 +208,16 @@ export const fileRoutes = new OpenAPIHono()
 
     const now = Math.floor(Date.now() / 1000)
     if (now > expiry) {
-      return c.json({ success: false, error: 'URL has expired' }, 403)
+      return c.json({ success: false as const, error: 'URL has expired' }, 403)
     }
 
     if (!verifySignature(namespace, filename, expiry, signature)) {
-      return c.json({ success: false, error: 'Invalid signature' }, 403)
+      return c.json({ success: false as const, error: 'Invalid signature' }, 403)
     }
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false, error: 'File not found' }, 404)
+      return c.json({ success: false as const, error: 'File not found' }, 404)
     }
 
     c.header('Content-Type', fileInfo.mimeType)

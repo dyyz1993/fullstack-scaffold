@@ -2,7 +2,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import { Role } from '@shared/modules/admin'
 import {
   NotificationSchema,
@@ -120,28 +120,28 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
       unreadOnly: unreadOnly === 'true',
       limit: limit ? parseInt(limit, 10) : 20,
     })
-    return c.json({ success: true, data: notifications })
+    return c.json(success(notifications), 200)
   })
   .openapi(getUnreadCountRoute, async c => {
     const count = adminService.getUnreadCount()
-    return c.json({ success: true, data: { count } })
+    return c.json(success({ count }), 200)
   })
   .openapi(markNotificationReadRoute, async c => {
     const { id } = c.req.valid('param')
-    const success = adminService.markNotificationRead(id)
-    if (!success) {
-      return c.json({ success: false, error: 'Notification not found' }, 404)
+    const marked = await adminService.markNotificationRead(id)
+    if (!marked) {
+      return c.json({ success: false as const, error: 'Notification not found' }, 404)
     }
-    return c.json({ success: true })
+    return c.json(success({}), 200)
   })
   .openapi(markAllNotificationsReadRoute, async c => {
-    const count = adminService.markAllNotificationsRead()
-    return c.json({ success: true, data: { count } })
+    const count = await adminService.markAllNotificationsRead()
+    return c.json(success({ count }), 200)
   })
   .openapi(sendTestNotificationRoute, async c => {
     const { type } = c.req.valid('json')
     const notification = await adminService.sendTestNotification(type)
-    return c.json({ success: true, data: notification })
+    return c.json(success(notification), 200)
   })
   .openapi(notificationSSERoute, async c => {
     const env = c.env as { REALTIME_DO?: DurableObjectNamespace } | undefined
@@ -163,5 +163,5 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
       ).handleSSERequest()
       return response
     }
-    return c.json({ success: false, error: 'SSE not supported' }, 500)
+    return c.json({ success: false as const, error: 'SSE not supported' }, 500)
   })

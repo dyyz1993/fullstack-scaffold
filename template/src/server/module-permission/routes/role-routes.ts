@@ -5,7 +5,7 @@ import { authMiddleware } from '../../middleware/auth'
 import { Role } from '@shared/modules/permission'
 import { roleService } from '../services/role-service'
 import { permissionService } from '../services/permission-service-impl'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import {
   RoleSchema,
   CreateRoleSchema,
@@ -139,6 +139,7 @@ const updateRolePermissionsRoute = createRoute({
   },
   responses: {
     200: successResponse(SuccessSchema, 'Role permissions updated'),
+    400: errorResponse('Permission dependency validation failed'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Role not found'),
@@ -148,25 +149,25 @@ const updateRolePermissionsRoute = createRoute({
 export const roleRoutes = new OpenAPIHono()
   .openapi(getRolesRoute, async c => {
     const roles = await roleService.getAll()
-    return c.json({ success: true, data: roles })
+    return c.json(success(roles), 200)
   })
   .openapi(getRoleRoute, async c => {
     const { id } = c.req.valid('param')
     const role = await roleService.getById(id)
 
     if (!role) {
-      return c.json({ success: false, error: 'Role not found' }, 404)
+      return c.json({ success: false as const, error: 'Role not found' }, 404)
     }
 
     const permissions = await permissionService.getRolePermissions(id)
 
-    return c.json({
-      success: true,
-      data: {
+    return c.json(
+      success({
         ...role,
         permissions: permissions.map(p => p.code),
-      },
-    })
+      }),
+      200
+    )
   })
   .openapi(createRoleRoute, async c => {
     const data = c.req.valid('json')
@@ -176,7 +177,7 @@ export const roleRoutes = new OpenAPIHono()
       sortOrder: data.sortOrder ?? 0,
     })
 
-    return c.json({ success: true, data: role })
+    return c.json(success(role), 200)
   })
   .openapi(updateRoleRoute, async c => {
     const { id } = c.req.valid('param')
@@ -185,21 +186,24 @@ export const roleRoutes = new OpenAPIHono()
     const role = await roleService.update(id, data)
 
     if (!role) {
-      return c.json({ success: false, error: 'Role not found' }, 404)
+      return c.json({ success: false as const, error: 'Role not found' }, 404)
     }
 
-    return c.json({ success: true, data: role })
+    return c.json(success(role), 200)
   })
   .openapi(deleteRoleRoute, async c => {
     const { id } = c.req.valid('param')
 
-    const success = await roleService.delete(id)
+    const deleted = await roleService.delete(id)
 
-    if (!success) {
-      return c.json({ success: false, error: 'Cannot delete system role or role not found' }, 400)
+    if (!deleted) {
+      return c.json(
+        { success: false as const, error: 'Cannot delete system role or role not found' },
+        400
+      )
     }
 
-    return c.json({ success: true })
+    return c.json(success({}), 200)
   })
   .openapi(updateRolePermissionsRoute, async c => {
     const { id } = c.req.valid('param')
@@ -207,18 +211,21 @@ export const roleRoutes = new OpenAPIHono()
 
     const role = await roleService.getById(id)
     if (!role) {
-      return c.json({ success: false, error: 'Role not found' }, 404)
+      return c.json({ success: false as const, error: 'Role not found' }, 404)
     }
 
     if (role.code === 'super_admin') {
-      return c.json({ success: false, error: 'Cannot modify super admin permissions' }, 403)
+      return c.json(
+        { success: false as const, error: 'Cannot modify super admin permissions' },
+        403
+      )
     }
 
     const validation = validatePermissionDependencies(permissionIds)
     if (!validation.valid) {
       return c.json(
         {
-          success: false,
+          success: false as const,
           error: '权限依赖校验失败',
           details: validation.errors,
         },
@@ -248,5 +255,5 @@ export const roleRoutes = new OpenAPIHono()
       }
     }
 
-    return c.json({ success: true })
+    return c.json(success({}), 200)
   })

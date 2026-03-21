@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { getCookie } from 'hono/cookie'
 import { generateCaptcha, verifyCaptcha } from '../services/captcha-service'
 import { markCaptchaVerifiedMiddleware } from '../../middleware/captcha'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import {
   CaptchaResponseSchema,
   VerifyCaptchaRequestSchema,
@@ -42,13 +42,7 @@ export const captchaRoutes = new OpenAPIHono()
   .openapi(getCaptchaRoute, c => {
     const { id, image } = generateCaptcha()
 
-    return c.json({
-      success: true,
-      data: {
-        id,
-        image,
-      },
-    })
+    return c.json(success({ id, image }), 200)
   })
   .openapi(verifyCaptchaRoute, async c => {
     const { id, code } = c.req.valid('json')
@@ -61,16 +55,11 @@ export const captchaRoutes = new OpenAPIHono()
         markCaptchaVerifiedMiddleware(sessionId)
       }
 
-      return c.json({
-        success: true,
-        data: {
-          message: '验证成功',
-        },
-      })
+      return c.json(success({ message: '验证成功' }), 200)
     } else {
       return c.json(
         {
-          success: false,
+          success: false as const,
           error: '验证码错误或已过期',
         },
         400

@@ -2,26 +2,28 @@ import type { Role, NewRole } from '../../db/schema/roles'
 import { getDb } from '../../db'
 import { roles, userRoles } from '../../db/schema'
 import { eq, and } from 'drizzle-orm'
+import { transformRole } from '../../utils/date'
 
 export class RoleService {
-  async getAll(): Promise<Role[]> {
+  async getAll(): Promise<ReturnType<typeof transformRole>[]> {
     const db = await getDb()
-    return db.select().from(roles).where(eq(roles.isActive, true))
+    const result = await db.select().from(roles).where(eq(roles.isActive, true))
+    return result.map(transformRole)
   }
 
-  async getById(id: string): Promise<Role | undefined> {
+  async getById(id: string): Promise<ReturnType<typeof transformRole> | undefined> {
     const db = await getDb()
     const rows = await db.select().from(roles).where(eq(roles.id, id))
-    return rows[0]
+    return rows[0] ? transformRole(rows[0]) : undefined
   }
 
-  async getByCode(code: string): Promise<Role | undefined> {
+  async getByCode(code: string): Promise<ReturnType<typeof transformRole> | undefined> {
     const db = await getDb()
     const rows = await db.select().from(roles).where(eq(roles.code, code))
-    return rows[0]
+    return rows[0] ? transformRole(rows[0]) : undefined
   }
 
-  async create(data: NewRole): Promise<Role> {
+  async create(data: NewRole): Promise<ReturnType<typeof transformRole>> {
     const db = await getDb()
     const rows = await db
       .insert(roles)
@@ -31,10 +33,13 @@ export class RoleService {
         updatedAt: new Date(),
       })
       .returning()
-    return rows[0]
+    return transformRole(rows[0])
   }
 
-  async update(id: string, data: Partial<NewRole>): Promise<Role | undefined> {
+  async update(
+    id: string,
+    data: Partial<NewRole>
+  ): Promise<ReturnType<typeof transformRole> | undefined> {
     const db = await getDb()
     const rows = await db
       .update(roles)
@@ -44,7 +49,7 @@ export class RoleService {
       })
       .where(eq(roles.id, id))
       .returning()
-    return rows[0]
+    return rows[0] ? transformRole(rows[0]) : undefined
   }
 
   async delete(id: string): Promise<boolean> {

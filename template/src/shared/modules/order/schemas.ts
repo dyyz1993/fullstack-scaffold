@@ -34,7 +34,6 @@ export const UpdateOrderSchema = z.object({
 export const OrderListSchema = z.array(OrderSchema)
 
 export const DeleteResultSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
 })
 

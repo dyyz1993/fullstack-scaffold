@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
 import { auditLogService } from '../services/audit-log-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import { AuditLogSchema } from '@shared/modules/audit'
 
 const getAuditLogsRoute = createRoute({
@@ -57,11 +57,11 @@ export const auditLogRoutes = new OpenAPIHono()
         action: query.action,
         resourceType: query.resourceType,
       })
-      return c.json({ success: true, data: logs.slice(offset, offset + limit) })
+      return c.json(success(logs.slice(offset, offset + limit)), 200)
     }
 
     const logs = await auditLogService.getAll(limit, offset)
-    return c.json({ success: true, data: logs })
+    return c.json(success(logs), 200)
   })
   .openapi(getAuditLogRoute, async c => {
     const { id } = c.req.valid('param')
@@ -69,8 +69,8 @@ export const auditLogRoutes = new OpenAPIHono()
     const log = logs.find(l => l.id === id)
 
     if (!log) {
-      return c.json({ success: false, error: 'Audit log not found' }, 404)
+      return c.json({ success: false as const, error: 'Audit log not found' }, 404)
     }
 
-    return c.json({ success: true, data: log })
+    return c.json(success(log), 200)
   })

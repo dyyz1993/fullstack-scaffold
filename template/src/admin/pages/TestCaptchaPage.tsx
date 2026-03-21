@@ -43,7 +43,11 @@ export const TestCaptchaPage: React.FC = () => {
       const promises = Array.from({ length: 5 }, () => apiClient.api.admin.stats.$get())
 
       const responses = await Promise.all(promises)
-      const results = await Promise.all(responses.map(async r => await r.json()))
+      const results = await Promise.all(
+        responses.map(
+          async (r: Awaited<ReturnType<typeof apiClient.api.admin.stats.$get>>) => await r.json()
+        )
+      )
 
       setResult(`✅ 并发请求全部成功:\n${JSON.stringify(results, null, 2)}`)
       message.success('并发请求测试成功')

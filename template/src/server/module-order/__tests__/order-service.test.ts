@@ -112,7 +112,7 @@ describe('Order Service', () => {
       const created = await service.createOrder(data)
 
       const result = await service.deleteOrder(created.id)
-      expect(result.success).toBe(true)
+      expect(result.message).toBe('订单已删除')
 
       const found = await service.getOrderById(created.id)
       expect(found).toBeNull()
@@ -120,7 +120,7 @@ describe('Order Service', () => {
 
     it('should return failure when deleting non-existent order', async () => {
       const result = await service.deleteOrder('non-existent-order-id')
-      expect(result.success).toBe(false)
+      expect(result.message).toBe('订单不存在')
     })
   })
 

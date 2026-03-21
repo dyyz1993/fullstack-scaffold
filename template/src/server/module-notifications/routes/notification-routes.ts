@@ -156,17 +156,17 @@ export const notificationRoutes = new OpenAPIHono()
       limit: query.limit ? parseInt(query.limit) : 20,
       cursor: query.cursor,
     })
-    return c.json(success({ items: result.data, nextCursor: result.nextCursor }))
+    return c.json(success({ items: result.data, nextCursor: result.nextCursor }), 200)
   })
   .openapi(unreadCountRoute, async c => {
     const count = notificationService.getUnreadCount()
-    return c.json(success({ count }))
+    return c.json(success({ count }), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const notification = notificationService.getNotification(id)
     if (!notification) throw new NotFoundError('Notification', id)
-    return c.json(success(notification))
+    return c.json(success(notification), 200)
   })
   .openapi(createRouteDef, async c => {
     const data = c.req.valid('json')
@@ -176,17 +176,17 @@ export const notificationRoutes = new OpenAPIHono()
   })
   .openapi(markAllReadRoute, async c => {
     const count = notificationService.markAllAsRead()
-    return c.json(success({ count }))
+    return c.json(success({ count }), 200)
   })
   .openapi(markReadRoute, async c => {
     const { id } = c.req.valid('param')
     const notification = notificationService.markAsRead(id)
     if (!notification) throw new NotFoundError('Notification', id)
-    return c.json(success(notification))
+    return c.json(success(notification), 200)
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const deleted = notificationService.deleteNotification(id)
     if (!deleted) throw new NotFoundError('Notification', id)
-    return c.json(success({ id }))
+    return c.json(success({ id }), 200)
   })

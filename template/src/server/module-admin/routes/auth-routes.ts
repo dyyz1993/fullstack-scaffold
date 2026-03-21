@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import { getAuthUser } from '../../utils/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import {
   AuthUserSchema,
   LoginRequestSchema,
@@ -65,23 +65,15 @@ const registerRoute = createRoute({
 export const authRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getCurrentUserRoute, async c => {
     const user = getAuthUser(c)
-    return c.json({ success: true, data: user })
+    return c.json(success(user), 200)
   })
   .openapi(loginRoute, async c => {
-    try {
-      const data = c.req.valid('json')
-      const result = await adminService.login(data)
-      return c.json({ success: true, data: result })
-    } catch (error) {
-      return c.json({ success: false, error: (error as Error).message }, 401)
-    }
+    const data = c.req.valid('json')
+    const result = await adminService.login(data)
+    return c.json(success(result), 200)
   })
   .openapi(registerRoute, async c => {
-    try {
-      const data = c.req.valid('json')
-      const user = await adminService.register(data)
-      return c.json({ success: true, data: user }, 201)
-    } catch (error) {
-      return c.json({ success: false, error: (error as Error).message }, 400)
-    }
+    const data = c.req.valid('json')
+    const user = await adminService.register(data)
+    return c.json(success(user), 201)
   })

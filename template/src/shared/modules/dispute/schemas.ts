@@ -50,7 +50,6 @@ export const ResolveDisputeSchema = z.object({
 export const DisputeListSchema = z.array(DisputeSchema)
 
 export const DeleteResultSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
 })
 

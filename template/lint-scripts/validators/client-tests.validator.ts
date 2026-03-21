@@ -126,25 +126,30 @@ export function formatClientTestErrors(errors: ClientTestError[]): string {
     output += `     Suggestion: ${err.suggestion}\n\n`
   }
 
-  output += '📋 Client Test Coverage Guidelines:\n\n'
-  output += '  src/client/\n'
-  output += '    ├── components/\n'
-  output += '    │   ├── Component.tsx\n'
-  output += '    │   └── __tests__/\n'
-  output += '    │       └── Component.test.tsx    # Required\n'
-  output += '    ├── pages/\n'
-  output += '    │   ├── Page.tsx\n'
-  output += '    │   └── __tests__/\n'
-  output += '    │       └── Page.test.tsx         # Required\n'
-  output += '    ├── stores/\n'
-  output += '    │   ├── store.ts\n'
-  output += '    │   └── __tests__/\n'
-  output += '    │       └── store.test.ts         # Required\n'
-  output += '    └── hooks/\n'
-  output += '        ├── useHook.ts\n'
-  output += '        └── __tests__/\n'
-  output += '            └── useHook.test.ts       # Required\n\n'
-  output += '  📖 Every component, page, store, and hook should have a test file.\n'
+  output += '📋 测试文件位置: src/client/{components,pages}/__tests__/*.test.tsx\n\n'
+
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+  output += '📚 测试规范文档\n'
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
+  output += '  📖 测试规范: .trae/rules/60-testing-standards.md\n'
+  output += '  📖 组件规范: .trae/rules/30-client-components.md\n\n'
+
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+  output += '🎯 测试价值 & 快速上手\n'
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
+  output += '  💡 为什么测试？防止回归 | 文档作用 | 重构信心\n\n'
+  output += '  📝 示例:\n'
+  output += "     import { render, screen } from '@testing-library/react'\n"
+  output += "     import { Button } from '../Button'\n"
+  output += '     \n'
+  output += "     describe('Button', () => {\n"
+  output += "       it('renders label', () => {\n"
+  output += '         render(<Button label="Click" onClick={() => {}} />)\n'
+  output += "         expect(screen.getByText('Click')).toBeInTheDocument()\n"
+  output += '       })\n'
+  output += '     })\n\n'
+
+  output += '  💡 提示: 测试用户行为而非实现细节 | Mock 外部依赖\n\n'
 
   return output
 }

@@ -2,7 +2,6 @@ import type {
   Content,
   CreateContentInput,
   UpdateContentInput,
-  DeleteResult,
   ContentCategory,
   ContentStatus,
 } from '@shared/modules/content'
@@ -125,7 +124,7 @@ export async function updateContent(id: string, data: UpdateContentInput): Promi
   return null
 }
 
-export async function deleteContent(id: string): Promise<DeleteResult> {
+export async function deleteContent(id: string): Promise<{ success: boolean; message: string }> {
   const index = MOCK_CONTENTS.findIndex(c => c.id === id)
   if (index !== -1) {
     MOCK_CONTENTS.splice(index, 1)

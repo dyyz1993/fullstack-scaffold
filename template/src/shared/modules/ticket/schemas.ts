@@ -63,7 +63,6 @@ export const ReplyTicketSchema = z.object({
 export const TicketListSchema = z.array(TicketSchema)
 
 export const DeleteResultSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
 })
 

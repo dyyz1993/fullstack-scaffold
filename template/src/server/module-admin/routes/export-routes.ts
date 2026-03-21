@@ -2,7 +2,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import { DownloadTokenSchema } from '@shared/modules/admin'
 
 const downloadTokens = new Map<string, { createdAt: number; expiresIn: number }>()
@@ -143,14 +143,14 @@ export const exportRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } 
   .openapi(generateDownloadTokenRoute, async c => {
     const token = generateDownloadToken()
     const downloadUrl = `/api/admin/todos/export/download/${token}`
-    return c.json({
-      success: true as const,
-      data: {
+    return c.json(
+      success({
         token,
         downloadUrl,
         expiresIn: 60000,
-      },
-    })
+      }),
+      200
+    )
   })
   .openapi(downloadWithTokenRoute, async c => {
     const { token } = c.req.valid('param')

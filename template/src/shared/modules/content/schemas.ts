@@ -42,7 +42,6 @@ export const UpdateContentSchema = z.object({
 export const ContentListSchema = z.array(ContentSchema)
 
 export const DeleteResultSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
 })
 

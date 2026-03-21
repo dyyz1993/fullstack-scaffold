@@ -16,9 +16,15 @@ const FRAMEWORK_GLOBS = [
   'src/server/test-utils/**/*.ts',
   'src/server/index.ts',
   'src/client/services/**/*.ts',
+  'eslint.config.js',
+  'eslint-rules/**/*.js',
 ]
 
-function initFile(filePath: string): { file: string; baseline: string; action: 'created' | 'skipped' } {
+function initFile(filePath: string): {
+  file: string
+  baseline: string
+  action: 'created' | 'skipped'
+} {
   const content = fs.readFileSync(filePath, 'utf-8')
   const info = extractBaselineInfo(content)
 
@@ -46,7 +52,7 @@ async function main() {
     allFiles.push(...files)
   }
 
-  const frameworkFiles = allFiles.filter((f) => isFrameworkFile(f))
+  const frameworkFiles = allFiles.filter(f => isFrameworkFile(f))
 
   if (frameworkFiles.length === 0) {
     console.log('⚠️  未找到框架文件')
@@ -66,8 +72,8 @@ async function main() {
     console.log(`     基准: ${result.baseline}\n`)
   }
 
-  const created = results.filter((r) => r.action === 'created').length
-  const skipped = results.filter((r) => r.action === 'skipped').length
+  const created = results.filter(r => r.action === 'created').length
+  const skipped = results.filter(r => r.action === 'skipped').length
 
   console.log('─'.repeat(50))
   console.log(`✨ 初始化完成！`)

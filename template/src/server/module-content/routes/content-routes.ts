@@ -21,9 +21,6 @@ const listRoute = createRoute({
   middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_VIEW] })],
   responses: {
     200: successResponse(ContentListSchema, 'List all contents'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
-    500: errorResponse('Internal server error'),
   },
 })
 
@@ -38,10 +35,7 @@ const getRoute = createRoute({
   },
   responses: {
     200: successResponse(ContentSchema, 'Get content by id'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Content not found'),
-    500: errorResponse('Internal server error'),
   },
 })
 
@@ -62,10 +56,7 @@ const createRouteDef = createRoute({
   },
   responses: {
     201: successResponse(ContentSchema, 'Create content'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     400: errorResponse('Invalid input'),
-    500: errorResponse('Internal server error'),
   },
 })
 
@@ -87,11 +78,8 @@ const updateRoute = createRoute({
   },
   responses: {
     200: successResponse(ContentSchema, 'Update content'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Content not found'),
     400: errorResponse('Invalid input'),
-    500: errorResponse('Internal server error'),
   },
 })
 
@@ -106,23 +94,20 @@ const deleteRoute = createRoute({
   },
   responses: {
     200: successResponse(DeleteResultSchema, 'Content deleted'),
-    401: errorResponse('Unauthorized'),
-    403: errorResponse('Forbidden'),
     404: errorResponse('Content not found'),
-    500: errorResponse('Internal server error'),
   },
 })
 
 export const contentRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const result = await contentService.getContents()
-    return c.json(success(result))
+    return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await contentService.getContentById(id)
     if (!result) throw new NotFoundError('Content', id)
-    return c.json(success(result))
+    return c.json(success(result), 200)
   })
   .openapi(createRouteDef, async c => {
     const body = c.req.valid('json')
@@ -134,11 +119,11 @@ export const contentRoutes = new OpenAPIHono()
     const body = c.req.valid('json')
     const result = await contentService.updateContent(id, body)
     if (!result) throw new NotFoundError('Content', id)
-    return c.json(success(result))
+    return c.json(success(result), 200)
   })
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await contentService.deleteContent(id)
     if (!result) throw new NotFoundError('Content', id)
-    return c.json(success({ message: 'Deleted successfully' }))
+    return c.json(success(result), 200)
   })

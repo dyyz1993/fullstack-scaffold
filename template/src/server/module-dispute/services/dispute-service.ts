@@ -3,7 +3,6 @@ import type {
   CreateDisputeInput,
   UpdateDisputeInput,
   ResolveDisputeInput,
-  DeleteResult,
   DisputeType,
   DisputeStatus,
 } from '@shared/modules/dispute'
@@ -113,7 +112,7 @@ export async function updateDispute(id: string, data: UpdateDisputeInput): Promi
   return null
 }
 
-export async function deleteDispute(id: string): Promise<DeleteResult> {
+export async function deleteDispute(id: string): Promise<{ success: boolean; message: string }> {
   const index = MOCK_DISPUTES.findIndex(d => d.id === id)
   if (index !== -1) {
     MOCK_DISPUTES.splice(index, 1)

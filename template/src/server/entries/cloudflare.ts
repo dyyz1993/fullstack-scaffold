@@ -1,5 +1,5 @@
 /**
- * @framework-baseline b31e6f04a2d9c702
+ * @framework-baseline e350401421193896
  * @framework-modify
  * @reason 统一错误响应格式为 JSON，确保所有错误都返回结构化数据
  * @impact 影响 Cloudflare Workers 环境的错误响应格式

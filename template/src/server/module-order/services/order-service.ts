@@ -7,13 +7,7 @@
  * - 内存存储
  */
 
-import type {
-  Order,
-  CreateOrderInput,
-  UpdateOrderInput,
-  DeleteResult,
-  OrderStatus,
-} from '@shared/modules/order'
+import type { Order, CreateOrderInput, UpdateOrderInput, OrderStatus } from '@shared/modules/order'
 import { generateOrderNo, randomDate } from '@server/utils/generate'
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -138,13 +132,13 @@ export async function updateOrder(id: string, data: UpdateOrderInput): Promise<O
   return null
 }
 
-export async function deleteOrder(id: string): Promise<DeleteResult> {
+export async function deleteOrder(id: string): Promise<{ message: string }> {
   const index = MOCK_ORDERS.findIndex(o => o.id === id)
   if (index !== -1) {
     MOCK_ORDERS.splice(index, 1)
-    return { success: true, message: '订单已删除' }
+    return { message: '订单已删除' }
   }
-  return { success: false, message: '订单不存在' }
+  return { message: '订单不存在' }
 }
 
 export async function processOrder(id: string): Promise<Order | null> {

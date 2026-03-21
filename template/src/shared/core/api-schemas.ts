@@ -1,5 +1,5 @@
 /**
- * @framework-baseline 295608e4d0c3a8de
+ * @framework-baseline e226e0ef8bf7d5c4
  *
  * 此文件属于框架层代码。如需修改，请添加以下说明：
  *
@@ -14,6 +14,7 @@ export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     success: z.literal(true),
     data: dataSchema,
+    timestamp: z.string(),
   })
 
 export const ApiErrorSchema = z.object({
@@ -24,6 +25,6 @@ export const ApiErrorSchema = z.object({
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.union([ApiSuccessSchema(dataSchema), ApiErrorSchema])
 
-export type ApiSuccess<T> = { success: true; data: T }
+export type ApiSuccess<T> = { success: true; data: T; timestamp: string }
 export type ApiError = z.infer<typeof ApiErrorSchema>
 export type ApiResponse<T> = ApiSuccess<T> | ApiError

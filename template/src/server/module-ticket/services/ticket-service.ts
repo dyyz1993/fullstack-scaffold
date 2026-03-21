@@ -4,7 +4,6 @@ import type {
   CreateTicketInput,
   UpdateTicketInput,
   ReplyTicketInput,
-  DeleteResult,
   TicketStatus,
   TicketPriority,
   TicketCategory,
@@ -145,13 +144,13 @@ export async function updateTicket(id: string, data: UpdateTicketInput): Promise
   return null
 }
 
-export async function deleteTicket(id: string): Promise<DeleteResult> {
+export async function deleteTicket(id: string): Promise<{ message: string }> {
   const index = MOCK_TICKETS.findIndex(t => t.id === id)
   if (index !== -1) {
     MOCK_TICKETS.splice(index, 1)
-    return { success: true, message: '工单已删除' }
+    return { message: '工单已删除' }
   }
-  return { success: false, message: '工单不存在' }
+  return { message: '工单不存在' }
 }
 
 export async function replyTicket(id: string, data: ReplyTicketInput): Promise<Ticket | null> {

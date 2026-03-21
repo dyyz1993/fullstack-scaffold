@@ -1,5 +1,5 @@
 /**
- * @framework-baseline d16fe334284db1d7
+ * @framework-baseline b18502d5cc33f07d
  *
  * @framework-modify
  * @reason 添加 headers 参数支持，以便在测试中传递认证头
@@ -17,6 +17,7 @@ import type { SSEClient } from '@shared/schemas'
  * 注意：TypeScript 5.8+ 和 Hono 4.12+ 已优化类型推导性能，
  * 无需修改 TypeScript 的类型实例化深度限制即可正常工作。
  */
+// @ts-expect-error TypeScript 类型实例化过深，这是 Hono RPC 类型的已知限制
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {

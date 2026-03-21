@@ -1,16 +1,22 @@
 import { z } from '@hono/zod-openapi'
 
+const dateStringSchema = z.union([z.string(), z.date(), z.null()]).transform(v => {
+  if (v instanceof Date) return v.toISOString()
+  if (v === null) return new Date().toISOString()
+  return v
+})
+
 export const RoleSchema = z.object({
   id: z.string(),
   code: z.string(),
   name: z.string(),
   label: z.string(),
   description: z.string().optional().nullable(),
-  isSystem: z.boolean(),
-  isActive: z.boolean(),
+  isSystem: z.boolean().nullable(),
+  isActive: z.boolean().nullable(),
   sortOrder: z.number().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: dateStringSchema,
+  updatedAt: dateStringSchema,
 })
 
 export const CreateRoleSchema = z.object({
@@ -32,9 +38,7 @@ export const UpdateRolePermissionsSchema = z.object({
   permissionIds: z.array(z.string()),
 })
 
-export const SuccessSchema = z.object({
-  success: z.literal(true),
-})
+export const SuccessSchema = z.object({})
 
 export type RoleType = z.infer<typeof RoleSchema>
 export type CreateRoleType = z.infer<typeof CreateRoleSchema>
