@@ -20,7 +20,7 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import { apiClient } from '../services/apiClient'
+import { apiClient, api } from '../services/apiClient'
 import { useRoleLabels } from '../hooks/useConfig'
 import { Permission, Role } from '@shared/modules/permission'
 import { PermissionGuard } from '../components/PermissionGuard'
@@ -30,24 +30,17 @@ type UserFormData = CreateUserRequest & { password?: string }
 
 export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [form] = Form.useForm()
   const { roleLabels } = useRoleLabels()
 
   const fetchUsers = async () => {
-    setLoading(true)
     try {
-      const response = await apiClient.api.admin.users.$get()
-      const result = await response.json()
-      if (result.success) {
-        setUsers(result.data)
-      }
+      const data = await api(apiClient.api.admin.users.$get()).withLoading('加载用户列表...').json()
+      setUsers(data)
     } catch {
-      message.error('获取用户列表失败')
-    } finally {
-      setLoading(false)
+      // 错误已由 api-request 自动处理
     }
   }
 
@@ -75,67 +68,71 @@ export const UsersPage: React.FC = () => {
   const handleSubmit = async (values: UserFormData) => {
     try {
       if (editingUser) {
-        const response = await apiClient.api.admin.users[':id'].$put({
-          param: { id: editingUser.id },
-          json: values,
-        })
-        const result = await response.json()
-        if (result.success) {
-          message.success('用户更新成功')
-          setModalVisible(false)
-          fetchUsers()
-        }
+        await api(
+          apiClient.api.admin.users[':id'].$put({
+            param: { id: editingUser.id },
+            json: values,
+          })
+        )
+          .withLoading('更新中...')
+          .json()
+        message.success('用户更新成功')
+        setModalVisible(false)
+        fetchUsers()
       } else {
-        const response = await apiClient.api.admin.users.$post({
-          json: {
-            username: values.username,
-            email: values.email,
-            password: values.password!,
-            role: values.role,
-            status: values.status,
-          },
-        })
-        const result = await response.json()
-        if (result.success) {
-          message.success('用户创建成功')
-          setModalVisible(false)
-          fetchUsers()
-        }
+        await api(
+          apiClient.api.admin.users.$post({
+            json: {
+              username: values.username,
+              email: values.email,
+              password: values.password!,
+              role: values.role,
+              status: values.status,
+            },
+          })
+        )
+          .withLoading('创建中...')
+          .json()
+        message.success('用户创建成功')
+        setModalVisible(false)
+        fetchUsers()
       }
     } catch {
-      message.error(editingUser ? '更新用户失败' : '创建用户失败')
+      // 错误已由 api-request 自动处理
     }
   }
 
   const handleToggleLock = async (user: User) => {
     try {
       const newStatus = user.status === 'locked' ? 'active' : 'locked'
-      const response = await apiClient.api.admin.users[':id'].$put({
-        param: { id: user.id },
-        json: { status: newStatus },
-      })
-      const result = await response.json()
-      if (result.success) {
-        message.success(newStatus === 'locked' ? '用户已锁定' : '用户已解锁')
-        fetchUsers()
-      }
+      await api(
+        apiClient.api.admin.users[':id'].$put({
+          param: { id: user.id },
+          json: { status: newStatus },
+        })
+      )
+        .withLoading()
+        .json()
+      message.success(newStatus === 'locked' ? '用户已锁定' : '用户已解锁')
+      fetchUsers()
     } catch {
-      message.error('操作失败')
+      // 错误已由 api-request 自动处理
     }
   }
 
   const handleDelete = async (userId: string) => {
     try {
-      const response = await apiClient.api.admin.users[':id'].$delete({
-        param: { id: userId },
-      })
-      const result = await response.json()
-      if (result.success) {
-        message.success('用户已删除')
-        fetchUsers()
-      }
+      await api(
+        apiClient.api.admin.users[':id'].$delete({
+          param: { id: userId },
+        })
+      )
+        .withLoading('删除中...')
+        .json()
+      message.success('用户已删除')
+      fetchUsers()
     } catch {
-      message.error('删除用户失败')
+      // 错误已由 api-request 自动处理
     }
   }
 
@@ -227,7 +224,7 @@ export const UsersPage: React.FC = () => {
           </PermissionGuard>
         }
       >
-        <Table columns={columns} dataSource={users} rowKey="id" loading={loading} />
+        <Table columns={columns} dataSource={users} rowKey="id" />
       </Card>
 
       <Modal

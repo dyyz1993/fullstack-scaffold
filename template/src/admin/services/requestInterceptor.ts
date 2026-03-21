@@ -1,9 +1,14 @@
-import type { AdminFetchExtendOptions, InterceptorCallbacks } from './types'
+import type { CaptchaType } from './types'
 
 type PendingRequest = {
   resolve: (value: Response) => void
   reject: (error: Error) => void
   request: () => Promise<Response>
+}
+
+export interface InterceptorCallbacks {
+  onShowLogin: () => void
+  onShowCaptcha: (config: { type: CaptchaType; captchaUrl?: string }) => Promise<boolean>
 }
 
 export class RequestInterceptor {
@@ -12,11 +17,7 @@ export class RequestInterceptor {
 
   constructor(private callbacks: InterceptorCallbacks) {}
 
-  async intercept(
-    url: string,
-    init: RequestInit & { extend?: AdminFetchExtendOptions }
-  ): Promise<Response> {
-    const extend = init.extend
+  async intercept(url: string, init: RequestInit): Promise<Response> {
     const request = () => this.executeRequest(url, init)
 
     if (this.isShowingCaptcha) {
@@ -25,21 +26,11 @@ export class RequestInterceptor {
       })
     }
 
-    this.callbacks.onRequest?.(extend)
-    try {
-      const response = await request()
-      this.callbacks.onResponse?.(extend)
-      return this.handleResponseStatus(response, request, extend)
-    } catch (error) {
-      this.callbacks.onError?.(extend)
-      throw error
-    }
+    const response = await request()
+    return this.handleResponseStatus(response, request)
   }
 
-  private async executeRequest(
-    url: string,
-    init: RequestInit & { extend?: AdminFetchExtendOptions }
-  ): Promise<Response> {
+  private async executeRequest(url: string, init: RequestInit): Promise<Response> {
     const token = this.getStoredToken()
     const headers = new Headers(init.headers)
 
@@ -47,19 +38,15 @@ export class RequestInterceptor {
       headers.set('Authorization', `Bearer ${token}`)
     }
 
-    const restInit = { ...init }
-    delete restInit.extend
-
     return window.fetch(url, {
-      ...restInit,
+      ...init,
       headers,
     })
   }
 
   private async handleResponseStatus(
     response: Response,
-    retryRequest: () => Promise<Response>,
-    extend?: AdminFetchExtendOptions
+    retryRequest: () => Promise<Response>
   ): Promise<Response> {
     if (response.status === 401) {
       this.callbacks.onShowLogin()
@@ -67,7 +54,7 @@ export class RequestInterceptor {
     }
 
     if (this.shouldShowCaptcha(response)) {
-      return this.handleCaptcha(retryRequest, extend)
+      return this.handleCaptcha(retryRequest)
     }
 
     return response
@@ -77,10 +64,7 @@ export class RequestInterceptor {
     return response.status === 403 || response.status === 429
   }
 
-  private async handleCaptcha(
-    retryRequest: () => Promise<Response>,
-    extend?: AdminFetchExtendOptions
-  ): Promise<Response> {
+  private async handleCaptcha(retryRequest: () => Promise<Response>): Promise<Response> {
     if (this.isShowingCaptcha) {
       return new Promise((resolve, reject) => {
         this.pendingRequests.push({ resolve, reject, request: retryRequest })
@@ -96,17 +80,12 @@ export class RequestInterceptor {
       })
 
       if (success) {
-        this.callbacks.onRequest?.(extend)
         const response = await retryRequest()
-        this.callbacks.onResponse?.(extend)
         await this.processPendingRequests()
         return response
       } else {
         throw new Error('Captcha verification failed')
       }
-    } catch (error) {
-      this.callbacks.onError?.(extend)
-      throw error
     } finally {
       this.isShowingCaptcha = false
     }
@@ -119,12 +98,9 @@ export class RequestInterceptor {
     await Promise.all(
       requests.map(async ({ resolve, reject, request }) => {
         try {
-          this.callbacks.onRequest?.()
           const response = await request()
-          this.callbacks.onResponse?.()
           resolve(response)
         } catch (error) {
-          this.callbacks.onError?.()
           reject(error as Error)
         }
       })
@@ -147,6 +123,5 @@ export class RequestInterceptor {
 
 export function createRequestInterceptor(callbacks: InterceptorCallbacks) {
   const interceptor = new RequestInterceptor(callbacks)
-  return (url: string, init: RequestInit & { extend?: AdminFetchExtendOptions }) =>
-    interceptor.intercept(url, init)
+  return (url: string, init: RequestInit) => interceptor.intercept(url, init)
 }

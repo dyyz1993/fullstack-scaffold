@@ -17,14 +17,25 @@ export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
     timestamp: z.string(),
   })
 
+export const ApiErrorDetailSchema = z.object({
+  field: z.string().optional(),
+  message: z.string(),
+  code: z.string().optional(),
+})
+
 export const ApiErrorSchema = z.object({
   success: z.literal(false),
   error: z.string(),
+  code: z.string().optional(),
+  status: z.number().optional(),
+  details: z.array(ApiErrorDetailSchema).optional(),
+  timestamp: z.string().optional(),
 })
 
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.union([ApiSuccessSchema(dataSchema), ApiErrorSchema])
 
 export type ApiSuccess<T> = { success: true; data: T; timestamp: string }
+export type ApiErrorDetail = z.infer<typeof ApiErrorDetailSchema>
 export type ApiError = z.infer<typeof ApiErrorSchema>
 export type ApiResponse<T> = ApiSuccess<T> | ApiError

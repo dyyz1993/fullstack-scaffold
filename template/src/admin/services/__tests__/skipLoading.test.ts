@@ -1,36 +1,48 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { useLoadingStore } from '../../stores/loadingStore'
-import { createRequestInterceptor } from '../requestInterceptor'
-import type { AdminFetchExtendOptions } from '../types'
+import { api, setupApiRequestDeps, ApiRequestError } from '@shared/core/api-request'
+import type { ApiSuccess, ApiError } from '@shared/core/api-schemas'
 
-describe('extend options functionality', () => {
-  let loadingStore: ReturnType<typeof useLoadingStore.getState>
-  let interceptor: ReturnType<typeof createRequestInterceptor>
+describe('api request functionality', () => {
+  let loadingStore: {
+    count: number
+    isLoading: boolean
+    loadingText?: string
+    startLoading: ReturnType<typeof vi.fn>
+    stopLoading: ReturnType<typeof vi.fn>
+  }
+  let messageApi: {
+    error: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
-    loadingStore = useLoadingStore.getState()
-    loadingStore.count = 0
-    loadingStore.isLoading = false
+    loadingStore = {
+      count: 0,
+      isLoading: false,
+      loadingText: undefined,
+      startLoading: vi.fn((text?: string) => {
+        loadingStore.count++
+        loadingStore.isLoading = true
+        loadingStore.loadingText = text
+      }),
+      stopLoading: vi.fn(() => {
+        loadingStore.count = Math.max(0, loadingStore.count - 1)
+        loadingStore.isLoading = loadingStore.count > 0
+        if (loadingStore.count === 0) {
+          loadingStore.loadingText = undefined
+        }
+      }),
+    }
 
-    interceptor = createRequestInterceptor({
-      onShowLogin: vi.fn(),
-      onShowCaptcha: vi.fn().mockResolvedValue(true),
-      onRequest: (extend?: AdminFetchExtendOptions) => {
-        if (extend?.loading !== false) {
-          const text = typeof extend?.loading === 'string' ? extend.loading : undefined
-          loadingStore.startLoading(text)
-        }
+    messageApi = {
+      error: vi.fn(),
+    }
+
+    setupApiRequestDeps({
+      loadingStore: loadingStore as unknown as {
+        startLoading: (text?: string) => void
+        stopLoading: () => void
       },
-      onResponse: (extend?: AdminFetchExtendOptions) => {
-        if (extend?.loading !== false) {
-          loadingStore.stopLoading()
-        }
-      },
-      onError: (extend?: AdminFetchExtendOptions) => {
-        if (extend?.loading !== false) {
-          loadingStore.stopLoading()
-        }
-      },
+      messageApi: messageApi as unknown as { error: (msg: string) => void },
     })
   })
 
@@ -38,51 +50,97 @@ describe('extend options functionality', () => {
     vi.clearAllMocks()
   })
 
-  it('should trigger loading when extend.loading is not false', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }))
-    vi.stubGlobal('fetch', mockFetch)
+  const createMockResponse = (
+    data: ApiSuccess<unknown> | ApiError,
+    status = 200
+  ): Promise<{
+    ok: boolean
+    status: number
+    statusText: string
+    json: () => Promise<unknown>
+  }> => {
+    return Promise.resolve({
+      ok: status >= 200 && status < 300,
+      status,
+      statusText: status === 200 ? 'OK' : 'Error',
+      json: () => Promise.resolve(data),
+    })
+  }
 
-    expect(loadingStore.isLoading).toBe(false)
+  it('should return data on successful response', async () => {
+    const mockData = { id: '1', name: 'test' }
+    const response = createMockResponse({
+      success: true,
+      data: mockData,
+      timestamp: new Date().toISOString(),
+    })
 
-    await interceptor('http://test.com', { extend: { loading: true } })
+    const result = await api(response).json()
 
-    expect(loadingStore.isLoading).toBe(false)
+    expect(result).toEqual(mockData)
   })
 
-  it('should NOT trigger loading when extend.loading is false', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }))
-    vi.stubGlobal('fetch', mockFetch)
+  it('should trigger loading when withLoading() is called', async () => {
+    const mockData = { id: '1' }
+    const response = createMockResponse({
+      success: true,
+      data: mockData,
+      timestamp: new Date().toISOString(),
+    })
 
-    expect(loadingStore.isLoading).toBe(false)
+    await api(response).withLoading('加载中...').json()
 
-    await interceptor('http://test.com', { extend: { loading: false } })
-
-    expect(loadingStore.isLoading).toBe(false)
-    expect(loadingStore.count).toBe(0)
+    expect(loadingStore.startLoading).toHaveBeenCalledWith('加载中...')
+    expect(loadingStore.stopLoading).toHaveBeenCalled()
   })
 
-  it('should show custom loading text when extend.loading is string', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }))
-    vi.stubGlobal('fetch', mockFetch)
+  it('should NOT trigger loading when withLoading is not called', async () => {
+    const mockData = { id: '1' }
+    const response = createMockResponse({
+      success: true,
+      data: mockData,
+      timestamp: new Date().toISOString(),
+    })
 
-    const startLoadingSpy = vi.spyOn(loadingStore, 'startLoading')
+    await api(response).json()
 
-    await interceptor('http://test.com', { extend: { loading: '加载中...' } })
-
-    expect(startLoadingSpy).toHaveBeenCalledWith('加载中...')
+    expect(loadingStore.startLoading).not.toHaveBeenCalled()
+    expect(loadingStore.stopLoading).not.toHaveBeenCalled()
   })
 
-  it('should handle error with extend options', async () => {
-    const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'))
-    vi.stubGlobal('fetch', mockFetch)
-
-    try {
-      await interceptor('http://test.com', { extend: { loading: false } })
-    } catch {
-      // Expected error
+  it('should show error message on failure', async () => {
+    const errorResponse: ApiError = {
+      success: false,
+      error: 'Something went wrong',
+      code: 'ERROR_CODE',
+      status: 400,
     }
+    const response = createMockResponse(errorResponse, 400)
 
-    expect(loadingStore.isLoading).toBe(false)
-    expect(loadingStore.count).toBe(0)
+    await expect(api(response).json()).rejects.toThrow(ApiRequestError)
+    expect(messageApi.error).toHaveBeenCalledWith('Something went wrong')
+  })
+
+  it('should NOT show error message when silentError() is called', async () => {
+    const errorResponse: ApiError = {
+      success: false,
+      error: 'Silent error',
+      status: 500,
+    }
+    const response = createMockResponse(errorResponse, 500)
+
+    await expect(api(response).silentError().json()).rejects.toThrow(ApiRequestError)
+    expect(messageApi.error).not.toHaveBeenCalled()
+  })
+
+  it('should NOT retry on non-retryable errors (401, 403, 404, 422)', async () => {
+    const errorResponse: ApiError = {
+      success: false,
+      error: 'Not found',
+      status: 404,
+    }
+    const response = createMockResponse(errorResponse, 404)
+
+    await expect(api(response).withRetry(3, 10).json()).rejects.toThrow(ApiRequestError)
   })
 })

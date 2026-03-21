@@ -1,14 +1,15 @@
 /**
  * @framework-baseline ab16e97716a7556e
+ * @framework-modify
+ * @reason 简化拦截器，移除 loading 控制，由 api-request.ts 统一管理
+ * @impact loading 控制现在通过 api().withLoading() 链式调用实现
  */
 
 import { hc } from 'hono/client'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { createRequestInterceptor } from './requestInterceptor'
-import type { AdminFetchExtendOptions } from './types'
 import { useCaptchaStore } from '../stores/captchaStore'
-import { useLoadingStore } from '../stores/loadingStore'
 import type { AdminApiType } from '@server/index'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
@@ -37,7 +38,6 @@ function getAuthToken(): string | null {
 
 function createCustomFetch() {
   const showCaptcha = useCaptchaStore.getState().show
-  const { startLoading, stopLoading } = useLoadingStore.getState()
 
   return createRequestInterceptor({
     onShowLogin: clearAuthAndRedirect,
@@ -46,22 +46,6 @@ function createCustomFetch() {
         type: config.type,
         captchaUrl: config.captchaUrl,
       })
-    },
-    onRequest: (extend?: AdminFetchExtendOptions) => {
-      if (extend?.loading !== false) {
-        const text = typeof extend?.loading === 'string' ? extend.loading : undefined
-        startLoading(text)
-      }
-    },
-    onResponse: (extend?: AdminFetchExtendOptions) => {
-      if (extend?.loading !== false) {
-        stopLoading()
-      }
-    },
-    onError: (extend?: AdminFetchExtendOptions) => {
-      if (extend?.loading !== false) {
-        stopLoading()
-      }
     },
   })
 }
@@ -78,3 +62,5 @@ export const apiClient = hc<AdminApiType>(baseUrl, {
     return new SSEClientImpl(url, headers)
   },
 })
+
+export { api } from '@shared/core/api-request'
