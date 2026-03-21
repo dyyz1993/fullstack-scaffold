@@ -156,7 +156,7 @@ export const roleRoutes = new OpenAPIHono()
     const role = await roleService.getById(id)
 
     if (!role) {
-      return c.json({ success: false as const, error: 'Role not found' }, 404)
+      return c.json({ success: false, error: 'Role not found' }, 404)
     }
 
     const permissions = await permissionService.getRolePermissions(id)
@@ -186,7 +186,7 @@ export const roleRoutes = new OpenAPIHono()
     const role = await roleService.update(id, data)
 
     if (!role) {
-      return c.json({ success: false as const, error: 'Role not found' }, 404)
+      return c.json({ success: false, error: 'Role not found' }, 404)
     }
 
     return c.json(success(role), 200)
@@ -197,10 +197,7 @@ export const roleRoutes = new OpenAPIHono()
     const deleted = await roleService.delete(id)
 
     if (!deleted) {
-      return c.json(
-        { success: false as const, error: 'Cannot delete system role or role not found' },
-        400
-      )
+      return c.json({ success: false, error: 'Cannot delete system role or role not found' }, 400)
     }
 
     return c.json(success({}), 200)
@@ -211,21 +208,18 @@ export const roleRoutes = new OpenAPIHono()
 
     const role = await roleService.getById(id)
     if (!role) {
-      return c.json({ success: false as const, error: 'Role not found' }, 404)
+      return c.json({ success: false, error: 'Role not found' }, 404)
     }
 
     if (role.code === 'super_admin') {
-      return c.json(
-        { success: false as const, error: 'Cannot modify super admin permissions' },
-        403
-      )
+      return c.json({ success: false, error: 'Cannot modify super admin permissions' }, 403)
     }
 
     const validation = validatePermissionDependencies(permissionIds)
     if (!validation.valid) {
       return c.json(
         {
-          success: false as const,
+          success: false,
           error: '权限依赖校验失败',
           details: validation.errors,
         },

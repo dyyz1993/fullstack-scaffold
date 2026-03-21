@@ -130,7 +130,7 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
     const { id } = c.req.valid('param')
     const marked = await adminService.markNotificationRead(id)
     if (!marked) {
-      return c.json({ success: false as const, error: 'Notification not found' }, 404)
+      return c.json({ success: false, error: 'Notification not found' }, 404)
     }
     return c.json(success({}), 200)
   })
@@ -163,5 +163,5 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
       ).handleSSERequest()
       return response
     }
-    return c.json({ success: false as const, error: 'SSE not supported' }, 500)
+    return c.json({ success: false, error: 'SSE not supported' }, 500)
   })

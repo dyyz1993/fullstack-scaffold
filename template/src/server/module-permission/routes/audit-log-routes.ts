@@ -69,7 +69,7 @@ export const auditLogRoutes = new OpenAPIHono()
     const log = logs.find(l => l.id === id)
 
     if (!log) {
-      return c.json({ success: false as const, error: 'Audit log not found' }, 404)
+      return c.json({ success: false, error: 'Audit log not found' }, 404)
     }
 
     return c.json(success(log), 200)

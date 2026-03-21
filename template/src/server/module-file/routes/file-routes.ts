@@ -128,7 +128,7 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      return c.json({ success: false, error: 'File not found' }, 404)
     }
 
     const filePath = getFilePath(namespace, filename)
@@ -148,16 +148,16 @@ export const fileRoutes = new OpenAPIHono()
 
     const now = Math.floor(Date.now() / 1000)
     if (now > expiry) {
-      return c.json({ success: false as const, error: 'URL has expired' }, 403)
+      return c.json({ success: false, error: 'URL has expired' }, 403)
     }
 
     if (!verifySignature(namespace, filename, expiry, signature)) {
-      return c.json({ success: false as const, error: 'Invalid signature' }, 403)
+      return c.json({ success: false, error: 'Invalid signature' }, 403)
     }
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      return c.json({ success: false, error: 'File not found' }, 404)
     }
 
     const filePath = getFilePath(namespace, filename)
@@ -175,7 +175,7 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      return c.json({ success: false, error: 'File not found' }, 404)
     }
 
     const baseUrl = process.env.PUBLIC_URL || ''
@@ -193,7 +193,7 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      return c.json({ success: false, error: 'File not found' }, 404)
     }
 
     c.header('Content-Type', fileInfo.mimeType)
@@ -208,16 +208,16 @@ export const fileRoutes = new OpenAPIHono()
 
     const now = Math.floor(Date.now() / 1000)
     if (now > expiry) {
-      return c.json({ success: false as const, error: 'URL has expired' }, 403)
+      return c.json({ success: false, error: 'URL has expired' }, 403)
     }
 
     if (!verifySignature(namespace, filename, expiry, signature)) {
-      return c.json({ success: false as const, error: 'Invalid signature' }, 403)
+      return c.json({ success: false, error: 'Invalid signature' }, 403)
     }
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      return c.json({ success: false, error: 'File not found' }, 404)
     }
 
     c.header('Content-Type', fileInfo.mimeType)

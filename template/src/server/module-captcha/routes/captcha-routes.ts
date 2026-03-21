@@ -59,7 +59,7 @@ export const captchaRoutes = new OpenAPIHono()
     } else {
       return c.json(
         {
-          success: false as const,
+          success: false,
           error: '验证码错误或已过期',
         },
         400
