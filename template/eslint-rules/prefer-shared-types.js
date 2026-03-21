@@ -1,43 +1,9 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs'
-import { resolve, dirname, join } from 'path'
-import { URL } from 'url'
-
-const __dirname = dirname(new URL(import.meta.url).pathname)
+import { resolve, join } from 'path'
 
 const SHARED_TYPES_CACHE = new Map()
 let cacheTimestamp = 0
 const CACHE_TTL = 5000
-
-function extractFieldNamesFromZodObject(node) {
-  const fields = new Set()
-
-  if (node.type !== 'CallExpression') return null
-
-  const { callee } = node
-  if (
-    callee.type !== 'MemberExpression' ||
-    callee.object?.type !== 'Identifier' ||
-    callee.object.name !== 'z' ||
-    callee.property?.type !== 'Identifier' ||
-    callee.property.name !== 'object'
-  ) {
-    return null
-  }
-
-  const args = node.arguments
-  if (!args || args.length === 0) return null
-
-  const objectArg = args[0]
-  if (objectArg.type !== 'ObjectExpression') return null
-
-  for (const prop of objectArg.properties) {
-    if (prop.type === 'Property' && prop.key?.type === 'Identifier') {
-      fields.add(prop.key.name)
-    }
-  }
-
-  return fields
-}
 
 function parseSchemaFile(content) {
   const schemaMap = new Map()
