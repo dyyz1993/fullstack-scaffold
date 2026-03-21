@@ -34,6 +34,7 @@ import { requireFileOpenapiProps } from './eslint-rules/require-file-openapi-pro
 import { requireNullableForOptional } from './eslint-rules/require-nullable-for-optional.js'
 import { moduleBoundary } from './eslint-rules/module-boundary.js'
 import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
+import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
 
 const localRules = {
   rules: {
@@ -67,6 +68,7 @@ const localRules = {
     'require-nullable-for-optional': requireNullableForOptional,
     'module-boundary': moduleBoundary,
     'limit-type-complexity': limitTypeComplexity,
+    'require-antd-generic-types': requireAntdGenericTypes,
   },
 }
 
@@ -140,6 +142,7 @@ export default tseslint.config(
       'local-rules/no-type-assertion-on-shared-types': 'error',
       'local-rules/no-disable-direct-fetch': 'error',
       'local-rules/module-boundary': 'error',
+      'local-rules/require-antd-generic-types': 'error',
     },
   },
   {

@@ -33,7 +33,7 @@ const QUICK_LOGIN_ACCOUNTS: QuickLoginAccount[] = [
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<LoginRequest>()
   const { login, loading } = useAdminStore()
 
   const handleSubmit = async (values: LoginRequest) => {

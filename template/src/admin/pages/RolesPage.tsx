@@ -29,6 +29,16 @@ import { PermissionTree } from '../components/PermissionTree'
 import { apiClient } from '../services/apiClient'
 import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
 
+// RoleFormValues 用于编辑角色（包含 isActive），与 CreateRoleType（用于创建，包含 sortOrder）不同
+// eslint-disable-next-line local-rules/prefer-shared-types
+interface RoleFormValues {
+  code: string
+  name: string
+  label: string
+  description?: string | null
+  isActive?: boolean | null
+}
+
 export const RolesPage: React.FC = () => {
   const { roles, loading, fetchRoles, createRole, updateRole, deleteRole, updateRolePermissions } =
     useRoleStore()
@@ -39,7 +49,7 @@ export const RolesPage: React.FC = () => {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false)
   const [editingRole, setEditingRole] = useState<RoleType | null>(null)
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<RoleFormValues>()
 
   useEffect(() => {
     fetchRoles()
@@ -53,7 +63,13 @@ export const RolesPage: React.FC = () => {
 
   const handleEdit = (role: RoleType) => {
     setEditingRole(role)
-    form.setFieldsValue(role)
+    form.setFieldsValue({
+      code: role.code,
+      name: role.name,
+      label: role.label,
+      description: role.description,
+      isActive: role.isActive ?? undefined,
+    })
     setModalVisible(true)
   }
 

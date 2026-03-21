@@ -20,7 +20,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
   onCancel,
   loading,
 }) => {
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<UserFormData>()
 
   const handleOk = async () => {
     try {

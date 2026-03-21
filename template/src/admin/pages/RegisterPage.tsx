@@ -11,7 +11,7 @@ interface RegisterForm extends RegisterRequest {
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<RegisterForm>()
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (values: RegisterForm) => {

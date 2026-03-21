@@ -1,7 +1,15 @@
 import { Card, Form, Input, Button, Switch, Divider, message } from 'antd'
 
+interface SettingsFormValues {
+  siteName?: string
+  siteDescription?: string
+  currentPassword?: string
+  newPassword?: string
+  confirmPassword?: string
+}
+
 export const SettingsPage: React.FC = () => {
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<SettingsFormValues>()
 
   const handleSave = () => {
     message.success('Settings saved successfully!')

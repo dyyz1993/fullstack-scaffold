@@ -32,6 +32,7 @@ export const UpdateRoleSchema = z.object({
   label: z.string().nullish(),
   description: z.string().nullish(),
   sortOrder: z.number().nullish(),
+  isActive: z.boolean().nullish(),
 })
 
 export const UpdateRolePermissionsSchema = z.object({

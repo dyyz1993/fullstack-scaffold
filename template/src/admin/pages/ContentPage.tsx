@@ -4,7 +4,7 @@ import { Plus, Edit, Delete } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/admin'
 import { apiClient } from '../services/apiClient'
-import type { Content } from '@shared/modules/content'
+import type { Content, CreateContentInput } from '@shared/modules/content'
 
 const CATEGORY_LABELS = {
   article: '文章',
@@ -31,7 +31,7 @@ export const ContentPage: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingContent, setEditingContent] = useState<Content | null>(null)
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<CreateContentInput>()
 
   useEffect(() => {
     fetchContents()

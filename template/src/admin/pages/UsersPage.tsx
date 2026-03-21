@@ -32,7 +32,7 @@ export const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<UserFormData>()
   const { roleLabels } = useRoleLabels()
 
   const fetchUsers = async () => {
