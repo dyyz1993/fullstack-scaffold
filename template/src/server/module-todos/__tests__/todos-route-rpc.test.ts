@@ -438,7 +438,7 @@ describe('Todo Routes - Business Logic Tests', () => {
       await createMultipleTodos(3)
       const client = createTestClient(undefined, { headers: authHeaders })
 
-      const res = await client.api.todos.$get(undefined, { headers: authHeaders })
+      const res = await client.api.todos.$get({ headers: authHeaders })
       const data = await res.json()
 
       expect(data.success).toBe(true)
@@ -456,7 +456,7 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return empty array when no todos exist', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
 
-      const res = await client.api.todos.$get(undefined, { headers: authHeaders })
+      const res = await client.api.todos.$get({ headers: authHeaders })
       const data = await res.json()
 
       expect(data.success).toBe(true)

@@ -28,7 +28,7 @@ describe('Admin Routes', () => {
 
     it('should reject request with invalid token', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.stats.$get(undefined, {
+      const res = await client.api.admin.stats.$get({
         headers: { Authorization: 'Bearer invalid-token' },
       })
       expect(res.status).toBe(401)
@@ -38,7 +38,7 @@ describe('Admin Routes', () => {
 
     it('should reject non-admin user', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.stats.$get(undefined, {
+      const res = await client.api.admin.stats.$get({
         headers: { Authorization: 'Bearer user-token' },
       })
       expect(res.status).toBe(403)
@@ -50,7 +50,7 @@ describe('Admin Routes', () => {
   describe('GET /api/admin/stats', () => {
     it('should return system stats for admin', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.stats.$get(undefined, {
+      const res = await client.api.admin.stats.$get({
         headers: { Authorization: 'Bearer admin-token' },
       })
 
@@ -79,7 +79,7 @@ describe('Admin Routes', () => {
         })
 
         const client = createTestClient()
-        const res = await client.api.admin.stats.$get(undefined, {
+        const res = await client.api.admin.stats.$get({
           headers: { Authorization: 'Bearer admin-token' },
         })
 
@@ -97,7 +97,7 @@ describe('Admin Routes', () => {
   describe('GET /api/admin/health', () => {
     it('should return health status for admin', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.health.$get(undefined, {
+      const res = await client.api.admin.health.$get({
         headers: { Authorization: 'Bearer admin-token' },
       })
 
@@ -168,7 +168,7 @@ describe('Admin Routes', () => {
         })
 
         const client = createTestClient()
-        const res = await client.api.admin.todos.all.$delete(undefined, {
+        const res = await client.api.admin.todos.all.$delete({
           headers: { Authorization: 'Bearer admin-token' },
         })
 
@@ -182,7 +182,7 @@ describe('Admin Routes', () => {
   describe('GET /api/admin/me', () => {
     it('should return current admin user info', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.me.$get(undefined, {
+      const res = await client.api.admin.me.$get({
         headers: { Authorization: 'Bearer admin-token' },
       })
 
@@ -201,7 +201,7 @@ describe('Admin Routes', () => {
 
     it('should return current user info for regular user', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.me.$get(undefined, {
+      const res = await client.api.admin.me.$get({
         headers: { Authorization: 'Bearer user-token' },
       })
 
@@ -353,7 +353,7 @@ describe('Admin Routes', () => {
   describe('PUT /api/admin/notifications/read-all', () => {
     it('should mark all notifications as read', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.notifications['read-all'].$put(undefined, {
+      const res = await client.api.admin.notifications['read-all'].$put({
         headers: { Authorization: 'Bearer admin-token' },
       })
 
@@ -394,7 +394,7 @@ describe('Admin Routes', () => {
   describe('POST /api/admin/todos/export/token', () => {
     it('should generate download token', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.todos.export.token.$post(undefined, {
+      const res = await client.api.admin.todos.export.token.$post({
         headers: { Authorization: 'Bearer admin-token' },
       })
 

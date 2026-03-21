@@ -16,7 +16,7 @@ describe('Role Routes', () => {
   describe('GET /api/roles', () => {
     it('should get all roles', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.roles.$get(undefined, { headers: authHeaders })
+      const res = await client.api.roles.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -29,7 +29,7 @@ describe('Role Routes', () => {
 
     it('should return roles with correct structure', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.roles.$get(undefined, { headers: authHeaders })
+      const res = await client.api.roles.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()

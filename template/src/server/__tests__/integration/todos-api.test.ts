@@ -28,7 +28,7 @@ describe('Integration: Todos API (Real Database)', () => {
     it('should handle complete todo lifecycle', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
 
-      const listRes = await client.api.todos.$get(undefined, { headers: authHeaders })
+      const listRes = await client.api.todos.$get({ headers: authHeaders })
       const listData = await listRes.json()
       expect(listData).toEqual({ success: true, data: [] })
 
@@ -102,7 +102,7 @@ describe('Integration: Todos API (Real Database)', () => {
         expect(res.status).toBe(201)
       })
 
-      const listRes = await client.api.todos.$get(undefined, { headers: authHeaders })
+      const listRes = await client.api.todos.$get({ headers: authHeaders })
       const listData = await listRes.json()
       if (listData.success && 'data' in listData) {
         expect(listData.data).toHaveLength(10)

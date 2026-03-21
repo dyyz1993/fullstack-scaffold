@@ -29,7 +29,7 @@ describe('Error Response Format', () => {
       const client = createTestClient()
 
       // Call a protected endpoint with invalid token
-      const res = await client.api.admin.stats.$get(undefined, {
+      const res = await client.api.admin.stats.$get({
         headers: {
           Authorization: 'Bearer invalid-token',
         },
@@ -54,7 +54,7 @@ describe('Error Response Format', () => {
 
       // Call a protected endpoint with valid token but insufficient permissions
       // user-token has 'user' role which doesn't have admin permissions
-      const res = await client.api.admin.stats.$get(undefined, {
+      const res = await client.api.admin.stats.$get({
         headers: {
           Authorization: 'Bearer user-token',
         },

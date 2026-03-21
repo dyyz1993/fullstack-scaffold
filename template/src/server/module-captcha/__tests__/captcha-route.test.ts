@@ -7,7 +7,7 @@ describe('Captcha Routes', () => {
   describe('GET /api/captcha', () => {
     it('should return captcha with id and image', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.captcha.$get(undefined, { headers: authHeaders })
+      const res = await client.api.captcha.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()

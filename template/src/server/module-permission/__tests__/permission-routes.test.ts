@@ -17,7 +17,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions', () => {
     it('should return list of permissions', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions.$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -30,7 +30,7 @@ describe('Permission Routes', () => {
 
     it('should return permissions with correct structure', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions.$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -46,7 +46,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/roles', () => {
     it('should return list of roles', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions.roles.$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.roles.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -59,7 +59,7 @@ describe('Permission Routes', () => {
 
     it('should return roles with correct structure', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions.roles.$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.roles.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -76,7 +76,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/menu-config', () => {
     it('should return menu configuration', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions['menu-config'].$get(undefined, {
+      const res = await client.api.permissions['menu-config'].$get({
         headers: authHeaders,
       })
       expect(res.status).toBe(200)
@@ -91,7 +91,7 @@ describe('Permission Routes', () => {
 
     it('should return menu items with correct structure', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions['menu-config'].$get(undefined, {
+      const res = await client.api.permissions['menu-config'].$get({
         headers: authHeaders,
       })
       expect(res.status).toBe(200)
@@ -110,7 +110,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/page-permissions', () => {
     it('should return page permissions configuration', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions['page-permissions'].$get(undefined, {
+      const res = await client.api.permissions['page-permissions'].$get({
         headers: authHeaders,
       })
       expect(res.status).toBe(200)
@@ -126,7 +126,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/categories', () => {
     it('should return permission categories', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions.categories.$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.categories.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -140,7 +140,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/role-labels', () => {
     it('should return role labels', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions['role-labels'].$get(undefined, {
+      const res = await client.api.permissions['role-labels'].$get({
         headers: authHeaders,
       })
       expect(res.status).toBe(200)
@@ -156,7 +156,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/permission-labels', () => {
     it('should return permission labels', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions['permission-labels'].$get(undefined, {
+      const res = await client.api.permissions['permission-labels'].$get({
         headers: authHeaders,
       })
       expect(res.status).toBe(200)
@@ -210,7 +210,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/my-menu', () => {
     it('should return filtered menu for super admin', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions['my-menu'].$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions['my-menu'].$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -224,7 +224,7 @@ describe('Permission Routes', () => {
     it('should return filtered menu for customer service', async () => {
       const csAuthHeaders = { Authorization: 'Bearer test-customer-service-1' }
       const client = createTestClient(undefined, { headers: csAuthHeaders })
-      const res = await client.api.permissions['my-menu'].$get(undefined, {
+      const res = await client.api.permissions['my-menu'].$get({
         headers: csAuthHeaders,
       })
       expect(res.status).toBe(200)
@@ -245,7 +245,7 @@ describe('Permission Routes', () => {
     it('should return filtered menu for regular user', async () => {
       const userAuthHeaders = { Authorization: 'Bearer test-user-1' }
       const client = createTestClient(undefined, { headers: userAuthHeaders })
-      const res = await client.api.permissions['my-menu'].$get(undefined, {
+      const res = await client.api.permissions['my-menu'].$get({
         headers: userAuthHeaders,
       })
       expect(res.status).toBe(200)
@@ -272,7 +272,7 @@ describe('Permission Routes', () => {
   describe('GET /api/permissions/init', () => {
     it('should return all permission data for super admin', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api.permissions.init.$get(undefined, { headers: authHeaders })
+      const res = await client.api.permissions.init.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -292,7 +292,7 @@ describe('Permission Routes', () => {
     it('should return filtered data for customer service', async () => {
       const csAuthHeaders = { Authorization: 'Bearer test-customer-service-1' }
       const client = createTestClient(undefined, { headers: csAuthHeaders })
-      const res = await client.api.permissions.init.$get(undefined, { headers: csAuthHeaders })
+      const res = await client.api.permissions.init.$get({ headers: csAuthHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()
@@ -308,7 +308,7 @@ describe('Permission Routes', () => {
     it('should return filtered data for regular user', async () => {
       const userAuthHeaders = { Authorization: 'Bearer test-user-1' }
       const client = createTestClient(undefined, { headers: userAuthHeaders })
-      const res = await client.api.permissions.init.$get(undefined, { headers: userAuthHeaders })
+      const res = await client.api.permissions.init.$get({ headers: userAuthHeaders })
       expect(res.status).toBe(200)
 
       const data = await res.json()

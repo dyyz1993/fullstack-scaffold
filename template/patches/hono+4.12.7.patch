@@ -101,7 +101,7 @@ index 5bbbe00..b391357 100644
      buildSearchParams: buildSearchParamsOption
    });
 diff --git a/node_modules/hono/dist/types/client/types.d.ts b/node_modules/hono/dist/types/client/types.d.ts
-index 779df12..ef86e1e 100644
+index 779df12..551db4b 100644
 --- a/node_modules/hono/dist/types/client/types.d.ts
 +++ b/node_modules/hono/dist/types/client/types.d.ts
 @@ -4,6 +4,7 @@ import type { METHODS, METHOD_NAME_ALL_LOWERCASE } from '../router';
@@ -120,7 +120,20 @@ index 779df12..ef86e1e 100644
      /**
       * Standard `RequestInit`, caution that this take highest priority
       * and could be used to overwrite things that Hono sets for you, like `body | method | headers`.
-@@ -91,12 +93,41 @@ export type ClientRequest<Prefix extends string, Path extends string, S extends
+@@ -53,10 +55,11 @@ export type ClientRequestOptions<T = unknown> = {
+ } : {
+     headers: T | (() => T | Promise<T>);
+ });
++type IsEmptyObject<T> = keyof T extends never ? true : false;
+ export type ClientRequest<Prefix extends string, Path extends string, S extends Schema> = {
+     [M in keyof ExpandAllMethod<S>]: ExpandAllMethod<S>[M] extends Endpoint & {
+         input: infer R;
+-    } ? R extends object ? HasRequiredKeys<R> extends true ? (args: R, options?: ClientRequestOptions) => Promise<ClientResponseOfEndpoint<ExpandAllMethod<S>[M]>> : (args?: R, options?: ClientRequestOptions) => Promise<ClientResponseOfEndpoint<ExpandAllMethod<S>[M]>> : never : never;
++    } ? R extends object ? IsEmptyObject<R> extends true ? (options?: ClientRequestOptions) => Promise<ClientResponseOfEndpoint<ExpandAllMethod<S>[M]>> : HasRequiredKeys<R> extends true ? (args: R, options?: ClientRequestOptions) => Promise<ClientResponseOfEndpoint<ExpandAllMethod<S>[M]>> : (args?: R, options?: ClientRequestOptions) => Promise<ClientResponseOfEndpoint<ExpandAllMethod<S>[M]>> : never : never;
+ } & {
+     $url: <const Arg extends (S[keyof S] extends {
+         input: infer R;
+@@ -91,12 +94,41 @@ export type ClientRequest<Prefix extends string, Path extends string, S extends
          query: Q;
      } : {} : {}) | undefined = undefined>(arg?: Arg) => BuildPath<Path, Arg>;
  } & (S['$get'] extends {
