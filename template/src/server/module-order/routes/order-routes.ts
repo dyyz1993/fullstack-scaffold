@@ -11,6 +11,7 @@ import {
   UpdateOrderSchema,
   OrderListSchema,
   DeleteResultSchema,
+  OrderQuerySchema,
 } from '@shared/modules/order'
 
 const listRoute = createRoute({
@@ -19,6 +20,9 @@ const listRoute = createRoute({
   tags: ['orders'],
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
+  request: {
+    query: OrderQuerySchema,
+  },
   responses: {
     200: successResponse(OrderListSchema, 'List all orders'),
     401: errorResponse('Unauthorized'),
@@ -153,7 +157,8 @@ const cancelRoute = createRoute({
 
 export const orderRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const result = await orderService.getOrders()
+    const { status, customerName } = c.req.valid('query')
+    const result = await orderService.getOrders({ status, customerName })
     return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {

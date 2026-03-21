@@ -33,6 +33,11 @@ export const UpdateOrderSchema = z.object({
 
 export const OrderListSchema = z.array(OrderSchema)
 
+export const OrderQuerySchema = z.object({
+  status: OrderStatusSchema.optional(),
+  customerName: z.string().optional(),
+})
+
 export const DeleteResultSchema = z.object({
   message: z.string(),
 })
@@ -53,3 +58,4 @@ export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>
 export type DeleteResult = z.infer<typeof DeleteResultSchema>
 export type ProcessOrderInput = z.infer<typeof ProcessOrderSchema>
 export type CancelOrderInput = z.infer<typeof CancelOrderSchema>
+export type OrderQueryInput = z.infer<typeof OrderQuerySchema>

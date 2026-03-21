@@ -7,13 +7,83 @@ describe('Order Routes', () => {
   describe('GET /api/orders', () => {
     it('should return list of orders', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api['orders'].$get()
+      const res = await client.api['orders'].$get({ query: {} })
       expect(res.status).toBe(200)
 
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
         expect(Array.isArray(data.data)).toBe(true)
+      }
+    })
+
+    it('should filter orders by status', async () => {
+      const client = createTestClient(undefined, { headers: authHeaders })
+
+      const res = await client.api['orders'].$get({
+        query: { status: 'completed' },
+      })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+        data.data.forEach((order: { status: string }) => {
+          expect(order.status).toBe('completed')
+        })
+      }
+    })
+
+    it('should filter orders by customerName', async () => {
+      const client = createTestClient(undefined, { headers: authHeaders })
+
+      const res = await client.api['orders'].$get({
+        query: { customerName: '张三' },
+      })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+        data.data.forEach((order: { customerName: string }) => {
+          expect(order.customerName).toContain('张三')
+        })
+      }
+    })
+
+    it('should filter orders by both status and customerName', async () => {
+      const client = createTestClient(undefined, { headers: authHeaders })
+
+      const res = await client.api['orders'].$get({
+        query: { status: 'pending', customerName: '李四' },
+      })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(Array.isArray(data.data)).toBe(true)
+        data.data.forEach((order: { status: string; customerName: string }) => {
+          expect(order.status).toBe('pending')
+          expect(order.customerName).toContain('李四')
+        })
+      }
+    })
+
+    it('should return empty array when no orders match filter', async () => {
+      const client = createTestClient(undefined, { headers: authHeaders })
+
+      const res = await client.api['orders'].$get({
+        query: { customerName: 'NonExistentCustomer12345' },
+      })
+      expect(res.status).toBe(200)
+
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      if (data.success) {
+        expect(data.data).toHaveLength(0)
       }
     })
   })
