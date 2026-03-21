@@ -75,13 +75,13 @@ export async function updateTodo(id: number, input: UpdateTodoInput): Promise<To
     updatedAt: now,
   }
 
-  if (input.title !== undefined) {
+  if (input.title !== undefined && input.title !== null) {
     updateData.title = input.title
   }
-  if (input.description !== undefined) {
+  if (input.description !== undefined && input.description !== null) {
     updateData.description = input.description
   }
-  if (input.status !== undefined) {
+  if (input.status !== undefined && input.status !== null) {
     updateData.status = input.status
   }
 

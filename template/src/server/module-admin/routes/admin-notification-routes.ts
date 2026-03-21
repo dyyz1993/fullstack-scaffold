@@ -140,7 +140,7 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
   })
   .openapi(sendTestNotificationRoute, async c => {
     const { type } = c.req.valid('json')
-    const notification = await adminService.sendTestNotification(type)
+    const notification = await adminService.sendTestNotification(type ?? undefined)
     return c.json(success(notification), 200)
   })
   .openapi(notificationSSERoute, async c => {

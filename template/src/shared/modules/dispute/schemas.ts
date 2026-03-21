@@ -19,12 +19,12 @@ export const DisputeSchema = z.object({
   type: DisputeTypeSchema,
   status: DisputeStatusSchema,
   description: z.string(),
-  resolution: z.string().optional(),
+  resolution: z.string().nullish(),
   amount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  resolvedAt: z.string().optional(),
-  resolvedBy: z.string().optional(),
+  resolvedAt: z.string().nullish(),
+  resolvedBy: z.string().nullish(),
 })
 
 export const CreateDisputeSchema = z.object({
@@ -38,8 +38,8 @@ export const CreateDisputeSchema = z.object({
 })
 
 export const UpdateDisputeSchema = z.object({
-  status: DisputeStatusSchema.optional(),
-  resolution: z.string().optional(),
+  status: DisputeStatusSchema.nullish(),
+  resolution: z.string().nullish(),
 })
 
 export const ResolveDisputeSchema = z.object({

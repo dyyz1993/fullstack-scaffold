@@ -27,7 +27,7 @@ export const AuthUserSchema = z.object({
   username: z.string(),
   email: z.string(),
   role: RoleEnum,
-  avatar: z.string().optional(),
+  avatar: z.string().nullish(),
   permissions: z.array(PermissionEnum),
 })
 
@@ -53,7 +53,7 @@ export const UserSchema = z.object({
   email: z.string(),
   role: RoleEnum,
   status: z.enum(['active', 'inactive', 'locked']),
-  avatar: z.string().optional(),
+  avatar: z.string().nullish(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -61,10 +61,10 @@ export const UserSchema = z.object({
 export const UserListSchema = z.array(UserSchema)
 
 export const UpdateUserRequestSchema = z.object({
-  username: z.string().optional(),
-  email: z.string().email().optional(),
-  role: RoleEnum.optional(),
-  status: z.enum(['active', 'inactive', 'locked']).optional(),
+  username: z.string().nullish(),
+  email: z.string().email().nullish(),
+  role: RoleEnum.nullish(),
+  status: z.enum(['active', 'inactive', 'locked']).nullish(),
 })
 
 export const CreateUserRequestSchema = z.object({
@@ -72,7 +72,7 @@ export const CreateUserRequestSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: RoleEnum,
-  status: z.enum(['active', 'inactive', 'locked']).optional().default('active'),
+  status: z.enum(['active', 'inactive', 'locked']).nullish().default('active'),
 })
 
 export const ClearTodosResultSchema = z.object({

@@ -37,7 +37,7 @@ export const MenuItemSchema = z.object({
         permissions: z.array(PermissionEnum),
       })
     )
-    .optional(),
+    .nullish(),
 })
 
 export const PageActionSchema = z.object({

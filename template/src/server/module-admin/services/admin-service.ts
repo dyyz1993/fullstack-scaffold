@@ -284,9 +284,13 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
     throw new Error('User not found')
   }
 
+  const filteredData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== null && v !== undefined)
+  )
+
   const updatedUser: User = {
     ...mockUsers[userIndex],
-    ...data,
+    ...filteredData,
     updatedAt: new Date().toISOString(),
   }
 

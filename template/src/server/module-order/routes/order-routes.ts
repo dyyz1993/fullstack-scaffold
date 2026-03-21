@@ -158,7 +158,10 @@ const cancelRoute = createRoute({
 export const orderRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const { status, customerName } = c.req.valid('query')
-    const result = await orderService.getOrders({ status, customerName })
+    const result = await orderService.getOrders({
+      status: status ?? undefined,
+      customerName: customerName ?? undefined,
+    })
     return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {

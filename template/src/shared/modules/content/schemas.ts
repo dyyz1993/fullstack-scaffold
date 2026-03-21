@@ -21,22 +21,22 @@ export const ContentSchema = z.object({
   likeCount: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  publishedAt: z.string().optional(),
+  publishedAt: z.string().nullish(),
 })
 
 export const CreateContentSchema = z.object({
   title: z.string(),
   content: z.string(),
   category: ContentCategorySchema,
-  tags: z.array(z.string()).optional(),
+  tags: z.array(z.string()).nullish(),
 })
 
 export const UpdateContentSchema = z.object({
-  title: z.string().optional(),
-  content: z.string().optional(),
-  category: ContentCategorySchema.optional(),
-  tags: z.array(z.string()).optional(),
-  status: ContentStatusSchema.optional(),
+  title: z.string().nullish(),
+  content: z.string().nullish(),
+  category: ContentCategorySchema.nullish(),
+  tags: z.array(z.string()).nullish(),
+  status: ContentStatusSchema.nullish(),
 })
 
 export const ContentListSchema = z.array(ContentSchema)

@@ -35,7 +35,7 @@ export const TicketSchema = z.object({
   status: TicketStatusSchema,
   priority: TicketPrioritySchema,
   category: TicketCategorySchema,
-  assignedTo: z.string().optional(),
+  assignedTo: z.string().nullish(),
   createdAt: z.string(),
   updatedAt: z.string(),
   replies: z.array(TicketReplySchema),
@@ -51,8 +51,8 @@ export const CreateTicketSchema = z.object({
 })
 
 export const UpdateTicketSchema = z.object({
-  status: TicketStatusSchema.optional(),
-  assignedTo: z.string().optional(),
+  status: TicketStatusSchema.nullish(),
+  assignedTo: z.string().nullish(),
 })
 
 export const ReplyTicketSchema = z.object({

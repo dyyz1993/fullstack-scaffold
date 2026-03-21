@@ -28,14 +28,14 @@ export const CreateOrderSchema = z.object({
 })
 
 export const UpdateOrderSchema = z.object({
-  status: OrderStatusSchema.optional(),
+  status: OrderStatusSchema.nullish(),
 })
 
 export const OrderListSchema = z.array(OrderSchema)
 
 export const OrderQuerySchema = z.object({
-  status: OrderStatusSchema.optional(),
-  customerName: z.string().optional(),
+  status: OrderStatusSchema.nullish(),
+  customerName: z.string().nullish(),
 })
 
 export const DeleteResultSchema = z.object({
@@ -48,7 +48,7 @@ export const ProcessOrderSchema = z.object({
 
 export const CancelOrderSchema = z.object({
   orderId: z.string(),
-  reason: z.string().optional(),
+  reason: z.string().nullish(),
 })
 
 export type OrderStatus = z.infer<typeof OrderStatusSchema>

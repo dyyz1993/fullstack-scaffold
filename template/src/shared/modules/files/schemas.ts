@@ -22,8 +22,8 @@ export const PrivateFileUrlSchema = z.object({
 export const GenerateUrlRequestSchema = z.object({
   namespace: z.string(),
   filename: z.string(),
-  isPrivate: z.boolean().optional().default(false),
-  expirySeconds: z.number().optional(),
+  isPrivate: z.boolean().nullish().default(false),
+  expirySeconds: z.number().nullish(),
 })
 
 export const FileUrlResponseSchema = z.union([PublicFileUrlSchema, PrivateFileUrlSchema])

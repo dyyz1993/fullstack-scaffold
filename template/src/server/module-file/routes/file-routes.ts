@@ -181,7 +181,12 @@ export const fileRoutes = new OpenAPIHono()
     const baseUrl = process.env.PUBLIC_URL || ''
 
     if (isPrivate) {
-      const { url, expiry } = getPrivateFileUrl(namespace, filename, expirySeconds, baseUrl)
+      const { url, expiry } = getPrivateFileUrl(
+        namespace,
+        filename,
+        expirySeconds ?? undefined,
+        baseUrl
+      )
       return c.json(success({ url, expiry }), 200)
     }
 

@@ -5,7 +5,7 @@ export const TodoStatusSchema = z.enum(['pending', 'in_progress', 'completed'])
 export const TodoSchema = z.object({
   id: z.number().int().positive(),
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().max(1000, 'Description too long').optional(),
+  description: z.string().max(1000, 'Description too long').nullish(),
   status: TodoStatusSchema,
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -13,13 +13,13 @@ export const TodoSchema = z.object({
 
 export const CreateTodoSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  description: z.string().max(1000, 'Description too long').optional(),
+  description: z.string().max(1000, 'Description too long').nullish(),
 })
 
 export const UpdateTodoSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long').optional(),
-  description: z.string().max(1000, 'Description too long').optional(),
-  status: TodoStatusSchema.optional(),
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long').nullish(),
+  description: z.string().max(1000, 'Description too long').nullish(),
+  status: TodoStatusSchema.nullish(),
 })
 
 export const TodoIdSchema = z.object({
@@ -38,7 +38,7 @@ export const TodoAttachmentSchema = z.object({
   mimeType: z.string(),
   size: z.number().int().positive(),
   path: z.string(),
-  uploadedBy: z.string().optional(),
+  uploadedBy: z.string().nullish(),
   createdAt: z.string().datetime(),
 })
 

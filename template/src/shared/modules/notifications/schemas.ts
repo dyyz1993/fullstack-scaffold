@@ -18,9 +18,9 @@ export const CreateNotificationSchema = z.object({
 })
 
 export const NotificationListQuerySchema = z.object({
-  unreadOnly: z.coerce.boolean().optional().default(false),
-  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
-  cursor: z.string().optional(),
+  unreadOnly: z.coerce.boolean().nullish().default(false),
+  limit: z.coerce.number().int().min(1).max(100).nullish().default(20),
+  cursor: z.string().nullish(),
 })
 
 export const SSEEventSchema = z.object({
@@ -56,7 +56,7 @@ export const MarkAllReadResultSchema = z.object({
 })
 
 export const TestNotificationRequestSchema = z.object({
-  type: NotificationTypeSchema.optional().default('info'),
+  type: NotificationTypeSchema.nullish().default('info'),
 })
 
 export type NotificationType = z.infer<typeof NotificationTypeSchema>

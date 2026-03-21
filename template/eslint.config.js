@@ -31,6 +31,7 @@ import { noDisableDirectFetch } from './eslint-rules/no-disable-direct-fetch.js'
 import { noNewOldServiceNaming } from './eslint-rules/no-new-old-service-naming.js'
 import { noDirectZodImportInFileRoutes } from './eslint-rules/no-direct-zod-import-in-file-routes.js'
 import { requireFileOpenapiProps } from './eslint-rules/require-file-openapi-props.js'
+import { requireNullableForOptional } from './eslint-rules/require-nullable-for-optional.js'
 import { moduleBoundary } from './eslint-rules/module-boundary.js'
 import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 
@@ -63,6 +64,7 @@ const localRules = {
     'no-new-old-service-naming': noNewOldServiceNaming,
     'no-direct-zod-import-in-file-routes': noDirectZodImportInFileRoutes,
     'require-file-openapi-props': requireFileOpenapiProps,
+    'require-nullable-for-optional': requireNullableForOptional,
     'module-boundary': moduleBoundary,
     'limit-type-complexity': limitTypeComplexity,
   },
@@ -158,6 +160,7 @@ export default tseslint.config(
     files: ['src/shared/modules/**/schemas.ts'],
     rules: {
       'local-rules/require-file-openapi-props': 'error',
+      'local-rules/require-nullable-for-optional': 'error',
     },
   },
   {

@@ -183,7 +183,11 @@ export const roleRoutes = new OpenAPIHono()
     const { id } = c.req.valid('param')
     const data = c.req.valid('json')
 
-    const role = await roleService.update(id, data)
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([_, v]) => v !== null && v !== undefined)
+    )
+
+    const role = await roleService.update(id, filteredData)
 
     if (!role) {
       return c.json({ success: false, error: 'Role not found' }, 404)

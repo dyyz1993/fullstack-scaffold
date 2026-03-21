@@ -23,15 +23,15 @@ export const CreateRoleSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
   label: z.string().min(1),
-  description: z.string().optional(),
-  sortOrder: z.number().optional(),
+  description: z.string().nullish(),
+  sortOrder: z.number().nullish(),
 })
 
 export const UpdateRoleSchema = z.object({
-  name: z.string().optional(),
-  label: z.string().optional(),
-  description: z.string().optional(),
-  sortOrder: z.number().optional(),
+  name: z.string().nullish(),
+  label: z.string().nullish(),
+  description: z.string().nullish(),
+  sortOrder: z.number().nullish(),
 })
 
 export const UpdateRolePermissionsSchema = z.object({
