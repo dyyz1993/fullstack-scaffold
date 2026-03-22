@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, App as AntdApp } from 'antd'
 import { Layout } from './layouts/Layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
@@ -24,36 +24,38 @@ export const App: React.FC = () => {
         },
       }}
     >
-      <BrowserRouter basename="/ops">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/users" element={<UsersPage />} />
-                    <Route path="/orders" element={<OrdersPage />} />
-                    <Route path="/tickets" element={<TicketsPage />} />
-                    <Route path="/disputes" element={<DisputesPage />} />
-                    <Route path="/content" element={<ContentPage />} />
-                    <Route path="/system/settings" element={<SettingsPage />} />
-                    <Route path="/system/logs" element={<SystemLogsPage />} />
-                    <Route path="/system/monitor" element={<div>系统监控页面（待开发）</div>} />
-                    <Route path="/system/permissions" element={<PermissionsPage />} />
-                    <Route path="/system/roles" element={<RolesPage />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-        <CaptchaModal />
-      </BrowserRouter>
+      <AntdApp>
+        <BrowserRouter basename="/ops">
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/users" element={<UsersPage />} />
+                      <Route path="/orders" element={<OrdersPage />} />
+                      <Route path="/tickets" element={<TicketsPage />} />
+                      <Route path="/disputes" element={<DisputesPage />} />
+                      <Route path="/content" element={<ContentPage />} />
+                      <Route path="/system/settings" element={<SettingsPage />} />
+                      <Route path="/system/logs" element={<SystemLogsPage />} />
+                      <Route path="/system/monitor" element={<div>系统监控页面（待开发）</div>} />
+                      <Route path="/system/permissions" element={<PermissionsPage />} />
+                      <Route path="/system/roles" element={<RolesPage />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <CaptchaModal />
+        </BrowserRouter>
+      </AntdApp>
     </ConfigProvider>
   )
 }

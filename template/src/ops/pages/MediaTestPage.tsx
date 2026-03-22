@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { apiClient } from '../services/apiClient'
-import { Card, Button, Space, Input, message, Image, Typography, Divider, Progress } from 'antd'
+import { Card, Button, Space, Input, Image, Typography, Divider, Progress } from 'antd'
 import { Image as ImageIcon, FileCode, Download } from 'lucide-react'
+import { useMessage } from '../hooks/useAntdStatic'
 
 const { Title, Paragraph, Text } = Typography
 
 const TOTAL_LINES = 12
 
 export const MediaTestPage: React.FC = () => {
+  const message = useMessage()
   const [avatarId, setAvatarId] = useState('test-user')
   const [iconName, setIconName] = useState('home')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)

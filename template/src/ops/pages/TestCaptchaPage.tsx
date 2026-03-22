@@ -1,8 +1,10 @@
-import { Button, Card, Space, Divider, Alert, message } from 'antd'
+import { Button, Card, Space, Divider, Alert } from 'antd'
 import { apiClient } from '../services/apiClient'
 import { useState } from 'react'
+import { useMessage } from '../hooks/useAntdStatic'
 
 export const TestCaptchaPage: React.FC = () => {
+  const message = useMessage()
   const [result, setResult] = useState<string>('')
   const [loading, setLoading] = useState(false)
 

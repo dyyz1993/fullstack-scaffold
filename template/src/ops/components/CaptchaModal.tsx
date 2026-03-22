@@ -1,17 +1,19 @@
-import { Modal, Input, Button, message } from 'antd'
+import { Modal, Input, Button } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useCaptchaStore } from '../stores/captchaStore'
 import type { CaptchaResponse } from '@shared/modules/captcha'
+import { useMessage } from '../hooks/useAntdStatic'
 
 export const CaptchaModal: React.FC = () => {
+  const message = useMessage()
   const { isOpen, resolve } = useCaptchaStore()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [captchaData, setCaptchaData] = useState<CaptchaResponse | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchCaptcha = async () => {
+  const fetchCaptcha = useCallback(async () => {
     setRefreshing(true)
     try {
       const response = await window.fetch('/api/captcha')
@@ -27,14 +29,14 @@ export const CaptchaModal: React.FC = () => {
     } finally {
       setRefreshing(false)
     }
-  }
+  }, [message])
 
   useEffect(() => {
     if (isOpen) {
       fetchCaptcha()
       setCode('')
     }
-  }, [isOpen])
+  }, [isOpen, fetchCaptcha])
 
   const handleRefresh = () => {
     fetchCaptcha()

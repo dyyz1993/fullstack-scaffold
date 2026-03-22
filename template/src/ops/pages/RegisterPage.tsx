@@ -1,15 +1,17 @@
-import { Form, Input, Button, Card, message, Spin } from 'antd'
+import { Form, Input, Button, Card, Spin } from 'antd'
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons'
 import { useNavigate, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { apiClient } from '../services/apiClient'
 import type { RegisterRequest } from '@shared/modules/ops'
+import { useMessage } from '../hooks/useAntdStatic'
 
 interface RegisterForm extends RegisterRequest {
   confirmPassword: string
 }
 
 export const RegisterPage: React.FC = () => {
+  const message = useMessage()
   const navigate = useNavigate()
   const [form] = Form.useForm<RegisterForm>()
   const [loading, setLoading] = useState(false)

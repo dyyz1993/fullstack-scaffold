@@ -3,9 +3,11 @@ import { apiClient } from '../services/apiClient'
 import type { SystemStats } from '@shared/modules/ops'
 import type { NotificationType } from '@shared/schemas'
 import { Activity, CheckCircle, Clock, TrendingUp, Bell, BellRing } from 'lucide-react'
-import { Button, Select, message } from 'antd'
+import { Button, Select } from 'antd'
+import { useMessage } from '../hooks/useAntdStatic'
 
 export const DashboardPage: React.FC = () => {
+  const message = useMessage()
   const [stats, setStats] = useState<SystemStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [sendingNotification, setSendingNotification] = useState(false)

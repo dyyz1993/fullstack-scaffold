@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Table, Card, Tag, Button, Space, Modal, Form, Input, Select, message } from 'antd'
+import { useState, useEffect, useCallback } from 'react'
+import { Table, Card, Tag, Button, Space, Modal, Form, Input, Select } from 'antd'
 import { Plus, Edit, Delete } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@platform/shared/permission'
 import { apiClient } from '../services/apiClient'
 import type { Content, CreateContentInput } from '@shared/modules/content'
+import { useMessage } from '../hooks/useAntdStatic'
 
 const CATEGORY_LABELS = {
   article: '文章',
@@ -27,17 +28,14 @@ const STATUS_LABELS = {
 }
 
 export const ContentPage: React.FC = () => {
+  const message = useMessage()
   const [contents, setContents] = useState<Content[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [form] = Form.useForm<CreateContentInput>()
 
-  useEffect(() => {
-    fetchContents()
-  }, [])
-
-  const fetchContents = async () => {
+  const fetchContents = useCallback(async () => {
     setLoading(true)
     try {
       const response = await apiClient.api.contents.$get()
@@ -50,7 +48,11 @@ export const ContentPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [message])
+
+  useEffect(() => {
+    fetchContents()
+  }, [fetchContents])
 
   const handleCreate = () => {
     setEditingContent(null)

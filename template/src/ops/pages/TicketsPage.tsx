@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Table, Card, Tag, Button, Space, Modal, message, Descriptions } from 'antd'
+import { useState, useEffect, useCallback } from 'react'
+import { Table, Card, Tag, Button, Space, Modal, Descriptions } from 'antd'
 import { Eye, MessageCircle, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@platform/shared/permission'
 import { apiClient } from '../services/apiClient'
 import type { Ticket } from '@shared/modules/ticket'
+import { useMessage } from '../hooks/useAntdStatic'
 
 const PRIORITY_COLORS = {
   low: 'default',
@@ -37,16 +38,13 @@ const STATUS_LABELS = {
 }
 
 export const TicketsPage: React.FC = () => {
+  const message = useMessage()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
 
-  useEffect(() => {
-    fetchTickets()
-  }, [])
-
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     setLoading(true)
     try {
       const response = await apiClient.api.tickets.$get()
@@ -59,7 +57,11 @@ export const TicketsPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [message])
+
+  useEffect(() => {
+    fetchTickets()
+  }, [fetchTickets])
 
   const handleClose = async (ticketId: string) => {
     Modal.confirm({

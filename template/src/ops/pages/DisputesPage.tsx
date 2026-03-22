@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Table, Card, Tag, Button, Space, Modal, message, Descriptions } from 'antd'
+import { useState, useEffect, useCallback } from 'react'
+import { Table, Card, Tag, Button, Space, Modal, Descriptions } from 'antd'
 import { Eye, AlertTriangle, CheckCircle } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@platform/shared/permission'
 import { apiClient } from '../services/apiClient'
 import type { Dispute } from '@shared/modules/dispute'
+import { useMessage } from '../hooks/useAntdStatic'
 
 const TYPE_LABELS = {
   refund: '退款争议',
@@ -29,16 +30,13 @@ const STATUS_LABELS = {
 }
 
 export const DisputesPage: React.FC = () => {
+  const message = useMessage()
   const [disputes, setDisputes] = useState<Dispute[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
 
-  useEffect(() => {
-    fetchDisputes()
-  }, [])
-
-  const fetchDisputes = async () => {
+  const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
       const response = await apiClient.api.disputes.$get()
@@ -51,7 +49,11 @@ export const DisputesPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [message])
+
+  useEffect(() => {
+    fetchDisputes()
+  }, [fetchDisputes])
 
   const handleResolve = (dispute: Dispute) => {
     Modal.confirm({

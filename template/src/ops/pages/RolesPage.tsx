@@ -1,17 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Switch,
-  message,
-  Popconfirm,
-  Space,
-  Tag,
-  Tabs,
-} from 'antd'
+import { Table, Button, Modal, Form, Input, Switch, Popconfirm, Space, Tag, Tabs } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -23,6 +11,7 @@ import {
 import { useRoleStore } from '../hooks/useRoles'
 import { useConfig, usePermissionCategories } from '../hooks/useConfig'
 import { usePermissions } from '../hooks/usePermissions'
+import { useMessage } from '../hooks/useAntdStatic'
 import type { RoleType, CreateRoleType } from '@shared/modules/role/schemas'
 import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
@@ -34,6 +23,7 @@ type RoleFormValues = Pick<CreateRoleType, 'code' | 'name' | 'label' | 'descript
 }
 
 export const RolesPage: React.FC = () => {
+  const message = useMessage()
   const { roles, loading, fetchRoles, createRole, updateRole, deleteRole, updateRolePermissions } =
     useRoleStore()
   const { permissions } = useConfig()

@@ -1,9 +1,10 @@
-import { Form, Input, Button, Card, message, Spin, Divider } from 'antd'
+import { Form, Input, Button, Card, Spin, Divider } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate, Link } from 'react-router-dom'
 import { useOpsStore } from '../stores/opsStore'
 import { Role } from '@platform/shared/permission'
 import type { LoginRequest } from '@shared/modules/ops'
+import { useMessage } from '../hooks/useAntdStatic'
 
 interface QuickLoginAccount extends LoginRequest {
   username: string
@@ -32,6 +33,7 @@ const QUICK_LOGIN_ACCOUNTS: QuickLoginAccount[] = [
 ]
 
 export const LoginPage: React.FC = () => {
+  const message = useMessage()
   const navigate = useNavigate()
   const [form] = Form.useForm<LoginRequest>()
   const { login, loading } = useOpsStore()

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Tabs, Input, Button, message, Space, Alert } from 'antd'
+import { Tabs, Input, Button, Space, Alert } from 'antd'
 import { CodeOutlined, SaveOutlined, FormatPainterOutlined } from '@ant-design/icons'
 import type { PermissionInfo } from '@platform/shared/permission'
+import { useMessage } from '../hooks/useAntdStatic'
 
 interface PermissionConfigEditorProps {
   visible: boolean
@@ -18,6 +19,7 @@ export const PermissionConfigEditor: React.FC<PermissionConfigEditorProps> = ({
   selectedPermissions,
   onOk,
 }) => {
+  const message = useMessage()
   const [jsonValue, setJsonValue] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
 

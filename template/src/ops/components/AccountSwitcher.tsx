@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Dropdown, Button, Tag, Space, message } from 'antd'
+import { Dropdown, Button, Tag, Space } from 'antd'
 import { User, RefreshCw } from 'lucide-react'
 import { useOpsStore } from '../stores/opsStore'
 import { usePermissions } from '../hooks/usePermissions'
 import { Role } from '@platform/shared/permission'
+import { useMessage } from '../hooks/useAntdStatic'
 
 interface TestAccount {
   username: string
@@ -38,6 +39,7 @@ const TEST_ACCOUNTS: TestAccount[] = [
 ]
 
 export const AccountSwitcher: React.FC = () => {
+  const message = useMessage()
   const [switching, setSwitching] = useState(false)
   const { user, login, logout } = useOpsStore()
   const { refreshPermissions } = usePermissions()

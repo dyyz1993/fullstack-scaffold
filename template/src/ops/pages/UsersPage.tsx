@@ -1,17 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  Table,
-  Card,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Tag,
-  Space,
-  message,
-  Popconfirm,
-} from 'antd'
+import { Table, Card, Button, Modal, Form, Input, Select, Tag, Space, Popconfirm } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
@@ -25,10 +13,12 @@ import { useRoleLabels } from '../hooks/useConfig'
 import { Permission, Role } from '@platform/shared/permission'
 import { PermissionGuard } from '../components/PermissionGuard'
 import type { User, CreateUserRequest } from '@shared/modules/ops'
+import { useMessage } from '../hooks/useAntdStatic'
 
 type UserFormData = CreateUserRequest & { password?: string }
 
 export const UsersPage: React.FC = () => {
+  const message = useMessage()
   const [users, setUsers] = useState<User[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)

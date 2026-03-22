@@ -1,4 +1,5 @@
-import { Card, Form, Input, Button, Switch, Divider, message } from 'antd'
+import { Card, Form, Input, Button, Switch, Divider } from 'antd'
+import { useMessage } from '../hooks/useAntdStatic'
 
 interface SettingsFormValues {
   siteName?: string
@@ -9,6 +10,7 @@ interface SettingsFormValues {
 }
 
 export const SettingsPage: React.FC = () => {
+  const message = useMessage()
   const [form] = Form.useForm<SettingsFormValues>()
 
   const handleSave = () => {

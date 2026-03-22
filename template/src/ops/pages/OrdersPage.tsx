@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Table, Card, Tag, Button, Space, Modal, Select, message, Descriptions } from 'antd'
+import { Table, Card, Tag, Button, Space, Modal, Select, Descriptions } from 'antd'
 import { Eye, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@platform/shared/permission'
 import { apiClient } from '../services/apiClient'
 import type { Order } from '@shared/modules/order'
+import { useMessage } from '../hooks/useAntdStatic'
 
 const STATUS_COLORS = {
   pending: 'orange',
@@ -23,6 +24,7 @@ const STATUS_LABELS = {
 }
 
 export const OrdersPage: React.FC = () => {
+  const message = useMessage()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -47,7 +49,7 @@ export const OrdersPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }, [filterStatus])
+  }, [filterStatus, message])
 
   useEffect(() => {
     fetchOrders()

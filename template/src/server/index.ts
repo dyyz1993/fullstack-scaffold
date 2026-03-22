@@ -23,21 +23,21 @@ setRuntimeAdapter(runtimeAdapter)
 
 // HTML 文件路径（开发环境直接读取根目录）
 const indexHtmlPath = resolve(process.cwd(), 'index.html')
-const adminHtmlPath = resolve(process.cwd(), 'admin.html')
+const opsHtmlPath = resolve(process.cwd(), 'ops.html')
 
 const indexHtml = existsSync(indexHtmlPath)
   ? readFileSync(indexHtmlPath, 'utf-8')
   : '<html><body>index.html not found</body></html>'
-const adminHtml = existsSync(adminHtmlPath)
-  ? readFileSync(adminHtmlPath, 'utf-8')
-  : '<html><body>admin.html not found</body></html>'
+const opsHtml = existsSync(opsHtmlPath)
+  ? readFileSync(opsHtmlPath, 'utf-8')
+  : '<html><body>ops.html not found</body></html>'
 
 // 创建 Hono 应用
 const app = createApp()
 
-// 添加 Admin 路由
-app.get('/admin/*', c => {
-  return c.html(adminHtml)
+// 添加 Ops 路由
+app.get('/ops/*', c => {
+  return c.html(opsHtml)
 })
 
 // SPA fallback - 使用中间件方式，确保 API 路由已经注册后才添加
