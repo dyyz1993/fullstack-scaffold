@@ -12,10 +12,24 @@ export type ColorScheme =
   | 'indigo'
 
 interface StatusBadgeProps {
-  label: string
+  label?: string
+  status?: string
   icon?: LucideIcon
   colorScheme?: ColorScheme
   className?: string
+}
+
+const statusColorMap: Record<string, ColorScheme> = {
+  active: 'green',
+  inactive: 'gray',
+  pending: 'yellow',
+  suspended: 'red',
+  cancelled: 'red',
+  left: 'gray',
+  trial: 'blue',
+  expired: 'red',
+  accepted: 'green',
+  declined: 'red',
 }
 
 const colorMap: Record<ColorScheme, { bg: string; text: string }> = {
@@ -32,11 +46,14 @@ const colorMap: Record<ColorScheme, { bg: string; text: string }> = {
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({
   label,
+  status,
   icon: Icon,
-  colorScheme = 'gray',
+  colorScheme,
   className = '',
 }) => {
-  const colors = colorMap[colorScheme]
+  const displayLabel = label || status || ''
+  const resolvedColorScheme = colorScheme || statusColorMap[status || ''] || 'gray'
+  const colors = colorMap[resolvedColorScheme]
 
   return (
     <span
@@ -44,7 +61,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       data-testid="status-badge"
     >
       {Icon && <Icon className="w-3 h-3" />}
-      {label}
+      {displayLabel}
     </span>
   )
 }

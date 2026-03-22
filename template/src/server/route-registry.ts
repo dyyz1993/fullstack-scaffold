@@ -19,6 +19,7 @@ export const clientApiRoutes = new OpenAPIHono()
   .route('/api', chatRoutes)
   .route('/api', notificationRoutes)
   .route('/api', apiRoutes)
+  .route('/api', tenantRoutes)
 
 // 管理后台路由 - 普通用户使用的 API + 管理功能
 export const adminApiRoutes = new OpenAPIHono()

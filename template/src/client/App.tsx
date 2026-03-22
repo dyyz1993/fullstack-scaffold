@@ -3,6 +3,7 @@ import { Layout } from './Layout'
 import { TodoPage } from './pages/TodoPage'
 import { NotificationPage } from './pages/NotificationPage'
 import { WebSocketPage } from './pages/WebSocketPage'
+import { TenantPage } from './pages/TenantPage'
 
 export const App: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ export const App: React.FC = () => {
           <Route path="/todos" element={<TodoPage />} />
           <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/websocket" element={<WebSocketPage />} />
+          <Route path="/tenants" element={<TenantPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
