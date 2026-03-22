@@ -16,7 +16,7 @@ export default defineConfig({
       entry: 'src/server/index.ts',
       exclude: [
         /^\/$/,
-        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|admin\.html|src)/,
+        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|ops\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
     }),
@@ -28,20 +28,20 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        admin: path.resolve(__dirname, 'admin.html'),
+        ops: path.resolve(__dirname, 'ops.html'),
       },
     },
   },
   resolve: {
     alias: {
       '@platform/server': path.resolve(__dirname, 'src/platform/server'),
-      '@platform/admin': path.resolve(__dirname, 'src/platform/admin'),
+      '@platform/ops': path.resolve(__dirname, 'src/platform/ops'),
       '@platform/client': path.resolve(__dirname, 'src/platform/client'),
       '@platform/shared': path.resolve(__dirname, 'src/platform/shared'),
       '@shared': path.resolve(__dirname, 'src/shared'),
       '@client': path.resolve(__dirname, 'src/client'),
       '@server': path.resolve(__dirname, 'src/server'),
-      '@admin': path.resolve(__dirname, 'src/admin'),
+      '@ops': path.resolve(__dirname, 'src/ops'),
     },
   },
 })

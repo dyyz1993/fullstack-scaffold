@@ -34,7 +34,7 @@ export function createApp() {
   const app = new OpenAPIHono()
     .use('*', errorHandlerMiddleware())
     .use('/api/admin/*', captchaMiddleware()) // ✅ 全局中间件
-    .route('/api', adminRoutes)
+    .route('/api', opsRoutes)
   return app
 }
 ```
@@ -44,7 +44,7 @@ export function createApp() {
 适用于单个路由：
 
 ```typescript
-// src/server/module-admin/routes/admin-routes.ts
+// src/server/module-ops/routes/ops-routes.ts
 const getStatsRoute = createRoute({
   method: 'get',
   path: '/admin/stats',
@@ -55,7 +55,7 @@ const getStatsRoute = createRoute({
   },
 })
 
-export const adminRoutes = new OpenAPIHono().openapi(getStatsRoute, async c => {
+export const opsRoutes = new OpenAPIHono().openapi(getStatsRoute, async c => {
   // 路由处理逻辑
 })
 ```
@@ -65,8 +65,8 @@ export const adminRoutes = new OpenAPIHono().openapi(getStatsRoute, async c => {
 在路由文件中使用 `.use()` 方法：
 
 ```typescript
-// src/server/module-admin/routes/admin-routes.ts
-export const adminRoutes = new OpenAPIHono()
+// src/server/module-ops/routes/ops-routes.ts
+export const opsRoutes = new OpenAPIHono()
   .use('*', captchaMiddleware())  // ❌ 会导致类型推导丢失
   .openapi(getStatsRoute, async c => { ... })  // ❌ 类型错误
 ```
@@ -92,7 +92,7 @@ export const adminRoutes = new OpenAPIHono()
 🚫 禁止在路由文件中使用 .use() 应用中间件。
 
 ❌ 错误示例：
-   export const adminRoutes = new OpenAPIHono()
+   export const opsRoutes = new OpenAPIHono()
      .use("*", captchaMiddleware())  // ❌ 会导致类型推导丢失
      .openapi(getStatsRoute, ...)
 
@@ -103,12 +103,12 @@ export const adminRoutes = new OpenAPIHono()
    export function createApp() {
      const app = new OpenAPIHono()
        .use("/api/admin/*", captchaMiddleware())  // ✅ 全局中间件
-       .route("/api", adminRoutes)
+       .route("/api", opsRoutes)
      return app
    }
 
 2️⃣ 路由级中间件 - 在路由定义中配置：
-   // src/server/module-admin/routes/admin-routes.ts
+   // src/server/module-ops/routes/ops-routes.ts
    const getStatsRoute = createRoute({
      method: "get",
      path: "/admin/stats",

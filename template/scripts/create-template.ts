@@ -8,14 +8,14 @@
  *   --with-db       包含数据库操作
  *   --sse           SSE (Server-Sent Events) 模板
  *   --ws            WebSocket 模板
- *   --admin         创建管理后台模块 (module-admin-xxx)
+ *   --ops         创建运维后台模块 (module-ops-xxx)
  *
  * 示例：
  *   npm run create:module product                    # 基础模板（无数据库）
  *   npm run create:module product --with-db          # 数据库模板
  *   npm run create:module notifications --sse        # SSE 模板
  *   npm run create:module chat --ws                  # WebSocket 模板
- *   npm run create:module users --admin              # 管理后台模块 (module-admin-users)
+ *   npm run create:module users --ops              # 运维后台模块 (module-ops-users)
  *   npm run create:module reports --admin --with-db  # 管理后台数据库模块
  *
  * 自动操作：
@@ -1605,18 +1605,18 @@ function main(): void {
   --with-db       包含数据库操作
   --sse           SSE (Server-Sent Events) 模板
   --ws            WebSocket 模板
-  --admin         创建管理后台模块 (module-admin-xxx)
+  --ops         创建运维后台模块 (module-ops-xxx)
 
 示例：
   npm run create:module product                    # 基础模板（无数据库）
   npm run create:module product --with-db          # 数据库模板
   npm run create:module notifications --sse        # SSE 模板
   npm run create:module chat --ws                  # WebSocket 模板
-  npm run create:module users --admin              # 管理后台模块 (module-admin-users)
+  npm run create:module users --ops              # 运维后台模块 (module-ops-users)
   npm run create:module reports --admin --with-db  # 管理后台数据库模块
 
 自动操作：
-  1. 创建模块目录结构 (src/server/module-{name}/ 或 src/server/module-admin-{name}/)
+  1. 创建模块目录结构 (src/server/module-{name}/ 或 src/server/module-ops-{name}/)
   2. 创建 schema 文件 (src/shared/modules/{name}/schemas.ts)
   3. 更新 app.ts 导入和注册路由
   4. 更新 shared/modules/index.ts 导出

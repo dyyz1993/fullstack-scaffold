@@ -3,7 +3,7 @@ import { Layout } from './Layout'
 import { TodoPage } from './pages/TodoPage'
 import { NotificationPage } from './pages/NotificationPage'
 import { WebSocketPage } from './pages/WebSocketPage'
-import { TenantPage } from './pages/TenantPage'
+import { TenantPage } from '../tenant/pages/TenantPage'
 
 export const App: React.FC = () => {
   return (

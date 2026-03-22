@@ -5,7 +5,7 @@ import { roleRoutes } from './module-permission/routes/role-routes'
 import { auditLogRoutes } from './module-permission/routes/audit-log-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
-import { adminRoutes } from './module-admin/routes/admin-routes'
+import { opsRoutes } from './module-ops/routes/ops-routes'
 import { captchaRoutes } from './module-captcha/routes/captcha-routes'
 import { orderRoutes } from './module-order/routes/order-routes'
 import { ticketRoutes } from './module-ticket/routes/ticket-routes'
@@ -21,8 +21,8 @@ export const clientApiRoutes = new OpenAPIHono()
   .route('/api', apiRoutes)
   .route('/api', tenantRoutes)
 
-// 管理后台路由 - 普通用户使用的 API + 管理功能
-export const adminApiRoutes = new OpenAPIHono()
+// 运营后台路由 - 普通用户使用的 API + 管理功能
+export const opsApiRoutes = new OpenAPIHono()
   .route('/api', orderRoutes)
   .route('/api', ticketRoutes)
   .route('/api', disputeRoutes)
@@ -32,9 +32,9 @@ export const adminApiRoutes = new OpenAPIHono()
   .route('/api', permissionRoutes)
   .route('/api', roleRoutes)
   .route('/api', auditLogRoutes)
-  .route('/api', adminRoutes)
+  .route('/api', opsRoutes)
   .route('/api', tenantRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes
-export type AdminApiRoutes = typeof adminApiRoutes
+export type OpsApiRoutes = typeof opsApiRoutes

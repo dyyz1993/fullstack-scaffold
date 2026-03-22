@@ -45,7 +45,7 @@ export {
   type RecentActivityItem,
   type AuthUserResponse,
   type ClearTodosResult,
-} from './admin'
+} from './ops'
 
 // Re-export from platform layer
 export {

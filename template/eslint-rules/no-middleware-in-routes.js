@@ -24,7 +24,7 @@ export const noMiddlewareInRoutes = {
       noMiddlewareInRoutes:
         '🚫 禁止在路由文件中使用 .use() 应用中间件。\n\n' +
         '❌ 错误示例：\n' +
-        '   export const adminRoutes = new OpenAPIHono()\n' +
+        '   export const opsRoutes = new OpenAPIHono()\n' +
         '     .use("*", captchaMiddleware())  // ❌ 会导致类型推导丢失\n' +
         '     .openapi(getStatsRoute, ...)\n\n' +
         '✅ 正确示例：\n\n' +
@@ -33,11 +33,11 @@ export const noMiddlewareInRoutes = {
         '   export function createApp() {\n' +
         '     const app = new OpenAPIHono()\n' +
         '       .use("/api/admin/*", captchaMiddleware())  // ✅ 全局中间件\n' +
-        '       .route("/api", adminRoutes)\n' +
+        '       .route("/api", opsRoutes)\n' +
         '     return app\n' +
         '   }\n\n' +
         '2️⃣ 路由级中间件 - 在路由定义中配置：\n' +
-        '   // src/server/module-admin/routes/admin-routes.ts\n' +
+        '   // src/server/module-ops/routes/ops-routes.ts\n' +
         '   const getStatsRoute = createRoute({\n' +
         '     method: "get",\n' +
         '     path: "/admin/stats",\n' +

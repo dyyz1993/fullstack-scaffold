@@ -9,7 +9,7 @@ import { captchaMiddleware } from './middleware/captcha'
 import { auditLogMiddleware } from './middleware/audit-log'
 import { createModuleLoggerSync } from './utils/logger'
 import { AppError, toAppError } from './utils/app-error'
-import { adminApiRoutes, clientApiRoutes } from './route-registry'
+import { opsApiRoutes, clientApiRoutes } from './route-registry'
 import { fileRoutes } from './module-file/routes/file-routes'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
@@ -154,7 +154,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
       })
     )
     .route('/', clientApiRoutes)
-    .route('/', adminApiRoutes)
+    .route('/', opsApiRoutes)
     .route('/files', fileRoutes)
     .get('/health', async c => {
       try {
@@ -182,6 +182,6 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
   return app
 }
-export type AdminApiType = typeof adminApiRoutes
+export type OpsApiType = typeof opsApiRoutes
 export type ClientApiType = typeof clientApiRoutes
 export type AppType = ReturnType<typeof createApp>

@@ -161,7 +161,7 @@ template/
 │   ├── server/
 │   │   ├── middleware/
 │   │   │   └── auth.ts                     # 认证和权限中间件
-│   │   ├── module-admin/
+│   │   ├── module-ops/
 │   │   │   ├── routes/
 │   │   │   │   └── admin-routes.ts         # 权限 API 路由
 │   │   │   └── services/

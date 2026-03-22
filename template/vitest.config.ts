@@ -43,13 +43,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@platform/server': resolve(__dirname, 'src/platform/server'),
-      '@platform/admin': resolve(__dirname, 'src/platform/admin'),
+      '@platform/ops': resolve(__dirname, 'src/platform/ops'),
       '@platform/client': resolve(__dirname, 'src/platform/client'),
       '@platform/shared': resolve(__dirname, 'src/platform/shared'),
       '@shared': resolve(__dirname, 'src/shared'),
       '@client': resolve(__dirname, 'src/client'),
       '@server': resolve(__dirname, 'src/server'),
-      '@admin': resolve(__dirname, 'src/admin'),
+      '@ops': resolve(__dirname, 'src/ops'),
     },
   },
 })

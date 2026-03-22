@@ -1,8 +1,8 @@
 /**
  * @framework-baseline 13391b28b7c66ede
  * @framework-modify
- * @reason 添加 AdminApiType 导出以支持客户端类型安全的 RPC 调用
- * @impact 导出 AdminApiType 供 admin 模块使用
+ * @reason 添加 OpsApiType 导出以支持客户端类型安全的 RPC 调用
+ * @impact 导出 OpsApiType 供 ops 模块使用
  */
 
 /**
@@ -59,4 +59,4 @@ export { createApp } from './app'
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 export { getAppConfig, getDatabaseConfig, type AppConfig, type DatabaseConfig } from './config'
 export { createServer, startServer } from './entries/node'
-export type { ClientApiType, AdminApiType, AppType } from './app'
+export type { ClientApiType, OpsApiType, AppType } from './app'

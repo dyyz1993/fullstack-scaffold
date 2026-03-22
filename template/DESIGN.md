@@ -63,7 +63,7 @@ app.route('/api', featureRoutes)
 **参考现有模块**:
 
 - `src/server/module-todos/` - Todo 模块
-- `src/server/module-admin/` - Admin 模块
+- `src/server/module-ops/` - Ops 模块
 
 ## Real-time Architecture
 
