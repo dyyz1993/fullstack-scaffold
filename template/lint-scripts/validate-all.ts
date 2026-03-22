@@ -28,6 +28,10 @@ import {
   formatAPICoverageErrors,
 } from './validators/api-coverage.validator.js'
 import { validateConsoleLog, formatConsoleLogErrors } from './validators/console-log.validator.js'
+import {
+  validatePermissionConsistency,
+  formatPermissionErrors,
+} from './validators/permission-consistency.validator.js'
 import projectConfig from './config/project.config.js'
 
 interface ValidatorResult {
@@ -203,7 +207,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 12. Console.log 验证
-  console.log('🔍 [12/12] Checking for console.log statements...')
+  console.log('🔍 [12/13] Checking for console.log statements...')
   const consoleLogErrors = validateConsoleLog(projectConfig.consoleLog, rootPath)
   results.push({
     name: 'Console.log',
@@ -214,6 +218,23 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.error(formatConsoleLogErrors(consoleLogErrors))
   } else {
     console.log('  ✅ No console.log statements found\n')
+  }
+
+  // 13. 权限配置一致性验证
+  console.log('🔍 [13/13] Checking permission consistency...')
+  const permissionErrors = validatePermissionConsistency(
+    projectConfig.permissionConsistency,
+    rootPath
+  )
+  results.push({
+    name: 'Permission Consistency',
+    passed: permissionErrors.length === 0,
+    errors: permissionErrors.length,
+  })
+  if (permissionErrors.length > 0) {
+    console.error(formatPermissionErrors(permissionErrors))
+  } else {
+    console.log('  ✅ All permissions are consistent\n')
   }
 
   return results

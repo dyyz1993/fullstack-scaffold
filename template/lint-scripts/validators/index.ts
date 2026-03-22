@@ -269,3 +269,25 @@ export interface ConsoleLogError {
   message: string
   content: string
 }
+
+// ============================================
+// 权限配置一致性验证配置
+// ============================================
+export interface PermissionConsistencyConfig {
+  permissionEnumPath: string
+  seedDataPath: string
+  menuConfigPath: string
+  pagePermissionsPath: string
+  routesDirs: string[]
+  componentDirs: string[]
+  ignoreDirs: string[]
+}
+
+export interface PermissionError {
+  type: 'missing_in_enum' | 'missing_in_seed' | 'wrong_permission' | 'unused_permission'
+  file: string
+  line?: number
+  permission: string
+  message: string
+  suggestion: string
+}

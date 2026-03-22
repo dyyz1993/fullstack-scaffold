@@ -59,7 +59,7 @@ export const MENU_CONFIG: MenuItem[] = [
     path: '/disputes',
     label: '争议处理',
     icon: 'AlertTriangle',
-    permissions: [Permission.TICKET_VIEW],
+    permissions: [Permission.DISPUTE_VIEW],
   },
   {
     path: '/content',
@@ -186,6 +186,37 @@ export const PAGE_PERMISSIONS: PagePermissionConfig[] = [
         key: 'close',
         label: '关闭工单',
         permissions: [Permission.TICKET_CLOSE],
+        mode: 'all',
+      },
+    ],
+  },
+  {
+    path: '/disputes',
+    label: '争议管理',
+    requiredPermissions: [Permission.DISPUTE_VIEW],
+    actions: [
+      {
+        key: 'create',
+        label: '创建争议',
+        permissions: [Permission.DISPUTE_CREATE],
+        mode: 'all',
+      },
+      {
+        key: 'edit',
+        label: '编辑争议',
+        permissions: [Permission.DISPUTE_EDIT],
+        mode: 'all',
+      },
+      {
+        key: 'delete',
+        label: '删除争议',
+        permissions: [Permission.DISPUTE_DELETE],
+        mode: 'all',
+      },
+      {
+        key: 'resolve',
+        label: '解决争议',
+        permissions: [Permission.DISPUTE_RESOLVE],
         mode: 'all',
       },
     ],

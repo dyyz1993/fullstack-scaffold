@@ -153,7 +153,7 @@ export const DisputesPage: React.FC = () => {
           >
             查看
           </Button>
-          <PermissionGuard permission={Permission.TICKET_CLOSE}>
+          <PermissionGuard permission={Permission.DISPUTE_RESOLVE}>
             {(record.status === 'pending' || record.status === 'investigating') && (
               <Button
                 type="link"

@@ -17,6 +17,7 @@ import type {
   ClientTestsConfig,
   MdRefsConfig,
   ConsoleLogConfig,
+  PermissionConsistencyConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -372,6 +373,19 @@ export const consoleLogConfig: ConsoleLogConfig = {
 }
 
 // ============================================
+// 权限配置一致性验证配置
+// ============================================
+export const permissionConsistencyConfig: PermissionConsistencyConfig = {
+  permissionEnumPath: 'src/platform/shared/permission/permissions.ts',
+  seedDataPath: 'src/server/db/seeds/permission-data.ts',
+  menuConfigPath: 'src/server/module-permission/services/permission-service.ts',
+  pagePermissionsPath: 'src/server/module-permission/services/permission-service.ts',
+  routesDirs: ['src/server', 'src/platform/server'],
+  componentDirs: ['src/admin', 'src/client'],
+  ignoreDirs: ['node_modules', 'dist', '__tests__', '.git'],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -386,6 +400,7 @@ export const projectConfig = {
   clientTests: clientTestsConfig,
   mdRefs: mdRefsConfig,
   consoleLog: consoleLogConfig,
+  permissionConsistency: permissionConsistencyConfig,
 } as const
 
 export default projectConfig
