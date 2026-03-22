@@ -12,6 +12,7 @@ import { ticketRoutes } from './module-ticket/routes/ticket-routes'
 import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
+import { tenantRoutes } from './module-tenant/routes/tenant-routes'
 
 // 客户端路由 - 普通用户使用的 API
 export const clientApiRoutes = new OpenAPIHono()
@@ -31,6 +32,7 @@ export const adminApiRoutes = new OpenAPIHono()
   .route('/api', roleRoutes)
   .route('/api', auditLogRoutes)
   .route('/api', adminRoutes)
+  .route('/api', tenantRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes
