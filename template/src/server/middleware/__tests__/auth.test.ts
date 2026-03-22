@@ -6,13 +6,15 @@ import {
   requirePermissionsMiddleware,
   type AuthUser,
 } from '../auth'
-import { Permission, Role } from '@shared/modules/permission'
+import { createAppErrorHandler } from '../error-handler'
+import { Permission, Role } from '@platform/shared/permission'
 
 describe('Auth Middleware', () => {
   let app: Hono<{ Variables: { authUser: AuthUser } }>
 
   beforeEach(() => {
     app = new Hono<{ Variables: { authUser: AuthUser } }>()
+    app.onError(createAppErrorHandler())
   })
 
   describe('authMiddleware', () => {
@@ -149,7 +151,6 @@ describe('Auth Middleware', () => {
         method: 'DELETE',
         headers: { Authorization: 'Bearer user-token' },
       })
-      // Permission middleware may return 403 or 500 depending on DB state
       expect(res.status).toBeGreaterThanOrEqual(403)
       const text = await res.text()
       expect(text.length).toBeGreaterThan(0)
@@ -162,7 +163,6 @@ describe('Auth Middleware', () => {
       const res = await app.request('/view', {
         headers: { Authorization: 'Bearer super-admin-token' },
       })
-      // Super admin should be allowed
       expect(res.status).toBeGreaterThanOrEqual(200)
       expect(res.status).toBeLessThan(500)
       if (res.status === 200) {
@@ -179,7 +179,6 @@ describe('Auth Middleware', () => {
         method: 'DELETE',
         headers: { Authorization: 'Bearer super-admin-token' },
       })
-      // Super admin should be allowed
       expect(res.status).toBeGreaterThanOrEqual(200)
       expect(res.status).toBeLessThan(500)
       if (res.status === 200) {
@@ -204,7 +203,6 @@ describe('Auth Middleware', () => {
         method: 'POST',
         headers: { Authorization: 'Bearer user-token' },
       })
-      // Permission middleware may return 403 or 500 depending on DB state
       expect(res.status).toBeGreaterThanOrEqual(403)
       const text = await res.text()
       expect(text.length).toBeGreaterThan(0)

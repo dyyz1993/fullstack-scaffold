@@ -3,7 +3,7 @@ import { Dropdown, Button, Tag, Space, message } from 'antd'
 import { User, RefreshCw } from 'lucide-react'
 import { useAdminStore } from '../stores/adminStore'
 import { usePermissions } from '../hooks/usePermissions'
-import { Role } from '@shared/modules/permission'
+import { Role } from '@platform/shared/permission'
 
 interface TestAccount {
   username: string

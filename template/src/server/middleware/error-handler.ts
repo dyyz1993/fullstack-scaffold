@@ -1,8 +1,9 @@
-import type { MiddlewareHandler } from 'hono'
+import type { Context } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import { createModuleLoggerSync } from '../utils/logger'
-import type { LogFnFields } from '../utils/logger'
+import { AppError } from '../utils/app-error'
 
 export type ErrorHandlerOptions = {
   includeStackTrace?: boolean
@@ -40,79 +41,105 @@ function createErrorResponse(status: number, message: string, details?: unknown)
   return response
 }
 
-export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): MiddlewareHandler {
+export function createErrorMiddleware(options: ErrorHandlerOptions = {}) {
   const mergedOptions = { ...defaultErrorHandlerOptions, ...options }
   const log = createModuleLoggerSync('api')
 
-  return async (c, next) => {
-    try {
-      await next()
-    } catch (error) {
-      // Always return JSON response
-      c.res.headers.set('Content-Type', 'application/json')
+  return (err: Error, c: Context): Response => {
+    if (AppError.isAppError(err)) {
+      if (mergedOptions.logErrors) {
+        const logFn =
+          err.logLevel === 'error' && typeof log.error === 'function'
+            ? log.error
+            : err.logLevel === 'warn' && typeof log.warn === 'function'
+              ? log.warn
+              : typeof log.info === 'function'
+                ? log.info
+                : log.warn
+        logFn(
+          {
+            errorType: err.name,
+            error: err.message,
+            code: err.code,
+            status: err.statusCode,
+            path: c.req.path,
+            method: c.req.method,
+          },
+          `Application error: ${err.name}`
+        )
+      }
 
-      if (error instanceof ZodError) {
-        const formattedErrors = formatZodError(error)
+      return c.json(
+        createErrorResponse(err.statusCode, err.message, err.details),
+        err.statusCode as ContentfulStatusCode
+      )
+    }
 
-        if (mergedOptions.logErrors) {
-          const fields: LogFnFields = {
+    if (err instanceof ZodError) {
+      const formattedErrors = formatZodError(err)
+
+      if (mergedOptions.logErrors) {
+        log.warn(
+          {
             errorType: 'ZodError',
             errors: formattedErrors,
             path: c.req.path,
             method: c.req.method,
-          }
-          log.warn(fields, 'Validation error')
-        }
-
-        return c.json(createErrorResponse(400, 'Validation failed', formattedErrors), 400)
+          },
+          'Validation error'
+        )
       }
 
-      if (error instanceof HTTPException) {
-        if (mergedOptions.logErrors) {
-          const fields: LogFnFields = {
+      return c.json(createErrorResponse(400, 'Validation failed', formattedErrors), 400)
+    }
+
+    if (err instanceof HTTPException) {
+      if (mergedOptions.logErrors) {
+        log.warn(
+          {
             errorType: 'HTTPException',
-            error: error.message,
-            status: error.status,
+            error: err.message,
+            status: err.status,
             path: c.req.path,
             method: c.req.method,
-            cause: error.cause,
-          }
-          log.warn(fields, 'HTTP exception')
-        }
-
-        // Ensure we always return JSON even if HTTPException has a text response
-        const status = error.status || 500
-        const message = error.message || 'Internal server error'
-        return c.json(createErrorResponse(status, message), status)
+          },
+          'HTTP exception'
+        )
       }
 
-      if (mergedOptions.logErrors) {
-        const fields: LogFnFields = {
+      const status = err.status || 500
+      const message = err.message || 'Internal server error'
+      return c.json(createErrorResponse(status, message), status as ContentfulStatusCode)
+    }
+
+    if (mergedOptions.logErrors) {
+      log.error(
+        {
           errorType: 'UnknownError',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
+          error: err.message,
+          stack: err.stack,
           path: c.req.path,
           method: c.req.method,
-        }
-        log.error(fields, 'Unhandled error')
-      }
-
-      const message = error instanceof Error ? error.message : 'Internal server error'
-      const response: { success: false; error: string; status: number; stack?: string } = {
-        success: false,
-        error: message,
-        status: 500,
-      }
-
-      if (mergedOptions.includeStackTrace && error instanceof Error && error.stack) {
-        response.stack = error.stack
-      }
-
-      return c.json(response, 500)
+        },
+        'Unhandled error'
+      )
     }
+
+    const response: { success: false; error: string; status: number; stack?: string } = {
+      success: false,
+      error: err.message || 'Internal server error',
+      status: 500,
+    }
+
+    if (mergedOptions.includeStackTrace && err.stack) {
+      response.stack = err.stack
+    }
+
+    return c.json(response, 500)
   }
 }
 
-export function createErrorHandlerMiddleware(options: ErrorHandlerOptions = {}) {
-  return errorHandlerMiddleware(options)
+export {
+  createErrorMiddleware as createAppErrorHandler,
+  createErrorMiddleware as createErrorHandlerMiddleware,
 }

@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from 'hono'
 import { createModuleLoggerSync } from '../utils/logger'
-import { Role, Permission, getPermissionsByRole } from '@shared/modules/permission'
+import { Role, Permission, getPermissionsByRole } from '@platform/shared/permission'
 import { AuthenticationError, AuthorizationError } from '../utils/app-error'
 
 export type UserRole = Role
@@ -41,7 +41,8 @@ const isDevTokensEnabled = (): boolean => {
 function extractToken(authHeader: string | undefined): string | null {
   if (!authHeader) return null
   if (!authHeader.startsWith('Bearer ')) return null
-  return authHeader.slice(7)
+  const token = authHeader.slice(7).trim()
+  return token || null
 }
 
 function verifyDevToken(token: string): AuthUser | null {
@@ -164,9 +165,7 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     }
 
     if (options.requiredPermissions && options.requiredPermissions.length > 0) {
-      // 从数据库读取权限，而不是使用硬编码的权限
-      const { permissionService } =
-        await import('../module-permission/services/permission-service-impl')
+      const { permissionService } = await import('@platform/server/module-permission')
 
       for (const requiredPermission of options.requiredPermissions) {
         const hasPermission = await permissionService.hasPermission(user.id, requiredPermission)

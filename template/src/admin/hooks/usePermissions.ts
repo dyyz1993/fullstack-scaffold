@@ -7,13 +7,13 @@ import {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-} from '@shared/modules/permission'
+} from '@platform/shared/permission'
 import type {
   RoleInfo,
   PermissionInfo,
   MenuItem,
   PagePermissionConfig,
-} from '@shared/modules/permission'
+} from '@platform/shared/permission'
 
 interface PermissionState {
   permissions: Permission[]

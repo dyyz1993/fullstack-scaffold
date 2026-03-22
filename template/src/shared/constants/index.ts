@@ -1,1 +1,1 @@
-export * from './resource-types'
+export * from '@platform/shared/audit'

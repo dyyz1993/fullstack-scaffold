@@ -7,7 +7,7 @@ import type {
   Role,
   Permission,
   PermissionInfo,
-} from '@shared/modules/permission'
+} from '@platform/shared/permission'
 
 export function useMenuConfig() {
   const [menuConfig, setMenuConfig] = useState<MenuItem[]>([])

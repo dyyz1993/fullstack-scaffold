@@ -6,7 +6,7 @@ describe('Dispute Routes', () => {
 
   describe('GET /api/disputes', () => {
     it('should return list of disputes', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['disputes'].$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
@@ -20,7 +20,7 @@ describe('Dispute Routes', () => {
 
   describe('GET /api/disputes/:id', () => {
     it('should return 404 for non-existent dispute', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['disputes'][':id'].$get(
         {
           param: { id: 'non-existent' },

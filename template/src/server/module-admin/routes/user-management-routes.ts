@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as adminService from '../services/admin-service'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
-import { Permission } from '@shared/modules/permission'
+import { Permission } from '@platform/shared/permission'
 import {
   UserSchema,
   UserListSchema,

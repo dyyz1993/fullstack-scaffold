@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import type { AuthUser } from '../middleware/auth'
 import type { User } from '@shared/modules/admin'
-import { Role } from '@shared/modules/permission'
+import { Role } from '@platform/shared/permission'
 
 const mockUsers: User[] = [
   {

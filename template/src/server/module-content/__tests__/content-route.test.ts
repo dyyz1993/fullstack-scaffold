@@ -6,7 +6,7 @@ describe('Content Routes', () => {
 
   describe('GET /api/contents', () => {
     it('should return list of contents', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['contents'].$get()
       expect(res.status).toBe(200)
 
@@ -20,7 +20,7 @@ describe('Content Routes', () => {
 
   describe('GET /api/contents/:id', () => {
     it('should return 404 for non-existent content', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['contents'][':id'].$get({
         param: { id: 'non-existent' },
       })

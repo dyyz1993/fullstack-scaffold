@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import * as service from '../services/permission-service'
-import { Role } from '@shared/modules/permission'
+import { Role } from '@platform/shared/permission'
 import * as fs from 'fs'
 import * as path from 'path'
 

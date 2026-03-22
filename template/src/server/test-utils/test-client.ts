@@ -1,9 +1,8 @@
 /**
- * @framework-baseline b18502d5cc33f07d
- *
+ * @framework-baseline 21fc56af7c4c3995
  * @framework-modify
- * @reason 添加 headers 参数支持，以便在测试中传递认证头
- * @impact 测试客户端现在支持自定义 headers，用于认证测试
+ * @reason 修复 Hono RPC 客户端的 headers 传递问题
+ * @impact 测试客户端现在可以正确传递认证 headers
  */
 
 import { hc } from 'hono/client'
@@ -11,12 +10,6 @@ import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
 import type { SSEClient } from '@shared/schemas'
 
-/**
- * 测试客户端类型
- *
- * 注意：TypeScript 5.8+ 和 Hono 4.12+ 已优化类型推导性能，
- * 无需修改 TypeScript 的类型实例化深度限制即可正常工作。
- */
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {
@@ -25,35 +18,23 @@ export interface TestClientOptions {
   headers?: Record<string, string>
 }
 
-/**
- * 创建测试客户端
- */
-export function createTestClient(baseUrl?: string, options?: TestClientOptions): TestClient {
+export function createTestClient(
+  _baseUrl?: string | null,
+  options?: TestClientOptions
+): TestClient {
   const app = createApp()
-  const defaultHeaders = {
+  const defaultHeaders: Record<string, string> = {
     'User-Agent': 'TestClient/1.0 (Unit Test)',
     ...options?.headers,
   }
 
-  if (baseUrl) {
-    return hc<AppType>(baseUrl, {
-      headers: defaultHeaders,
-      webSocket: options?.webSocket ? url => options.webSocket!(url) : undefined,
-      sse: options?.sse,
-    })
-  }
   return hc<AppType>('http://localhost', {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fetch: (input: any, init?: any) => {
+    headers: defaultHeaders,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       const request = new Request(input, init)
-      // Add default headers if not present
-      Object.entries(defaultHeaders).forEach(([key, value]) => {
-        if (!request.headers.has(key)) {
-          request.headers.set(key, value)
-        }
-      })
       return app.fetch(request)
     },
+    webSocket: options?.webSocket ? (url: string | URL) => options.webSocket!(url) : undefined,
     sse: options?.sse,
   })
 }

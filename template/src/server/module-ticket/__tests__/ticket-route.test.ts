@@ -6,7 +6,7 @@ describe('Ticket Routes', () => {
 
   describe('GET /api/tickets', () => {
     it('should return list of tickets', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['tickets'].$get()
       expect(res.status).toBe(200)
 
@@ -20,7 +20,7 @@ describe('Ticket Routes', () => {
 
   describe('GET /api/tickets/:id', () => {
     it('should return 404 for non-existent ticket', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['tickets'][':id'].$get({
         param: { id: 'non-existent' },
       })
@@ -30,7 +30,7 @@ describe('Ticket Routes', () => {
 
   describe('POST /api/tickets', () => {
     it('should create a new ticket', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['tickets'].$post({
         json: {
           customerName: 'Test Customer',
@@ -54,7 +54,7 @@ describe('Ticket Routes', () => {
 
   describe('PUT /api/tickets/:id', () => {
     it('should update a ticket', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
 
       const createRes = await client.api['tickets'].$post({
         json: {
@@ -82,7 +82,7 @@ describe('Ticket Routes', () => {
 
   describe('DELETE /api/tickets/:id', () => {
     it('should delete a ticket', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
 
       const createRes = await client.api['tickets'].$post({
         json: {
@@ -109,7 +109,7 @@ describe('Ticket Routes', () => {
 
   describe('POST /api/tickets/:id/reply', () => {
     it('should reply to a ticket', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
 
       const createRes = await client.api['tickets'].$post({
         json: {
@@ -137,7 +137,7 @@ describe('Ticket Routes', () => {
 
   describe('PUT /api/tickets/:id/close', () => {
     it('should close a ticket', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
 
       const createRes = await client.api['tickets'].$post({
         json: {

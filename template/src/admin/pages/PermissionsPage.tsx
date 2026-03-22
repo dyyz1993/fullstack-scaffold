@@ -1,7 +1,7 @@
 import { Card, Table, Tag } from 'antd'
 import { usePermissions } from '../hooks/usePermissions'
 import { usePermissionCategories, useRoleLabels, usePermissionLabels } from '../hooks/useConfig'
-import type { PermissionInfo, Permission } from '@shared/modules/permission'
+import type { PermissionInfo, Permission } from '@platform/shared/permission'
 
 export const PermissionsPage: React.FC = () => {
   const { allPermissions, roles, loading } = usePermissions()
@@ -9,14 +9,17 @@ export const PermissionsPage: React.FC = () => {
   const { roleLabels } = useRoleLabels()
   const { permissionLabels } = usePermissionLabels()
 
-  const groupedPermissions = allPermissions.reduce((acc, permission) => {
-    const category = permission.category
-    if (!acc[category]) {
-      acc[category] = []
-    }
-    acc[category].push(permission)
-    return acc
-  }, {} as Record<string, PermissionInfo[]>)
+  const groupedPermissions = allPermissions.reduce(
+    (acc, permission) => {
+      const category = permission.category
+      if (!acc[category]) {
+        acc[category] = []
+      }
+      acc[category].push(permission)
+      return acc
+    },
+    {} as Record<string, PermissionInfo[]>
+  )
 
   const columns = [
     {
@@ -62,12 +65,8 @@ export const PermissionsPage: React.FC = () => {
         <div className="grid grid-cols-3 gap-4">
           {roles.map(role => (
             <Card key={role.role} size="small">
-              <div className="text-lg font-semibold mb-2">
-                {roleLabels[role.role] || role.role}
-              </div>
-              <div className="text-sm text-gray-500">
-                权限数量: {role.permissions.length}
-              </div>
+              <div className="text-lg font-semibold mb-2">{roleLabels[role.role] || role.role}</div>
+              <div className="text-sm text-gray-500">权限数量: {role.permissions.length}</div>
             </Card>
           ))}
         </div>

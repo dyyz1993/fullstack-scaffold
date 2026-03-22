@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { PermissionGuard, PermissionButton, Can, Cannot } from '../PermissionGuard'
-import { Permission } from '@shared/modules/permission'
+import { Permission } from '@platform/shared/permission'
 
 const mockPermissions = {
   permissions: [Permission.USER_VIEW, Permission.USER_EDIT, Permission.CONTENT_VIEW],

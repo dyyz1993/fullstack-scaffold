@@ -111,7 +111,15 @@ export class AppError extends Error {
   }
 
   static isAppError(error: unknown): error is AppError {
-    return error instanceof AppError
+    return (
+      error instanceof AppError ||
+      (error instanceof Error &&
+        'code' in error &&
+        'statusCode' in error &&
+        'timestamp' in error &&
+        typeof (error as AppError).statusCode === 'number' &&
+        typeof (error as AppError).timestamp === 'string')
+    )
   }
 }
 

@@ -3,7 +3,7 @@ import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
-import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
+import { corsMiddleware, loggerMiddleware } from './middleware'
 import { realtimeEnvMiddleware } from './middleware/realtime-env'
 import { captchaMiddleware } from './middleware/captcha'
 import { auditLogMiddleware } from './middleware/audit-log'
@@ -142,7 +142,6 @@ function globalErrorHandler(err: Error, c: any) {
 
 export function createApp<T extends AppBindings = AppBindings>(_options: CreateAppOptions = {}) {
   const app = new OpenAPIHono<{ Bindings: T }>()
-    .use('*', errorHandlerMiddleware())
     .use('*', loggerMiddleware())
     .use('*', corsMiddleware())
     .use('*', realtimeEnvMiddleware())

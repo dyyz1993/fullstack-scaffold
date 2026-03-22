@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { RoleEnum, PermissionEnum } from '@shared/modules/permission'
+import { RoleEnum, PermissionEnum } from '@platform/shared/permission'
 
 export const SystemStatsSchema = z.object({
   totalTodos: z.number(),

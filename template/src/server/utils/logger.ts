@@ -116,6 +116,11 @@ export function createModuleLoggerSync(module: string, level?: LogLevel): Logger
     return createConsoleLogger(module, level || 'info')
   }
 
+  // In test environment, use console logger to avoid pino.transport issues
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+    return createConsoleLogger(module, level || 'info')
+  }
+
   if (_loggers.has(module)) {
     return _loggers.get(module)!
   }

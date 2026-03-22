@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 32f4fd087a4b4f85
+ */
+
+/**
  * 自定义 ESLint 规则：禁止对 apiClient 使用 `as any` 类型断言
  *
  * apiClient 是类型安全的 API 客户端，使用 `as any` 会破坏类型安全。
@@ -38,7 +42,7 @@ export const noAnyOnApiclient = {
         '   ✅ const route = createRoute({...}); export const routes = new OpenAPIHono().openapi(route, ...)\n' +
         '   ❌ export const routes = new OpenAPIHono(); const route = createRoute({...})\n\n' +
         '3. 路由是否在 app.ts 中正确注册？\n' +
-        '   ✅ .route(\'/api\', xxxRoutes)\n\n' +
+        "   ✅ .route('/api', xxxRoutes)\n\n" +
         '4. 路由是否正确导出类型？\n' +
         '   ✅ export type XxxRoutesType = typeof xxxRoutes\n\n' +
         '📖 相关文档：\n' +

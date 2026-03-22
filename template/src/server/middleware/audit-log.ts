@@ -7,7 +7,7 @@ import {
   ACTION_TYPES,
   type ResourceType,
   type ActionType,
-} from '@shared/constants'
+} from '@platform/shared/audit'
 
 const log = logger.api()
 

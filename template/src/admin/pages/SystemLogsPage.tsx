@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Table, Card, Input, Select, Space, Tag, Button, Descriptions, Modal } from 'antd'
 import { SearchOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useAuditLogStore } from '../hooks/useAuditLogs'
-import type { AuditLogType } from '@shared/modules/audit'
+import type { AuditLogType } from '@platform/shared/audit'
 import {
   RESOURCE_TYPES,
   RESOURCE_LABELS,
@@ -11,7 +11,7 @@ import {
   ACTION_COLORS,
   type ResourceType,
   type ActionType,
-} from '@shared/constants'
+} from '@platform/shared/audit'
 
 const { Option } = Select
 

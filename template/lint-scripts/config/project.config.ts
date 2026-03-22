@@ -16,6 +16,7 @@ import type {
   TestQualityConfig,
   ClientTestsConfig,
   MdRefsConfig,
+  ConsoleLogConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -78,6 +79,38 @@ export const sensitiveConfig: SensitiveConfig = {
       pattern: /['"`]\.env(?:\.\w+)?['"`]/,
       message: '.env file reference in string literal',
       excludePattern: /\.env\.example|config\.ts/,
+    },
+    // External URLs (excluding localhost, example.com, test domains)
+    {
+      pattern:
+        /['"]https?:\/\/(?!localhost|127\.0\.0\.1|example\.com|test\.com|api\.dicebear\.com|unpkg\.com)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s'"]*)?['"]/gi,
+      message: 'Hardcoded external URL detected',
+      excludePattern: /process\.env\.|AVATAR_SERVICE_URL|import\s+|from\s+['"]|href\s*=|xmlns\s*=/,
+    },
+    // Email addresses (excluding example.com)
+    {
+      pattern: /['"][a-zA-Z0-9._%+-]+@(?!example\.com|test\.com)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}['"]/gi,
+      message: 'Hardcoded email address detected',
+      excludePattern: /process\.env\.|mailto:|type\s*=\s*['"]email['"]/,
+    },
+    // Port numbers in strings
+    {
+      pattern: /['"]:\d{4,5}['"]/g,
+      message: 'Hardcoded port number detected',
+      excludePattern: /process\.env\.PORT|localhost:\d+|127\.0\.0\.1:\d+/,
+    },
+    // Database connection strings
+    {
+      pattern: /['"](?:mysql|postgres|mongodb|redis):\/\/[^\s'"]+['"]/gi,
+      message: 'Hardcoded database connection string detected',
+      excludePattern: /process\.env\./,
+    },
+    // Private IP addresses
+    {
+      pattern:
+        /['"](?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})['"]/g,
+      message: 'Hardcoded private IP address detected',
+      excludePattern: /process\.env\.|localhost|127\.0\.0\.1/,
     },
   ],
 

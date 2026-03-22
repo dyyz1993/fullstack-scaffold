@@ -6,7 +6,7 @@ describe('Captcha Routes', () => {
 
   describe('GET /api/captcha', () => {
     it('should return captcha with id and image', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api.captcha.$get({ headers: authHeaders })
       expect(res.status).toBe(200)
 
@@ -19,7 +19,7 @@ describe('Captcha Routes', () => {
 
   describe('POST /api/verify-captcha', () => {
     it('should reject request with non-existent id', async () => {
-      const client = createTestClient(undefined, { headers: authHeaders })
+      const client = createTestClient(null, { headers: authHeaders })
       const res = await client.api['verify-captcha'].$post(
         {
           json: { id: 'non-existent', code: '123456' },

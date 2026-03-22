@@ -34,6 +34,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@platform/server': path.resolve(__dirname, 'src/platform/server'),
+      '@platform/admin': path.resolve(__dirname, 'src/platform/admin'),
+      '@platform/client': path.resolve(__dirname, 'src/platform/client'),
+      '@platform/shared': path.resolve(__dirname, 'src/platform/shared'),
       '@shared': path.resolve(__dirname, 'src/shared'),
       '@client': path.resolve(__dirname, 'src/client'),
       '@server': path.resolve(__dirname, 'src/server'),

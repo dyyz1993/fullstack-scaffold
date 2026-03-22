@@ -3,7 +3,7 @@ import { getDb } from '../../db'
 import { permissionAuditLogs } from '../../db/schema'
 import { eq, and, gte, lte, desc } from 'drizzle-orm'
 import { transformAuditLog } from '../../utils/date'
-import { type ResourceType, type ActionType } from '@shared/constants'
+import { type ResourceType, type ActionType } from '@platform/shared/audit'
 
 export class AuditLogService {
   async create(data: NewPermissionAuditLog): Promise<ReturnType<typeof transformAuditLog>> {

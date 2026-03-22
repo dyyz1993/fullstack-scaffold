@@ -9,7 +9,7 @@ import {
   useMenuConfig,
   usePagePermissions,
 } from '../usePermissions'
-import { Permission, Role } from '@shared/modules/permission'
+import { Permission, Role } from '@platform/shared/permission'
 
 const mockAdminState = {
   user: { id: 'test-user-1', role: Role.CUSTOMER_SERVICE },

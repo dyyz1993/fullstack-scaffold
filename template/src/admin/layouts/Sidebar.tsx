@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { usePermissions } from '../hooks/usePermissions'
-import type { MenuItem } from '@shared/modules/permission'
+import type { MenuItem } from '@platform/shared/permission'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,

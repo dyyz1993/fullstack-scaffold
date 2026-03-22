@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Tabs, Input, Button, message, Space, Alert } from 'antd'
 import { CodeOutlined, SaveOutlined, FormatPainterOutlined } from '@ant-design/icons'
-import type { PermissionInfo } from '@shared/modules/permission'
+import type { PermissionInfo } from '@platform/shared/permission'
 
 interface PermissionConfigEditorProps {
   visible: boolean

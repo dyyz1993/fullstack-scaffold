@@ -1,12 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import { Tree, Card, Tag, Input, Space, Button, Tooltip } from 'antd'
 import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
-import type { PermissionInfo, PermissionCategory } from '@shared/modules/permission'
+import type { PermissionInfo, PermissionCategory } from '@platform/shared/permission'
 import type { DataNode } from 'antd/es/tree'
-import {
-  PERMISSION_DEPENDENCIES,
-  getRequiredPermissions,
-} from '@shared/modules/permission/permission-dependencies'
+import { PERMISSION_DEPENDENCIES, getRequiredPermissions } from '@platform/shared/permission'
 
 interface PermissionTreeProps {
   permissions: PermissionInfo[]

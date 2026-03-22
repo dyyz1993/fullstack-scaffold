@@ -10,7 +10,7 @@ import {
   created,
 } from '../../utils/route-helpers'
 import { authMiddleware } from '../../middleware/auth'
-import { Permission } from '@shared/modules/permission'
+import { Permission } from '@platform/shared/permission'
 import {
   DisputeSchema,
   CreateDisputeSchema,

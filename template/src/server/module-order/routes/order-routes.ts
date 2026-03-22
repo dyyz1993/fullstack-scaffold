@@ -4,7 +4,7 @@ import * as orderService from '../services/order-service'
 import { successResponse, errorResponse, success, created } from '../../utils/route-helpers'
 import { NotFoundError } from '@server/utils/app-error'
 import { authMiddleware } from '../../middleware/auth'
-import { Permission } from '@shared/modules/permission'
+import { Permission } from '@platform/shared/permission'
 import {
   OrderSchema,
   CreateOrderSchema,

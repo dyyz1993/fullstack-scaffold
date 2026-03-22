@@ -22,7 +22,7 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import { apiClient, api } from '../services/apiClient'
 import { useRoleLabels } from '../hooks/useConfig'
-import { Permission, Role } from '@shared/modules/permission'
+import { Permission, Role } from '@platform/shared/permission'
 import { PermissionGuard } from '../components/PermissionGuard'
 import type { User, CreateUserRequest } from '@shared/modules/admin'
 

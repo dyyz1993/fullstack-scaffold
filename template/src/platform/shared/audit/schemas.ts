@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { RESOURCE_TYPES, ACTION_TYPES, type ResourceType, type ActionType } from '@shared/constants'
+import { RESOURCE_TYPES, ACTION_TYPES, type ResourceType, type ActionType } from './constants'
 
 export const ResourceTypeSchema = z.enum(
   Object.values(RESOURCE_TYPES) as [ResourceType, ...ResourceType[]]

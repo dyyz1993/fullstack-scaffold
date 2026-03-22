@@ -40,3 +40,15 @@ export {
   hasAnyPermission,
   hasAllPermissions,
 } from './permissions'
+
+export type {
+  MenuItem as MenuItemType,
+  PageAction as PageActionType,
+  PagePermissionConfig as PagePermissionConfigType,
+} from './types'
+
+export {
+  PERMISSION_DEPENDENCIES,
+  validatePermissionDependencies,
+  getRequiredPermissions,
+} from './permission-dependencies'

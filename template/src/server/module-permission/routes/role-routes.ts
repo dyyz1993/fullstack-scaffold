@@ -2,7 +2,7 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
-import { Role } from '@shared/modules/permission'
+import { Role } from '@platform/shared/permission'
 import { roleService } from '../services/role-service'
 import { permissionService } from '../services/permission-service-impl'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
@@ -13,7 +13,7 @@ import {
   UpdateRolePermissionsSchema,
   SuccessSchema,
 } from '@shared/modules/role/schemas'
-import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
+import { validatePermissionDependencies } from '@platform/shared/permission'
 
 const RoleWithPermissionsSchema = RoleSchema.extend({
   permissions: z.array(z.string()),

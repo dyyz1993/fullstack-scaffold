@@ -27,7 +27,7 @@ import type { RoleType, CreateRoleType } from '@shared/modules/role/schemas'
 import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
 import { apiClient } from '../services/apiClient'
-import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
+import { validatePermissionDependencies } from '@platform/shared/permission'
 
 type RoleFormValues = Pick<CreateRoleType, 'code' | 'name' | 'label' | 'description'> & {
   isActive?: boolean | null

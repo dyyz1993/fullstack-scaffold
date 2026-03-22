@@ -46,6 +46,8 @@ export {
   type AuthUserResponse,
   type ClearTodosResult,
 } from './admin'
+
+// Re-export from platform layer
 export {
   RoleEnum,
   RoleInfoSchema,
@@ -63,8 +65,26 @@ export {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
+  PERMISSION_DEPENDENCIES,
+  validatePermissionDependencies,
+  getRequiredPermissions,
   type RoleType,
   type RoleInfo,
   type PermissionInfo,
   type UserPermissions,
-} from './permission'
+} from '@platform/shared/permission'
+
+export {
+  RESOURCE_TYPES,
+  ACTION_TYPES,
+  RESOURCE_LABELS,
+  ACTION_LABELS,
+  ACTION_COLORS,
+  PATH_TO_RESOURCE_TYPE,
+  ResourceTypeSchema,
+  ActionTypeSchema,
+  AuditLogSchema,
+  type ResourceType,
+  type ActionType,
+  type AuditLogType,
+} from '@platform/shared/audit'

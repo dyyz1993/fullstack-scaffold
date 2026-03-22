@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { apiClient } from '../services/apiClient'
-import type { AuditLogType } from '@shared/modules/audit'
-import { type ResourceType, type ActionType } from '@shared/constants'
+import type { AuditLogType } from '@platform/shared/audit'
+import { type ResourceType, type ActionType } from '@platform/shared/audit'
 
 interface AuditLogState {
   logs: AuditLogType[]

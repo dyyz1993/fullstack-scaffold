@@ -2,7 +2,7 @@ import { Form, Input, Button, Card, message, Spin, Divider } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
-import { Role } from '@shared/modules/permission'
+import { Role } from '@platform/shared/permission'
 import type { LoginRequest } from '@shared/modules/admin'
 
 interface QuickLoginAccount extends LoginRequest {

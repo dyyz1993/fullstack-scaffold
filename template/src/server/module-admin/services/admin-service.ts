@@ -3,7 +3,8 @@ import { todos } from '../../db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '../../utils/date'
 import { getMockUsers } from '../../utils/auth'
-import { Role, getPermissionsByRole } from '@shared/modules/permission'
+import { Role, getPermissionsByRole } from '@platform/shared/permission'
+import { AuthenticationError } from '../../utils/app-error'
 import type {
   SystemStats,
   HealthCheck,
@@ -214,11 +215,11 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   const user = mockUsers.find(u => u.username === data.username)
 
   if (!user) {
-    throw new Error('User not found')
+    throw AuthenticationError.tokenInvalid()
   }
 
   if (data.password !== '123456') {
-    throw new Error('Invalid password')
+    throw AuthenticationError.tokenInvalid()
   }
 
   let token: string
