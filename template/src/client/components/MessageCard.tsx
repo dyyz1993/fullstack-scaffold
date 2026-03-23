@@ -36,7 +36,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
 
   return (
     <div
-      className={`p-4 bg-white rounded-lg border-l-4 shadow-sm ${className}`}
+      className={`p-4 bg-white rounded-lg border-l-4 shadow-sm max-w-full ${className}`}
       style={{ borderLeftColor: borderColor || undefined }}
       data-testid="message-card"
     >
@@ -51,7 +51,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
           <span className="text-xs text-gray-400">{new Date(timestamp).toLocaleTimeString()}</span>
         )}
       </div>
-      <pre className="text-sm text-gray-700 whitespace-pre-wrap break-words font-mono">
+      <pre className="text-sm text-gray-700 whitespace-pre-wrap overflow-x-auto font-mono">
         {JSON.stringify(payload, null, 2)}
       </pre>
     </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { notification } from 'antd'
 import { apiClient } from '../services/apiClient'
+import { connectSSEClient } from '@shared/core'
 import type { SSEClient, AppSSEProtocol, AppNotification, UnreadCountEvent } from '@shared/schemas'
 
 type SSEStatus = 'connecting' | 'open' | 'closed'
@@ -94,7 +95,7 @@ export function useOpsNotifications(): UseOpsNotificationsReturn {
         setUnreadCount(payload.count)
       })
 
-      setStatus(client.status)
+      connectSSEClient(client)
     } catch (error) {
       console.error('Failed to connect SSE:', error)
       setStatus('closed')

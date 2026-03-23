@@ -25,7 +25,6 @@
     "baseUrl": ".",
     "paths": {
       "@platform/server/*": ["src/platform/server/*"],
-      "@platform/ops/*": ["src/platform/ops/*"],
       "@platform/client/*": ["src/platform/client/*"],
       "@platform/shared/*": ["src/platform/shared/*"],
       "@shared/*": ["src/shared/*"],

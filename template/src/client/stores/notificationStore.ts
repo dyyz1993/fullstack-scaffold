@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
+import { connectSSEClient } from '@shared/core'
 import type {
   AppNotification,
   CreateNotificationInput,
@@ -175,6 +176,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       })
 
       sseClient = conn
+      connectSSEClient(conn)
       console.log('[SSE] Client initialized')
     } catch (error) {
       console.error('[SSE] Failed to connect:', error)

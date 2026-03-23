@@ -36,6 +36,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       )
 
       expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should reject POST with missing title', async () => {
@@ -49,6 +51,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       )
 
       expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should reject POST with title longer than 255 characters', async () => {
@@ -62,6 +66,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       )
 
       expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should reject PUT with invalid status', async () => {
@@ -150,6 +156,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       )
 
       expect(res.status).toBe(500)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should return 500 for DELETE with non-numeric id (parseInt returns NaN)', async () => {
@@ -163,6 +171,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       )
 
       expect(res.status).toBe(500)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
   })
 
@@ -261,6 +271,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
   })
 
@@ -406,6 +418,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should return 404 when updating non-existent todo', async () => {
@@ -417,6 +431,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       expect(res.status).toBe(404)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
   })
 
@@ -505,6 +521,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       expect(res.status).toBe(404)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should not be able to get deleted todo', async () => {
@@ -520,6 +538,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       expect(res.status).toBe(404)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
 
     it('should not be able to update deleted todo', async () => {
@@ -536,6 +556,8 @@ describe('Todo Routes - Business Logic Tests', () => {
       })
 
       expect(res.status).toBe(404)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
   })
 

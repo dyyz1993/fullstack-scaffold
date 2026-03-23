@@ -17,6 +17,7 @@ interface SSEClient<P extends SSEProtocol = SSEProtocol> {
   on<K extends keyof P['events']>(type: K, handler: (payload: P['events'][K]) => void): () => void
   onStatusChange(handler: (status: 'connecting' | 'open' | 'closed') => void): () => void
   onError(handler: (error: Error) => void): () => void
+  connect(): void
   abort(): void
 }
 
@@ -25,7 +26,7 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private statusHandlers: ((status: 'connecting' | 'open' | 'closed') => void)[] = []
   private errorHandlers: ((error: Error) => void)[] = []
-  private _status: 'connecting' | 'open' | 'closed' = 'connecting'
+  private _status: 'connecting' | 'open' | 'closed' = 'closed'
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private reconnectDelay = 1000
@@ -35,14 +36,20 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
   constructor(url: string | URL, headers: Record<string, string> = {}) {
     this.url = url
     this.headers = headers
-    this.connect()
+  }
+
+  connect() {
+    if (this._status === 'connecting' || this._status === 'open') {
+      return
+    }
+    this._connect()
   }
 
   get status() {
     return this._status
   }
 
-  private async connect() {
+  private async _connect() {
     this._status = 'connecting'
     this.abortController = new AbortController()
 
@@ -121,7 +128,7 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
       setTimeout(() => {
-        this.connect()
+        this._connect()
       }, this.reconnectDelay * this.reconnectAttempts)
     } else {
       this._status = 'closed'
@@ -182,4 +189,11 @@ export function createSSEClient<P extends SSEProtocol>(
   headers: Record<string, string> = {}
 ): SSEClient<P> {
   return new SSEClientImpl<P>(url, headers) as unknown as SSEClient<P>
+}
+
+export function connectSSEClient(client: unknown): void {
+  const sseClient = client as SSEClientImpl
+  if (typeof sseClient.connect === 'function') {
+    sseClient.connect()
+  }
 }

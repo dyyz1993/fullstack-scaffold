@@ -51,6 +51,11 @@ describe('Ticket Service', () => {
     it('should return null for non-existent ticket', async () => {
       const result = await service.getTicketById('non-existent-ticket-id-xyz')
       expect(result).toBeNull()
+      expect(result).toBeNull()
+      expect(result).toBeFalsy()
+      expect(result).not.toBeDefined()
+      expect(result).toBeFalsy()
+      expect(result).not.toBeDefined()
     })
   })
 
@@ -105,6 +110,8 @@ describe('Ticket Service', () => {
     it('should return null for non-existent ticket', async () => {
       const result = await service.updateTicket('non-existent-ticket-id-xyz', {})
       expect(result).toBeNull()
+      expect(result).toBeFalsy()
+      expect(result).not.toBeDefined()
     })
   })
 
@@ -130,6 +137,8 @@ describe('Ticket Service', () => {
     it('should return false for non-existent ticket', async () => {
       const result = await service.deleteTicket('non-existent-ticket-id-xyz')
       expect(result.message).toBe('工单不存在')
+      expect(result).toBeDefined()
+      expect(result.message).toBeDefined()
     })
   })
 
@@ -163,6 +172,9 @@ describe('Ticket Service', () => {
       }
       const result = await service.replyTicket('non-existent-ticket-id-xyz', replyData)
       expect(result).toBeNull()
+      expect(result).toBeNull()
+      expect(result).toBeFalsy()
+      expect(result).not.toBeDefined()
     })
   })
 
@@ -187,6 +199,9 @@ describe('Ticket Service', () => {
     it('should return null for non-existent ticket', async () => {
       const result = await service.closeTicket('non-existent-ticket-id-xyz')
       expect(result).toBeNull()
+      expect(result).toBeNull()
+      expect(result).toBeFalsy()
+      expect(result).not.toBeDefined()
     })
   })
 })

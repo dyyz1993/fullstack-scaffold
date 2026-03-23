@@ -4,6 +4,8 @@ import { AuthButton } from '../AuthButton'
 
 const mockSetToken = vi.fn()
 const mockLogout = vi.fn()
+const mockSetUser = vi.fn()
+const mockLogin = vi.fn()
 
 // Mock zustand
 vi.mock('../../stores/authStore', () => ({
@@ -12,8 +14,11 @@ vi.mock('../../stores/authStore', () => ({
     const state = {
       isAuthenticated: false,
       token: null,
+      user: null,
       logout: mockLogout,
       setToken: mockSetToken,
+      setUser: mockSetUser,
+      login: mockLogin,
     }
     if (selector) {
       return selector(state)
@@ -39,8 +44,11 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: false,
         token: null,
+        user: null,
         logout: mockLogout,
         setToken: mockSetToken,
+        setUser: mockSetUser,
+        login: mockLogin,
       }
       return selector ? selector(state) : state
     })
@@ -56,8 +64,11 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: true,
         token: 'user-token',
+        user: { id: 'user-1', username: 'Test User' },
         logout: mockLogout,
         setToken: mockSetToken,
+        setUser: mockSetUser,
+        login: mockLogin,
       }
       return selector ? selector(state) : state
     })
@@ -74,8 +85,11 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: false,
         token: null,
+        user: null,
         logout: mockLogout,
         setToken: mockSetToken,
+        setUser: mockSetUser,
+        login: mockLogin,
       }
       return selector ? selector(state) : state
     })
@@ -93,8 +107,11 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: true,
         token: 'user-token',
+        user: { id: 'user-1', username: 'Test User' },
         logout: mockLogout,
         setToken: mockSetToken,
+        setUser: mockSetUser,
+        login: mockLogin,
       }
       return selector ? selector(state) : state
     })

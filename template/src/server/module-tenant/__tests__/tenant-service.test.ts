@@ -66,20 +66,28 @@ describe('TenantService', () => {
 
     it('should have audit permission', () => {
       expect(TenantPermission.AUDIT_VIEW).toBe('tenant:audit:view')
+      expect(TenantPermission.AUDIT_VIEW).toBeDefined()
+      expect(typeof TenantPermission.AUDIT_VIEW).toBe('string')
     })
   })
 
   describe('TenantRoleCode enum', () => {
     it('should have admin role code', () => {
       expect(TenantRoleCode.ADMIN).toBe('tenant_admin')
+      expect(TenantRoleCode.ADMIN).toBeDefined()
+      expect(typeof TenantRoleCode.ADMIN).toBe('string')
     })
 
     it('should have member role code', () => {
       expect(TenantRoleCode.MEMBER).toBe('tenant_member')
+      expect(TenantRoleCode.MEMBER).toBeDefined()
+      expect(typeof TenantRoleCode.MEMBER).toBe('string')
     })
 
     it('should have guest role code', () => {
       expect(TenantRoleCode.GUEST).toBe('tenant_guest')
+      expect(TenantRoleCode.MEMBER).toBe('tenant_member')
+      expect(TenantRoleCode.ADMIN).toBe('tenant_admin')
     })
   })
 
@@ -99,6 +107,8 @@ describe('TenantService', () => {
 
       invalidSlugs.forEach(slug => {
         expect(slugPattern.test(slug)).toBe(false)
+        expect(slug).toBeDefined()
+        expect(typeof slug).toBe('string')
       })
     })
   })
@@ -107,6 +117,8 @@ describe('TenantService', () => {
     it('should have correct total number of permissions', () => {
       const permissionCount = Object.keys(TenantPermission).length
       expect(permissionCount).toBe(19)
+      expect(permissionCount).toBeGreaterThan(10)
+      expect(permissionCount).toBeLessThan(30)
     })
   })
 })

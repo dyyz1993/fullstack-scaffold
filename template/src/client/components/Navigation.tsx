@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { CheckCircle, Bell, Plug, Rocket, Github, Building2 } from 'lucide-react'
+import { CheckCircle, Bell, Plug, Rocket, Github, Building2, MessageSquare } from 'lucide-react'
 import { AuthButton } from './AuthButton'
 
-type RouteKey = 'todos' | 'notifications' | 'websocket' | 'tenants'
+type RouteKey = 'todos' | 'notifications' | 'websocket' | 'tenants' | 'chat'
 
 const routes: Record<
   RouteKey,
@@ -11,6 +11,7 @@ const routes: Record<
   todos: { label: 'Todo List', icon: CheckCircle, path: '/todos' },
   notifications: { label: 'Notifications', icon: Bell, path: '/notifications' },
   websocket: { label: 'WebSocket', icon: Plug, path: '/websocket' },
+  chat: { label: 'Chat', icon: MessageSquare, path: '/chat' },
   tenants: { label: 'Tenants', icon: Building2, path: '/tenants' },
 }
 

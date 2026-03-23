@@ -2,9 +2,9 @@
  * Unit tests for Todo store
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useTodoStore } from '../todoStore';
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useTodoStore } from '../todoStore'
 
 // Mock the API client
 vi.mock('@client/services/apiClient', () => ({
@@ -20,7 +20,7 @@ vi.mock('@client/services/apiClient', () => ({
       },
     },
   },
-}));
+}))
 
 describe('Todo Store', () => {
   beforeEach(() => {
@@ -29,42 +29,47 @@ describe('Todo Store', () => {
       todos: [],
       loading: false,
       error: null,
-    });
-  });
+    })
+  })
 
   describe('Initial State', () => {
     it('should have empty initial state', () => {
-      const { result } = renderHook(() => useTodoStore());
+      const { result } = renderHook(() => useTodoStore())
 
-      expect(result.current.todos).toEqual([]);
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeNull();
-    });
-  });
+      expect(result.current.todos).toEqual([])
+      expect(result.current.loading).toBe(false)
+      expect(result.current.error).toBeNull()
+    })
+  })
 
   describe('setError', () => {
     it('should set error message', () => {
-      const { result } = renderHook(() => useTodoStore());
+      const { result } = renderHook(() => useTodoStore())
 
       act(() => {
-        result.current.setError('Test error');
-      });
+        result.current.setError('Test error')
+      })
 
-      expect(result.current.error).toBe('Test error');
-    });
+      expect(result.current.error).toBe('Test error')
+      expect(typeof result.current.setError).toBe('function')
+    })
 
     it('should clear error message', () => {
-      const { result } = renderHook(() => useTodoStore());
+      const { result } = renderHook(() => useTodoStore())
 
       act(() => {
-        result.current.setError('Test error');
-      });
+        result.current.setError('Test error')
+      })
+
+      expect(result.current.error).toBe('Test error')
 
       act(() => {
-        result.current.setError(null);
-      });
+        result.current.setError(null)
+      })
 
-      expect(result.current.error).toBeNull();
-    });
-  });
-});
+      expect(result.current.error).toBeNull()
+      expect(result.current.todos).toEqual([])
+      expect(result.current.loading).toBe(false)
+    })
+  })
+})

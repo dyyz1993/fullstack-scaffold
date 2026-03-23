@@ -25,6 +25,9 @@ describe('Ticket Routes', () => {
         param: { id: 'non-existent' },
       })
       expect(res.status).toBe(404)
+      expect(res.ok).toBe(false)
+      const data = await res.json()
+      expect(data.success).toBe(false)
     })
   })
 

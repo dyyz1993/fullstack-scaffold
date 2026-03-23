@@ -25,4 +25,4 @@ export type { RpcMethod, EventName, RpcInput, RpcOutput, EventPayload } from './
 export { WSClientImpl, createWSClient } from './ws-client'
 
 // SSE Client
-export { SSEClientImpl, createSSEClient } from './sse-client'
+export { SSEClientImpl, createSSEClient, connectSSEClient } from './sse-client'

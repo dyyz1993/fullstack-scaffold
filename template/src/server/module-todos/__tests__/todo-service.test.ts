@@ -68,6 +68,7 @@ describe('Todo Service', () => {
       const result = await todoService.getTodo(999)
 
       expect(result).toBeNull()
+      expect(typeof todoService.getTodo).toBe('function')
     })
 
     it('should return todo by id with correct fields', async () => {
@@ -159,6 +160,7 @@ describe('Todo Service', () => {
       const result = await todoService.updateTodo(999, { title: 'Updated' })
 
       expect(result).toBeNull()
+      expect(typeof todoService.updateTodo).toBe('function')
     })
   })
 
@@ -191,6 +193,9 @@ describe('Todo Service', () => {
       const result = await todoService.deleteTodo(999)
 
       expect(result).toBe(false)
+      expect(typeof todoService.deleteTodo).toBe('function')
+      const listResult = await todoService.listTodos()
+      expect(Array.isArray(listResult)).toBe(true)
     })
   })
 })

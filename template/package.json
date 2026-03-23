@@ -61,10 +61,12 @@
     "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sandbox-runtime": "^0.0.42",
     "@hono/node-server": "^1.14.4",
     "@hono/zod-openapi": "1.2.2",
     "@hono/zod-validator": "0.7.6",
     "@libsql/client": "^0.17.0",
+    "@mariozechner/pi-coding-agent": "^0.61.0",
     "antd": "^5.24.0",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
@@ -78,7 +80,10 @@
     "pino-pretty": "^13.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.1",
+    "remark-gfm": "^4.0.1",
+    "vm2": "^3.10.5",
     "ws": "^8.18.3",
     "zod": "^4.2.1",
     "zustand": "^5.0.2"

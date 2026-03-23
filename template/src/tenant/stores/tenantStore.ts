@@ -16,6 +16,8 @@ export interface Tenant {
   ownerId: string
   createdAt: number | null
   updatedAt: number | null
+  memberCount?: number
+  usedStorage?: number
 }
 
 export type TenantRole = Pick<
@@ -36,7 +38,7 @@ export interface TenantMember {
   invitedAt: number | null
   joinedAt: number | null
   lastActiveAt: number | null
-  role: TenantRole
+  role?: TenantRole
 }
 
 export interface TenantInvitation {

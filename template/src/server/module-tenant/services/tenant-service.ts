@@ -10,6 +10,7 @@ import {
 } from '@platform/shared/permission/tenant-role-templates'
 import { TenantPermission } from '@platform/shared/permission/tenant-permissions'
 import type { TenantPlan } from '../../db/schema'
+import { TenantSchema } from '@shared/modules/tenant/schemas'
 
 export interface CreateTenantData {
   name: string
@@ -109,7 +110,14 @@ export class TenantService {
     const tenantIds = memberRows.map(m => m.tenantId)
     const tenantRows = await db.select().from(tenants).where(inArray(tenants.id, tenantIds))
 
-    return tenantRows
+    return tenantRows.filter(row => {
+      const result = TenantSchema.safeParse(row)
+      if (!result.success) {
+        console.error('Invalid tenant data:', result.error.flatten(), row)
+        return false
+      }
+      return true
+    })
   }
 
   async updateTenant(id: string, data: Partial<NewTenant>): Promise<Tenant | undefined> {
