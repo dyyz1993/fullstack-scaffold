@@ -126,7 +126,7 @@ export const sensitiveConfig: SensitiveConfig = {
     /lint-scripts\/(validate|config|watch-validator|test-validators-unit|test-tracker|test-history|post-commit-track|smart-test|dev-server|TESTING|README|quick-test|DIRECTORY_RULES|framework|check-refs)/,
     /server\/config\.ts/,
     /server\/utils\/logger\.ts/,
-    /admin\/services\/(README|TESTING)\.md/,
+    /ops\/services\/(README|TESTING)\.md/,
   ],
 
   // 检查的文件扩展名
@@ -381,7 +381,7 @@ export const permissionConsistencyConfig: PermissionConsistencyConfig = {
   menuConfigPath: 'src/server/module-permission/services/permission-service.ts',
   pagePermissionsPath: 'src/server/module-permission/services/permission-service.ts',
   routesDirs: ['src/server', 'src/platform/server'],
-  componentDirs: ['src/admin', 'src/client'],
+  componentDirs: ['src/ops', 'src/client'],
   ignoreDirs: ['node_modules', 'dist', '__tests__', '.git'],
 }
 

@@ -1,21 +1,21 @@
 ---
-paths: src/admin/**/*.tsx, src/admin/**/*.ts
+paths: src/ops/**/*.tsx, src/ops/**/*.ts
 ---
 
-# Admin 模块开发规范
+# Ops 模块开发规范
 
 ## 🎯 核心原则
 
-Admin 模块是一个**独立的管理后台**，与主应用完全分离，有自己的入口、布局和路由。
+Ops 模块是一个**独立的运营后台**，与主应用完全分离，有自己的入口、布局和路由。
 
-**重要**: Admin 模块位于 `src/admin/`，与 `src/client/`（用户前台）平级，实现用户端与管理端的完全隔离。
+**重要**: Ops 模块位于 `src/ops/`，与 `src/client/`（用户前台）平级，实现用户端与运营端的完全隔离。
 
-**技术栈**: Admin 模块使用 **Ant Design** 作为 UI 组件库。
+**技术栈**: Ops 模块使用 **Ant Design** 作为 UI 组件库。
 
 ## 📁 目录结构
 
 ```
-src/admin/
+src/ops/
 ├── components/                 # 业务组件
 │   ├── UserTable.tsx           # 用户表格
 │   ├── StatsCard.tsx           # 统计卡片
@@ -36,7 +36,7 @@ src/admin/
 │   └── UsersPage.tsx           # 用户管理
 │
 ├── stores/                     # 状态管理
-│   └── adminStore.ts           # Admin 状态
+│   └── opsStore.ts             # Ops 状态
 │
 ├── App.tsx                     # 入口（路由配置）
 └── main.tsx                    # 启动文件
@@ -46,12 +46,13 @@ src/admin/
 
 ### 入口文件
 
-项目支持**两个独立入口**：
+项目支持**多个独立入口**：
 
-| 入口     | 文件                  | HTML         | 访问路径   | 用途     |
-| -------- | --------------------- | ------------ | ---------- | -------- |
-| 用户前台 | `src/client/main.tsx` | `index.html` | `/`        | 用户前台 |
-| 管理后台 | `src/admin/main.tsx`  | `admin.html` | `/admin/*` | 管理后台 |
+| 入口     | 文件                  | HTML          | 访问路径    | 用途     |
+| -------- | --------------------- | ------------- | ----------- | -------- |
+| 用户前台 | `src/client/main.tsx` | `index.html`  | `/`         | 用户前台 |
+| 运营后台 | `src/ops/main.tsx`    | `ops.html`    | `/ops/*`    | 运营后台 |
+| 租户管理 | `src/tenant/main.tsx` | `tenant.html` | `/tenant/*` | 租户管理 |
 
 ### Vite 配置
 
@@ -62,7 +63,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        admin: path.resolve(__dirname, 'admin.html'),
+        ops: path.resolve(__dirname, 'ops.html'),
       },
     },
   },
@@ -71,7 +72,8 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, 'src/shared'),
       '@client': path.resolve(__dirname, 'src/client'),
       '@server': path.resolve(__dirname, 'src/server'),
-      '@admin': path.resolve(__dirname, 'src/admin'),
+      '@ops': path.resolve(__dirname, 'src/ops'),
+      '@tenant': path.resolve(__dirname, 'src/tenant'),
     },
   },
 })
@@ -81,15 +83,15 @@ export default defineConfig({
 
 ### Ant Design
 
-Admin 模块使用 **Ant Design** 作为 UI 组件库。
+Ops 模块使用 **Ant Design** 作为 UI 组件库。
 
 **依赖**: `"antd": "^5.24.0"`
 
 ### 全局配置
 
 ```typescript
-// src/admin/App.tsx
-import { ConfigProvider } from 'antd'
+// src/ops/App.tsx
+import { ConfigProvider, App as AntdApp } from 'antd'
 
 export const App: React.FC = () => {
   return (
@@ -100,7 +102,9 @@ export const App: React.FC = () => {
         },
       }}
     >
-      {/* ... */}
+      <AntdApp>
+        {/* ... */}
+      </AntdApp>
     </ConfigProvider>
   )
 }
@@ -120,14 +124,14 @@ export const App: React.FC = () => {
 | `Modal`   | 弹窗     |
 | `message` | 全局提示 |
 
-## 🔧 Admin 入口配置
+## 🔧 Ops 入口配置
 
 ### App.tsx
 
 ```typescript
-// src/admin/App.tsx
+// src/ops/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, App as AntdApp } from 'antd'
 import { Layout } from './layouts/Layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
@@ -137,24 +141,26 @@ import { SettingsPage } from './pages/SettingsPage'
 export const App: React.FC = () => {
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
-      <BrowserRouter basename="/admin">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/*"
-            element={
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Routes>
-              </Layout>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+      <AntdApp>
+        <BrowserRouter basename="/ops">
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/*"
+              element={
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                  </Routes>
+                </Layout>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </AntdApp>
     </ConfigProvider>
   )
 }
@@ -163,7 +169,7 @@ export const App: React.FC = () => {
 ### main.tsx
 
 ```typescript
-// src/admin/main.tsx
+// src/ops/main.tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { App } from './App'
@@ -187,12 +193,12 @@ layouts/
 └── Header.tsx     # 顶部导航组件
 ```
 
-**注意**: 由于 Admin 模块已经是独立目录，布局组件不需要 `Admin` 前缀。
+**注意**: 由于 Ops 模块已经是独立目录，布局组件不需要 `Ops` 前缀。
 
 ### Layout.tsx
 
 ```typescript
-// src/admin/layouts/Layout.tsx
+// src/ops/layouts/Layout.tsx
 import { ReactNode, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
@@ -222,48 +228,50 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
 ### 页面类型
 
-| 页面 | 路径         | 文件                | 说明       |
-| ---- | ------------ | ------------------- | ---------- |
-| 登录 | `/login`     | `LoginPage.tsx`     | 管理员登录 |
-| 注册 | `/register`  | `RegisterPage.tsx`  | 管理员注册 |
-| 首页 | `/dashboard` | `DashboardPage.tsx` | 仪表盘     |
-| 设置 | `/settings`  | `SettingsPage.tsx`  | 系统设置   |
+| 页面 | 路径         | 文件                | 说明         |
+| ---- | ------------ | ------------------- | ------------ |
+| 登录 | `/login`     | `LoginPage.tsx`     | 运营人员登录 |
+| 注册 | `/register`  | `RegisterPage.tsx`  | 运营人员注册 |
+| 首页 | `/dashboard` | `DashboardPage.tsx` | 仪表盘       |
+| 设置 | `/settings`  | `SettingsPage.tsx`  | 系统设置     |
 
 ### 登录页面示例
 
 ```typescript
-// src/admin/pages/LoginPage.tsx
-import { Form, Input, Button, Card, message } from 'antd'
+// src/ops/pages/LoginPage.tsx
+import { Form, Input, Button, Card } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import { useMessage } from '../hooks/useAntdStatic'
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
   const [form] = Form.useForm()
+  const message = useMessage()
 
   const handleSubmit = async (values: any) => {
     try {
       console.log('Login:', values)
-      message.success('Login successful!')
+      message.success('登录成功！')
       navigate('/dashboard')
     } catch (error) {
-      message.error('Login failed!')
+      message.error('登录失败！')
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md" title="Admin Login">
+      <Card className="w-full max-w-md" title="运营后台登录">
         <Form form={form} onFinish={handleSubmit} layout="vertical">
           <Form.Item name="username" rules={[{ required: true }]}>
-            <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
+            <Input prefix={<UserOutlined />} placeholder="用户名" size="large" />
           </Form.Item>
           <Form.Item name="password" rules={[{ required: true }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+            <Input.Password prefix={<LockOutlined />} placeholder="密码" size="large" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" size="large" block>
-              Login
+              登录
             </Button>
           </Form.Item>
         </Form>
@@ -277,7 +285,7 @@ export const LoginPage: React.FC = () => {
 
 ### 业务组件示例
 
-Admin 模块包含以下业务组件：
+Ops 模块包含以下业务组件：
 
 | 组件            | 文件                | 说明             |
 | --------------- | ------------------- | ---------------- |
@@ -289,7 +297,7 @@ Admin 模块包含以下业务组件：
 ### 使用业务组件
 
 ```typescript
-import { UserTable, StatsCard, PageHeader } from '@admin/components'
+import { UserTable, StatsCard, PageHeader } from '@ops/components'
 
 // 使用 UserTable
 <UserTable
@@ -322,23 +330,19 @@ import { UserTable, StatsCard, PageHeader } from '@admin/components'
 ### 路由守卫
 
 ```typescript
-// src/admin/components/AuthGuard.tsx
+// src/ops/components/ProtectedRoute.tsx
 import { Navigate } from 'react-router-dom'
-import { useAdminStore } from '../stores/adminStore'
+import { useOpsStore } from '../stores/opsStore'
 
-interface AuthGuardProps {
+interface ProtectedRouteProps {
   children: React.ReactNode
 }
 
-export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const { isAuthenticated, user } = useAdminStore()
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, user } = useOpsStore()
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />
-  }
-
-  if (user?.role !== 'admin') {
-    return <Navigate to="/admin/unauthorized" replace />
+    return <Navigate to="/ops/login" replace />
   }
 
   return <>{children}</>
@@ -348,20 +352,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 ### 使用守卫
 
 ```typescript
-// src/admin/App.tsx
+// src/ops/App.tsx
 export const App: React.FC = () => {
   return (
-    <BrowserRouter basename="/admin">
+    <BrowserRouter basename="/ops">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/*"
           element={
-            <AuthGuard>
+            <ProtectedRoute>
               <Layout>
                 <Routes>...</Routes>
               </Layout>
-            </AuthGuard>
+            </ProtectedRoute>
           }
         />
       </Routes>
@@ -372,20 +376,20 @@ export const App: React.FC = () => {
 
 ## 📊 API 调用
 
-### 使用 admin API
+### 使用 ops API
 
 ```typescript
-// src/admin/stores/adminStore.ts
+// src/ops/stores/opsStore.ts
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
 import type { SystemStats } from '@shared/schemas'
 
-interface AdminState {
+interface OpsState {
   stats: SystemStats | null
   fetchStats: () => Promise<void>
 }
 
-export const useAdminStore = create<AdminState>(set => ({
+export const useOpsStore = create<OpsState>(set => ({
   stats: null,
 
   fetchStats: async () => {
@@ -403,21 +407,21 @@ export const useAdminStore = create<AdminState>(set => ({
 ### 1. 禁止混用用户前台组件
 
 ```typescript
-// ❌ 错误 - Admin 使用用户前台组件
+// ❌ 错误 - Ops 使用用户前台组件
 import { Navigation } from '@client/components/Navigation'
 
-// ✅ 正确 - Admin 使用自己的组件
+// ✅ 正确 - Ops 使用自己的组件
 import { Sidebar } from './layouts/Sidebar'
 ```
 
 ### 2. 禁止共享状态
 
 ```typescript
-// ❌ 错误 - Admin 使用用户前台 Store
+// ❌ 错误 - Ops 使用用户前台 Store
 import { useTodoStore } from '@client/stores/todoStore'
 
-// ✅ 正确 - Admin 使用自己的 Store
-import { useAdminStore } from './stores/adminStore'
+// ✅ 正确 - Ops 使用自己的 Store
+import { useOpsStore } from './stores/opsStore'
 ```
 
 ### 3. 禁止在 App 中定义布局
@@ -440,7 +444,7 @@ export const App: React.FC = () => {
 // ✅ 正确 - App 只负责路由
 export const App: React.FC = () => {
   return (
-    <BrowserRouter basename="/admin">
+    <BrowserRouter basename="/ops">
       <Layout>
         <Routes>...</Routes>
       </Layout>
@@ -451,7 +455,7 @@ export const App: React.FC = () => {
 
 ## 📝 HTML 入口文件
 
-### admin.html
+### ops.html
 
 ```html
 <!DOCTYPE html>
@@ -460,29 +464,29 @@ export const App: React.FC = () => {
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Dashboard</title>
+    <title>Ops Dashboard</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/admin/main.tsx"></script>
+    <script type="module" src="/src/ops/main.tsx"></script>
   </body>
 </html>
 ```
 
 ## 🎨 样式规范
 
-Admin 模块可以共享用户前台的样式：
+Ops 模块可以共享用户前台的样式：
 
 ```typescript
-// src/admin/main.tsx
+// src/ops/main.tsx
 import '../client/index.css' // 共享样式
 ```
 
 也可以使用独立的样式：
 
 ```typescript
-// src/admin/styles/admin.css
-.admin-sidebar {
+// src/ops/styles/ops.css
+.ops-sidebar {
   width: 250px;
   background: #1f2937;
 }
@@ -492,4 +496,4 @@ import '../client/index.css' // 共享样式
 
 - [App 入口规范](./33-client-app-entry.md) - 用户前台入口规范
 - [Client 组件规范](./30-client-components.md) - 用户前台组件规范
-- [Server Admin API](./20-server-api.md) - 服务端 Admin API
+- [Server Ops API](./20-server-api.md) - 服务端 Ops API

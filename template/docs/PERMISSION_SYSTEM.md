@@ -260,12 +260,12 @@ GET /api/admin/permissions/me
 
 ## 权限配置文件
 
-权限配置位于 `src/admin/config/permissions.ts`，可以配置每个页面和操作所需的权限。
+权限配置位于 `src/ops/config/permissions.ts`，可以配置每个页面和操作所需的权限。
 
 ```typescript
 export const PAGE_PERMISSIONS: PagePermissionConfig[] = [
   {
-    path: '/admin/users',
+    path: '/ops/users',
     label: '用户管理',
     requiredPermissions: [Permission.USER_VIEW],
     actions: [
