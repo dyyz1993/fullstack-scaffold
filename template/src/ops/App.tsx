@@ -8,7 +8,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { PermissionsPage } from './pages/PermissionsPage'
 import { RolesPage } from './pages/RolesPage'
 import { SystemLogsPage } from './pages/SystemLogsPage'
-import { UsersPage } from './pages/UsersPage'
+import { StaffPage } from './pages/StaffPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { TicketsPage } from './pages/TicketsPage'
 import { DisputesPage } from './pages/DisputesPage'
@@ -37,11 +37,11 @@ export const App: React.FC = () => {
                     <Routes>
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<DashboardPage />} />
-                      <Route path="/users" element={<UsersPage />} />
                       <Route path="/orders" element={<OrdersPage />} />
                       <Route path="/tickets" element={<TicketsPage />} />
                       <Route path="/disputes" element={<DisputesPage />} />
                       <Route path="/content" element={<ContentPage />} />
+                      <Route path="/system/staff" element={<StaffPage />} />
                       <Route path="/system/settings" element={<SettingsPage />} />
                       <Route path="/system/logs" element={<SystemLogsPage />} />
                       <Route path="/system/monitor" element={<div>系统监控页面（待开发）</div>} />

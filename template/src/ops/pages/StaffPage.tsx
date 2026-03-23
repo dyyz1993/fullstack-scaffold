@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Card, Button, Modal, Form, Input, Select, Tag, Space, Popconfirm } from 'antd'
 import {
   PlusOutlined,
@@ -17,7 +17,7 @@ import { useMessage } from '../hooks/useAntdStatic'
 
 type UserFormData = CreateUserRequest & { password?: string }
 
-export const UsersPage: React.FC = () => {
+export const StaffPage: React.FC = () => {
   const message = useMessage()
   const [users, setUsers] = useState<User[]>([])
   const [modalVisible, setModalVisible] = useState(false)
@@ -25,19 +25,20 @@ export const UsersPage: React.FC = () => {
   const [form] = Form.useForm<UserFormData>()
   const { roleLabels } = useRoleLabels()
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      const data = await api(apiClient.api.admin.users.$get()).withLoading('加载用户列表...').json()
-      const businessUsers = data.filter((user: User) => user.role === Role.USER)
-      setUsers(businessUsers)
+      const data = await api(apiClient.api.admin.users.$get())
+        .withLoading('加载运营人员列表...')
+        .json()
+      setUsers(data)
     } catch {
       // 错误已由 api-request 自动处理
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
   const handleCreate = () => {
     setEditingUser(null)
@@ -67,7 +68,7 @@ export const UsersPage: React.FC = () => {
         )
           .withLoading('更新中...')
           .json()
-        message.success('用户更新成功')
+        message.success('运营人员更新成功')
         setModalVisible(false)
         fetchUsers()
       } else {
@@ -84,7 +85,7 @@ export const UsersPage: React.FC = () => {
         )
           .withLoading('创建中...')
           .json()
-        message.success('用户创建成功')
+        message.success('运营人员创建成功')
         setModalVisible(false)
         fetchUsers()
       }
@@ -104,7 +105,7 @@ export const UsersPage: React.FC = () => {
       )
         .withLoading()
         .json()
-      message.success(newStatus === 'locked' ? '用户已锁定' : '用户已解锁')
+      message.success(newStatus === 'locked' ? '运营人员已锁定' : '运营人员已解锁')
       fetchUsers()
     } catch {
       // 错误已由 api-request 自动处理
@@ -120,7 +121,7 @@ export const UsersPage: React.FC = () => {
       )
         .withLoading('删除中...')
         .json()
-      message.success('用户已删除')
+      message.success('运营人员已删除')
       fetchUsers()
     } catch {
       // 错误已由 api-request 自动处理
@@ -188,7 +189,7 @@ export const UsersPage: React.FC = () => {
           </PermissionGuard>
           <PermissionGuard permission={Permission.USER_DELETE}>
             <Popconfirm
-              title="确定要删除此用户吗？"
+              title="确定要删除此运营人员吗？"
               onConfirm={() => handleDelete(record.id)}
               okText="确定"
               cancelText="取消"
@@ -206,11 +207,11 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="p-6">
       <Card
-        title="用户管理"
+        title="运营人员管理"
         extra={
           <PermissionGuard permission={Permission.USER_CREATE}>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              创建用户
+              创建运营人员
             </Button>
           </PermissionGuard>
         }
@@ -219,7 +220,7 @@ export const UsersPage: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingUser ? '编辑用户' : '创建用户'}
+        title={editingUser ? '编辑运营人员' : '创建运营人员'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => form.submit()}
@@ -254,7 +255,11 @@ export const UsersPage: React.FC = () => {
           )}
           <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
             <Select placeholder="请选择角色">
-              <Select.Option value={Role.USER}>普通用户</Select.Option>
+              {Object.values(Role).map(role => (
+                <Select.Option key={role} value={role}>
+                  {roleLabels[role] || role}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>

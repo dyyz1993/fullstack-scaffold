@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Users,
@@ -42,8 +42,10 @@ interface MenuItemComponentProps {
 
 const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }) => {
   const [expanded, setExpanded] = useState(false)
+  const location = useLocation()
   const Icon = ICON_MAP[item.icon] || LayoutDashboard
   const hasChildren = item.children && item.children.length > 0
+  const isActive = location.pathname === item.path
 
   if (hasChildren) {
     return (
@@ -72,11 +74,19 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }
   return (
     <NavLink
       to={item.path}
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
-          isActive ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'
-        } ${level > 0 ? 'pl-8 text-sm' : ''}`
-      }
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+        level > 0 ? 'pl-8 text-sm' : ''
+      }`}
+      style={{
+        backgroundColor: isActive ? '#2563eb' : undefined,
+        color: isActive ? '#ffffff' : '#d1d5db',
+      }}
+      onMouseEnter={e => {
+        if (!isActive) e.currentTarget.style.backgroundColor = '#1f2937'
+      }}
+      onMouseLeave={e => {
+        if (!isActive) e.currentTarget.style.backgroundColor = ''
+      }}
     >
       <Icon className="w-5 h-5" />
       <span>{item.label}</span>

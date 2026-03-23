@@ -38,12 +38,6 @@ export const MENU_CONFIG: MenuItem[] = [
     permissions: [],
   },
   {
-    path: '/users',
-    label: '用户管理',
-    icon: 'Users',
-    permissions: [Permission.USER_VIEW],
-  },
-  {
     path: '/orders',
     label: '订单管理',
     icon: 'ShoppingCart',
@@ -73,6 +67,12 @@ export const MENU_CONFIG: MenuItem[] = [
     icon: 'Settings',
     permissions: [],
     children: [
+      {
+        path: '/system/staff',
+        label: '运营人员管理',
+        icon: 'UserCog',
+        permissions: [Permission.USER_VIEW],
+      },
       {
         path: '/system/settings',
         label: '系统设置',
