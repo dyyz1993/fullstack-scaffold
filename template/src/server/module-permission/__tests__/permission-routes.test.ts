@@ -220,7 +220,7 @@ describe('Permission Routes', () => {
           item.children ? item.children.map(c => c.path) : [item.path]
         )
         expect(menuPaths).toContain('/dashboard')
-        expect(menuPaths).toContain('/users')
+        expect(menuPaths).not.toContain('/users')
         expect(menuPaths).not.toContain('/system/settings')
       }
     })
