@@ -64,9 +64,31 @@ export function auditLogMiddleware(): MiddlewareHandler {
 
     const pathParts = path.split('/').filter(Boolean)
     let resourceType: ResourceType = 'user' as ResourceType
-    if (pathParts.length >= 2) {
-      const pathSegment = pathParts[1]
-      resourceType = PATH_TO_RESOURCE_TYPE[pathSegment] || ('unknown' as ResourceType)
+    const resourceKeywords = [
+      'users',
+      'roles',
+      'permissions',
+      'contents',
+      'orders',
+      'tickets',
+      'disputes',
+      'files',
+      'chats',
+      'notifications',
+      'captchas',
+    ]
+    let foundIndex = -1
+    for (let i = 0; i < pathParts.length; i++) {
+      if (resourceKeywords.includes(pathParts[i])) {
+        foundIndex = i
+        break
+      }
+    }
+    if (foundIndex !== -1) {
+      resourceType = PATH_TO_RESOURCE_TYPE[pathParts[foundIndex]] || ('unknown' as ResourceType)
+    } else {
+      resourceType =
+        PATH_TO_RESOURCE_TYPE[pathParts[pathParts.length - 1]] || ('unknown' as ResourceType)
     }
 
     try {

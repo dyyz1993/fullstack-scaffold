@@ -12,6 +12,7 @@ import { apiClient, api } from '../services/apiClient'
 import { useRoleLabels } from '../hooks/useConfig'
 import { Permission, Role } from '@platform/shared/permission'
 import { PermissionGuard } from '../components/PermissionGuard'
+import { useOpsStore } from '../stores/opsStore'
 import type { User, CreateUserRequest } from '@shared/modules/ops'
 import { useMessage } from '../hooks/useAntdStatic'
 
@@ -19,6 +20,7 @@ type UserFormData = CreateUserRequest & { password?: string }
 
 export const StaffPage: React.FC = () => {
   const message = useMessage()
+  const currentUser = useOpsStore(state => state.user)
   const [users, setUsers] = useState<User[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -95,6 +97,10 @@ export const StaffPage: React.FC = () => {
   }
 
   const handleToggleLock = async (user: User) => {
+    if (currentUser && user.id === currentUser.id) {
+      message.error('不能锁定自己的账号')
+      return
+    }
     try {
       const newStatus = user.status === 'locked' ? 'active' : 'locked'
       await api(
@@ -178,14 +184,16 @@ export const StaffPage: React.FC = () => {
             </Button>
           </PermissionGuard>
           <PermissionGuard permission={Permission.USER_EDIT}>
-            <Button
-              type="link"
-              icon={record.status === 'locked' ? <UnlockOutlined /> : <LockOutlined />}
-              onClick={() => handleToggleLock(record)}
-              danger={record.status !== 'locked'}
-            >
-              {record.status === 'locked' ? '解锁' : '锁定'}
-            </Button>
+            {record.id !== currentUser?.id && (
+              <Button
+                type="link"
+                icon={record.status === 'locked' ? <UnlockOutlined /> : <LockOutlined />}
+                onClick={() => handleToggleLock(record)}
+                danger={record.status !== 'locked'}
+              >
+                {record.status === 'locked' ? '解锁' : '锁定'}
+              </Button>
+            )}
           </PermissionGuard>
           <PermissionGuard permission={Permission.USER_DELETE}>
             <Popconfirm
