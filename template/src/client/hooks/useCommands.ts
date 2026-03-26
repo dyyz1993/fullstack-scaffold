@@ -4,9 +4,10 @@ import type { Command, CommandMatch } from '../components/CommandPalette'
 interface UseCommandsOptions {
   commands: Command[]
   onExecute: (command: Command, input: string) => void
+  onClearInput?: () => void
 }
 
-export function useCommands({ commands, onExecute }: UseCommandsOptions) {
+export function useCommands({ commands, onExecute, onClearInput }: UseCommandsOptions) {
   const [input, setInput] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -43,10 +44,11 @@ export function useCommands({ commands, onExecute }: UseCommandsOptions) {
   const executeCommand = useCallback(
     (command: Command) => {
       onExecute(command, input)
+      onClearInput?.()
       setInput('')
       setIsOpen(false)
     },
-    [onExecute, input]
+    [onExecute, input, onClearInput]
   )
 
   const handleKeyDown = useCallback(
