@@ -108,7 +108,7 @@ const ws = apiClient.api.chat.ws.$ws()
 const result = await ws.call('echo', { message: 'hello' })
 
 // SSE
-const conn = await apiClient.api.notifications.stream.$sse()
+const conn = apiClient.api.notifications.stream.$sse()
 conn.on('notification', n => console.log(n))
 ```
 

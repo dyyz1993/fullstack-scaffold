@@ -102,7 +102,7 @@ export function validateClientRPCInFile(
           file: relative(rootPath, filePath),
           line: lineNumber,
           message: 'Direct new EventSource() is not allowed',
-          suggestion: `Use type-safe $sse() method: await apiClient.api.notifications.stream.$sse()`,
+          suggestion: `Use type-safe $sse() method: apiClient.api.notifications.stream.$sse()`,
         })
       }
     }
@@ -175,7 +175,7 @@ export function formatClientRPCErrors(errors: ClientRPCError[]): string {
   output += '    const ws = apiClient.api.chat.ws.$ws()\n'
   output += '    const result = await ws.call("echo", { message: "hello" })\n\n'
   output += '  ✅ DO: Use $sse() for SSE\n'
-  output += '    const conn = await apiClient.api.notifications.stream.$sse()\n'
+  output += '    const conn = apiClient.api.notifications.stream.$sse()\n'
   output += '    conn.on("notification", (n) => { ... })\n\n'
   output += "  ❌ DON'T: Use direct fetch for internal APIs\n"
   output += "    const response = await fetch('/api/todos')\n\n"

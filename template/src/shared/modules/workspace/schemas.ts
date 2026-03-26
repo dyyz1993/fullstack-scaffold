@@ -40,7 +40,7 @@ const FileNodeZodSchema: z.ZodType<FileNode> = z.object({
   path: z.string(),
   size: z.number().nullish(),
   modifiedAt: z.string().nullish(),
-  children: z.lazy(() => z.array(FileNodeZodSchema)).nullish(),
+  children: z.array(z.any()).nullish(),
 })
 
 export const FileNodeSchema = FileNodeZodSchema

@@ -49,7 +49,7 @@ export const TodoWithAttachmentsSchema = TodoSchema.extend({
 })
 
 export const UploadFileSchema = z.object({
-  file: z.file().openapi({ type: 'string', format: 'binary' }),
+  file: z.any(),
 })
 
 export const AttachmentIdResponseSchema = z.object({

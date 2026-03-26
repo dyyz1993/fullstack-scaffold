@@ -209,7 +209,7 @@ ws.on('notification', n => console.log(n))
 import { AppSSEProtocolSchema } from '@shared/schemas'
 
 // Client: Use $sse()
-const conn = await apiClient.api.notifications.stream.$sse()
+const conn = apiClient.api.notifications.stream.$sse()
 conn.on('notification', n => console.log(n))
 conn.on('ping', p => console.log(p.timestamp))
 ```

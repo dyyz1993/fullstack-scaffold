@@ -35,6 +35,8 @@ import { requireNullableForOptional } from './eslint-rules/require-nullable-for-
 import { moduleBoundary } from './eslint-rules/module-boundary.js'
 import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
+import { noLazyInSchemas } from './eslint-rules/no-lazy-in-schemas.js'
+import { noZodFileType } from './eslint-rules/no-zod-file-type.js'
 
 const localRules = {
   rules: {
@@ -69,6 +71,8 @@ const localRules = {
     'module-boundary': moduleBoundary,
     'limit-type-complexity': limitTypeComplexity,
     'require-antd-generic-types': requireAntdGenericTypes,
+    'no-lazy-in-schemas': noLazyInSchemas,
+    'no-zod-file-type': noZodFileType,
   },
 }
 
@@ -164,6 +168,8 @@ export default tseslint.config(
     rules: {
       'local-rules/require-file-openapi-props': 'error',
       'local-rules/require-nullable-for-optional': 'error',
+      'local-rules/no-lazy-in-schemas': 'error',
+      'local-rules/no-zod-file-type': 'error',
     },
   },
   {

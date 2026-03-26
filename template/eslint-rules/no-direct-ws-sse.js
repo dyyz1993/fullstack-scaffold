@@ -20,7 +20,7 @@ export const noDirectWsSse = {
         'Example: const ws = apiClient.api.chat.ws.$ws()',
       forbiddenEventSource:
         'Direct new EventSource() is not allowed. Use apiClient.xxx.$sse() for type-safe SSE connection.\n' +
-        'Example: const sse = await apiClient.api.notifications.stream.$sse()',
+        'Example: const sse = apiClient.api.notifications.stream.$sse()',
     },
     schema: [],
   },
