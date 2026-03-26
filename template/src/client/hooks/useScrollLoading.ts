@@ -64,13 +64,15 @@ export function useScrollLoading({
     const container = containerRef.current
     if (!container) return
 
-    requestAnimationFrame(() => {
-      const el = containerRef.current
-      if (el) {
-        el.scrollTop = el.scrollHeight
-      }
-    })
-  }, [rounds])
+    if (isAtBottom) {
+      requestAnimationFrame(() => {
+        const el = containerRef.current
+        if (el) {
+          el.scrollTop = el.scrollHeight
+        }
+      })
+    }
+  }, [rounds, isAtBottom])
 
   useEffect(() => {
     const container = containerRef.current

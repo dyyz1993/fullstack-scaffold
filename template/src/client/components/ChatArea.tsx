@@ -7,6 +7,7 @@ import { ChatInput } from './ChatInput'
 import { PendingMessages } from './PendingMessages'
 import { FilePreview } from './FilePreview'
 import { useWorkspaceStore } from '../stores/workspaceStore'
+import type { Command } from './CommandPalette'
 
 export const ChatArea: React.FC = () => {
   const rounds = useAgentStore(state => state.rounds)
@@ -17,6 +18,7 @@ export const ChatArea: React.FC = () => {
   const pendingMessages = useAgentStore(state => state.pendingMessages)
   const removePendingMessage = useAgentStore(state => state.removePendingMessage)
   const sendPendingMessages = useAgentStore(state => state.sendPendingMessages)
+  const clearMessages = useAgentStore(state => state.clearMessages)
   const selectedFile = useWorkspaceStore(state => state.selectedFile)
   const setSelectedFile = useWorkspaceStore(state => state.setSelectedFile)
 
@@ -37,6 +39,17 @@ export const ChatArea: React.FC = () => {
 
   const handleClosePreview = () => {
     setSelectedFile(null)
+  }
+
+  const handleCommand = (command: Command) => {
+    switch (command.id) {
+      case 'clear':
+        clearMessages()
+        break
+      case 'reset':
+        clearMessages()
+        break
+    }
   }
 
   return (
@@ -66,6 +79,7 @@ export const ChatArea: React.FC = () => {
         onButtonClick={handleButtonClick}
         buttonState={buttonState}
         disabled={loading}
+        onCommand={handleCommand}
       />
     </div>
   )
