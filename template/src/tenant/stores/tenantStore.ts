@@ -1,61 +1,22 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { RoleType } from '@shared/modules/role/schemas'
+import type * as TenantTypes from '@shared/modules/tenant/schemas'
+export type {
+  Tenant,
+  TenantRole,
+  TenantMember,
+  TenantInvitation,
+  TenantWithStats,
+} from '@shared/modules/tenant/schemas'
 
-export interface Tenant {
-  id: string
-  code: string
-  name: string
-  slug: string
-  logo: string | null
-  description: string | null
-  plan: string
-  status: string
-  maxMembers: number | null
-  maxStorage: number | null
-  ownerId: string
-  createdAt: number | null
-  updatedAt: number | null
-  memberCount?: number
-  usedStorage?: number
-}
-
-export type TenantRole = Pick<
-  RoleType,
-  'id' | 'code' | 'name' | 'label' | 'description' | 'isSystem' | 'isActive' | 'sortOrder'
-> & {
-  tenantId: string
-  permissions: string
-}
-
-export interface TenantMember {
-  id: string
-  tenantId: string
-  userId: string
-  roleId: string
-  status: string
-  invitedBy: string | null
-  invitedAt: number | null
-  joinedAt: number | null
-  lastActiveAt: number | null
-  role?: TenantRole
-}
-
-export interface TenantInvitation {
-  id: string
-  tenantId: string
-  email: string
-  roleId: string
-  inviterId: string
-  token: string
-  status: string
-  expiresAt: number | null
-  createdAt: number | null
-}
+type Tenant = TenantTypes.Tenant
+type TenantRole = TenantTypes.TenantRole
+type TenantMember = TenantTypes.TenantMember
+type TenantWithStats = TenantTypes.TenantWithStats
 
 interface TenantState {
-  tenants: Tenant[]
-  currentTenant: Tenant | null
+  tenants: TenantWithStats[]
+  currentTenant: TenantWithStats | null
   roles: TenantRole[]
   members: TenantMember[]
   permissions: string[]
@@ -63,7 +24,7 @@ interface TenantState {
   error: string | null
 
   setTenants: (tenants: Tenant[]) => void
-  setCurrentTenant: (tenant: Tenant | null) => void
+  setCurrentTenant: (tenant: TenantWithStats | null) => void
   setRoles: (roles: TenantRole[]) => void
   setMembers: (members: TenantMember[]) => void
   setPermissions: (permissions: string[]) => void
@@ -83,7 +44,7 @@ interface TenantState {
 }
 
 const initialState = {
-  tenants: [],
+  tenants: [] as TenantWithStats[],
   currentTenant: null,
   roles: [],
   members: [],

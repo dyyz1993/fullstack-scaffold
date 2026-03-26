@@ -25,3 +25,7 @@ export async function abortChat(userId: string): Promise<void> {
 export function isChatRunning(userId: string): boolean {
   return chatSessionManager.isRunning(userId)
 }
+
+export async function reloadResources(userId: string): Promise<void> {
+  return chatSessionManager.reloadResources(userId)
+}

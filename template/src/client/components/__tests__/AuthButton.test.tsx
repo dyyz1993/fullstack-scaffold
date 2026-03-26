@@ -1,16 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { AuthButton } from '../AuthButton'
+import type { AuthUserResponse } from '@shared/modules/ops/schemas'
+import { Role } from '@platform/shared/permission/permissions'
 
 const mockSetToken = vi.fn()
 const mockLogout = vi.fn()
 const mockSetUser = vi.fn()
 const mockLogin = vi.fn()
 
+const mockUser: AuthUserResponse = {
+  id: 'user-1',
+  username: 'Test User',
+  email: 'test@example.com',
+  role: Role.USER,
+  permissions: [],
+  avatar: null,
+}
+
 // Mock zustand
 vi.mock('../../stores/authStore', () => ({
   useAuthStore: vi.fn(selector => {
-    // Return different values based on selector
     const state = {
       isAuthenticated: false,
       token: null,
@@ -32,7 +42,6 @@ import { useAuthStore } from '../../stores/authStore'
 describe('AuthButton', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock window.location.reload
     Object.defineProperty(window, 'location', {
       writable: true,
       value: { reload: vi.fn() },
@@ -64,7 +73,7 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: true,
         token: 'user-token',
-        user: { id: 'user-1', username: 'Test User' },
+        user: mockUser,
         logout: mockLogout,
         setToken: mockSetToken,
         setUser: mockSetUser,
@@ -107,7 +116,7 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: true,
         token: 'user-token',
-        user: { id: 'user-1', username: 'Test User' },
+        user: mockUser,
         logout: mockLogout,
         setToken: mockSetToken,
         setUser: mockSetUser,

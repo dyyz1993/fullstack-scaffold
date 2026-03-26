@@ -9,6 +9,7 @@ export * from './api-endpoints'
 export * from './permission-route-mappings'
 export * from './permission-audit-logs'
 export * from './agents'
+export * from './workspaces'
 
 export * from './tenants'
 export * from './tenant-roles'

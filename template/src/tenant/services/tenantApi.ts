@@ -62,7 +62,7 @@ class TenantApiService {
     })
     const result = await response.json()
     if (result.success) {
-      return result.data as Tenant
+      return result.data
     }
     throw new Error(result.error || 'Failed to create tenant')
   }
@@ -73,7 +73,7 @@ class TenantApiService {
     })
     const result = await response.json()
     if (result.success) {
-      return result.data as Tenant
+      return result.data
     }
     throw new Error(result.error || 'Failed to get tenant')
   }

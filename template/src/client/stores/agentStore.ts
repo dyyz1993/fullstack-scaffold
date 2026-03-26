@@ -6,10 +6,12 @@ import type {
   AgentSubRound,
   MessageRound,
 } from '@shared/modules/agent'
+import type { Workspace } from '@shared/modules/workspace'
 import { apiClient } from '@client/services/apiClient'
 
 interface AgentState {
   agent: Agent | null
+  workspace: Workspace | null
   rounds: MessageRound[]
   loading: boolean
   loadingMore: boolean
@@ -61,6 +63,7 @@ interface AgentState {
 
 export const useAgentStore = create<AgentState>((set, get) => ({
   agent: null,
+  workspace: null,
   rounds: [],
   loading: false,
   loadingMore: false,
@@ -76,12 +79,32 @@ export const useAgentStore = create<AgentState>((set, get) => ({
 
     set({ loading: true, error: null })
     try {
-      const response = await apiClient.api.agents.$get()
-      const result = await response.json()
-      if (result.success) {
-        set({ agent: result.data, loading: false })
+      const [agentResponse, workspaceResponse] = await Promise.all([
+        apiClient.api.agents.$get(),
+        apiClient.api.workspace.$get(),
+      ])
+
+      const agentResult = await agentResponse.json()
+      const workspaceResult = await workspaceResponse.json()
+
+      if (agentResult.success && workspaceResult.success) {
+        set({
+          agent: agentResult.data,
+          workspace: workspaceResult.data,
+          loading: false,
+        })
       } else {
-        set({ error: result.error, loading: false })
+        const errors: string[] = []
+        if (!agentResult.success) {
+          errors.push('Failed to fetch agent')
+        }
+        if (!workspaceResult.success) {
+          errors.push('Failed to fetch workspace')
+        }
+        set({
+          error: errors.join(', '),
+          loading: false,
+        })
       }
     } catch (error) {
       set({

@@ -75,6 +75,8 @@ describe('Tenant Routes', () => {
       const pattern = /^[a-z0-9-]+$/
       expect(pattern.test('valid-slug')).toBe(true)
       expect(pattern.test('Invalid-Slug')).toBe(false)
+      expect(pattern.test('another-valid-slug')).toBe(true)
+      expect(pattern.test('test123')).toBe(true)
     })
 
     it('should validate plan enum values', () => {

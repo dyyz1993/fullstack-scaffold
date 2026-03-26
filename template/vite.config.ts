@@ -10,13 +10,16 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
+    watch: {
+      ignored: ['**/.sessions/**', '**/.workspaces/**'],
+    },
   },
   plugins: [
     devServer({
       entry: 'src/server/index.ts',
       exclude: [
         /^\/$/,
-        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|ops\.html|src)/,
+        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|ops\.html|src|\.sessions|\.workspaces)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
     }),

@@ -1,15 +1,32 @@
 import { eq, and } from 'drizzle-orm'
-import type { Agent, ChatMessage, CreateAgentInput, UpdateAgentInput } from '@shared/modules/agent'
+import fs from 'fs'
+import path from 'path'
+import type {
+  Agent,
+  ChatMessage,
+  CreateAgentInput,
+  UpdateAgentInput,
+  MessageRound,
+} from '@shared/modules/agent'
 import { getDb } from '../../db'
 import { agents, type AgentTable } from '../../db/schema'
 import { toISOString } from '../../utils/date'
 import { generateId } from '../../utils/id'
 import { parseSessionJsonl, extractTextContent, parseAssistantSubRounds } from './session-parser'
+import { Paths } from './paths'
 
-export async function getOrCreateAgent(userId: string, input?: CreateAgentInput): Promise<Agent> {
+export async function getOrCreateAgent(
+  workspaceId: string,
+  _userId: string,
+  input?: CreateAgentInput
+): Promise<Agent> {
   const db = await getDb()
 
-  const existingAgents = await db.select().from(agents).where(eq(agents.userId, userId)).limit(1)
+  const existingAgents = await db
+    .select()
+    .from(agents)
+    .where(eq(agents.workspaceId, workspaceId))
+    .limit(1)
 
   if (existingAgents.length > 0) {
     const row = existingAgents[0] as AgentTable
@@ -32,7 +49,7 @@ export async function getOrCreateAgent(userId: string, input?: CreateAgentInput)
     description: input?.description ?? null,
     model: input?.model ?? 'claude-3-5-sonnet-20241022',
     systemPrompt: input?.systemPrompt ?? null,
-    userId,
+    workspaceId,
     createdAt: now,
     updatedAt: now,
   }
@@ -50,12 +67,12 @@ export async function getOrCreateAgent(userId: string, input?: CreateAgentInput)
   }
 }
 
-export async function getAgent(agentId: string, userId: string): Promise<Agent | null> {
+export async function getAgent(agentId: string, workspaceId: string): Promise<Agent | null> {
   const db = await getDb()
   const rows = await db
     .select()
     .from(agents)
-    .where(and(eq(agents.id, agentId), eq(agents.userId, userId)))
+    .where(and(eq(agents.id, agentId), eq(agents.workspaceId, workspaceId)))
 
   const row = rows[0] as AgentTable | undefined
   if (!row) return null
@@ -73,12 +90,12 @@ export async function getAgent(agentId: string, userId: string): Promise<Agent |
 
 export async function updateAgent(
   agentId: string,
-  userId: string,
+  workspaceId: string,
   input: UpdateAgentInput
 ): Promise<Agent | null> {
   const db = await getDb()
 
-  const existing = await getAgent(agentId, userId)
+  const existing = await getAgent(agentId, workspaceId)
   if (!existing) return null
 
   const now = new Date()
@@ -103,62 +120,72 @@ export async function updateAgent(
 
 export async function getMessages(
   agentId: string,
-  userId: string,
+  _workspaceId: string,
+  workspacePath: string,
   limit?: number,
-  offset?: number
-): Promise<ChatMessage[]> {
+  _offset?: number
+): Promise<MessageRound[]> {
+  const userId = path.basename(workspacePath)
   const { messages: piMessages, toolCallMap } = parseSessionJsonl(userId)
 
   piMessages.sort((a, b) => b.timestamp - a.timestamp)
 
-  let pagedMessages = piMessages
-  if (limit !== undefined || offset !== undefined) {
-    const start = offset || 0
-    const end = limit !== undefined ? start + limit : undefined
-    pagedMessages = piMessages.slice(start, end)
+  const rounds: MessageRound[] = []
+  let currentRound: {
+    userMessage: ChatMessage
+    agentMessages: ChatMessage[]
+    timestamp: string
+  } | null = null
+
+  for (const msg of piMessages) {
+    if (msg.role === 'user') {
+      if (currentRound) {
+        rounds.push({
+          userMessage: currentRound.userMessage,
+          agentMessages: currentRound.agentMessages,
+          timestamp: currentRound.timestamp,
+        })
+      }
+      const userMsg: ChatMessage = {
+        id: `msg-${msg.timestamp}-${rounds.length}`,
+        agentId,
+        role: 'user',
+        content: extractTextContent(msg.content),
+        createdAt: new Date(msg.timestamp).toISOString(),
+      }
+      currentRound = { userMessage: userMsg, agentMessages: [], timestamp: userMsg.createdAt }
+    } else if (msg.role === 'assistant' && currentRound) {
+      const content = extractTextContent(msg.content)
+      const subRounds = parseAssistantSubRounds(msg, msg.timestamp, toolCallMap)
+      const agentMsg: ChatMessage = {
+        id: `msg-${msg.timestamp}-${rounds.length}-${currentRound.agentMessages.length}`,
+        agentId,
+        role: 'agent',
+        content,
+        subRounds: subRounds.length > 0 ? subRounds : undefined,
+        createdAt: new Date(msg.timestamp).toISOString(),
+      }
+      currentRound.agentMessages.push(agentMsg)
+    }
   }
 
-  return pagedMessages
-    .map((msg, index) => {
-      if (msg.role === 'user') {
-        return {
-          id: `msg-${msg.timestamp}-${index}`,
-          agentId,
-          role: 'user',
-          content: extractTextContent(msg.content),
-          createdAt: new Date(msg.timestamp).toISOString(),
-        }
-      } else if (msg.role === 'assistant') {
-        const content = extractTextContent(msg.content)
-        const subRounds = parseAssistantSubRounds(msg, msg.timestamp, toolCallMap)
-
-        return {
-          id: `msg-${msg.timestamp}-${index}`,
-          agentId,
-          role: 'agent',
-          content,
-          subRounds: subRounds.length > 0 ? subRounds : undefined,
-          createdAt: new Date(msg.timestamp).toISOString(),
-        }
-      } else {
-        return null
-      }
+  if (currentRound) {
+    rounds.push({
+      userMessage: currentRound.userMessage,
+      agentMessages: currentRound.agentMessages,
+      timestamp: currentRound.timestamp,
     })
-    .filter(Boolean) as ChatMessage[]
+  }
+
+  return limit ? rounds.slice(0, limit) : rounds
 }
 
-export async function clearMessages(_agentId: string, userId: string): Promise<void> {
-  const fs = await import('fs')
-  const path = await import('path')
-  const { fileURLToPath } = await import('url')
-
-  const currentFile = fileURLToPath(import.meta.url)
-  const currentDir = path.dirname(currentFile)
-  const projectRoot = path.join(currentDir, '..', '..', '..', '..')
-  const sessionDir = path.join(projectRoot, '.pi', 'sessions', userId)
+export async function clearMessages(_agentId: string, workspacePath: string): Promise<void> {
+  const userId = path.basename(workspacePath)
+  const sessionDir = Paths.sessions(userId)
 
   if (fs.existsSync(sessionDir)) {
-    const sessionFiles = fs.readdirSync(sessionDir).filter(f => f.endsWith('.jsonl'))
+    const sessionFiles = fs.readdirSync(sessionDir).filter((f: string) => f.endsWith('.jsonl'))
     for (const file of sessionFiles) {
       const filePath = path.join(sessionDir, file)
       try {
@@ -167,100 +194,5 @@ export async function clearMessages(_agentId: string, userId: string): Promise<v
         console.warn('[Agent] Failed to delete session file:', filePath, e)
       }
     }
-  }
-}
-
-interface MessageRound {
-  userMessage: ChatMessage
-  agentMessages: ChatMessage[]
-  timestamp: string
-}
-
-interface RoundsResponse {
-  rounds: MessageRound[]
-  hasMore: boolean
-  oldestTimestamp?: string
-  newestTimestamp?: string
-}
-
-export async function getRounds(
-  agentId: string,
-  userId: string,
-  options: { limit?: number; before?: string; after?: string }
-): Promise<RoundsResponse> {
-  const { messages: piMessages, toolCallMap } = parseSessionJsonl(userId)
-
-  const chatMessages = piMessages
-    .map((msg, index) => {
-      if (msg.role === 'user') {
-        return {
-          id: `msg-${msg.timestamp}-${index}`,
-          agentId,
-          role: 'user' as const,
-          content: extractTextContent(msg.content),
-          createdAt: new Date(msg.timestamp).toISOString(),
-        }
-      } else if (msg.role === 'assistant') {
-        const content = extractTextContent(msg.content)
-        const subRounds = parseAssistantSubRounds(msg, msg.timestamp, toolCallMap)
-
-        return {
-          id: `msg-${msg.timestamp}-${index}`,
-          agentId,
-          role: 'agent' as const,
-          content,
-          subRounds: subRounds.length > 0 ? subRounds : undefined,
-          createdAt: new Date(msg.timestamp).toISOString(),
-        }
-      }
-      return null
-    })
-    .filter(Boolean) as ChatMessage[]
-
-  chatMessages.sort((a, b) => {
-    const timeDiff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    if (timeDiff !== 0) return timeDiff
-    return a.id.localeCompare(b.id)
-  })
-
-  let filteredMessages = chatMessages
-  if (options.before) {
-    const beforeTime = new Date(options.before).getTime()
-    filteredMessages = filteredMessages.filter(
-      msg => new Date(msg.createdAt).getTime() < beforeTime
-    )
-  }
-  if (options.after) {
-    const afterTime = new Date(options.after).getTime()
-    filteredMessages = filteredMessages.filter(msg => new Date(msg.createdAt).getTime() > afterTime)
-  }
-
-  const rounds: MessageRound[] = []
-  let currentRound: MessageRound | null = null
-
-  for (const msg of filteredMessages) {
-    if (msg.role === 'user') {
-      currentRound = {
-        userMessage: msg,
-        agentMessages: [],
-        timestamp: msg.createdAt,
-      }
-      rounds.push(currentRound)
-    } else if (msg.role === 'agent' && currentRound) {
-      currentRound.agentMessages.push(msg)
-    }
-  }
-
-  const limit = options.limit || 10
-  const totalRounds = rounds.length
-  const reversedRounds = rounds.reverse()
-  const limitedRounds = reversedRounds.slice(0, limit)
-  const hasMore = totalRounds > limit
-
-  return {
-    rounds: limitedRounds,
-    hasMore,
-    oldestTimestamp: limitedRounds[limitedRounds.length - 1]?.timestamp,
-    newestTimestamp: limitedRounds[0]?.timestamp,
   }
 }

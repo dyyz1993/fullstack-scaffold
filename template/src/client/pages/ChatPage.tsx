@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { MessageSquare, Settings, Trash2 } from 'lucide-react'
 import { ChatArea } from '../components/ChatArea'
+import { WorkspacePanel } from '../components/WorkspacePanel'
 import { useAgentStore } from '../stores/agentStore'
 import { useChatSSEConnection } from '../hooks/useChatSSEConnection'
 
@@ -103,9 +104,11 @@ export const ChatPage: React.FC = () => {
       </div>
 
       <div className="flex-1 flex flex-col bg-gray-50">
-        <div className="flex-1 overflow-hidden">
-          <ChatArea />
-        </div>
+        <ChatArea />
+      </div>
+
+      <div className="w-80 bg-white border-l border-gray-200">
+        <WorkspacePanel />
       </div>
     </div>
   )

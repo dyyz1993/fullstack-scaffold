@@ -127,6 +127,7 @@ export const sensitiveConfig: SensitiveConfig = {
     /server\/config\.ts/,
     /server\/utils\/logger\.ts/,
     /ops\/services\/(README|TESTING)\.md/,
+    /file-service\.ts/,
   ],
 
   // 检查的文件扩展名

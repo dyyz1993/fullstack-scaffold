@@ -65,6 +65,7 @@ export interface PiToolEndEvent {
   type: 'pi-tool-end'
   messageId: string
   toolCallId: string
+  toolName?: string
   result: unknown
   error?: string
 }

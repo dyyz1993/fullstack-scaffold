@@ -104,3 +104,24 @@ export const TenantListSchema = z.object({ tenants: z.array(TenantSchema) })
 export const TenantRoleListSchema = z.object({ roles: z.array(TenantRoleSchema) })
 export const TenantMemberListSchema = z.object({ members: z.array(TenantMemberSchema) })
 export const SuccessSchema = z.object({ success: z.literal(true) })
+
+export type Tenant = z.infer<typeof TenantSchema>
+export type TenantRole = z.infer<typeof TenantRoleSchema>
+export type TenantMember = z.infer<typeof TenantMemberSchema>
+export type Invitation = z.infer<typeof InvitationSchema>
+export type CreateTenant = z.infer<typeof CreateTenantSchema>
+export type UpdateTenant = z.infer<typeof UpdateTenantSchema>
+export type CreateTenantRole = z.infer<typeof CreateTenantRoleSchema>
+export type UpdateTenantRole = z.infer<typeof UpdateTenantRoleSchema>
+export type InviteMember = z.infer<typeof InviteMemberSchema>
+export type UpdateMember = z.infer<typeof UpdateMemberSchema>
+export type TenantList = z.infer<typeof TenantListSchema>
+export type TenantRoleList = z.infer<typeof TenantRoleListSchema>
+export type TenantMemberList = z.infer<typeof TenantMemberListSchema>
+
+export type TenantInvitation = Invitation
+
+export type TenantWithStats = Tenant & {
+  memberCount?: number
+  usedStorage?: number
+}

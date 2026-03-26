@@ -99,6 +99,8 @@ describe('TenantService', () => {
       validSlugs.forEach(slug => {
         expect(slugPattern.test(slug)).toBe(true)
       })
+      expect(validSlugs.length).toBeGreaterThan(0)
+      expect(slugPattern.test('valid-slug')).toBe(true)
     })
 
     it('should reject invalid slugs', () => {

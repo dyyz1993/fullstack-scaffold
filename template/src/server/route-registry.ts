@@ -13,7 +13,7 @@ import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
 import { tenantRoutes } from './module-tenant/routes/tenant-routes'
-import { agentRoutes } from './module-agent/routes/agent-routes'
+import { agentRoutes, workspaceRoutes, fileRoutes as agentFileRoutes } from './module-agent'
 
 // 客户端路由 - 普通用户使用的 API
 export const clientApiRoutes = new OpenAPIHono()
@@ -22,6 +22,8 @@ export const clientApiRoutes = new OpenAPIHono()
   .route('/api', apiRoutes)
   .route('/api', tenantRoutes)
   .route('/api', agentRoutes)
+  .route('/api', workspaceRoutes)
+  .route('/api', agentFileRoutes)
 
 // 运营后台路由 - 普通用户使用的 API + 管理功能
 export const opsApiRoutes = new OpenAPIHono()
@@ -37,6 +39,8 @@ export const opsApiRoutes = new OpenAPIHono()
   .route('/api', opsRoutes)
   .route('/api', tenantRoutes)
   .route('/api', agentRoutes)
+  .route('/api', workspaceRoutes)
+  .route('/api', agentFileRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes

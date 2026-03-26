@@ -10,7 +10,7 @@ export const agents = sqliteTable('agents', {
   description: text('description'),
   model: text('model'),
   systemPrompt: text('system_prompt'),
-  userId: text('user_id').notNull(),
+  workspaceId: text('workspace_id').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
@@ -22,7 +22,7 @@ export const agents = sqliteTable('agents', {
 export const chatMessages = sqliteTable('chat_messages', {
   id: text('id').primaryKey(),
   agentId: text('agent_id').notNull(),
-  userId: text('user_id').notNull(),
+  workspaceId: text('workspace_id').notNull(),
   role: text('role', { enum: messageRoles }).notNull(),
   content: text('content').notNull(),
   thinking: text('thinking'),

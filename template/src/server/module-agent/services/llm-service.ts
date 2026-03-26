@@ -1,7 +1,5 @@
 import * as fs from 'fs'
-import * as path from 'path'
 import * as os from 'os'
-import { fileURLToPath } from 'url'
 import {
   createAgentSession,
   ModelRegistry,
@@ -15,12 +13,7 @@ import type { AssistantMessageEvent } from '@mariozechner/pi-ai'
 import type { LLMLCallbacks } from '../types'
 import { createSandboxedBashOperations, initializeSandbox } from './sandbox-bash'
 import { parseSessionJsonl, toLLMMessages } from './session-parser'
-
-function getProjectRoot(): string {
-  const currentFile = fileURLToPath(import.meta.url)
-  const currentDir = path.dirname(currentFile)
-  return path.join(currentDir, '..', '..', '..', '..')
-}
+import { Paths } from './paths'
 
 interface ModelsConfig {
   providers: Record<
@@ -58,9 +51,10 @@ function loadPiModelsConfig(): ModelsConfig | null {
 
 export function loadSessionHistory(
   userId: string,
-  limit?: number
+  limit?: number,
+  workspacePath?: string
 ): Array<{ role: string; content: string }> {
-  const { messages } = parseSessionJsonl(userId)
+  const { messages } = parseSessionJsonl(userId, workspacePath)
   const llmMessages = toLLMMessages(messages)
   return limit ? llmMessages.slice(-limit) : llmMessages
 }
@@ -74,7 +68,10 @@ export interface LLMPIService {
   session: AgentSession
 }
 
-export async function createPILLMService(userId: string): Promise<LLMPIService> {
+export async function createPILLMService(
+  userId: string,
+  workspacePath?: string
+): Promise<LLMPIService> {
   const piConfig = loadPiModelsConfig()
   if (!piConfig) {
     throw new Error('PI config not found')
@@ -93,9 +90,8 @@ export async function createPILLMService(userId: string): Promise<LLMPIService> 
     throw new Error(`Model not found: ${config.provider}/${config.model}`)
   }
 
-  const projectRoot = getProjectRoot()
-  const userWorkspace = path.join(projectRoot, '.pi', 'work', userId)
-  const sessionDir = path.join(projectRoot, '.pi', 'sessions', userId)
+  const userWorkspace = workspacePath || Paths.workspace(userId)
+  const sessionDir = Paths.sessions(userId)
 
   const sessionManager = SessionManager.create(userWorkspace, sessionDir)
 
@@ -113,6 +109,7 @@ export async function createPILLMService(userId: string): Promise<LLMPIService> 
   const bashTool = createBashTool(userWorkspace, { operations: bashOperations })
 
   const { session } = await createAgentSession({
+    cwd: userWorkspace,
     model,
     thinkingLevel: 'medium',
     authStorage,
@@ -186,7 +183,10 @@ export async function createPILLMService(userId: string): Promise<LLMPIService> 
   }
 }
 
-export async function createLLMService(userId: string): Promise<LLMPIService | null> {
+export async function createLLMService(
+  userId: string,
+  workspacePath?: string
+): Promise<LLMPIService | null> {
   if (process.env.MOCK_LLM === 'true') {
     return null
   }
@@ -200,7 +200,7 @@ export async function createLLMService(userId: string): Promise<LLMPIService | n
     return null
   }
 
-  return createPILLMService(userId)
+  return createPILLMService(userId, workspacePath)
 }
 
 export { loadPiModelsConfig }

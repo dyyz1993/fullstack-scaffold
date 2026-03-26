@@ -1,6 +1,5 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { fileURLToPath } from 'url'
 import type {
   PiMessage,
   PiAssistantMessage,
@@ -11,28 +10,17 @@ import type {
   PiThinkingContent,
 } from '@shared/modules/agent/pi-types'
 import type { AgentSubRound } from '@shared/modules/agent'
+import { Paths } from './paths'
 
-interface ToolCallWithResult extends PiToolCall {
-  result?: unknown
-  error?: string
-}
-
-export type ToolCallMap = Map<string, ToolCallWithResult>
-
-function getProjectRoot(): string {
-  const currentFile = fileURLToPath(import.meta.url)
-  const currentDir = path.dirname(currentFile)
-  return path.join(currentDir, '..', '..', '..', '..')
-}
+import type { ToolCallWithResult, ToolCallMap } from './types'
 
 export interface ParseSessionResult {
   messages: PiMessage[]
   toolCallMap: ToolCallMap
 }
 
-export function parseSessionJsonl(userId: string): ParseSessionResult {
-  const projectRoot = getProjectRoot()
-  const sessionDir = path.join(projectRoot, '.pi', 'sessions', userId)
+export function parseSessionJsonl(userId: string, _workspacePath?: string): ParseSessionResult {
+  const sessionDir = Paths.sessions(userId)
 
   if (!fs.existsSync(sessionDir)) {
     console.warn('[SessionParser] Session dir not found:', sessionDir)

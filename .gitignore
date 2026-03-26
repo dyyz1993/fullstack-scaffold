@@ -9,3 +9,5 @@ lib/**.trae/
 /template/.trae/documents/
 my-biomimic-app
 .wrangler/
+.sessions/
+.workspaces/

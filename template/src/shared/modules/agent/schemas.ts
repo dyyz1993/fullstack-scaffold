@@ -98,6 +98,7 @@ export const PiToolStartEventSchema = z.object({
 export const PiToolEndEventSchema = z.object({
   messageId: z.string(),
   toolCallId: z.string(),
+  toolName: z.string().nullish(),
   result: z.unknown().nullable(),
   error: z.string().nullish(),
 })

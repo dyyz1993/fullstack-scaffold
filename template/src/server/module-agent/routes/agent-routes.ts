@@ -1,6 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as agentService from '../services/agent-service'
+import * as workspaceService from '../services/workspace-service'
 import { sseManager } from '../services/sse-manager'
 import { processChatMessage, abortChat } from '../services/chat-service'
 import {
@@ -171,7 +172,8 @@ export const agentRoutes = new OpenAPIHono()
       user = defaultUser
     }
 
-    const agent = await agentService.getOrCreateAgent(user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getOrCreateAgent(workspace.id, user.id)
 
     return c.json(success(agent))
   })
@@ -185,7 +187,8 @@ export const agentRoutes = new OpenAPIHono()
     const { id } = c.req.valid('param')
     const input = c.req.valid('json')
 
-    const agent = await agentService.updateAgent(id, user.id, input)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.updateAgent(id, workspace.id, input)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }
@@ -202,12 +205,13 @@ export const agentRoutes = new OpenAPIHono()
     const { id } = c.req.valid('param')
     const { limit, offset } = c.req.valid('query')
 
-    const agent = await agentService.getAgent(id, user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getAgent(id, workspace.id)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }
 
-    const messages = await agentService.getMessages(id, user.id, limit, offset)
+    const messages = await agentService.getMessages(id, workspace.id, workspace.path, limit, offset)
 
     return c.json(success(messages))
   })
@@ -219,16 +223,24 @@ export const agentRoutes = new OpenAPIHono()
     }
 
     const { id } = c.req.valid('param')
-    const { limit, before, after } = c.req.valid('query')
+    const { limit } = c.req.valid('query')
 
-    const agent = await agentService.getAgent(id, user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getAgent(id, workspace.id)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }
 
-    const rounds = await agentService.getRounds(id, user.id, { limit, before, after })
+    const rounds = await agentService.getMessages(id, workspace.id, workspace.path, limit)
 
-    return c.json(success(rounds))
+    return c.json(
+      success({
+        rounds,
+        hasMore: false,
+        oldestTimestamp: rounds[rounds.length - 1]?.timestamp,
+        newestTimestamp: rounds[0]?.timestamp,
+      })
+    )
   })
   .openapi(sendMessageRoute, async c => {
     let user = getAuthUser(c)
@@ -240,7 +252,8 @@ export const agentRoutes = new OpenAPIHono()
     const { id } = c.req.valid('param')
     const { content } = c.req.valid('json')
 
-    const agent = await agentService.getAgent(id, user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getAgent(id, workspace.id)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }
@@ -258,12 +271,13 @@ export const agentRoutes = new OpenAPIHono()
 
     const { id } = c.req.valid('param')
 
-    const agent = await agentService.getAgent(id, user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getAgent(id, workspace.id)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }
 
-    await agentService.clearMessages(id, user.id)
+    await agentService.clearMessages(id, workspace.path)
 
     return c.json(success({ success: true }))
   })
@@ -276,7 +290,8 @@ export const agentRoutes = new OpenAPIHono()
 
     const { id } = c.req.valid('param')
 
-    const agent = await agentService.getAgent(id, user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getAgent(id, workspace.id)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }
@@ -337,7 +352,8 @@ export const agentRoutes = new OpenAPIHono()
 
     const { id } = c.req.valid('param')
 
-    const agent = await agentService.getAgent(id, user.id)
+    const workspace = await workspaceService.getOrCreateWorkspace(user.id)
+    const agent = await agentService.getAgent(id, workspace.id)
     if (!agent) {
       throw new NotFoundError('Agent not found')
     }

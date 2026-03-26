@@ -12,6 +12,7 @@ import type {
   PiErrorEvent,
 } from '@shared/modules/agent'
 import { useAgentStore } from '@client/stores/agentStore'
+import { useWorkspaceStore } from '@client/stores/workspaceStore'
 
 export function useChatSSEConnection() {
   const agent = useAgentStore(state => state.agent)
@@ -27,6 +28,7 @@ export function useChatSSEConnection() {
   const setSseStatus = useAgentStore(state => state.setSseStatus)
   const setIsRunning = useAgentStore(state => state.setIsRunning)
   const addSubRound = useAgentStore(state => state.addSubRound)
+  const fetchFiles = useWorkspaceStore(state => state.fetchFiles)
 
   const { status, connect, disconnect, client } = useSSE<ChatSSEProtocol, typeof agent>(
     async currentAgent => {
@@ -71,6 +73,13 @@ export function useChatSSEConnection() {
         data.error || undefined
       )
       addSubRound(data.messageId)
+
+      if (
+        data.toolName &&
+        ['create_file', 'write_file', 'delete_file', 'create_directory'].includes(data.toolName)
+      ) {
+        fetchFiles()
+      }
     }
 
     const handleAgentStart = (data: PiAgentStartEvent) => {
@@ -121,6 +130,7 @@ export function useChatSSEConnection() {
     setSseStatus,
     setIsRunning,
     addSubRound,
+    fetchFiles,
   ])
 
   return {

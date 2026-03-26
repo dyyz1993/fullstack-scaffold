@@ -2,6 +2,7 @@ import { createLLMService, loadSessionHistory, type LLMPIService } from './llm-s
 import { createMockLLMService, isMockEnabled } from './mock-service'
 import type { LLMService } from '../types'
 import { sseManager } from './sse-manager'
+import { getOrCreateWorkspace } from './workspace-service'
 
 interface RunningChat {
   agentId: string
@@ -9,19 +10,62 @@ interface RunningChat {
   abort: () => Promise<void>
 }
 
+interface CachedLLMService {
+  service: LLMPIService
+  workspacePath: string
+  lastUsed: number
+}
+
 class ChatSessionManager {
   private runningChats = new Map<string, RunningChat>()
+  private llmCache = new Map<string, CachedLLMService>()
+  private readonly CACHE_TTL = 30 * 60 * 1000 // 30 minutes
 
-  private async getLLMService(userId: string): Promise<LLMService | null> {
+  private async getLLMService(
+    userId: string,
+    workspacePath: string
+  ): Promise<LLMService | LLMPIService | null> {
     if (isMockEnabled()) {
       return createMockLLMService()
     }
 
-    if (process.env.USE_PI_CONFIG === 'true') {
-      return await createLLMService(userId)
+    if (process.env.USE_PI_CONFIG !== 'true') {
+      return null
     }
 
-    return null
+    const cached = this.llmCache.get(userId)
+    const now = Date.now()
+
+    if (
+      cached &&
+      cached.workspacePath === workspacePath &&
+      now - cached.lastUsed < this.CACHE_TTL
+    ) {
+      cached.lastUsed = now
+      return cached.service
+    }
+
+    const service = await createLLMService(userId, workspacePath)
+    if (service) {
+      this.llmCache.set(userId, {
+        service,
+        workspacePath,
+        lastUsed: now,
+      })
+    }
+
+    return service
+  }
+
+  async reloadResources(userId: string): Promise<void> {
+    const cached = this.llmCache.get(userId)
+    if (cached && 'session' in cached.service) {
+      const session = cached.service.session
+      if (session.resourceLoader) {
+        await session.resourceLoader.reload()
+        console.warn('[ChatSessionManager] Reloaded resources for user:', userId)
+      }
+    }
   }
 
   async processChatMessage(
@@ -44,13 +88,14 @@ class ChatSessionManager {
     let llm: LLMService | LLMPIService | null = null
 
     try {
-      llm = await this.getLLMService(userId)
+      const workspace = await getOrCreateWorkspace(userId)
+      llm = await this.getLLMService(userId, workspace.path)
 
       if (!llm) {
         throw new Error('No LLM service available')
       }
 
-      const historyMessages = loadSessionHistory(userId, 10)
+      const historyMessages = loadSessionHistory(userId, 10, workspace.path)
       const conversationMessages = [...historyMessages, { role: 'user' as const, content }]
 
       const runningChat: RunningChat = {

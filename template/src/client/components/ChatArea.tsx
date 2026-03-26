@@ -5,6 +5,8 @@ import { useChat } from '../hooks/useChat'
 import { MessageList } from './MessageList'
 import { ChatInput } from './ChatInput'
 import { PendingMessages } from './PendingMessages'
+import { FilePreview } from './FilePreview'
+import { useWorkspaceStore } from '../stores/workspaceStore'
 
 export const ChatArea: React.FC = () => {
   const rounds = useAgentStore(state => state.rounds)
@@ -15,6 +17,8 @@ export const ChatArea: React.FC = () => {
   const pendingMessages = useAgentStore(state => state.pendingMessages)
   const removePendingMessage = useAgentStore(state => state.removePendingMessage)
   const sendPendingMessages = useAgentStore(state => state.sendPendingMessages)
+  const selectedFile = useWorkspaceStore(state => state.selectedFile)
+  const setSelectedFile = useWorkspaceStore(state => state.setSelectedFile)
 
   const { containerRef, handleScroll } = useScrollLoading({
     hasMore: hasMoreRounds,
@@ -31,16 +35,26 @@ export const ChatArea: React.FC = () => {
     }
   }, [isRunning, pendingMessages.length, sendPendingMessages])
 
+  const handleClosePreview = () => {
+    setSelectedFile(null)
+  }
+
   return (
     <div className="flex flex-col h-full" data-testid="chat-area">
-      <MessageList
-        ref={containerRef}
-        rounds={rounds}
-        isRunning={isRunning}
-        loadingMore={loadingMore}
-        hasMoreRounds={hasMoreRounds}
-        onScroll={handleScroll}
-      />
+      {selectedFile ? (
+        <div className="flex-1 overflow-hidden">
+          <FilePreview file={selectedFile} onClose={handleClosePreview} />
+        </div>
+      ) : (
+        <MessageList
+          ref={containerRef}
+          rounds={rounds}
+          isRunning={isRunning}
+          loadingMore={loadingMore}
+          hasMoreRounds={hasMoreRounds}
+          onScroll={handleScroll}
+        />
+      )}
 
       <PendingMessages messages={pendingMessages} onRemove={removePendingMessage} />
 

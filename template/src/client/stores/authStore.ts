@@ -1,20 +1,15 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-interface AuthUser {
-  id: string
-  username: string
-  email?: string
-}
+import type { AuthUserResponse } from '@shared/modules/ops/schemas'
 
 interface AuthState {
   token: string | null
-  user: AuthUser | null
+  user: AuthUserResponse | null
   isAuthenticated: boolean
 
   setToken: (token: string) => void
-  setUser: (user: AuthUser) => void
-  login: (token: string, user: AuthUser) => void
+  setUser: (user: AuthUserResponse) => void
+  login: (token: string, user: AuthUserResponse) => void
   logout: () => void
 }
 
@@ -31,9 +26,9 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         }),
 
-      setUser: (user: AuthUser) => set({ user }),
+      setUser: (user: AuthUserResponse) => set({ user }),
 
-      login: (token: string, user: AuthUser) =>
+      login: (token: string, user: AuthUserResponse) =>
         set({
           token,
           user,
