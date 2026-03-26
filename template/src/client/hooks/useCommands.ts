@@ -40,6 +40,15 @@ export function useCommands({ commands, onExecute }: UseCommandsOptions) {
     }
   }, [])
 
+  const executeCommand = useCallback(
+    (command: Command) => {
+      onExecute(command, input)
+      setInput('')
+      setIsOpen(false)
+    },
+    [onExecute, input]
+  )
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!isOpen || matches.length === 0) return
@@ -56,9 +65,7 @@ export function useCommands({ commands, onExecute }: UseCommandsOptions) {
         case 'Enter':
           e.preventDefault()
           if (matches[selectedIndex]) {
-            onExecute(matches[selectedIndex].command, input)
-            setInput('')
-            setIsOpen(false)
+            executeCommand(matches[selectedIndex].command)
           }
           break
         case 'Escape':
@@ -68,16 +75,7 @@ export function useCommands({ commands, onExecute }: UseCommandsOptions) {
           break
       }
     },
-    [isOpen, matches, selectedIndex, onExecute, input]
-  )
-
-  const executeCommand = useCallback(
-    (command: Command) => {
-      onExecute(command, input)
-      setInput('')
-      setIsOpen(false)
-    },
-    [onExecute, input]
+    [isOpen, matches, selectedIndex, executeCommand]
   )
 
   const close = useCallback(() => {

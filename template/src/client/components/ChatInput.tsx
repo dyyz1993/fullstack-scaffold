@@ -64,7 +64,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     close,
   } = useCommands({
     commands,
-    onExecute: cmd => executeCommand(cmd),
+    onExecute: (cmd, _input) => executeCommand(cmd),
   })
 
   const [localInput, setLocalInput] = useState(value)
