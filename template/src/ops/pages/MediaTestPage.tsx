@@ -176,7 +176,7 @@ export const MediaTestPage: React.FC = () => {
         throw new Error('No response body')
       }
 
-      const chunks: Uint8Array[] = []
+      const chunks: BlobPart[] = []
       let receivedLength = 0
 
       while (true) {

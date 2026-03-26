@@ -41,11 +41,7 @@ export const ChatArea: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full" data-testid="chat-area">
-      {selectedFile ? (
-        <div className="flex-1 overflow-hidden">
-          <FilePreview file={selectedFile} onClose={handleClosePreview} />
-        </div>
-      ) : (
+      <div className={`flex-1 overflow-y-auto ${selectedFile ? 'hidden' : ''}`}>
         <MessageList
           ref={containerRef}
           rounds={rounds}
@@ -54,7 +50,11 @@ export const ChatArea: React.FC = () => {
           hasMoreRounds={hasMoreRounds}
           onScroll={handleScroll}
         />
-      )}
+      </div>
+
+      <div className={`flex-1 overflow-y-auto ${selectedFile ? '' : 'hidden'}`}>
+        {selectedFile && <FilePreview file={selectedFile} onClose={handleClosePreview} />}
+      </div>
 
       <PendingMessages messages={pendingMessages} onRemove={removePendingMessage} />
 

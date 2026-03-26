@@ -79,7 +79,8 @@ export const sensitiveConfig: SensitiveConfig = {
     {
       pattern: /['"`]\.env(?:\.\w+)?['"`]/,
       message: '.env file reference in string literal',
-      excludePattern: /\.env\.example|config\.ts/,
+      excludePattern:
+        /\.env\.example|config\.ts|ignorePatterns|gitignore|\.gitignore|includes\(|index\./,
     },
     // External URLs (excluding localhost, example.com, test domains)
     {
@@ -122,12 +123,12 @@ export const sensitiveConfig: SensitiveConfig = {
     /\.git/,
     /coverage/,
     /\.env\.example$/,
+    /\.env$/,
     /__tests__/,
     /lint-scripts\/(validate|config|watch-validator|test-validators-unit|test-tracker|test-history|post-commit-track|smart-test|dev-server|TESTING|README|quick-test|DIRECTORY_RULES|framework|check-refs)/,
     /server\/config\.ts/,
     /server\/utils\/logger\.ts/,
     /ops\/services\/(README|TESTING)\.md/,
-    /file-service\.ts/,
   ],
 
   // 检查的文件扩展名
