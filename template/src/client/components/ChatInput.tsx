@@ -32,25 +32,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       id: 'clear',
       name: 'clear',
       description: 'Clear all messages',
-      action: () =>
-        onCommand?.({
-          id: 'clear',
-          name: 'clear',
-          description: 'Clear all messages',
-          action: () => {},
-        }),
     },
     {
       id: 'reset',
       name: 'reset',
       description: 'Reset conversation',
-      action: () =>
-        onCommand?.({
-          id: 'reset',
-          name: 'reset',
-          description: 'Reset conversation',
-          action: () => {},
-        }),
     },
   ]
 
@@ -60,11 +46,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     matches,
     selectedIndex,
     handleKeyDown: handleCommandKeyDown,
-    executeCommand,
     close,
   } = useCommands({
     commands,
-    onExecute: (cmd, _input) => executeCommand(cmd),
+    onExecute: (cmd, _input) => onCommand?.(cmd),
   })
 
   const [localInput, setLocalInput] = useState(value)

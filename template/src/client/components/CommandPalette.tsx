@@ -6,7 +6,7 @@ export interface Command {
   name: string
   description: string
   icon?: ReactNode
-  action: (input: string) => void
+  action?: (input: string) => void
 }
 
 export interface CommandMatch {
