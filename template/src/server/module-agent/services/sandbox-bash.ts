@@ -9,14 +9,22 @@ export interface SandboxOptions {
 }
 
 export async function initializeSandbox(options: SandboxOptions): Promise<void> {
-  const { workspacePath, allowNetwork = false } = options
+  const { workspacePath, allowNetwork = true } = options
 
   const config: SandboxRuntimeConfig = {
     filesystem: {
       allowRead: [workspacePath],
-      denyRead: [],
-      allowWrite: [workspacePath],
-      denyWrite: [],
+      denyRead: ['~/.ssh', '~/.aws', '~/.git-credentials', '/etc/passwd', '/etc/shadow'],
+      allowWrite: [workspacePath, '/tmp'],
+      denyWrite: [
+        '.env',
+        '.env.local',
+        '.env.production',
+        '.git/config',
+        '~/.bashrc',
+        '~/.zshrc',
+        '~/.profile',
+      ],
     },
     network: allowNetwork
       ? {

@@ -80,7 +80,7 @@ export const sensitiveConfig: SensitiveConfig = {
       pattern: /['"`]\.env(?:\.\w+)?['"`]/,
       message: '.env file reference in string literal',
       excludePattern:
-        /\.env\.example|config\.ts|ignorePatterns|gitignore|\.gitignore|includes\(|index\./,
+        /\.env\.example|config\.ts|ignorePatterns|gitignore|\.gitignore|includes\(|index\.|sandbox-bash\.ts/,
     },
     // External URLs (excluding localhost, example.com, test domains)
     {
@@ -129,6 +129,7 @@ export const sensitiveConfig: SensitiveConfig = {
     /server\/config\.ts/,
     /server\/utils\/logger\.ts/,
     /ops\/services\/(README|TESTING)\.md/,
+    /sandbox-bash\.ts/,
   ],
 
   // 检查的文件扩展名
