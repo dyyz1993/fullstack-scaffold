@@ -13,6 +13,9 @@ npm run check:refs
 echo "Checking framework modifications..."
 npm run framework:check
 
+echo "Checking TDD red-green-refactor compliance..."
+npm run validate:tdd
+
 npx lint-staged
 
 echo "Running smart tests for changed files..."

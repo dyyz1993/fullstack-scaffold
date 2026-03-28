@@ -1,5 +1,13 @@
 /**
- * @framework-baseline 3d7fff2afc62da61
+ * @framework-baseline 8e7f3a2c1d5b6e9f
+ */
+
+/**
+ * 自定义 ESLint 规则：优先使用共享类型
+ *
+ * 当 shared/schemas 中存在相同类型定义时，禁止在本地重复定义
+ *
+ * 📚 文档: .claude/rules/40-shared-types.md
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs'
@@ -205,17 +213,20 @@ export const preferSharedTypes = {
   meta: {
     type: 'suggestion',
     docs: {
-      description: '检测与 @shared/schemas 中结构相似的类型定义，建议直接导入或使用 Pick/Omit 派生',
+      description: 'Prefer importing types from @shared/schemas over defining them locally',
       recommended: true,
+      url: '.claude/rules/40-shared-types.md',
     },
     messages: {
       similarTypeDetected:
-        '类型 "{{typeName}}" 的结构 (字段: {{fields}}) 与 @shared/schemas 中的 "{{sharedTypeName}}" (字段: {{sharedFields}}) 相似度 {{similarity}}%。\n' +
-        '建议使用 Pick/Omit 派生类型:\n' +
+        '❌ 类型 "{{typeName}}" 的结构 (字段: {{fields}}) 与 @shared/schemas 中的 "{{sharedTypeName}}" (字段: {{sharedFields}}) 相似度 {{similarity}}%。\n' +
+        '📚 Documentation: .claude/rules/40-shared-types.md\n\n' +
+        '💡 建议使用 Pick/Omit 派生类型:\n' +
         '{{suggestions}}',
       duplicateTypeDetected:
-        '类型 "{{typeName}}" 已存在于 @shared/schemas 中。\n' +
-        '请直接导入: `import type { {{typeName}} } from "@shared/schemas"`',
+        '❌ 类型 "{{typeName}}" 已存在于 @shared/schemas 中。\n' +
+        '📚 Documentation: .claude/rules/40-shared-types.md\n\n' +
+        '💡 请直接导入: import type { {{typeName}} } from "@shared/schemas"',
     },
     schema: [
       {

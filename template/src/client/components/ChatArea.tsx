@@ -22,11 +22,10 @@ export const ChatArea: React.FC = () => {
   const selectedFile = useWorkspaceStore(state => state.selectedFile)
   const setSelectedFile = useWorkspaceStore(state => state.setSelectedFile)
 
-  const { containerRef, handleScroll } = useScrollLoading({
+  const { handleScroll } = useScrollLoading({
     hasMore: hasMoreRounds,
     loadingMore,
     onLoadMore: useAgentStore(state => state.loadMoreRounds),
-    rounds,
   })
 
   const { input, setInput, handleSubmit, handleKeyDown, handleButtonClick, buttonState } = useChat()
@@ -54,16 +53,14 @@ export const ChatArea: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full" data-testid="chat-area">
-      <div className={`flex-1 overflow-y-auto ${selectedFile ? 'hidden' : ''}`}>
-        <MessageList
-          ref={containerRef}
-          rounds={rounds}
-          isRunning={isRunning}
-          loadingMore={loadingMore}
-          hasMoreRounds={hasMoreRounds}
-          onScroll={handleScroll}
-        />
-      </div>
+      <MessageList
+        rounds={rounds}
+        isRunning={isRunning}
+        loadingMore={loadingMore}
+        hasMoreRounds={hasMoreRounds}
+        onScroll={handleScroll}
+        className={selectedFile ? 'hidden' : ''}
+      />
 
       <div className={`flex-1 overflow-y-auto ${selectedFile ? '' : 'hidden'}`}>
         {selectedFile && <FilePreview file={selectedFile} onClose={handleClosePreview} />}

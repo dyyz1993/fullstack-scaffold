@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useEffect, useRef, useImperativeHandle, useLayoutEffect } from 'react'
 import { Loader2, MessageSquare } from 'lucide-react'
 import { RoundCard } from './RoundCard'
 import { EmptyState } from './EmptyState'
@@ -9,13 +9,52 @@ interface MessageListProps {
   isRunning: boolean
   loadingMore: boolean
   hasMoreRounds: boolean
-  onScroll: () => void
+  onScroll: (e: React.UIEvent<HTMLDivElement>) => void
+  className?: string
+}
+
+const scrollToBottom = (element: HTMLDivElement | null) => {
+  if (element) {
+    element.scrollTop = element.scrollHeight
+  }
 }
 
 export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
-  ({ rounds, isRunning, loadingMore, hasMoreRounds, onScroll }, ref) => {
+  ({ rounds, isRunning, loadingMore, hasMoreRounds, onScroll, className }, ref) => {
+    const internalRef = useRef<HTMLDivElement>(null)
+    const prevRoundsLengthRef = useRef(0)
+
+    useImperativeHandle(ref, () => internalRef.current!)
+
+    useLayoutEffect(() => {
+      const container = internalRef.current
+      if (!container || rounds.length === 0) return
+
+      if (rounds.length !== prevRoundsLengthRef.current) {
+        scrollToBottom(container)
+      }
+      prevRoundsLengthRef.current = rounds.length
+    }, [rounds])
+
+    useEffect(() => {
+      if (!isRunning) return
+
+      const container = internalRef.current
+      if (!container) return
+
+      const intervalId = setInterval(() => {
+        scrollToBottom(internalRef.current)
+      }, 50)
+
+      return () => clearInterval(intervalId)
+    }, [isRunning])
+
     return (
-      <div ref={ref} className="flex-1 overflow-y-auto p-6 space-y-4" onScroll={onScroll}>
+      <div
+        ref={internalRef}
+        className={`flex-1 overflow-y-auto p-6 space-y-4 ${className || ''}`}
+        onScroll={onScroll}
+      >
         {rounds.length === 0 && !isRunning ? (
           <EmptyState
             icon={MessageSquare}

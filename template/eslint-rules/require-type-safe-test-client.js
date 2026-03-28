@@ -7,6 +7,8 @@
  *
  * 必须使用 createTestClient() 返回的客户端进行 API 测试
  * 禁止使用 fetch、app.fetch、app.request 等非类型安全方式
+ *
+ * 📚 文档: .claude/rules/60-testing-standards.md#type-safe-client
  */
 
 export const requireTypeSafeTestClient = {
@@ -15,24 +17,33 @@ export const requireTypeSafeTestClient = {
     docs: {
       description: 'Require type-safe test client for route/RPC tests to preserve type inference',
       recommended: true,
+      url: '.claude/rules/60-testing-standards.md#type-safe-client',
     },
     messages: {
       forbiddenFetch:
-        'Direct fetch() is not allowed in route tests. Use createTestClient() for type-safe API testing.\n' +
-        'Example: const client = createTestClient()\n' +
-        '         const res = await client.api.todos.$get()',
+        '❌ Direct fetch() is not allowed in route tests.\n' +
+        '📚 Documentation: .claude/rules/60-testing-standards.md#type-safe-client\n\n' +
+        '💡 Use createTestClient() for type-safe API testing:\n' +
+        '   const client = createTestClient()\n' +
+        '   const res = await client.api.todos.$get()',
       forbiddenAppFetch:
-        'Direct app.fetch() is not allowed in route tests. Use createTestClient() for type-safe API testing.\n' +
-        'Example: const client = createTestClient()\n' +
-        '         const res = await client.api.todos.$get()',
+        '❌ Direct app.fetch() is not allowed in route tests.\n' +
+        '📚 Documentation: .claude/rules/60-testing-standards.md#type-safe-client\n\n' +
+        '💡 Use createTestClient() for type-safe API testing:\n' +
+        '   const client = createTestClient()\n' +
+        '   const res = await client.api.todos.$get()',
       forbiddenAppRequest:
-        'Direct app.request() is not allowed in route tests. Use createTestClient() for type-safe API testing.\n' +
-        'Example: const client = createTestClient()\n' +
-        '         const res = await client.api.todos.$get()',
+        '❌ Direct app.request() is not allowed in route tests.\n' +
+        '📚 Documentation: .claude/rules/60-testing-standards.md#type-safe-client\n\n' +
+        '💡 Use createTestClient() for type-safe API testing:\n' +
+        '   const client = createTestClient()\n' +
+        '   const res = await client.api.todos.$get()',
       forbiddenHonoClient:
-        'Direct hono/client hc() is not allowed in route tests. Use createTestClient() from test-utils.\n' +
-        'Example: const client = createTestClient()\n' +
-        '         const res = await client.api.todos.$get()',
+        '❌ Direct hono/client hc() is not allowed in route tests.\n' +
+        '📚 Documentation: .claude/rules/60-testing-standards.md#type-safe-client\n\n' +
+        '💡 Use createTestClient() from test-utils:\n' +
+        '   const client = createTestClient()\n' +
+        '   const res = await client.api.todos.$get()',
     },
     schema: [],
   },

@@ -9,6 +9,8 @@
  * 1. 业务层代码不能直接修改框架层代码
  * 2. 业务层代码导入框架层代码时需要添加注释说明原因
  * 3. 框架层内部文件不能被业务层直接导入
+ *
+ * 📚 文档: .claude/rules/20-server-api.md#layer-boundary
  */
 
 export const layerBoundary = {
@@ -17,20 +19,26 @@ export const layerBoundary = {
     docs: {
       description: 'Enforce boundary between framework layer and business layer',
       recommended: true,
+      url: '.claude/rules/20-server-api.md#layer-boundary',
     },
     messages: {
       modifyFrameworkCode:
-        '禁止在业务层代码中修改框架层代码。框架层代码位于 shared/core/ 和 server/core/，是通用基础设施，不应被业务逻辑修改。\n' +
-        '如果需要扩展功能，请：\n' +
-        '1. 在业务层创建新的实现\n' +
-        '2. 或者在框架层添加扩展点（需要框架维护者审批）',
+        '❌ 禁止在业务层代码中修改框架层代码。\n' +
+        '📚 Documentation: .claude/rules/20-server-api.md#layer-boundary\n\n' +
+        '框架层代码位于 shared/core/ 和 server/core/，是通用基础设施，不应被业务逻辑修改。\n\n' +
+        '💡 如果需要扩展功能，请：\n' +
+        '   1. 在业务层创建新的实现\n' +
+        '   2. 或者在框架层添加扩展点（需要框架维护者审批）',
       importFrameworkInternal:
-        '禁止直接导入框架层内部文件。请使用公开的导出入口：\n' +
-        '- @shared/core (框架层导出)\n' +
-        '- @shared/schemas (统一导出)',
+        '❌ 禁止直接导入框架层内部文件。\n' +
+        '📚 Documentation: .claude/rules/20-server-api.md#layer-boundary\n\n' +
+        '💡 请使用公开的导出入口：\n' +
+        '   - @shared/core (框架层导出)\n' +
+        '   - @shared/schemas (统一导出)',
       missingFrameworkImportComment:
-        '业务层导入框架层代码时，请添加注释说明原因。\n' +
-        '示例：// @framework-import 用于 WebSocket 连接管理',
+        '❌ 业务层导入框架层代码时，请添加注释说明原因。\n' +
+        '📚 Documentation: .claude/rules/20-server-api.md#layer-boundary\n\n' +
+        '💡 示例：// @framework-import 用于 WebSocket 连接管理',
     },
     schema: [
       {

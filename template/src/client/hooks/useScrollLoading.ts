@@ -1,84 +1,40 @@
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 
 const LOAD_MORE_THRESHOLD = 100
-const AUTO_SCROLL_THRESHOLD = 100
 
 interface UseScrollLoadingOptions {
   hasMore: boolean
   loadingMore: boolean
   onLoadMore: () => Promise<void>
-  rounds: unknown[]
 }
 
 interface UseScrollLoadingReturn {
-  containerRef: React.RefObject<HTMLDivElement>
-  handleScroll: () => void
-  isAtBottom: boolean
+  handleScroll: (e: React.UIEvent<HTMLDivElement>) => void
 }
 
 export function useScrollLoading({
   hasMore,
   loadingMore,
   onLoadMore,
-  rounds,
 }: UseScrollLoadingOptions): UseScrollLoadingReturn {
-  const containerRef = useRef<HTMLDivElement>(null)
   const loadMoreTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const prevScrollHeightRef = useRef<number>(0)
-  const prevScrollTopRef = useRef<number>(0)
-  const [isAtBottom, setIsAtBottom] = useState(true)
 
-  const handleLoadMore = useCallback(async () => {
-    if (!hasMore || loadingMore) return
-    setIsAtBottom(false)
-    await onLoadMore()
-  }, [hasMore, loadingMore, onLoadMore])
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const container = e.currentTarget
+      if (!container || loadingMore) return
 
-  const handleScroll = useCallback(() => {
-    const container = containerRef.current
-    if (!container || loadingMore) return
-
-    const { scrollTop, scrollHeight, clientHeight } = container
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight
-
-    if (distanceFromBottom <= AUTO_SCROLL_THRESHOLD) {
-      setIsAtBottom(true)
-    } else {
-      setIsAtBottom(false)
-    }
-
-    if (scrollTop <= LOAD_MORE_THRESHOLD && hasMore) {
-      prevScrollHeightRef.current = scrollHeight
-      prevScrollTopRef.current = scrollTop
-
-      if (loadMoreTimeoutRef.current) {
-        clearTimeout(loadMoreTimeoutRef.current)
-      }
-      loadMoreTimeoutRef.current = setTimeout(() => {
-        handleLoadMore()
-      }, 100)
-    }
-  }, [hasMore, loadingMore, handleLoadMore])
-
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    if (isAtBottom) {
-      requestAnimationFrame(() => {
-        const el = containerRef.current
-        if (el) {
-          el.scrollTop = el.scrollHeight
+      if (container.scrollTop <= LOAD_MORE_THRESHOLD && hasMore) {
+        if (loadMoreTimeoutRef.current) {
+          clearTimeout(loadMoreTimeoutRef.current)
         }
-      })
-    }
-  }, [rounds, isAtBottom])
-
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-    container.scrollTop = container.scrollHeight
-  }, [])
+        loadMoreTimeoutRef.current = setTimeout(() => {
+          onLoadMore()
+        }, 100)
+      }
+    },
+    [hasMore, loadingMore, onLoadMore]
+  )
 
   useEffect(() => {
     return () => {
@@ -89,8 +45,6 @@ export function useScrollLoading({
   }, [])
 
   return {
-    containerRef,
     handleScroll,
-    isAtBottom,
   }
 }
