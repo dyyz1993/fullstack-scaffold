@@ -198,7 +198,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
         const hasMore = newRounds.length === (limit || 10)
 
         set(state => ({
-          rounds: append ? [...state.rounds, ...newRounds] : [...newRounds].reverse(),
+          rounds: append ? [...newRounds, ...state.rounds] : [...newRounds].reverse(),
           hasMoreRounds: hasMore,
           oldestTimestamp: result.data.oldestTimestamp ?? undefined,
           [isLoading]: false,
