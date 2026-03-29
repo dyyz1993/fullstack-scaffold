@@ -154,12 +154,6 @@ function SubRoundView({
     }
   }, [hasToolResult, isStreaming])
 
-  useEffect(() => {
-    if (hasToolResult) {
-      setToolsCollapsed(false)
-    }
-  }, [hasToolResult])
-
   const typewriterContent = useTypewriter({
     text: subRound.content || '',
     isStreaming: !!isStreaming && isLastSubRound,
