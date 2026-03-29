@@ -13,6 +13,8 @@ interface MessageListProps {
   className?: string
 }
 
+const AUTO_SCROLL_THRESHOLD = 100
+
 const scrollToBottom = (element: HTMLDivElement | null) => {
   if (element) {
     element.scrollTop = element.scrollHeight
@@ -22,51 +24,47 @@ const scrollToBottom = (element: HTMLDivElement | null) => {
 export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
   ({ rounds, isRunning, loadingMore, hasMoreRounds, onScroll, className }, ref) => {
     const internalRef = useRef<HTMLDivElement>(null)
-    const prevRoundsLengthRef = useRef(0)
-    const wasLoadingMoreRef = useRef(false)
+    const isAtBottomRef = useRef(true)
 
     useImperativeHandle(ref, () => internalRef.current!)
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+      const container = e.currentTarget
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight
+      isAtBottomRef.current = distanceFromBottom <= AUTO_SCROLL_THRESHOLD
+      onScroll(e)
+    }
 
     useLayoutEffect(() => {
       const container = internalRef.current
       if (!container || rounds.length === 0) return
 
-      if (rounds.length !== prevRoundsLengthRef.current) {
-        if (wasLoadingMoreRef.current) {
-          wasLoadingMoreRef.current = false
-        } else {
-          scrollToBottom(container)
-        }
+      if (isAtBottomRef.current) {
+        scrollToBottom(container)
       }
-      prevRoundsLengthRef.current = rounds.length
     }, [rounds])
 
     useEffect(() => {
-      if (loadingMore) {
-        wasLoadingMoreRef.current = true
-      }
-    }, [loadingMore])
+      if (!isRunning || !internalRef.current) return
 
-    useEffect(() => {
-      if (!isRunning) return
-
-      const container = internalRef.current
-      if (!container) return
-
-      const intervalId = setInterval(() => {
+      if (isAtBottomRef.current) {
         scrollToBottom(internalRef.current)
-      }, 50)
-
-      return () => clearInterval(intervalId)
+      }
     }, [isRunning])
 
     return (
       <div
         ref={internalRef}
         className={`flex-1 overflow-y-auto p-6 space-y-4 ${className || ''}`}
-        onScroll={onScroll}
+        onScroll={handleScroll}
       >
-        {rounds.length === 0 && !isRunning ? (
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          </div>
+        )}
+        {rounds.length === 0 && !isRunning && !loadingMore ? (
           <EmptyState
             icon={MessageSquare}
             title="Start a conversation"
@@ -75,11 +73,6 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
           />
         ) : (
           <>
-            {loadingMore && (
-              <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-              </div>
-            )}
             {!hasMoreRounds && rounds.length > 0 && !loadingMore && (
               <div className="text-center py-4 text-sm text-gray-400">No more messages</div>
             )}
