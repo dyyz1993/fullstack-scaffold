@@ -23,6 +23,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
   ({ rounds, isRunning, loadingMore, hasMoreRounds, onScroll, className }, ref) => {
     const internalRef = useRef<HTMLDivElement>(null)
     const prevRoundsLengthRef = useRef(0)
+    const wasLoadingMoreRef = useRef(false)
 
     useImperativeHandle(ref, () => internalRef.current!)
 
@@ -31,10 +32,20 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
       if (!container || rounds.length === 0) return
 
       if (rounds.length !== prevRoundsLengthRef.current) {
-        scrollToBottom(container)
+        if (wasLoadingMoreRef.current) {
+          wasLoadingMoreRef.current = false
+        } else {
+          scrollToBottom(container)
+        }
       }
       prevRoundsLengthRef.current = rounds.length
     }, [rounds])
+
+    useEffect(() => {
+      if (loadingMore) {
+        wasLoadingMoreRef.current = true
+      }
+    }, [loadingMore])
 
     useEffect(() => {
       if (!isRunning) return

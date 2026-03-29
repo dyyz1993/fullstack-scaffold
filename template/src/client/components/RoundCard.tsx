@@ -136,7 +136,6 @@ function SubRoundView({
   const hasThinking = !!subRound.thinking
   const hasContent = !!subRound.content
   const hasToolCalls = !!subRound.toolCalls && subRound.toolCalls.length > 0
-  const hasToolResult = hasToolCalls && subRound.toolCalls?.some(tc => tc.result !== undefined)
 
   const isThinking = isStreaming && isLastSubRound && !hasContent && !hasToolCalls
 
@@ -147,12 +146,6 @@ function SubRoundView({
       setThinkingCollapsed(true)
     }
   }, [isStreaming, isLastSubRound, hasThinking])
-
-  useEffect(() => {
-    if (hasToolResult && !isStreaming) {
-      setToolsCollapsed(false)
-    }
-  }, [hasToolResult, isStreaming])
 
   const typewriterContent = useTypewriter({
     text: subRound.content || '',
