@@ -54,6 +54,34 @@ interface CreatedFile {
   lineCount?: number
 }
 
+function validateModuleName(name: string): { valid: boolean; error?: string } {
+  if (!name || !name.trim()) {
+    return { valid: false, error: '请提供模块名称' }
+  }
+  const trimmed = name.trim()
+  if (trimmed.length > 100) {
+    return { valid: false, error: '模块名称不能超过 100 个字符' }
+  }
+  if (!/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(trimmed)) {
+    return { valid: false, error: '模块名称只能以字母开头，包含字母、数字、_ 和 -' }
+  }
+  return { valid: true }
+}
+
+function validatePrefix(prefix: string): { valid: boolean; error?: string } {
+  if (!prefix || !prefix.trim()) {
+    return { valid: true }
+  }
+  const trimmed = prefix.trim()
+  if (trimmed.includes('..') || trimmed.includes('/') || trimmed.includes('\\')) {
+    return { valid: false, error: '前缀不能包含路径分隔符或 ..' }
+  }
+  if (!/^[a-zA-Z][a-zA-Z0-9-]*$/.test(trimmed)) {
+    return { valid: false, error: '前缀只能以字母开头，包含字母、数字和 -' }
+  }
+  return { valid: true }
+}
+
 function generateClientUsageExample(name: string, options: CreateOptions): string {
   const pascalName = toPascalCase(name)
   const camelName = toCamelCase(name)
@@ -522,142 +550,7 @@ export type WebSocketStatus = z.infer<typeof WebSocketStatusSchema>
 // 路由模板
 // ============================================
 
-function generateBasicRouteTemplate(name: string): string {
-  const pascalName = toPascalCase(name)
-  const camelName = toCamelCase(name)
-  const kebabName = toKebabCase(name)
-
-  return `import { createRoute } from '@hono/zod-openapi'
-import { OpenAPIHono } from '@hono/zod-openapi'
-import * as ${camelName}Service from '../services/${kebabName}-service'
-import { successResponse, errorResponse } from '../../utils/route-helpers'
-import {
-  ${pascalName}Schema,
-  Create${pascalName}Schema,
-  Update${pascalName}Schema,
-  ${pascalName}ListSchema,
-  DeleteResultSchema,
-} from '@shared/modules/${kebabName}'
-
-const listRoute = createRoute({
-  method: 'get',
-  path: '/${kebabName}s',
-  tags: ['${kebabName}s'],
-  responses: {
-    200: successResponse(${pascalName}ListSchema, 'List all ${kebabName}s'),
-    500: errorResponse('Internal server error'),
-  },
-})
-
-const getRoute = createRoute({
-  method: 'get',
-  path: '/${kebabName}s/{id}',
-  tags: ['${kebabName}s'],
-  request: {
-    params: ${pascalName}Schema.pick({ id: true }),
-  },
-  responses: {
-    200: successResponse(${pascalName}Schema, 'Get ${kebabName} by id'),
-    404: errorResponse('${pascalName} not found'),
-    500: errorResponse('Internal server error'),
-  },
-})
-
-const createRouteDef = createRoute({
-  method: 'post',
-  path: '/${kebabName}s',
-  tags: ['${kebabName}s'],
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: Create${pascalName}Schema,
-        },
-      },
-    },
-  },
-  responses: {
-    201: successResponse(${pascalName}Schema, 'Create ${kebabName}'),
-    400: errorResponse('Invalid input'),
-    500: errorResponse('Internal server error'),
-  },
-})
-
-const updateRoute = createRoute({
-  method: 'put',
-  path: '/${kebabName}s/{id}',
-  tags: ['${kebabName}s'],
-  request: {
-    params: ${pascalName}Schema.pick({ id: true }),
-    body: {
-      content: {
-        'application/json': {
-          schema: Update${pascalName}Schema,
-        },
-      },
-    },
-  },
-  responses: {
-    200: successResponse(${pascalName}Schema, 'Update ${kebabName}'),
-    404: errorResponse('${pascalName} not found'),
-    400: errorResponse('Invalid input'),
-    500: errorResponse('Internal server error'),
-  },
-})
-
-const deleteRoute = createRoute({
-  method: 'delete',
-  path: '/${kebabName}s/{id}',
-  tags: ['${kebabName}s'],
-  request: {
-    params: ${pascalName}Schema.pick({ id: true }),
-  },
-  responses: {
-    200: successResponse(DeleteResultSchema, '${pascalName} deleted'),
-    404: errorResponse('${pascalName} not found'),
-    500: errorResponse('Internal server error'),
-  },
-})
-
-export const ${camelName}Routes = new OpenAPIHono()
-  .openapi(listRoute, async c => {
-    const result = await ${camelName}Service.getAll()
-    return c.json({ success: true, data: result })
-  })
-  .openapi(getRoute, async c => {
-    const { id } = c.req.valid('param')
-    const result = await ${camelName}Service.getById(id)
-    if (!result) {
-      return c.json({ success: false, error: '${pascalName} not found' }, 404)
-    }
-    return c.json({ success: true, data: result })
-  })
-  .openapi(createRouteDef, async c => {
-    const body = c.req.valid('json')
-    const result = await ${camelName}Service.create(body)
-    return c.json({ success: true, data: result }, 201)
-  })
-  .openapi(updateRoute, async c => {
-    const { id } = c.req.valid('param')
-    const body = c.req.valid('json')
-    const result = await ${camelName}Service.update(id, body)
-    if (!result) {
-      return c.json({ success: false, error: '${pascalName} not found' }, 404)
-    }
-    return c.json({ success: true, data: result })
-  })
-  .openapi(deleteRoute, async c => {
-    const { id } = c.req.valid('param')
-    const result = await ${camelName}Service.delete${pascalName}(id)
-    if (!result) {
-      return c.json({ success: false, error: '${pascalName} not found' }, 404)
-    }
-    return c.json({ success: true, data: { message: 'Deleted successfully' } })
-  })
-`
-}
-
-function generateDatabaseRouteTemplate(name: string): string {
+function generateRouteTemplate(name: string): string {
   const pascalName = toPascalCase(name)
   const camelName = toCamelCase(name)
   const kebabName = toKebabCase(name)
@@ -1463,6 +1356,16 @@ function createModule(options: CreateOptions): CreatedFile[] {
     prefix ? `${prefix}-${kebabName}` : kebabName
   )
 
+  // 防止路径遍历
+  const resolvedModuleDir = path.resolve(moduleDir)
+  const resolvedSharedDir = path.resolve(sharedModuleDir)
+  const serverDir = path.resolve(templateDir, 'src/server')
+  const modulesDir = path.resolve(templateDir, 'src/shared/modules')
+  if (!resolvedModuleDir.startsWith(serverDir) || !resolvedSharedDir.startsWith(modulesDir)) {
+    console.log(`❌ 无效的模块路径`)
+    process.exit(1)
+  }
+
   const createdFiles: CreatedFile[] = []
 
   if (fs.existsSync(moduleDir)) {
@@ -1501,65 +1404,75 @@ function createModule(options: CreateOptions): CreatedFile[] {
     routeTestTemplate = generateWebSocketRouteTestTemplate(name)
   } else if (withDatabase) {
     schemaTemplate = generateBasicSchema(name)
-    routeTemplate = generateDatabaseRouteTemplate(name)
+    routeTemplate = generateRouteTemplate(name)
     serviceTemplate = generateDatabaseServiceTemplate(name)
     serviceTestTemplate = generateBasicServiceTestTemplate(name)
     routeTestTemplate = generateBasicRouteTestTemplate(name)
   } else {
     schemaTemplate = generateBasicSchema(name)
-    routeTemplate = generateBasicRouteTemplate(name)
+    routeTemplate = generateRouteTemplate(name)
     serviceTemplate = generateBasicServiceTemplate(name)
     serviceTestTemplate = generateBasicServiceTestTemplate(name)
     routeTestTemplate = generateBasicRouteTestTemplate(name)
   }
 
   // 创建文件
-  const schemaFile = path.join(sharedModuleDir, 'schemas.ts')
-  fs.writeFileSync(schemaFile, schemaTemplate)
-  createdFiles.push({ path: schemaFile, type: 'created' })
+  try {
+    const schemaFile = path.join(sharedModuleDir, 'schemas.ts')
+    fs.writeFileSync(schemaFile, schemaTemplate)
+    createdFiles.push({ path: schemaFile, type: 'created' })
 
-  const sharedIndexFile = path.join(sharedModuleDir, 'index.ts')
-  fs.writeFileSync(sharedIndexFile, generateModuleIndexTemplate())
-  createdFiles.push({ path: sharedIndexFile, type: 'created' })
+    const sharedIndexFile = path.join(sharedModuleDir, 'index.ts')
+    fs.writeFileSync(sharedIndexFile, generateModuleIndexTemplate())
+    createdFiles.push({ path: sharedIndexFile, type: 'created' })
 
-  const routeFileName = prefix ? `${prefix}-${kebabName}-routes` : `${kebabName}-routes`
-  const routeFile = path.join(routesDir, `${routeFileName}.ts`)
-  fs.writeFileSync(routeFile, routeTemplate)
-  createdFiles.push({ path: routeFile, type: 'created' })
+    const routeFileName = prefix ? `${prefix}-${kebabName}-routes` : `${kebabName}-routes`
+    const routeFile = path.join(routesDir, `${routeFileName}.ts`)
+    fs.writeFileSync(routeFile, routeTemplate)
+    createdFiles.push({ path: routeFile, type: 'created' })
 
-  const serviceFileName = prefix ? `${prefix}-${kebabName}-service` : `${kebabName}-service`
-  const serviceFile = path.join(servicesDir, `${serviceFileName}.ts`)
-  fs.writeFileSync(serviceFile, serviceTemplate)
-  createdFiles.push({ path: serviceFile, type: 'created' })
+    const serviceFileName = prefix ? `${prefix}-${kebabName}-service` : `${kebabName}-service`
+    const serviceFile = path.join(servicesDir, `${serviceFileName}.ts`)
+    fs.writeFileSync(serviceFile, serviceTemplate)
+    createdFiles.push({ path: serviceFile, type: 'created' })
 
-  const serviceTestFile = path.join(testsDir, `${serviceFileName}.test.ts`)
-  fs.writeFileSync(serviceTestFile, serviceTestTemplate)
-  createdFiles.push({ path: serviceTestFile, type: 'created' })
+    const serviceTestFile = path.join(testsDir, `${serviceFileName}.test.ts`)
+    fs.writeFileSync(serviceTestFile, serviceTestTemplate)
+    createdFiles.push({ path: serviceTestFile, type: 'created' })
 
-  const routeTestFile = path.join(testsDir, `${routeFileName}.test.ts`)
-  fs.writeFileSync(routeTestFile, routeTestTemplate)
-  createdFiles.push({ path: routeTestFile, type: 'created' })
+    const routeTestFile = path.join(testsDir, `${routeFileName}.test.ts`)
+    fs.writeFileSync(routeTestFile, routeTestTemplate)
+    createdFiles.push({ path: routeTestFile, type: 'created' })
 
-  // 更新 app.ts
-  const appResult = updateAppTs(name, prefix)
-  if (appResult.success) {
-    createdFiles.push({
-      path: path.join(templateDir, 'src/server/app.ts'),
-      type: 'modified',
-      diff: appResult.diff,
-      lineCount: appResult.addedLines,
-    })
-  }
+    // 更新 app.ts
+    const appResult = updateAppTs(name, prefix)
+    if (appResult.success) {
+      createdFiles.push({
+        path: path.join(templateDir, 'src/server/app.ts'),
+        type: 'modified',
+        diff: appResult.diff,
+        lineCount: appResult.addedLines,
+      })
+    }
 
-  // 更新 shared/modules/index.ts
-  const indexResult = updateSharedModulesIndex(name, options)
-  if (indexResult.success) {
-    createdFiles.push({
-      path: path.join(templateDir, 'src/shared/modules/index.ts'),
-      type: 'modified',
-      diff: indexResult.diff,
-      lineCount: indexResult.addedLines,
-    })
+    // 更新 shared/modules/index.ts
+    const indexResult = updateSharedModulesIndex(name, options)
+    if (indexResult.success) {
+      createdFiles.push({
+        path: path.join(templateDir, 'src/shared/modules/index.ts'),
+        type: 'modified',
+        diff: indexResult.diff,
+        lineCount: indexResult.addedLines,
+      })
+    }
+  } catch (error) {
+    console.log(`❌ 创建文件失败: ${error instanceof Error ? error.message : String(error)}`)
+    // 尝试清理已创建的目录
+    try {
+      if (fs.existsSync(resolvedModuleDir)) fs.rmSync(resolvedModuleDir, { recursive: true })
+      if (fs.existsSync(resolvedSharedDir)) fs.rmSync(resolvedSharedDir, { recursive: true })
+    } catch {}
+    process.exit(1)
   }
 
   return createdFiles
@@ -1585,6 +1498,8 @@ function parseArgs(args: string[]): CreateOptions {
       options.withWebSocket = true
     } else if (arg === '--admin') {
       options.prefix = 'admin'
+    } else if (arg === '--ops') {
+      options.prefix = 'ops'
     } else if (!arg.startsWith('--')) {
       options.name = arg
     }
@@ -1626,9 +1541,18 @@ function main(): void {
 
   const options = parseArgs(args)
 
-  if (!options.name) {
-    console.log(`❌ 请提供模块名称`)
+  const nameValidation = validateModuleName(options.name)
+  if (!nameValidation.valid) {
+    console.log(`❌ ${nameValidation.error}`)
     process.exit(1)
+  }
+
+  if (options.prefix) {
+    const prefixValidation = validatePrefix(options.prefix)
+    if (!prefixValidation.valid) {
+      console.log(`❌ ${prefixValidation.error}`)
+      process.exit(1)
+    }
   }
 
   // 检查互斥选项
@@ -1637,6 +1561,10 @@ function main(): void {
   ).length
   if (selectedOptions > 1) {
     console.log(`❌ 只能选择一个模板类型: --with-db, --sse, 或 --ws`)
+    process.exit(1)
+  }
+  if (options.prefix === 'ops' && selectedOptions > 0) {
+    console.log(`❌ 运维模块 (--ops) 不支持组合 --with-db, --sse, 或 --ws`)
     process.exit(1)
   }
 

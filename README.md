@@ -6,7 +6,6 @@ Create a new BioMimic app with full-stack React + Hono + TypeScript architecture
 
 ```bash
 # Local testing
-cd /Users/xuyingzhou/Project/create-biomimic-app
 npm install
 npx tsx src/index.ts my-app
 
@@ -14,9 +13,14 @@ npx tsx src/index.ts my-app
 npx create-biomimic-app my-app
 ```
 
+## Prerequisites
+
+- **Node.js 18+** is required
+
 ## 📦 What's Included
 
 ### Architecture
+
 - **Monorepo-style**: client/server/shared separation
 - **Single-port development**: Frontend + Backend on port 3010
 - **Path aliases**: @shared, @client, @server
@@ -24,6 +28,7 @@ npx create-biomimic-app my-app
 - **Module-based backend**: Feature modules (routes + services)
 
 ### Tech Stack
+
 - ⚡️ **Vite** - Lightning fast build tool
 - ⚛️ **React 19** - Latest React features
 - 🔥 **Hono** - Fast web framework
@@ -33,6 +38,7 @@ npx create-biomimic-app my-app
 - 🗄️ **Drizzle ORM** - Type-safe database access
 
 ### Code Quality
+
 - ESLint + Prettier
 - Pre-commit hooks (lint-staged + test + validate)
 - Testing infrastructure (jsdom + node)
@@ -72,6 +78,7 @@ my-app/
 ```bash
 cd my-app
 npm install
+npm run db:push  # Initialize database
 npm run dev      # http://localhost:3010
 npm test         # Run tests
 ```
@@ -79,6 +86,7 @@ npm test         # Run tests
 ## 🔑 Key Features
 
 ### Hono RPC Chain Syntax
+
 Routes use chain syntax for type inference:
 
 ```typescript
@@ -89,18 +97,20 @@ export const apiRoutes = new OpenAPIHono()
 ```
 
 ### Type-Safe API Calls
-```typescript
-import { rpcClient } from '@shared/rpc-server';
 
-const response = await rpcClient.api.todos.$get();
-const result = await response.json(); // Fully typed!
+```typescript
+import { rpcClient } from '@shared/rpc-server'
+
+const response = await rpcClient.api.todos.$get()
+const result = await response.json() // Fully typed!
 ```
 
 ### Zustand with Selectors
+
 ```typescript
 // Minimal re-renders with precise selectors
-const todos = useTodoStore((state) => state.todos);
-const addTodo = useTodoStore((state) => state.addTodo);
+const todos = useTodoStore(state => state.todos)
+const addTodo = useTodoStore(state => state.addTodo)
 ```
 
 ## 📝 License

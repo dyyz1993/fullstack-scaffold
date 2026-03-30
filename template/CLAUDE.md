@@ -13,7 +13,7 @@ npm run dev          # Start Vite dev server on port 3010 with Hono backend
 npm run build        # Production build
 npm run preview      # Preview production build
 npm run test         # Run all Vitest tests
-npm run test:unit    # Run unit tests only
+npm run test:smart   # Run smart tests (recommended)
 npm run test:integration  # Run integration tests only
 npm run lint         # Run ESLint
 npm run format       # Run Prettier format

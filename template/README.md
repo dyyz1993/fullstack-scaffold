@@ -40,10 +40,25 @@ src/
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js 18+
+- npm
+
 ### Installation
 
 ```bash
 npm install
+```
+
+### First Time Setup
+
+```bash
+# Initialize database
+npm run db:push
+
+# (Optional) Configure environment variables
+cp .env.example .env.local
 ```
 
 ### Development
@@ -66,11 +81,17 @@ npm run build
 # Run all tests
 npm test
 
-# Run unit tests only
-npm run test:unit
+# Run smart tests (recommended for daily development)
+npm run test:smart
 
 # Run integration tests only
 npm run test:integration
+
+# Run E2E tests
+npm run test:e2e
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ## Key Concepts

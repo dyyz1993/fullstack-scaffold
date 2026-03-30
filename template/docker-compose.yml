@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - '3010:3010'
+    environment:
+      - NODE_ENV=production
+      - DB_DRIVER=sqlite
+      - SQLITE_PATH=./data/app.db
+    volumes:
+      - app-data:/app/data
+
+  # Uncomment for MySQL production setup:
+  # mysql:
+  #   image: mysql:8.0
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root_password
+  #     MYSQL_DATABASE: biomimic_app
+  #   ports:
+  #     - '3306:3306'
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+
+volumes:
+  app-data:
+  # mysql-data:

@@ -12,6 +12,39 @@
 npm install
 ```
 
+## First Time Setup
+
+After `npm install`, run the following to initialize the database:
+
+```bash
+# Push database schema (creates SQLite database)
+npm run db:push
+```
+
+### Environment Variables
+
+Copy the example environment file and configure:
+
+```bash
+cp .env.example .env.local
+```
+
+Default settings work for local development. Key variables:
+
+| Variable      | Default         | Description                       |
+| ------------- | --------------- | --------------------------------- |
+| `DB_DRIVER`   | `sqlite`        | Database driver (sqlite/mysql/d1) |
+| `SQLITE_PATH` | `./data/app.db` | SQLite database path              |
+| `PORT`        | `3010`          | Development server port           |
+
+### Node.js Version
+
+This project requires **Node.js 18+**. Check your version:
+
+```bash
+node -v
+```
+
 ## Development
 
 ```bash
@@ -65,14 +98,17 @@ template/
 # Run all tests
 npm test
 
-# Run unit tests only
-npm run test:unit
+# Run smart tests (recommended)
+npm run test:smart
 
 # Run integration tests only
 npm run test:integration
 
+# Run E2E tests
+npm run test:e2e
+
 # Run tests with coverage
-npm test -- --coverage
+npm run test:coverage
 ```
 
 ### Testing Real-time Features
@@ -276,8 +312,10 @@ git commit --no-verify -m "message"
 ### Port Already in Use
 
 ```bash
-# Kill process on port 3010
-lsof -ti:3010 | xargs kill -9
+# Find and gracefully stop process on port 3010
+lsof -ti:3010 | xargs kill
+# If graceful stop doesn't work, force kill:
+# lsof -ti:3010 | xargs kill -9
 ```
 
 ### Database Errors
