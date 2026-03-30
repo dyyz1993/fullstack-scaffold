@@ -57,7 +57,7 @@ export const workspaceRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
@@ -68,7 +68,7 @@ export const workspaceRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const input = c.req.valid('json')
@@ -84,7 +84,7 @@ export const workspaceRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     await workspaceService.deleteWorkspace(user.id)

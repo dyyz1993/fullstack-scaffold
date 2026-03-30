@@ -160,7 +160,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
@@ -172,7 +172,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')
@@ -190,7 +190,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')
@@ -216,7 +216,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')
@@ -249,7 +249,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')
@@ -269,7 +269,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')
@@ -288,7 +288,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')
@@ -350,7 +350,7 @@ export const agentRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { id } = c.req.valid('param')

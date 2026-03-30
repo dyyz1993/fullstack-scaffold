@@ -39,7 +39,7 @@ export const fileRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const files = await fileService.getWorkspaceFiles(user.id)
@@ -50,7 +50,7 @@ export const fileRoutes = new OpenAPIHono()
     const user = getAuthUser(c)
 
     if (!user) {
-      throw new AuthenticationError('Unauthorized')
+      throw new AuthenticationError('Authentication required - please login')
     }
 
     const { path } = c.req.valid('param')
