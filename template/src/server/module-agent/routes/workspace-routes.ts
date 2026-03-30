@@ -8,18 +8,9 @@ import {
 } from '@shared/modules/workspace'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
-import { NotFoundError } from '@server/utils/app-error'
-import type { AuthUser } from '@server/middleware/auth'
+import { NotFoundError, AuthenticationError } from '@server/utils/app-error'
 
 const WorkspaceResponseSchema = WorkspaceSchema
-
-const defaultUser: AuthUser = {
-  id: '3',
-  username: 'user1',
-  email: 'user1@example.com',
-  role: 'user' as AuthUser['role'],
-  permissions: [],
-}
 
 const getWorkspaceRoute = createRoute({
   method: 'get',
@@ -63,10 +54,10 @@ const deleteWorkspaceRoute = createRoute({
 
 export const workspaceRoutes = new OpenAPIHono()
   .openapi(getWorkspaceRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
@@ -74,10 +65,10 @@ export const workspaceRoutes = new OpenAPIHono()
     return c.json(success(workspace))
   })
   .openapi(updateWorkspaceRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const input = c.req.valid('json')
@@ -90,10 +81,10 @@ export const workspaceRoutes = new OpenAPIHono()
     return c.json(success(workspace))
   })
   .openapi(deleteWorkspaceRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     await workspaceService.deleteWorkspace(user.id)

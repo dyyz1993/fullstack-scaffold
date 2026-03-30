@@ -28,7 +28,7 @@ export function createTestClient(
     ...options?.headers,
   }
 
-  return hc<AppType>('http://localhost', {
+  return hc<AppType>(_baseUrl || 'http://localhost', {
     headers: defaultHeaders,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       const request = new Request(input, init)

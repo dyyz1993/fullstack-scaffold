@@ -16,19 +16,10 @@ import {
 } from '@shared/modules/agent'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
-import { NotFoundError } from '@server/utils/app-error'
-import type { AuthUser } from '@server/middleware/auth'
+import { NotFoundError, AuthenticationError } from '@server/utils/app-error'
 
 const AgentResponseSchema = AgentSchema
 const MessageListSchema = z.array(ChatMessageSchema)
-
-const defaultUser: AuthUser = {
-  id: '3',
-  username: 'user1',
-  email: 'user1@example.com',
-  role: 'user' as AuthUser['role'],
-  permissions: [],
-}
 
 const getAgentRoute = createRoute({
   method: 'get',
@@ -67,7 +58,7 @@ const getMessagesRoute = createRoute({
     params: z.object({ id: z.string() }),
     query: z.object({
       limit: z.coerce.number().int().positive().optional(),
-      offset: z.coerce.number().int().nonnegative().optional(),
+      before: z.string().optional(),
     }),
   },
   responses: {
@@ -166,10 +157,10 @@ const chatStreamRoute = createRoute({
 
 export const agentRoutes = new OpenAPIHono()
   .openapi(getAgentRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
@@ -178,10 +169,10 @@ export const agentRoutes = new OpenAPIHono()
     return c.json(success(agent))
   })
   .openapi(updateAgentRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')
@@ -196,14 +187,14 @@ export const agentRoutes = new OpenAPIHono()
     return c.json(success(agent))
   })
   .openapi(getMessagesRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')
-    const { limit, offset } = c.req.valid('query')
+    const { limit, before } = c.req.valid('query')
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
     const agent = await agentService.getAgent(id, workspace.id)
@@ -211,19 +202,25 @@ export const agentRoutes = new OpenAPIHono()
       throw new NotFoundError('Agent not found')
     }
 
-    const messages = await agentService.getMessages(id, workspace.id, workspace.path, limit, offset)
+    const { rounds } = await agentService.getMessages(
+      id,
+      workspace.id,
+      workspace.path,
+      limit,
+      before
+    )
 
-    return c.json(success(messages))
+    return c.json(success(rounds))
   })
   .openapi(getRoundsRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')
-    const { limit } = c.req.valid('query')
+    const { limit, before } = c.req.valid('query')
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
     const agent = await agentService.getAgent(id, workspace.id)
@@ -231,22 +228,28 @@ export const agentRoutes = new OpenAPIHono()
       throw new NotFoundError('Agent not found')
     }
 
-    const rounds = await agentService.getMessages(id, workspace.id, workspace.path, limit)
+    const { rounds, hasMore, oldestTimestamp } = await agentService.getMessages(
+      id,
+      workspace.id,
+      workspace.path,
+      limit,
+      before
+    )
 
     return c.json(
       success({
         rounds,
-        hasMore: false,
-        oldestTimestamp: rounds[rounds.length - 1]?.timestamp,
+        hasMore,
+        oldestTimestamp,
         newestTimestamp: rounds[0]?.timestamp,
       })
     )
   })
   .openapi(sendMessageRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')
@@ -263,10 +266,10 @@ export const agentRoutes = new OpenAPIHono()
     return c.json(success(result))
   })
   .openapi(clearMessagesRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')
@@ -282,10 +285,10 @@ export const agentRoutes = new OpenAPIHono()
     return c.json(success({ success: true }))
   })
   .openapi(chatStreamRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')
@@ -344,10 +347,10 @@ export const agentRoutes = new OpenAPIHono()
     })
   })
   .openapi(stopChatRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { id } = c.req.valid('param')

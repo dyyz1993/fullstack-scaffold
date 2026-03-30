@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { FileTree } from '../FileTree'
 
 describe('FileTree', () => {
@@ -15,6 +15,8 @@ describe('FileTree', () => {
 
   it('should show loading state', () => {
     render(<FileTree root={null} loading={true} onRefresh={() => {}} onSelectFile={() => {}} />)
-    expect(screen.queryByText('Loading...')).toBeInTheDocument()
+    // Loading state renders skeleton pulse animations, not "Loading..." text
+    const pulseElements = document.querySelectorAll('.animate-pulse')
+    expect(pulseElements.length).toBeGreaterThan(0)
   })
 })

@@ -91,9 +91,16 @@ export function parseSessionJsonl(userId: string, _workspacePath?: string): Pars
       }
     }
 
-    messages.sort((a, b) => a.timestamp - b.timestamp)
+    const seenTimestamps = new Set<number>()
+    const deduplicated = messages.filter(m => {
+      if (seenTimestamps.has(m.timestamp)) return false
+      seenTimestamps.add(m.timestamp)
+      return true
+    })
 
-    return { messages, toolCallMap }
+    deduplicated.sort((a, b) => a.timestamp - b.timestamp)
+
+    return { messages: deduplicated, toolCallMap }
   } catch (error) {
     console.warn('[SessionParser] Failed to load session:', error)
     return { messages: [], toolCallMap: new Map() }

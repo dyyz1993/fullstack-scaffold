@@ -122,62 +122,87 @@ export async function getMessages(
   agentId: string,
   _workspaceId: string,
   workspacePath: string,
-  limit?: number,
-  _offset?: number
-): Promise<MessageRound[]> {
-  const userId = path.basename(workspacePath)
-  const { messages: piMessages, toolCallMap } = parseSessionJsonl(userId)
+  limit: number = 10,
+  before?: string
+): Promise<{ rounds: MessageRound[]; hasMore: boolean; oldestTimestamp?: string }> {
+  try {
+    const userId = path.basename(workspacePath)
+    const { messages: piMessages, toolCallMap } = parseSessionJsonl(userId)
 
-  piMessages.sort((a, b) => b.timestamp - a.timestamp)
+    piMessages.sort((a, b) => b.timestamp - a.timestamp)
 
-  const rounds: MessageRound[] = []
-  let currentRound: {
-    userMessage: ChatMessage
-    agentMessages: ChatMessage[]
-    timestamp: string
-  } | null = null
+    const rounds: MessageRound[] = []
+    let currentRound: {
+      userMessage: ChatMessage
+      agentMessages: ChatMessage[]
+      timestamp: string
+    } | null = null
+    let roundIndex = 0
 
-  for (const msg of piMessages) {
-    if (msg.role === 'user') {
-      if (currentRound) {
-        rounds.push({
-          userMessage: currentRound.userMessage,
-          agentMessages: currentRound.agentMessages,
-          timestamp: currentRound.timestamp,
-        })
+    for (const msg of piMessages) {
+      if (msg.role === 'user') {
+        if (currentRound) {
+          rounds.push({
+            userMessage: currentRound.userMessage,
+            agentMessages: currentRound.agentMessages,
+            timestamp: currentRound.timestamp,
+          })
+        }
+        const userMsg: ChatMessage = {
+          id: `msg-${msg.timestamp}-${roundIndex}`,
+          agentId,
+          role: 'user',
+          content: extractTextContent(msg.content),
+          createdAt: new Date(msg.timestamp).toISOString(),
+        }
+        roundIndex++
+        currentRound = { userMessage: userMsg, agentMessages: [], timestamp: userMsg.createdAt }
+      } else if (msg.role === 'assistant' && currentRound) {
+        const content = extractTextContent(msg.content)
+        const subRounds = parseAssistantSubRounds(msg, msg.timestamp, toolCallMap)
+        const agentMsg: ChatMessage = {
+          id: `msg-${msg.timestamp}-${roundIndex - 1}-${currentRound.agentMessages.length}`,
+          agentId,
+          role: 'agent',
+          content,
+          subRounds: subRounds.length > 0 ? subRounds : undefined,
+          createdAt: new Date(msg.timestamp).toISOString(),
+        }
+        currentRound.agentMessages.push(agentMsg)
       }
-      const userMsg: ChatMessage = {
-        id: `msg-${msg.timestamp}-${rounds.length}`,
-        agentId,
-        role: 'user',
-        content: extractTextContent(msg.content),
-        createdAt: new Date(msg.timestamp).toISOString(),
-      }
-      currentRound = { userMessage: userMsg, agentMessages: [], timestamp: userMsg.createdAt }
-    } else if (msg.role === 'assistant' && currentRound) {
-      const content = extractTextContent(msg.content)
-      const subRounds = parseAssistantSubRounds(msg, msg.timestamp, toolCallMap)
-      const agentMsg: ChatMessage = {
-        id: `msg-${msg.timestamp}-${rounds.length}-${currentRound.agentMessages.length}`,
-        agentId,
-        role: 'agent',
-        content,
-        subRounds: subRounds.length > 0 ? subRounds : undefined,
-        createdAt: new Date(msg.timestamp).toISOString(),
-      }
-      currentRound.agentMessages.push(agentMsg)
     }
-  }
 
-  if (currentRound) {
-    rounds.push({
-      userMessage: currentRound.userMessage,
-      agentMessages: currentRound.agentMessages,
-      timestamp: currentRound.timestamp,
-    })
-  }
+    if (currentRound) {
+      rounds.push({
+        userMessage: currentRound.userMessage,
+        agentMessages: currentRound.agentMessages,
+        timestamp: currentRound.timestamp,
+      })
+    }
 
-  return limit ? rounds.slice(0, limit) : rounds
+    let filteredRounds = rounds
+    if (before) {
+      const beforeTimestamp = new Date(before).getTime()
+      if (!isNaN(beforeTimestamp)) {
+        filteredRounds = filteredRounds.filter(
+          r => new Date(r.timestamp).getTime() < beforeTimestamp
+        )
+      }
+    }
+
+    const hasMore = filteredRounds.length > limit
+    const resultRounds = filteredRounds.slice(0, limit)
+    const oldestTimestamp = resultRounds[resultRounds.length - 1]?.timestamp
+
+    return {
+      rounds: resultRounds,
+      hasMore,
+      oldestTimestamp,
+    }
+  } catch (error) {
+    console.error(`Failed to get messages for agent ${agentId}:`, error)
+    return { rounds: [], hasMore: false }
+  }
 }
 
 export async function clearMessages(_agentId: string, workspacePath: string): Promise<void> {

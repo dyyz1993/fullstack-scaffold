@@ -1,13 +1,27 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import { getOrCreateAgent, getAgent, updateAgent, clearMessages } from '../services/agent-service'
 import type { CreateAgentInput, UpdateAgentInput } from '@shared/modules/agent'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { getRawClient } from '../../db'
 
 describe('Agent Service Functions', () => {
   const testWorkspaceId = 'test-workspace-agent-service-xyz'
   const testUserId = 'test-user-agent-service-xyz'
   let createdAgentIds: string[] = []
 
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
   afterEach(async () => {
+    const client = await getRawClient()
+    if (client && 'execute' in client) {
+      await client.execute('DELETE FROM agents')
+    }
     for (const id of createdAgentIds) {
       try {
         await clearMessages(id, `/test/path/${id}`)
@@ -67,8 +81,6 @@ describe('Agent Service Functions', () => {
     it('should return null for non-existent agent', async () => {
       const result = await getAgent('non-existent-agent-id-xyz', testWorkspaceId)
       expect(result).toBeNull()
-      expect(result).toBeFalsy()
-      expect(result).not.toBeDefined()
     })
   })
 
@@ -96,8 +108,6 @@ describe('Agent Service Functions', () => {
         name: 'Test',
       })
       expect(result).toBeNull()
-      expect(result).toBeFalsy()
-      expect(result).not.toBeDefined()
     })
   })
 

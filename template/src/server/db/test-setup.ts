@@ -119,6 +119,104 @@ export async function setupTestDatabase(): Promise<void> {
       user_agent TEXT,
       created_at INTEGER
     );
+
+    CREATE TABLE IF NOT EXISTS workspaces (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      path TEXT NOT NULL,
+      user_id TEXT NOT NULL UNIQUE,
+      settings TEXT,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS agents (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      model TEXT,
+      system_prompt TEXT,
+      workspace_id TEXT NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY NOT NULL,
+      agent_id TEXT NOT NULL,
+      workspace_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      thinking TEXT,
+      tool_calls TEXT,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS tenants (
+      id TEXT PRIMARY KEY NOT NULL,
+      code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      logo TEXT,
+      description TEXT,
+      plan TEXT NOT NULL DEFAULT 'free',
+      status TEXT NOT NULL DEFAULT 'active',
+      max_members INTEGER DEFAULT 10,
+      max_storage INTEGER DEFAULT 1073741824,
+      settings TEXT,
+      metadata TEXT,
+      owner_id TEXT NOT NULL,
+      created_at INTEGER,
+      updated_at INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS tenant_roles (
+      id TEXT PRIMARY KEY NOT NULL,
+      tenant_id TEXT NOT NULL,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      label TEXT NOT NULL,
+      description TEXT,
+      permissions TEXT NOT NULL,
+      is_system INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      sort_order INTEGER DEFAULT 0,
+      created_at INTEGER,
+      updated_at INTEGER,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      UNIQUE(tenant_id, code)
+    );
+
+    CREATE TABLE IF NOT EXISTS tenant_members (
+      id TEXT PRIMARY KEY NOT NULL,
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      invited_by TEXT,
+      invited_at INTEGER,
+      joined_at INTEGER,
+      last_active_at INTEGER,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (role_id) REFERENCES tenant_roles(id) ON DELETE CASCADE,
+      UNIQUE(user_id, tenant_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS tenant_invitations (
+      id TEXT PRIMARY KEY NOT NULL,
+      tenant_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      inviter_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      expires_at INTEGER NOT NULL,
+      accepted_at INTEGER,
+      created_at INTEGER,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (role_id) REFERENCES tenant_roles(id) ON DELETE CASCADE
+    );
   `
 
   const statements = migrationSQL.split(';').filter(s => s.trim())
@@ -443,6 +541,13 @@ export async function cleanupTestDatabase(): Promise<void> {
   const client = await getRawClient()
 
   if (client && 'execute' in client) {
+    await client.execute('DELETE FROM chat_messages')
+    await client.execute('DELETE FROM agents')
+    await client.execute('DELETE FROM workspaces')
+    await client.execute('DELETE FROM tenant_invitations')
+    await client.execute('DELETE FROM tenant_members')
+    await client.execute('DELETE FROM tenant_roles')
+    await client.execute('DELETE FROM tenants')
     await client.execute('DELETE FROM todo_attachments')
     await client.execute('DELETE FROM todos')
     await client.execute('DELETE FROM notifications')

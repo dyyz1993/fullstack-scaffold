@@ -25,6 +25,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
   ({ rounds, isRunning, loadingMore, hasMoreRounds, onScroll, className }, ref) => {
     const internalRef = useRef<HTMLDivElement>(null)
     const isAtBottomRef = useRef(true)
+    const prevScrollHeightRef = useRef<number>(0)
 
     useImperativeHandle(ref, () => internalRef.current!)
 
@@ -40,10 +41,20 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
       const container = internalRef.current
       if (!container || rounds.length === 0) return
 
-      if (isAtBottomRef.current) {
+      if (loadingMore) {
+        const newScrollHeight = container.scrollHeight
+        const heightDiff = newScrollHeight - prevScrollHeightRef.current
+        if (heightDiff > 0) {
+          container.scrollTop += heightDiff
+        }
+      } else if (isAtBottomRef.current) {
         scrollToBottom(container)
       }
-    }, [rounds])
+
+      if (!loadingMore) {
+        prevScrollHeightRef.current = container.scrollHeight
+      }
+    }, [rounds, loadingMore])
 
     useEffect(() => {
       if (!isRunning || !internalRef.current) return

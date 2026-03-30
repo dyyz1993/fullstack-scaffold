@@ -19,6 +19,8 @@ describe('ChatMessageCard', () => {
 
   it('should render user avatar for user role', () => {
     render(<ChatMessageCard message={mockMessage} />)
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument()
+    // lucide-react icons render as <svg> with aria-hidden="true", no role="img"
+    const avatar = screen.getByTestId('chat-message-msg-1').querySelector('svg')
+    expect(avatar).toBeInTheDocument()
   })
 })

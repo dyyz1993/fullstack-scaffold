@@ -195,14 +195,19 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       const result = await response.json()
       if (result.success) {
         const newRounds = result.data.rounds
-        const hasMore = newRounds.length === (limit || 10)
 
-        set(state => ({
-          rounds: append ? [...newRounds, ...state.rounds] : [...newRounds].reverse(),
-          hasMoreRounds: hasMore,
-          oldestTimestamp: result.data.oldestTimestamp ?? undefined,
-          [isLoading]: false,
-        }))
+        set(state => {
+          const existingIds = new Set(state.rounds.map(r => r.userMessage.id))
+          const uniqueNewRounds = append
+            ? newRounds.filter(r => !existingIds.has(r.userMessage.id))
+            : newRounds
+          return {
+            rounds: append ? [...uniqueNewRounds, ...state.rounds] : [...uniqueNewRounds].reverse(),
+            hasMoreRounds: result.data.hasMore,
+            oldestTimestamp: result.data.oldestTimestamp ?? undefined,
+            [isLoading]: false,
+          }
+        })
       } else {
         set({ error: result.error, [isLoading]: false })
       }

@@ -3,16 +3,8 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import * as fileService from '../services/file-service'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
-import type { AuthUser } from '@server/middleware/auth'
+import { AuthenticationError } from '@server/utils/app-error'
 import { WorkspaceFilesSchema, FileContentSchema } from '@shared/modules/workspace/schemas'
-
-const defaultUser: AuthUser = {
-  id: '3',
-  username: 'user1',
-  email: 'user1@example.com',
-  role: 'user' as AuthUser['role'],
-  permissions: [],
-}
 
 const getFilesRoute = createRoute({
   method: 'get',
@@ -44,10 +36,10 @@ const getFileContentRoute = createRoute({
 
 export const fileRoutes = new OpenAPIHono()
   .openapi(getFilesRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const files = await fileService.getWorkspaceFiles(user.id)
@@ -55,10 +47,10 @@ export const fileRoutes = new OpenAPIHono()
     return c.json(success(files))
   })
   .openapi(getFileContentRoute, async c => {
-    let user = getAuthUser(c)
+    const user = getAuthUser(c)
 
     if (!user) {
-      user = defaultUser
+      throw new AuthenticationError('Unauthorized')
     }
 
     const { path } = c.req.valid('param')
