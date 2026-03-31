@@ -290,7 +290,7 @@ export const agentRoutes = new OpenAPIHono()
 
         sendEvent('connected', { timestamp: Date.now() })
 
-        unsubscribe = sseManager.subscribe(id, {
+        unsubscribe = sseManager.subscribe(id, user.id, {
           send: sendEvent,
           close: () => {
             isClosed = true

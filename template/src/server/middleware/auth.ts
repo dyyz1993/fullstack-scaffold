@@ -28,14 +28,8 @@ declare module 'hono' {
 
 const defaultSecretKey = 'dev-secret-key-change-in-production'
 
-const isDevTokensEnabled = (): boolean => {
-  const nodeEnv = process.env.NODE_ENV
-  const enableDevTokens = process.env.ENABLE_DEV_TOKENS
-
-  if (enableDevTokens === 'true') return true
-  if (enableDevTokens === 'false') return false
-
-  return nodeEnv === 'development' || nodeEnv === 'test'
+const isProduction = (): boolean => {
+  return process.env.NODE_ENV === 'production'
 }
 
 function extractToken(authHeader: string | undefined): string | null {
@@ -104,7 +98,14 @@ function verifyDevToken(token: string): AuthUser | null {
 }
 
 function verifyToken(token: string, secretKey: string): AuthUser | null {
-  if (secretKey === defaultSecretKey && isDevTokensEnabled()) {
+  if (secretKey === defaultSecretKey) {
+    if (isProduction()) {
+      createModuleLoggerSync('auth').error(
+        {},
+        'Production environment using default secret key - reject all requests'
+      )
+      return null
+    }
     const devUser = verifyDevToken(token)
     if (devUser) {
       const log = createModuleLoggerSync('auth')

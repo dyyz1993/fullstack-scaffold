@@ -19,12 +19,30 @@ interface CachedLLMService {
 class ChatSessionManager {
   private runningChats = new Map<string, RunningChat>()
   private llmCache = new Map<string, CachedLLMService>()
-  private readonly CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+  private readonly CACHE_TTL = 30 * 60 * 1000
+  private readonly MAX_CACHE_SIZE = 10
   private cleanupInterval: ReturnType<typeof setInterval> | null = null
 
   constructor() {
-    // 每 30 分钟清理过期缓存
     this.cleanupInterval = setInterval(() => this.cleanupExpiredCache(), 30 * 60 * 1000)
+  }
+
+  private evictLRU(): void {
+    if (this.llmCache.size < this.MAX_CACHE_SIZE) return
+
+    let oldestKey: string | null = null
+    let oldestTime = Infinity
+
+    for (const [key, cached] of this.llmCache.entries()) {
+      if (cached.lastUsed < oldestTime) {
+        oldestTime = cached.lastUsed
+        oldestKey = key
+      }
+    }
+
+    if (oldestKey) {
+      this.llmCache.delete(oldestKey)
+    }
   }
 
   private cleanupExpiredCache(): void {
@@ -59,6 +77,8 @@ class ChatSessionManager {
       cached.lastUsed = now
       return cached.service
     }
+
+    this.evictLRU()
 
     const service = await createLLMService(userId, workspacePath)
     if (service) {
@@ -95,7 +115,7 @@ class ChatSessionManager {
     const userMessageId = `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const agentMessageId = `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`
 
-    sseManager.send(agentId, 'pi-agent-start', {
+    sseManager.send(agentId, userId, 'pi-agent-start', {
       messageId: agentMessageId,
       agentId,
     })
@@ -126,13 +146,20 @@ class ChatSessionManager {
 
       await llm.chat(conversationMessages, {
         onThinkingDelta: delta => {
-          sseManager.send(agentId, 'pi-thinking-delta', { messageId: agentMessageId, delta })
+          sseManager.send(agentId, userId, 'pi-thinking-delta', {
+            messageId: agentMessageId,
+            delta,
+          })
         },
         onTextDelta: (delta, isFinal) => {
-          sseManager.send(agentId, 'pi-text-delta', { messageId: agentMessageId, delta, isFinal })
+          sseManager.send(agentId, userId, 'pi-text-delta', {
+            messageId: agentMessageId,
+            delta,
+            isFinal,
+          })
         },
         onToolStart: (toolCallId, toolName, args) => {
-          sseManager.send(agentId, 'pi-tool-start', {
+          sseManager.send(agentId, userId, 'pi-tool-start', {
             messageId: agentMessageId,
             toolCallId,
             toolName,
@@ -140,7 +167,7 @@ class ChatSessionManager {
           })
         },
         onToolEnd: (toolCallId, result, error) => {
-          sseManager.send(agentId, 'pi-tool-end', {
+          sseManager.send(agentId, userId, 'pi-tool-end', {
             messageId: agentMessageId,
             toolCallId,
             result,
@@ -148,7 +175,7 @@ class ChatSessionManager {
           })
         },
         onError: error => {
-          sseManager.send(agentId, 'pi-error', {
+          sseManager.send(agentId, userId, 'pi-error', {
             messageId: agentMessageId,
             code: error.code,
             message: error.message,
@@ -159,7 +186,7 @@ class ChatSessionManager {
 
       this.runningChats.delete(userId)
 
-      sseManager.send(agentId, 'pi-agent-end', { messageId: agentMessageId })
+      sseManager.send(agentId, userId, 'pi-agent-end', { messageId: agentMessageId })
 
       return {
         userMessageId,
@@ -175,14 +202,14 @@ class ChatSessionManager {
           ? 'token_exceeded'
           : 'api_error'
 
-      sseManager.send(agentId, 'pi-error', {
+      sseManager.send(agentId, userId, 'pi-error', {
         messageId: agentMessageId,
         code: errorCode,
         message: errorMessage,
         recoverable: errorCode !== 'token_exceeded',
       })
 
-      sseManager.send(agentId, 'pi-agent-end', { messageId: agentMessageId })
+      sseManager.send(agentId, userId, 'pi-agent-end', { messageId: agentMessageId })
 
       return {
         userMessageId,
