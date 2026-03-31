@@ -55,7 +55,6 @@ describe('Agent Store', () => {
       pendingMessages: [],
       hasMoreRounds: true,
       oldestTimestamp: undefined,
-      newestTimestamp: undefined,
     })
   })
 

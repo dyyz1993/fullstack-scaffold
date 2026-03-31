@@ -20,12 +20,30 @@ export interface WorkspaceFiles {
   totalSize: number
 }
 
-function shouldIgnoreFile(name: string): boolean {
+function shouldIgnoreFile(name: string, isSymbolicLink?: boolean): boolean {
+  // 忽略符号链接，防止路径遍历
+  if (isSymbolicLink) return true
   const ignorePatterns = ['.DS_Store', '.env', '.git', 'node_modules', '.tmp', '.cache']
   return ignorePatterns.some(pattern => name.includes(pattern))
 }
 
-async function buildFileTree(dirPath: string, relativePath: string = ''): Promise<FileNode> {
+async function buildFileTree(
+  dirPath: string,
+  relativePath: string = '',
+  maxDepth: number = 10
+): Promise<FileNode> {
+  // 递归深度限制
+  if (maxDepth <= 0) {
+    const name = path.basename(dirPath)
+    return {
+      id: relativePath || '/',
+      name,
+      type: 'directory',
+      path: relativePath || '/',
+      children: [],
+    }
+  }
+
   const stats = await fs.promises.stat(dirPath)
   const name = path.basename(dirPath)
 
@@ -43,12 +61,12 @@ async function buildFileTree(dirPath: string, relativePath: string = ''): Promis
     const children: FileNode[] = []
 
     for (const entry of entries) {
-      if (shouldIgnoreFile(entry.name)) continue
+      if (shouldIgnoreFile(entry.name, entry.isSymbolicLink())) continue
 
       const childPath = path.join(dirPath, entry.name)
       const childRelativePath = relativePath ? `${relativePath}/${entry.name}` : `/${entry.name}`
 
-      const childNode = await buildFileTree(childPath, childRelativePath)
+      const childNode = await buildFileTree(childPath, childRelativePath, maxDepth - 1)
       children.push(childNode)
     }
 
@@ -110,9 +128,11 @@ export async function getWorkspaceFiles(userId: string): Promise<WorkspaceFiles>
 
 export async function getFileContent(userId: string, filePath: string): Promise<string | null> {
   const workspace = await getOrCreateWorkspace(userId)
-  const fullPath = path.join(workspace.path, filePath)
+  const fullPath = path.resolve(path.join(workspace.path, filePath))
+  const normalizedWorkspace = path.normalize(workspace.path)
 
-  if (!fullPath.startsWith(workspace.path)) {
+  // 使用 resolve + normalize 后比较，防止路径遍历
+  if (!fullPath.startsWith(normalizedWorkspace + path.sep) && fullPath !== normalizedWorkspace) {
     throw new Error('Access denied: file path outside workspace')
   }
 

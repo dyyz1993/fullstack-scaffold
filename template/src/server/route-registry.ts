@@ -27,6 +27,7 @@ export const clientApiRoutes = new OpenAPIHono()
 
 // 运营后台路由 - 普通用户使用的 API + 管理功能
 export const opsApiRoutes = new OpenAPIHono()
+  .route('/', clientApiRoutes)
   .route('/api', orderRoutes)
   .route('/api', ticketRoutes)
   .route('/api', disputeRoutes)
@@ -37,10 +38,6 @@ export const opsApiRoutes = new OpenAPIHono()
   .route('/api', roleRoutes)
   .route('/api', auditLogRoutes)
   .route('/api', opsRoutes)
-  .route('/api', tenantRoutes)
-  .route('/api', agentRoutes)
-  .route('/api', workspaceRoutes)
-  .route('/api', agentFileRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes

@@ -3,7 +3,7 @@ import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
-import { corsMiddleware, loggerMiddleware } from './middleware'
+import { corsMiddleware, loggerMiddleware, authMiddleware } from './middleware'
 import { realtimeEnvMiddleware } from './middleware/realtime-env'
 import { captchaMiddleware } from './middleware/captcha'
 import { auditLogMiddleware } from './middleware/audit-log'
@@ -146,6 +146,8 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     .use('*', corsMiddleware())
     .use('*', realtimeEnvMiddleware())
     .use('/api/*', auditLogMiddleware())
+    .use('/api/agents/*', authMiddleware())
+    .use('/api/workspace/*', authMiddleware())
     .use(
       '/api/admin/*',
       captchaMiddleware({

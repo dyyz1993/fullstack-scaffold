@@ -8,16 +8,14 @@ import {
 } from '@shared/modules/workspace'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
-import { NotFoundError, AuthenticationError } from '@server/utils/app-error'
-
-const WorkspaceResponseSchema = WorkspaceSchema
+import { NotFoundError } from '@server/utils/app-error'
 
 const getWorkspaceRoute = createRoute({
   method: 'get',
   path: '/workspace',
   tags: ['workspace'],
   responses: {
-    200: successResponse(WorkspaceResponseSchema, 'Get or create workspace for current user'),
+    200: successResponse(WorkspaceSchema, 'Get or create workspace for current user'),
     401: errorResponse('Unauthorized'),
     500: errorResponse('Internal server error'),
   },
@@ -33,7 +31,7 @@ const updateWorkspaceRoute = createRoute({
     },
   },
   responses: {
-    200: successResponse(WorkspaceResponseSchema, 'Update workspace'),
+    200: successResponse(WorkspaceSchema, 'Update workspace'),
     401: errorResponse('Unauthorized'),
     404: errorResponse('Workspace not found'),
     500: errorResponse('Internal server error'),
@@ -56,20 +54,12 @@ export const workspaceRoutes = new OpenAPIHono()
   .openapi(getWorkspaceRoute, async c => {
     const user = getAuthUser(c)
 
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
-
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
 
     return c.json(success(workspace))
   })
   .openapi(updateWorkspaceRoute, async c => {
     const user = getAuthUser(c)
-
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
 
     const input = c.req.valid('json')
 
@@ -82,10 +72,6 @@ export const workspaceRoutes = new OpenAPIHono()
   })
   .openapi(deleteWorkspaceRoute, async c => {
     const user = getAuthUser(c)
-
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
 
     await workspaceService.deleteWorkspace(user.id)
 

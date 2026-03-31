@@ -150,9 +150,9 @@ describe('Agent Service Functions', () => {
         expect(result.length).toBe(0)
       })
 
-      it('should handle parseSessionJsonl with invalid path', () => {
-        expect(() => parseSessionJsonl('invalid-user-id')).not.toThrow()
-        const result = parseSessionJsonl('invalid-user-id')
+      it('should handle parseSessionJsonl with invalid path', async () => {
+        await expect(parseSessionJsonl('invalid-user-id')).resolves.not.toThrow()
+        const result = await parseSessionJsonl('invalid-user-id')
         expect(result).toBeDefined()
         expect(result.messages).toBeDefined()
         expect(Array.isArray(result.messages)).toBe(true)

@@ -27,7 +27,13 @@ export function findMockScenario(userMessage: string): string | null {
   for (const scenario of config.scenarios) {
     for (const trigger of scenario.triggers) {
       if (lowerMessage.includes(trigger.toLowerCase())) {
-        return path.join(MOCK_DIR, scenario.dataFile)
+        const dataFilePath = path.join(MOCK_DIR, scenario.dataFile)
+        const resolvedPath = path.resolve(dataFilePath)
+        if (!resolvedPath.startsWith(path.resolve(MOCK_DIR))) {
+          console.error('[Mock] Invalid data file path:', scenario.dataFile)
+          return null
+        }
+        return resolvedPath
       }
     }
   }

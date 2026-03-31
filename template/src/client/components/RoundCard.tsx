@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useEffect } from 'react'
+import { memo, useState, useCallback, useEffect, useRef } from 'react'
 import { User, Bot, Loader2, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -13,12 +13,18 @@ interface RoundCardProps {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(text)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setCopied(false), 2000)
   }, [text])
+
+  useEffect(() => {
+    return () => clearTimeout(timerRef.current)
+  }, [])
 
   return (
     <button

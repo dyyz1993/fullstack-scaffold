@@ -34,13 +34,13 @@ export const ChatPage: React.FC = () => {
   }, [agent, isInitialized, fetchRounds])
 
   useEffect(() => {
-    if (agent && isInitialized) {
+    if (agent?.id && isInitialized) {
       connectSSE()
     }
     return () => {
       disconnectSSE()
     }
-  }, [agent, isInitialized, connectSSE, disconnectSSE])
+  }, [agent?.id, isInitialized, connectSSE, disconnectSSE])
 
   const handleClearChat = async () => {
     await clearMessages()

@@ -16,9 +16,8 @@ import {
 } from '@shared/modules/agent'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
-import { NotFoundError, AuthenticationError } from '@server/utils/app-error'
+import { NotFoundError } from '@server/utils/app-error'
 
-const AgentResponseSchema = AgentSchema
 const MessageListSchema = z.array(ChatMessageSchema)
 
 const getAgentRoute = createRoute({
@@ -26,7 +25,7 @@ const getAgentRoute = createRoute({
   path: '/agents',
   tags: ['agents'],
   responses: {
-    200: successResponse(AgentResponseSchema, 'Get or create agent for current user'),
+    200: successResponse(AgentSchema, 'Get or create agent for current user'),
     401: errorResponse('Unauthorized'),
     500: errorResponse('Internal server error'),
   },
@@ -43,7 +42,7 @@ const updateAgentRoute = createRoute({
     },
   },
   responses: {
-    200: successResponse(AgentResponseSchema, 'Update agent'),
+    200: successResponse(AgentSchema, 'Update agent'),
     401: errorResponse('Unauthorized'),
     404: errorResponse('Agent not found'),
     500: errorResponse('Internal server error'),
@@ -159,10 +158,6 @@ export const agentRoutes = new OpenAPIHono()
   .openapi(getAgentRoute, async c => {
     const user = getAuthUser(c)
 
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
-
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
     const agent = await agentService.getOrCreateAgent(workspace.id, user.id)
 
@@ -170,10 +165,6 @@ export const agentRoutes = new OpenAPIHono()
   })
   .openapi(updateAgentRoute, async c => {
     const user = getAuthUser(c)
-
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
 
     const { id } = c.req.valid('param')
     const input = c.req.valid('json')
@@ -188,10 +179,6 @@ export const agentRoutes = new OpenAPIHono()
   })
   .openapi(getMessagesRoute, async c => {
     const user = getAuthUser(c)
-
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
 
     const { id } = c.req.valid('param')
     const { limit, before } = c.req.valid('query')
@@ -214,10 +201,6 @@ export const agentRoutes = new OpenAPIHono()
   })
   .openapi(getRoundsRoute, async c => {
     const user = getAuthUser(c)
-
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
 
     const { id } = c.req.valid('param')
     const { limit, before } = c.req.valid('query')
@@ -248,10 +231,6 @@ export const agentRoutes = new OpenAPIHono()
   .openapi(sendMessageRoute, async c => {
     const user = getAuthUser(c)
 
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
-
     const { id } = c.req.valid('param')
     const { content } = c.req.valid('json')
 
@@ -268,10 +247,6 @@ export const agentRoutes = new OpenAPIHono()
   .openapi(clearMessagesRoute, async c => {
     const user = getAuthUser(c)
 
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
-
     const { id } = c.req.valid('param')
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
@@ -287,10 +262,6 @@ export const agentRoutes = new OpenAPIHono()
   .openapi(chatStreamRoute, async c => {
     const user = getAuthUser(c)
 
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
-
     const { id } = c.req.valid('param')
 
     const workspace = await workspaceService.getOrCreateWorkspace(user.id)
@@ -300,6 +271,9 @@ export const agentRoutes = new OpenAPIHono()
     }
 
     let isClosed = false
+    let keepAlive: ReturnType<typeof setInterval> | undefined
+    let unsubscribe: (() => void) | undefined
+
     const stream = new ReadableStream({
       start(controller) {
         const encoder = new TextEncoder()
@@ -316,25 +290,21 @@ export const agentRoutes = new OpenAPIHono()
 
         sendEvent('connected', { timestamp: Date.now() })
 
-        const unsubscribe = sseManager.subscribe(id, {
+        unsubscribe = sseManager.subscribe(id, {
           send: sendEvent,
           close: () => {
             isClosed = true
           },
         })
 
-        const keepAlive = setInterval(() => {
+        keepAlive = setInterval(() => {
           sendEvent('heartbeat', { timestamp: Date.now() })
         }, 30000)
-
-        return () => {
-          isClosed = true
-          clearInterval(keepAlive)
-          unsubscribe()
-        }
       },
       cancel() {
         isClosed = true
+        if (keepAlive) clearInterval(keepAlive)
+        if (unsubscribe) unsubscribe()
       },
     })
 
@@ -348,10 +318,6 @@ export const agentRoutes = new OpenAPIHono()
   })
   .openapi(stopChatRoute, async c => {
     const user = getAuthUser(c)
-
-    if (!user) {
-      throw new AuthenticationError('Authentication required - please login')
-    }
 
     const { id } = c.req.valid('param')
 

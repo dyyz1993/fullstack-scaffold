@@ -20,6 +20,21 @@ class ChatSessionManager {
   private runningChats = new Map<string, RunningChat>()
   private llmCache = new Map<string, CachedLLMService>()
   private readonly CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null
+
+  constructor() {
+    // 每 30 分钟清理过期缓存
+    this.cleanupInterval = setInterval(() => this.cleanupExpiredCache(), 30 * 60 * 1000)
+  }
+
+  private cleanupExpiredCache(): void {
+    const now = Date.now()
+    for (const [key, cached] of this.llmCache.entries()) {
+      if (now - cached.lastUsed > this.CACHE_TTL) {
+        this.llmCache.delete(key)
+      }
+    }
+  }
 
   private async getLLMService(
     userId: string,
@@ -95,7 +110,7 @@ class ChatSessionManager {
         throw new Error('No LLM service available')
       }
 
-      const historyMessages = loadSessionHistory(userId, 10, workspace.path)
+      const historyMessages = await loadSessionHistory(userId, 10, workspace.path)
       const conversationMessages = [...historyMessages, { role: 'user' as const, content }]
 
       const runningChat: RunningChat = {
@@ -191,6 +206,15 @@ class ChatSessionManager {
 
   isRunning(userId: string): boolean {
     return this.runningChats.has(userId)
+  }
+
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval)
+      this.cleanupInterval = null
+    }
+    this.llmCache.clear()
+    this.runningChats.clear()
   }
 }
 

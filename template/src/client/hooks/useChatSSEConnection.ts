@@ -14,6 +14,8 @@ import type {
 import { useAgentStore } from '@client/stores/agentStore'
 import { useWorkspaceStore } from '@client/stores/workspaceStore'
 
+const FILE_SYSTEM_TOOLS = ['create_file', 'write_file', 'delete_file', 'create_directory'] as const
+
 export function useChatSSEConnection() {
   const agent = useAgentStore(state => state.agent)
   const updateCurrentSubRoundContent = useAgentStore(state => state.updateCurrentSubRoundContent)
@@ -76,7 +78,7 @@ export function useChatSSEConnection() {
 
       if (
         data.toolName &&
-        ['create_file', 'write_file', 'delete_file', 'create_directory'].includes(data.toolName)
+        FILE_SYSTEM_TOOLS.includes(data.toolName as (typeof FILE_SYSTEM_TOOLS)[number])
       ) {
         fetchFiles()
       }

@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import { access, readdir, stat, readFile } from 'fs/promises'
 import * as path from 'path'
 import type {
   PiMessage,
@@ -19,24 +19,36 @@ export interface ParseSessionResult {
   toolCallMap: ToolCallMap
 }
 
-export function parseSessionJsonl(userId: string, _workspacePath?: string): ParseSessionResult {
+export async function parseSessionJsonl(
+  userId: string,
+  _workspacePath?: string
+): Promise<ParseSessionResult> {
   const sessionDir = Paths.sessions(userId)
 
-  if (!fs.existsSync(sessionDir)) {
+  try {
+    await access(sessionDir)
+  } catch {
     console.warn('[SessionParser] Session dir not found:', sessionDir)
     return { messages: [], toolCallMap: new Map() }
   }
 
   try {
-    const sessionFiles = fs
-      .readdirSync(sessionDir)
-      .filter(f => f.endsWith('.jsonl'))
-      .map(f => ({
-        name: f,
-        path: path.join(sessionDir, f),
-        mtime: fs.statSync(path.join(sessionDir, f)).mtime.getTime(),
-      }))
-      .sort((a, b) => b.mtime - a.mtime)
+    const files = await readdir(sessionDir)
+    const sessionFiles = (
+      await Promise.all(
+        files
+          .filter(f => f.endsWith('.jsonl'))
+          .map(async f => {
+            const filePath = path.join(sessionDir, f)
+            const fileStat = await stat(filePath)
+            return {
+              name: f,
+              path: filePath,
+              mtime: fileStat.mtime.getTime(),
+            }
+          })
+      )
+    ).sort((a, b) => b.mtime - a.mtime)
 
     if (sessionFiles.length === 0) {
       return { messages: [], toolCallMap: new Map() }
@@ -46,7 +58,7 @@ export function parseSessionJsonl(userId: string, _workspacePath?: string): Pars
     const toolCallMap: ToolCallMap = new Map()
 
     for (const sessionFile of sessionFiles) {
-      const content = fs.readFileSync(sessionFile.path, 'utf-8')
+      const content = await readFile(sessionFile.path, 'utf-8')
       const lines = content.trim().split('\n')
 
       for (const line of lines) {

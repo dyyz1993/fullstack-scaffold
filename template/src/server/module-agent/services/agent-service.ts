@@ -1,5 +1,5 @@
 import { eq, and } from 'drizzle-orm'
-import fs from 'fs'
+import { access, readdir, unlink } from 'fs/promises'
 import path from 'path'
 import type {
   Agent,
@@ -99,14 +99,18 @@ export async function updateAgent(
   if (!existing) return null
 
   const now = new Date()
+
+  // 字段白名单，防止注入非预期字段
+  const allowedFields = ['name', 'description', 'model', 'systemPrompt'] as const
   const updateData: Record<string, unknown> = {
     updatedAt: now,
   }
 
-  if (input.name !== undefined) updateData.name = input.name
-  if (input.description !== undefined) updateData.description = input.description
-  if (input.model !== undefined) updateData.model = input.model
-  if (input.systemPrompt !== undefined) updateData.systemPrompt = input.systemPrompt
+  for (const key of allowedFields) {
+    if (input[key] !== undefined && input[key] !== null) {
+      updateData[key] = input[key]
+    }
+  }
 
   await db.update(agents).set(updateData).where(eq(agents.id, agentId))
 
@@ -127,7 +131,7 @@ export async function getMessages(
 ): Promise<{ rounds: MessageRound[]; hasMore: boolean; oldestTimestamp?: string }> {
   try {
     const userId = path.basename(workspacePath)
-    const { messages: piMessages, toolCallMap } = parseSessionJsonl(userId)
+    const { messages: piMessages, toolCallMap } = await parseSessionJsonl(userId)
 
     piMessages.sort((a, b) => b.timestamp - a.timestamp)
 
@@ -209,15 +213,19 @@ export async function clearMessages(_agentId: string, workspacePath: string): Pr
   const userId = path.basename(workspacePath)
   const sessionDir = Paths.sessions(userId)
 
-  if (fs.existsSync(sessionDir)) {
-    const sessionFiles = fs.readdirSync(sessionDir).filter((f: string) => f.endsWith('.jsonl'))
-    for (const file of sessionFiles) {
-      const filePath = path.join(sessionDir, file)
-      try {
-        fs.unlinkSync(filePath)
-      } catch (e) {
-        console.warn('[Agent] Failed to delete session file:', filePath, e)
-      }
+  try {
+    await access(sessionDir)
+  } catch {
+    return
+  }
+
+  const sessionFiles = (await readdir(sessionDir)).filter((f: string) => f.endsWith('.jsonl'))
+  for (const file of sessionFiles) {
+    const filePath = path.join(sessionDir, file)
+    try {
+      await unlink(filePath)
+    } catch (e) {
+      console.warn('[Agent] Failed to delete session file:', filePath, e)
     }
   }
 }

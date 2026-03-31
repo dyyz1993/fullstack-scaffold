@@ -17,12 +17,13 @@ export function useChat() {
     const messageContent = input.trim()
     setInput('')
 
-    if (isRunning) {
+    const currentlyRunning = useAgentStore.getState().isRunning
+    if (currentlyRunning) {
       addPendingMessage(messageContent)
     } else {
       await sendMessage(messageContent)
     }
-  }, [input, loading, isRunning, addPendingMessage, sendMessage])
+  }, [input, loading, addPendingMessage, sendMessage])
 
   const handleStop = useCallback(() => {
     stopGeneration()

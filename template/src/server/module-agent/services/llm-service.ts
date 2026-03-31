@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import { access, readFile, mkdir } from 'fs/promises'
 import * as os from 'os'
 import {
   createAgentSession,
@@ -37,24 +37,24 @@ interface ModelsConfig {
   defaultModel: string
 }
 
-function loadPiModelsConfig(): ModelsConfig | null {
+async function loadPiModelsConfig(): Promise<ModelsConfig | null> {
   try {
     const configPath = `${os.homedir()}/.pi/agent/settings.json`
-    if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf-8')) as ModelsConfig
-    }
+    await access(configPath)
+    const content = await readFile(configPath, 'utf-8')
+    return JSON.parse(content) as ModelsConfig
   } catch (error) {
     console.warn('[LLM] Failed to load PI settings config:', error)
   }
   return null
 }
 
-export function loadSessionHistory(
+export async function loadSessionHistory(
   userId: string,
   limit?: number,
   workspacePath?: string
-): Array<{ role: string; content: string }> {
-  const { messages } = parseSessionJsonl(userId, workspacePath)
+): Promise<Array<{ role: string; content: string }>> {
+  const { messages } = await parseSessionJsonl(userId, workspacePath)
   const llmMessages = toLLMMessages(messages)
   return limit ? llmMessages.slice(-limit) : llmMessages
 }
@@ -72,7 +72,7 @@ export async function createPILLMService(
   userId: string,
   workspacePath?: string
 ): Promise<LLMPIService> {
-  const piConfig = loadPiModelsConfig()
+  const piConfig = await loadPiModelsConfig()
   if (!piConfig) {
     throw new Error('PI config not found')
   }
@@ -95,12 +95,16 @@ export async function createPILLMService(
 
   const sessionManager = SessionManager.create(userWorkspace, sessionDir)
 
-  if (!fs.existsSync(userWorkspace)) {
-    fs.mkdirSync(userWorkspace, { recursive: true })
+  try {
+    await access(userWorkspace)
+  } catch {
+    await mkdir(userWorkspace, { recursive: true })
     console.warn('[LLM] Created user workspace:', userWorkspace)
   }
-  if (!fs.existsSync(sessionDir)) {
-    fs.mkdirSync(sessionDir, { recursive: true })
+  try {
+    await access(sessionDir)
+  } catch {
+    await mkdir(sessionDir, { recursive: true })
     console.warn('[LLM] Created session dir:', sessionDir)
   }
 
@@ -191,7 +195,7 @@ export async function createLLMService(
     return null
   }
 
-  const piConfig = loadPiModelsConfig()
+  const piConfig = await loadPiModelsConfig()
   if (!piConfig) {
     return null
   }

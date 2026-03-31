@@ -72,11 +72,6 @@ export const GetMessagesSchema = z.object({
   offset: z.coerce.number().int().nonnegative().nullish(),
 })
 
-export const SSEEventSchema = z.object({
-  event: z.string(),
-  data: z.unknown(),
-})
-
 export const PiTextDeltaEventSchema = z.object({
   messageId: z.string(),
   delta: z.string(),
