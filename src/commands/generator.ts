@@ -152,6 +152,7 @@ async function deleteFrontendChannels(targetDir: string, config: ProjectConfig):
 
   if (!config.backend) {
     await fs.remove(path.join(targetDir, 'src/server'))
+    await fs.remove(path.join(targetDir, 'src/platform/server'))
   }
 }
 
@@ -397,6 +398,61 @@ async function cleanClientApp(targetDir: string, config: ProjectConfig): Promise
     const updated = content.replace(/\/\/ tenant start[\s\S]*?\/\/ tenant end\n?/gi, '')
     await fs.writeFile(filePath, updated)
   }
+
+  const clientModulesWithRoutes: BackendModule[] = ['todos', 'chat', 'notifications', 'tenant']
+  const hasClientRoutes = config.modules.some(m => clientModulesWithRoutes.includes(m))
+
+  if (!hasClientRoutes) {
+    const homePagePath = path.join(targetDir, 'src/client/pages/HomePage.tsx')
+    if (!(await fs.pathExists(homePagePath))) {
+      await fs.ensureDir(path.dirname(homePagePath))
+      await fs.writeFile(
+        homePagePath,
+        `export const HomePage: React.FC = () => {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold mb-4">Welcome</h1>
+        <p className="text-gray-500">Get started by adding modules to your project.</p>
+      </div>
+    </div>
+  )
+}
+`
+      )
+    }
+
+    let content = await fs.readFile(filePath, 'utf-8')
+    content = content.replace(
+      /<Route path="\/" element=\{<Navigate to="\/todos" replace \/>\} \/>/g,
+      '<Route path="/" element={<HomePage />} />'
+    )
+    const hasHomePageImport = /import.*HomePage/.test(content)
+    if (!hasHomePageImport) {
+      content = content.replace(
+        /import\s*\{([^}]*)\}\s*from\s*['"]react-router-dom['"]/,
+        (match, imports: string) => {
+          const cleaned = imports
+            .replace(/,?\s*Navigate/g, '')
+            .replace(/\{\s*,/, '{')
+            .replace(/,\s*\}/, ' }')
+          if (cleaned.match(/\{\s*\}/)) return match
+          return `import { ${cleaned.replace(/\{|\}/g, '').trim()} } from 'react-router-dom'`
+        }
+      )
+      const layoutImportMatch = content.match(
+        /import\s*\{\s*Layout\s*\}\s*from\s*['"]\.\/Layout['"]/
+      )
+      if (layoutImportMatch) {
+        const insertPos = content.indexOf(layoutImportMatch[0]) + layoutImportMatch[0].length
+        content =
+          content.slice(0, insertPos) +
+          "\nimport { HomePage } from './pages/HomePage'" +
+          content.slice(insertPos)
+      }
+    }
+    await fs.writeFile(filePath, content)
+  }
 }
 
 async function cleanOpsApp(targetDir: string, config: ProjectConfig): Promise<void> {
@@ -458,15 +514,51 @@ async function cleanClientNavigation(targetDir: string, config: ProjectConfig): 
   if (keptKeys.length === 0) {
     updated = updated.replace(routeKeyLineRegex, `type RouteKey = never`)
 
-    const routeObjRegex = /const routes: Record<\s*RouteKey,\s*\{[^}]*\}\s*> = \{[\s\S]*?\n\}/
-    updated = updated.replace(
-      routeObjRegex,
-      'const routes: Record<RouteKey, { label: string; icon: React.FC<{ className?: string }>; path: string }> = {}'
-    )
+    const routeDeclStart = updated.indexOf('const routes:')
+    if (routeDeclStart !== -1) {
+      const routeObjStart = updated.indexOf('= {', routeDeclStart)
+      if (routeObjStart !== -1) {
+        let depth = 0
+        let routeObjEnd = -1
+        for (let i = routeObjStart + 2; i < updated.length; i++) {
+          if (updated[i] === '{') depth++
+          if (updated[i] === '}') {
+            depth--
+            if (depth === 0) {
+              routeObjEnd = i
+              break
+            }
+          }
+        }
+        if (routeObjEnd !== -1) {
+          updated =
+            updated.slice(0, routeDeclStart) +
+            'const routes: Record<RouteKey, { label: string; icon: React.FC<{ className?: string }>; path: string }> = {}' +
+            updated.slice(routeObjEnd + 1)
+        }
+      }
+    }
 
     const navItemsRegex =
       /\{[\s\S]*?\(Object\.keys\(routes\) as RouteKey\[\]\)[\s\S]*?\}\s*\n\s*\)\s*\n\s*\}\s*<\/div>/
     updated = updated.replace(navItemsRegex, '')
+
+    const navDivRegex = /<div className="flex items-center gap-1">[\s\S]*?<\/div>\s*\n/
+    updated = updated.replace(navDivRegex, '')
+
+    updated = updated.replace(
+      /import\s*\{[^}]*NavLink[^}]*\}\s*from\s*['"]react-router-dom['"]\s*;?\s*\n?/g,
+      ''
+    )
+    updated = updated.replace(/^type RouteKey = never\s*\n?/m, '')
+
+    const routeDeclStart2 = updated.indexOf('const routes:')
+    if (routeDeclStart2 !== -1) {
+      const routeDeclEnd2 = updated.indexOf('\n', updated.indexOf('= {}', routeDeclStart2))
+      if (routeDeclEnd2 !== -1) {
+        updated = updated.slice(0, routeDeclStart2) + updated.slice(routeDeclEnd2 + 1)
+      }
+    }
 
     const allIconNames = [
       'CheckCircle',
@@ -493,6 +585,9 @@ async function cleanClientNavigation(targetDir: string, config: ProjectConfig): 
         )
       }
     }
+
+    updated = updated.replace(/<Rocket[^/]*\/>/g, '🚀')
+    updated = updated.replace(/<Github[^/]*\/>/g, '')
   } else {
     updated = updated.replace(
       routeKeyLineRegex,
@@ -752,6 +847,23 @@ async function updateWranglerToml(targetDir: string, config: ProjectConfig): Pro
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
 
+  if (!config.backend) {
+    content = `name = "${workerName}"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist/client"
+not_found_handling = "single-page-application"
+
+[dev]
+port = 8787
+local_protocol = "http"
+`
+    await fs.writeFile(filePath, content)
+    return
+  }
+
   content = content.replace(/^name = ".*"/m, `name = "${workerName}"`)
   content = content.replace(/database_name = ".*"/g, `database_name = "${dbName}"`)
 
@@ -759,9 +871,20 @@ async function updateWranglerToml(targetDir: string, config: ProjectConfig): Pro
 }
 
 async function handleCloudflareCleanup(targetDir: string, config: ProjectConfig): Promise<void> {
-  if (config.deploy === 'cloudflare') {
+  if (config.deploy === 'cloudflare' || !config.backend) {
     await fs.remove(path.join(targetDir, 'docker-compose.yml'))
+  }
+
+  if (!config.backend) {
+    await fs.remove(path.join(targetDir, 'Dockerfile'))
+  }
+
+  if (config.deploy === 'cloudflare') {
     await updateWranglerToml(targetDir, config)
+  }
+
+  if (config.deploy === 'node' && !config.backend) {
+    await fs.remove(path.join(targetDir, 'wrangler.toml'))
   }
 
   if (config.deploy === 'node') {
@@ -946,11 +1069,11 @@ async function updateTsupConfig(targetDir: string, config: ProjectConfig): Promi
     content = removeBlock(content, 'src/cli/index.ts')
   }
 
-  if (config.deploy !== 'cloudflare') {
+  if (config.deploy !== 'cloudflare' || !config.backend) {
     content = removeBlock(content, 'entries/cloudflare')
   }
 
-  if (config.deploy !== 'node') {
+  if (config.deploy !== 'node' || !config.backend) {
     content = removeBlock(content, 'entries/node')
   }
 
@@ -979,12 +1102,190 @@ async function updateTsconfig(targetDir: string, config: ProjectConfig): Promise
   await fs.writeFile(filePath, content)
 }
 
+async function updateDrizzleConfig(targetDir: string, config: ProjectConfig): Promise<void> {
+  const filePath = path.join(targetDir, 'drizzle.config.ts')
+  if (!(await fs.pathExists(filePath))) return
+
+  if (config.database === 'mysql') {
+    await fs.writeFile(
+      filePath,
+      `import { defineConfig } from 'drizzle-kit';\nimport { getDatabaseConfig } from './src/server/db/config';\n\nconst config = getDatabaseConfig();\n\nexport default defineConfig({\n  schema: './src/server/db/schema/index.ts',\n  out: './drizzle',\n  dialect: 'mysql',\n  dbCredentials: {\n    host: config.mysqlHost || 'localhost',\n    port: config.mysqlPort || 3306,\n    user: config.mysqlUser || 'root',\n    password: config.mysqlPassword || '',\n    database: config.mysqlDatabase || 'biomimic',\n  },\n});\n`
+    )
+  } else if (config.database === 'd1') {
+    await fs.writeFile(
+      filePath,
+      `import { defineConfig } from 'drizzle-kit';\n\nexport default defineConfig({\n  schema: './src/server/db/schema/index.ts',\n  out: './drizzle',\n  dialect: 'sqlite',\n  driver: 'd1-http',\n});\n`
+    )
+  }
+}
+
+async function updateDbDriver(targetDir: string, config: ProjectConfig): Promise<void> {
+  const filePath = path.join(targetDir, 'src/server/db/driver.ts')
+  if (!(await fs.pathExists(filePath))) return
+
+  if (config.database === 'mysql') {
+    await fs.writeFile(
+      filePath,
+      `import { getDatabaseConfig, type DatabaseConfig } from '../config';\nimport * as schema from './schema';\nimport { drizzle as drizzleMysql } from 'drizzle-orm/mysql2';\nimport mysql from 'mysql2/promise';\nimport { logger } from '../utils/logger';\n\ntype MysqlDb = ReturnType<typeof drizzleMysql<typeof schema>>;\ntype Db = MysqlDb;\n\nlet _db: Db | null = null;\nlet _pool: mysql.Pool | null = null;\n\nconst log = logger.db();\n\nexport async function getDb(): Promise<Db> {\n  if (_db) return _db;\n\n  const config = getDatabaseConfig();\n\n  log.debug({ driver: config.driver }, 'Creating database connection');\n\n  const { db, pool } = createMysqlDb(config);\n  _db = db as unknown as Db;\n  _pool = pool;\n\n  log.info({ driver: config.driver }, 'Database connected');\n  return _db;\n}\n\nexport function getRawClient() {\n  return _pool;\n}\n\nexport async function closeDb(): Promise<void> {\n  if (_pool) {\n    await _pool.end();\n    _pool = null;\n    _db = null;\n  }\n}\n\nexport async function runMigrations(): Promise<void> {\n  log.info({}, 'Running migrations...');\n}\n\nfunction createMysqlDb(config: DatabaseConfig): { db: MysqlDb; pool: mysql.Pool } {\n  const pool = mysql.createPool({\n    host: config.mysqlHost || 'localhost',\n    port: config.mysqlPort || 3306,\n    user: config.mysqlUser || 'root',\n    password: config.mysqlPassword || '',\n    database: config.mysqlDatabase || 'biomimic',\n  });\n  const db = drizzleMysql(pool, { schema, mode: 'default' }) as unknown as MysqlDb;\n  log.debug({}, 'MySQL database created');\n  return { db, pool };\n}\n`
+    )
+  }
+}
+
+async function updateDbSchemaForMysql(targetDir: string, config: ProjectConfig): Promise<void> {
+  if (config.database !== 'mysql') return
+
+  const schemaDir = path.join(targetDir, 'src/server/db/schema')
+  if (!(await fs.pathExists(schemaDir))) return
+
+  const files = await fs.readdir(schemaDir)
+  for (const file of files) {
+    if (!file.endsWith('.ts') || file === 'index.ts') continue
+    const filePath = path.join(schemaDir, file)
+    let content = await fs.readFile(filePath, 'utf-8')
+
+    content = content.replace(
+      /import\s*\{\s*sqliteTable,\s*integer,\s*text\s*\}\s*from\s*['"]drizzle-orm\/sqlite-core['"]\s*;?/g,
+      "import { mysqlTable, int, varchar, mysqlEnum, timestamp } from 'drizzle-orm/mysql-core';"
+    )
+    content = content.replace(/sqliteTable/g, 'mysqlTable')
+    content = content.replace(
+      /integer\(\s*'(\w+)'\s*\)\.primaryKey\(\s*\{\s*autoIncrement:\s*true\s*\}\s*\)/g,
+      "int('$1').primaryKey().autoincrement()"
+    )
+    content = content.replace(
+      /integer\(\s*'(\w+)'\s*,\s*\{\s*mode:\s*'timestamp'\s*\}\s*\)\s*\n?\s*\.notNull\(\)\s*\n?\s*\.default\(\s*sql\s*`\(unixepoch\(\)\s*\*\s*1000\)`\s*\)/g,
+      "timestamp('$1').notNull().default(sql`CURRENT_TIMESTAMP`)"
+    )
+    content = content.replace(/integer\(/g, 'int(')
+    content = content.replace(
+      /text\(\s*'(\w+)'\s*,\s*\{\s*enum:\s*(\w+)\s*\}\s*\)/g,
+      "mysqlEnum('$1', $2)"
+    )
+    content = content.replace(/(\.\s*)text\(/g, '$1varchar(')
+
+    const usedImports = ['mysqlTable', 'int', 'varchar', 'timestamp']
+    if (content.includes('mysqlEnum(')) usedImports.push('mysqlEnum')
+    const importLine = content.match(
+      /import\s*\{[^}]+\}\s*from\s*['"]drizzle-orm\/mysql-core['"]\s*;?/
+    )
+    if (importLine) {
+      content = content.replace(
+        importLine[0],
+        `import { ${usedImports.join(', ')} } from 'drizzle-orm/mysql-core';`
+      )
+    }
+
+    await fs.writeFile(filePath, content)
+  }
+
+  const testsDir = path.join(targetDir, 'src/server/module-todos/__tests__')
+  if (await fs.pathExists(testsDir)) {
+    const testFiles = await fs.readdir(testsDir)
+    for (const f of testFiles) {
+      if (f.endsWith('.test.ts')) {
+        const tf = path.join(testsDir, f)
+        const tc = await fs.readFile(tf, 'utf-8')
+        if (tc.includes('.execute({') || tc.includes('.rows')) {
+          await fs.remove(tf)
+        }
+      }
+    }
+  }
+
+  const serviceDir = path.join(targetDir, 'src/server/module-todos/services')
+  if (await fs.pathExists(serviceDir)) {
+    const todoServicePath = path.join(serviceDir, 'todo-service.ts')
+    if (await fs.pathExists(todoServicePath)) {
+      let content = await fs.readFile(todoServicePath, 'utf-8')
+
+      content = content.replace(
+        /const result = await db\s*\n?\s*\.insert\(todos\)\s*\n?\s*\.values\(\{[^}]+\}\)\s*\n?\s*\.returning\(\)\s*\n?\s*const row = result\[0\]\s*\n?\s*return\s*\{[^}]+\}/,
+        `await db.insert(todos).values({
+      title: input.title,
+      description: input.description ?? null,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    })
+  const rows = await db.select().from(todos).orderBy(desc(todos.id)).limit(1)
+  const row = rows[0]
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description ?? undefined,
+    status: row.status,
+    createdAt: toISOString(row.createdAt),
+    updatedAt: toISOString(row.updatedAt),
+  }`
+      )
+
+      content = content.replace(
+        /const result = await db\.update\(todos\)\.set\(updateData\)\.where\(eq\(todos\.id, id\)\)\.returning\(\)\s*\n?\s*if \(result\.length === 0\) return null\s*\n?\s*const row = result\[0\]/,
+        `await db.update(todos).set(updateData).where(eq(todos.id, id))
+  const rows = await db.select().from(todos).where(eq(todos.id, id))
+  if (rows.length === 0) return null
+  const row = rows[0]`
+      )
+
+      content = content.replace(
+        /const result = await db\.delete\(todos\)\.where\(eq\(todos\.id, id\)\)\.returning\(\)\s*\n?\s*return result\.length > 0/,
+        `const rows = await db.select({ id: todos.id }).from(todos).where(eq(todos.id, id))
+  if (rows.length === 0) return false
+  await db.delete(todos).where(eq(todos.id, id))
+  return true`
+      )
+
+      content = content.replace(
+        /const result = await db\s*\n?\s*\.insert\(todoAttachments\)\s*\n?\s*\.values\(\{[^}]+\}\)\s*\n?\s*\.returning\(\)\s*\n?\s*const row = result\[0\]/,
+        `await db.insert(todoAttachments).values({
+      todoId,
+      fileName: uploadedFile.filename,
+      originalName: uploadedFile.originalName,
+      mimeType: uploadedFile.mimeType,
+      size: uploadedFile.size,
+      path: uploadedFile.path,
+      uploadedBy: uploadedBy ?? null,
+      createdAt: now,
+    })
+  const rows = await db.select().from(todoAttachments).orderBy(desc(todoAttachments.id)).limit(1)
+  const row = rows[0]`
+      )
+
+      content = content.replace(/\.returning\(\)/g, '')
+
+      await fs.writeFile(todoServicePath, content)
+    }
+  }
+}
+
+async function updateDockerCompose(targetDir: string, config: ProjectConfig): Promise<void> {
+  const filePath = path.join(targetDir, 'docker-compose.yml')
+  if (!(await fs.pathExists(filePath))) return
+
+  if (config.database === 'mysql') {
+    await fs.writeFile(
+      filePath,
+      `version: '3.8'\n\nservices:\n  app:\n    build: .\n    ports:\n      - '3010:3010'\n    environment:\n      - NODE_ENV=production\n      - DB_DRIVER=mysql\n      - MYSQL_HOST=mysql\n      - MYSQL_PORT=3306\n      - MYSQL_USER=root\n      - MYSQL_PASSWORD=root_password\n      - MYSQL_DATABASE=biomimic_app\n    depends_on:\n      mysql:\n        condition: service_healthy\n\n  mysql:\n    image: mysql:8.0\n    environment:\n      MYSQL_ROOT_PASSWORD: root_password\n      MYSQL_DATABASE: biomimic_app\n    ports:\n      - '3306:3306'\n    volumes:\n      - mysql-data:/var/lib/mysql\n    healthcheck:\n      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n\nvolumes:\n  mysql-data:\n`
+    )
+  }
+}
+
 async function updateConfigFiles(targetDir: string, config: ProjectConfig): Promise<void> {
   await updateViteConfig(targetDir, config)
   await updatePackageJson(targetDir, config)
   await handleCloudflareCleanup(targetDir, config)
   await updateTsupConfig(targetDir, config)
   await updateTsconfig(targetDir, config)
+
+  if (!config.backend) {
+    await fs.remove(path.join(targetDir, 'drizzle.config.ts'))
+    await fs.remove(path.join(targetDir, 'drizzle'))
+  } else {
+    await updateDrizzleConfig(targetDir, config)
+    await updateDbDriver(targetDir, config)
+    await updateDbSchemaForMysql(targetDir, config)
+    await updateDockerCompose(targetDir, config)
+  }
 }
 
 async function cleanOpsCrossModuleRefs(targetDir: string, config: ProjectConfig): Promise<void> {
@@ -1687,6 +1988,20 @@ async function cleanClientCrossRefs(targetDir: string, config: ProjectConfig): P
       const finalLines = lines2.filter((_, i) => !toRemove.has(i))
       content = finalLines.join('\n')
       await fs.writeFile(workspacePanelPath, content)
+    }
+  }
+
+  if (!config.backend) {
+    const apiClientPath = path.join(targetDir, 'src/client/services/apiClient.ts')
+    if (await fs.pathExists(apiClientPath)) {
+      await fs.remove(apiClientPath)
+    }
+
+    const apiClientIndexPath = path.join(targetDir, 'src/client/services/index.ts')
+    if (await fs.pathExists(apiClientIndexPath)) {
+      let content = await fs.readFile(apiClientIndexPath, 'utf-8')
+      content = content.replace(/export\s*\*\s*from\s*['"]\.\/apiClient['"]\s*;?\s*\n?/g, '')
+      await fs.writeFile(apiClientIndexPath, content)
     }
   }
 }

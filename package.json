@@ -1,7 +1,7 @@
 {
   "name": "create-biomimic-app",
   "version": "1.0.0",
-  "description": "Create a new BioMimic app with Todo List example",
+  "description": "Create a new BioMimic app - 组合式全栈项目生成器",
   "type": "module",
   "bin": {
     "create-biomimic-app": "./src/index.ts"
@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "prepublishOnly": "echo 'Ready to publish'",
-    "test": "node --test src/**/*.test.ts",
+    "test": "node --import tsx/esm --test src/**/*.test.ts",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "typecheck:template": "cd template && npm run typecheck",

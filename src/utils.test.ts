@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { validateProjectName, generateDbName, escapeRegExp } from './create.js'
+import { validateProjectName, generateDbName, escapeRegExp } from './utils.js'
 
 describe('escapeRegExp', () => {
   it('should escape special regex characters', () => {
@@ -52,6 +52,12 @@ describe('validateProjectName', () => {
 
   it('should reject names with special characters', () => {
     assert.strictEqual(validateProjectName('my@app!test').valid, false)
+  })
+
+  it('should reject names with path traversal', () => {
+    assert.strictEqual(validateProjectName('../evil').valid, false)
+    assert.strictEqual(validateProjectName('foo/..').valid, false)
+    assert.strictEqual(validateProjectName('a//b').valid, false)
   })
 
   it('should accept valid lowercase names', () => {
