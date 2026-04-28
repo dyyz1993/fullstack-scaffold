@@ -39,7 +39,7 @@ export function TenantPage() {
       const data = await tenantApi.getTenants()
       setTenants(data)
       if (data.length > 0 && !currentTenant) {
-        setCurrentTenant(data[0])
+        setCurrentTenant(data[0]!)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载租户失败')

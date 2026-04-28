@@ -1,5 +1,4 @@
-import { createRoute } from '@hono/zod-openapi'
-import { OpenAPIHono } from '@hono/zod-openapi'
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { authMiddleware } from '@server/middleware/auth'
 import { getAuthUser } from '@server/utils/auth'
 import { permissionService } from '../services/permission-service-impl'
@@ -13,9 +12,9 @@ import {
   PermissionCategoriesSchema,
   RoleLabelsSchema,
   PermissionLabelsSchema,
-  Permission,
   PermissionInitSchema,
 } from '@platform/shared/permission'
+import type { Permission } from '@platform/shared/permission'
 import * as permissionServiceOld from '../services/permission-service'
 
 const getRolesRoute = createRoute({

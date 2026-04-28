@@ -66,7 +66,7 @@ describe('Permission Routes', () => {
 
       const data = await res.json()
       if (data.success && data.data.length > 0) {
-        const firstRole = data.data[0]
+        const firstRole = data.data[0]!
         expect(firstRole).toHaveProperty('role')
         expect(firstRole).toHaveProperty('label')
         expect(firstRole).toHaveProperty('permissions')

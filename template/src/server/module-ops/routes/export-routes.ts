@@ -214,7 +214,7 @@ export const exportRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } 
         ]
 
         for (let i = 0; i < allTodos.length; i++) {
-          const todo = allTodos[i]
+          const todo = allTodos[i]!
           const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
           controller.enqueue(encoder.encode(line))
 

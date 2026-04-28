@@ -46,7 +46,7 @@ function randomDate(start: Date, end: Date): string {
 }
 
 function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
+  return array[Math.floor(Math.random() * array.length)]!
 }
 
 // 使用 let 而不是 const，允许在测试中重置
@@ -58,12 +58,12 @@ export let MOCK_CONTENTS: Content[] = Array.from({ length: 20 }, (_, index) => {
 
   return {
     id: `content-${index + 1}`,
-    title: TITLES[index % TITLES.length],
-    content: `这是${TITLES[index % TITLES.length]}的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
+    title: TITLES[index % TITLES.length]!,
+    content: `这是${TITLES[index % TITLES.length]!}的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
     category,
     status,
     author: randomElement(AUTHORS),
-    tags: TAGS[index % TAGS.length],
+    tags: TAGS[index % TAGS.length]!,
     viewCount: Math.floor(Math.random() * 1000),
     likeCount: Math.floor(Math.random() * 100),
     createdAt,
@@ -82,12 +82,12 @@ export function resetMockContents(): void {
 
     return {
       id: `content-${index + 1}`,
-      title: TITLES[index % TITLES.length],
-      content: `这是${TITLES[index % TITLES.length]}的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
+      title: TITLES[index % TITLES.length]!,
+      content: `这是${TITLES[index % TITLES.length]!}的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
       category,
       status,
       author: randomElement(AUTHORS),
-      tags: TAGS[index % TAGS.length],
+      tags: TAGS[index % TAGS.length]!,
       viewCount: Math.floor(Math.random() * 1000),
       likeCount: Math.floor(Math.random() * 100),
       createdAt,

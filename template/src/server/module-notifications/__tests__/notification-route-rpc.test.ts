@@ -178,7 +178,7 @@ describe('Notification Routes with Type-Safe Test Client', () => {
       expect(data.success).toBe(true)
       if (data.success) {
         expect(data.data.items).toHaveLength(1)
-        expect(data.data.items[0].read).toBe(false)
+        expect(data.data.items[0]!.read).toBe(false)
       }
     })
   })

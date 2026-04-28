@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm'
 import type { Permission, NewPermission } from '@server/db/schema/permissions'
 import type { RoleInfo, PermissionInfo, MenuItem } from '@platform/shared/permission'
-import { Permission as PermissionEnum, Role } from '@platform/shared/permission'
+import type { Permission as PermissionEnum, Role } from '@platform/shared/permission'
 import { getDb } from '@server/db'
 import { permissions, rolePermissions, roles } from '@server/db/schema'
 import { roleService } from './role-service'
@@ -69,7 +69,7 @@ export class PermissionService {
   async create(data: NewPermission): Promise<Permission> {
     const db = await getDb()
     const rows = await db.insert(permissions).values(data).returning()
-    return rows[0]
+    return rows[0]!
   }
 
   async update(id: string, data: Partial<NewPermission>): Promise<Permission | undefined> {

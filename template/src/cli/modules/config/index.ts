@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import type { Command } from 'commander'
 import { getBaseUrl, setBaseUrl, getClient } from '../../utils/api'
 import { getLogger } from '../../utils/logger'
 import fs from 'fs'

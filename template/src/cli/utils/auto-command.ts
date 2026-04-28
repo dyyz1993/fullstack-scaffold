@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import type { Command } from 'commander'
 import type { ZodType, ZodObject, ZodOptional } from 'zod'
 import { getClient } from './api'
 import { getLogger } from './logger'
@@ -189,7 +189,7 @@ export function createCommandFromRoute(config: RouteConfig): CliCommandConfig {
         apiCall[`$${config.method.charAt(0).toUpperCase() + config.method.slice(1)}`] ||
         apiCall.$get
 
-      const res = await methodCall.call(apiCall, {
+      const res = await methodCall!.call(apiCall, {
         param: Object.keys(param).length > 0 ? param : undefined,
         query: Object.keys(query).length > 0 ? query : undefined,
         json: Object.keys(json).length > 0 ? json : undefined,

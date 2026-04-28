@@ -56,10 +56,10 @@ describe('Todo Service', () => {
       const result = await todoService.listTodos()
 
       expect(result).toHaveLength(2)
-      expect(result[0].title).toBe('Todo 2')
-      expect(result[0].status).toBe('completed')
-      expect(result[1].title).toBe('Todo 1')
-      expect(result[1].status).toBe('pending')
+      expect(result[0]!.title).toBe('Todo 2')
+      expect(result[0]!.status).toBe('completed')
+      expect(result[1]!.title).toBe('Todo 1')
+      expect(result[1]!.status).toBe('pending')
     })
   })
 

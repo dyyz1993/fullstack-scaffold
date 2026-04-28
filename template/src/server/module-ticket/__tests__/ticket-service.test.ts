@@ -155,7 +155,7 @@ describe('Ticket Service', () => {
       const result = await service.replyTicket(created.id, replyData)
       expect(result).not.toBeNull()
       expect(result?.replies.length).toBe(1)
-      expect(result?.replies[0].content).toBe('This is a test reply')
+      expect(result?.replies[0]!.content).toBe('This is a test reply')
     })
 
     it('should return null for non-existent ticket', async () => {

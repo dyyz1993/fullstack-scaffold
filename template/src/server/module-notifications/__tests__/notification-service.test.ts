@@ -65,8 +65,8 @@ describe('Notification Service', () => {
       const result = notificationService.listNotifications({})
 
       expect(result.data.length).toBe(2)
-      expect(result.data[0].title).toBe('Second')
-      expect(result.data[1].title).toBe('First')
+      expect(result.data[0]!.title).toBe('Second')
+      expect(result.data[1]!.title).toBe('First')
     })
 
     it('should filter unread only when unreadOnly is true', () => {
@@ -82,7 +82,7 @@ describe('Notification Service', () => {
       const result = notificationService.listNotifications({ unreadOnly: true })
 
       expect(result.data.length).toBe(1)
-      expect(result.data[0].title).toBe('Unread')
+      expect(result.data[0]!.title).toBe('Unread')
     })
 
     it('should respect limit parameter', () => {
@@ -170,7 +170,7 @@ describe('Notification Service', () => {
 
       expect(notificationService.getUnreadCount()).toBe(2)
 
-      notificationService.markAsRead(notificationService.listNotifications({}).data[0].id)
+      notificationService.markAsRead(notificationService.listNotifications({}).data[0]!.id)
 
       expect(notificationService.getUnreadCount()).toBe(1)
     })

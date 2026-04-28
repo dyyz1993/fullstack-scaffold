@@ -31,7 +31,7 @@ describe('Admin Order Service', () => {
   describe('getOrderById', () => {
     it('should return order when id exists', () => {
       const allOrders = service.getOrders()
-      const firstOrder = allOrders[0]
+      const firstOrder = allOrders[0]!
       const result = service.getOrderById(firstOrder.id)
       expect(result).not.toBeNull()
       expect(result?.id).toBe(firstOrder.id)

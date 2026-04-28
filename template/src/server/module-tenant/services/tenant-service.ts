@@ -8,7 +8,7 @@ import {
   PLAN_ROLE_LIMITS,
   TenantRoleCode,
 } from '@platform/shared/permission/tenant-role-templates'
-import { TenantPermission } from '@platform/shared/permission/tenant-permissions'
+import type { TenantPermission } from '@platform/shared/permission/tenant-permissions'
 import type { TenantPlan } from '../../db/schema'
 import { TenantSchema } from '@shared/modules/tenant/schemas'
 
@@ -83,7 +83,7 @@ export class TenantService {
       return newTenant
     })
 
-    return tenant
+    return tenant!
   }
 
   async getTenantById(id: string): Promise<Tenant | undefined> {
@@ -255,7 +255,7 @@ export class TenantService {
       })
       .returning()
 
-    return member
+    return member!
   }
 
   async updateMemberRole(memberId: string, roleId: string): Promise<TenantMember | undefined> {
@@ -303,7 +303,7 @@ export class TenantService {
       })
       .returning()
 
-    return invitation
+    return invitation!
   }
 
   async getInvitationByToken(

@@ -29,7 +29,7 @@ describe('Admin Dispute Service', () => {
   describe('getDisputeById', () => {
     it('should return dispute when id exists', () => {
       const allDisputes = service.getDisputes()
-      const firstDispute = allDisputes[0]
+      const firstDispute = allDisputes[0]!
       const result = service.getDisputeById(firstDispute.id)
       expect(result).not.toBeNull()
       expect(result?.id).toBe(firstDispute.id)

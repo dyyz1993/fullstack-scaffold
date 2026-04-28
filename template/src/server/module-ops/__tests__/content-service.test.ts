@@ -34,7 +34,7 @@ describe('Admin Content Service', () => {
   describe('getContentById', () => {
     it('should return content when id exists', () => {
       const allContents = service.getContents()
-      const firstContent = allContents[0]
+      const firstContent = allContents[0]!
       const result = service.getContentById(firstContent.id)
       expect(result).not.toBeNull()
       expect(result?.id).toBe(firstContent.id)

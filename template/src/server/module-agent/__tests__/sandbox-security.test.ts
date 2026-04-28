@@ -3,9 +3,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Mock } from 'vitest'
+import type * as childProcess from 'child_process'
 
 vi.mock('child_process', async importOriginal => {
-  const actual = await importOriginal<typeof import('child_process')>()
+  const actual = (await importOriginal()) as typeof childProcess
   return {
     ...actual,
     spawn: vi.fn(),
@@ -60,7 +61,7 @@ function createMockChild() {
 
 /** Extract first arg from mock call as a typed object */
 function getConfigFromCall(index = 0): Record<string, unknown> {
-  return mockSandboxInitialize.mock.calls[index][0] as Record<string, unknown>
+  return mockSandboxInitialize.mock.calls[index]![0] as Record<string, unknown>
 }
 
 /** Get handlers registered for a specific event on a mock .on() */

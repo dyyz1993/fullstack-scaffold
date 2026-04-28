@@ -5,8 +5,8 @@ import { Button, Card, Tag, Modal, Form, Input, Select, message, Empty, Spin, Dr
 import type { MenuProps } from 'antd'
 import { useTenantStore, type TenantRole } from '../stores/tenantStore'
 import { tenantApi } from '../services/tenantApi'
+import type { TenantPermission } from '@platform/shared/permission/tenant-permissions'
 import {
-  TenantPermission,
   TENANT_PERMISSION_LABELS,
   TENANT_PERMISSION_CATEGORIES,
 } from '@platform/shared/permission/tenant-permissions'

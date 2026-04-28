@@ -391,8 +391,8 @@ export function parseSignedUrl(path: string): SignedUrlParams | null {
   if (!match) return null
 
   return {
-    namespace: match[1],
-    filename: match[2],
+    namespace: match[1]!,
+    filename: match[2]!,
     expiry: 0,
     signature: '',
   }

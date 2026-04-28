@@ -15,7 +15,7 @@ export class AuditLogService {
         createdAt: new Date(),
       })
       .returning()
-    return transformAuditLog(rows[0])
+    return transformAuditLog(rows[0]!)
   }
 
   async getAll(limit = 50, offset = 0): Promise<ReturnType<typeof transformAuditLog>[]> {

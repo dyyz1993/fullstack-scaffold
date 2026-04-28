@@ -36,7 +36,7 @@ const PRODUCTS = [
 ]
 
 function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
+  return array[Math.floor(Math.random() * array.length)]!
 }
 
 // 使用 let 而不是 const，允许在测试中重置

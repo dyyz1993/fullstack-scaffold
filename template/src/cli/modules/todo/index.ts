@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import type { Command } from 'commander'
 import { registerAutoCommand, type RouteConfig } from '../../utils/auto-command'
 import { z } from '@hono/zod-openapi'
 

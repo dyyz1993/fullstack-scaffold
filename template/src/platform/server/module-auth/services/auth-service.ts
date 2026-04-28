@@ -89,7 +89,7 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
   )
 
   const updatedUser: User = {
-    ...mockUsers[userIndex],
+    ...mockUsers[userIndex]!,
     ...filteredData,
     updatedAt: new Date().toISOString(),
   }

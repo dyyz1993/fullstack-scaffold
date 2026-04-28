@@ -57,7 +57,7 @@ export async function createTodo(input: CreateTodoInput): Promise<Todo> {
     })
     .returning()
 
-  const row = result[0]
+  const row = result[0]!
   return {
     id: row.id,
     title: row.title,
@@ -89,7 +89,7 @@ export async function updateTodo(id: number, input: UpdateTodoInput): Promise<To
 
   if (result.length === 0) return null
 
-  const row = result[0]
+  const row = result[0]!
   return {
     id: row.id,
     title: row.title,
@@ -143,7 +143,7 @@ export async function uploadAttachment(
     })
     .returning()
 
-  const row = result[0]
+  const row = result[0]!
   return {
     id: row.id,
     todoId: row.todoId,
@@ -193,7 +193,7 @@ export async function deleteAttachment(attachmentId: number): Promise<boolean> {
 
   if (rows.length === 0) return false
 
-  const attachment = rows[0]
+  const attachment = rows[0]!
 
   await deleteFile(attachment.path)
 

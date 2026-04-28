@@ -1,6 +1,7 @@
 import type { Plugin } from 'vite'
 import type { IncomingMessage } from 'http'
 import type { Duplex } from 'stream'
+import type { NodeRuntimeAdapter } from './src/server/core/runtime-node'
 import http from 'http'
 
 let entryLoaded = false
@@ -50,13 +51,9 @@ export function websocketPlugin(): Plugin {
               await import('./src/server/core/runtime')
             const { getNodeRuntimeAdapter } = await import('./src/server/core/runtime-node')
 
-            let runtime:
-              | InstanceType<typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter>
-              | undefined
+            let runtime: InstanceType<typeof NodeRuntimeAdapter> | undefined
             try {
-              runtime = getRuntimeAdapter() as InstanceType<
-                typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter
-              >
+              runtime = getRuntimeAdapter() as InstanceType<typeof NodeRuntimeAdapter>
             } catch {
               runtime = getNodeRuntimeAdapter()
               setRuntimeAdapter(runtime)

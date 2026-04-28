@@ -8,7 +8,7 @@
 import { hc } from 'hono/client'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
-import { ClientApiType } from '@server/app'
+import type { ClientApiType } from '@server/app'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 

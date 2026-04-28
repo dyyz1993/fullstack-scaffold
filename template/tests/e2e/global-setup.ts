@@ -1,4 +1,4 @@
-import { FullConfig } from '@playwright/test'
+import type { FullConfig } from '@playwright/test'
 import { createServer } from 'net'
 import { spawn } from 'child_process'
 

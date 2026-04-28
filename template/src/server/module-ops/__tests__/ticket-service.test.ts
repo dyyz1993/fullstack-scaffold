@@ -37,7 +37,7 @@ describe('Admin Ticket Service', () => {
   describe('getTicketById', () => {
     it('should return ticket when id exists', () => {
       const allTickets = service.getTickets()
-      const firstTicket = allTickets[0]
+      const firstTicket = allTickets[0]!
       const result = service.getTicketById(firstTicket.id)
       expect(result).not.toBeNull()
       expect(result?.id).toBe(firstTicket.id)
@@ -52,7 +52,7 @@ describe('Admin Ticket Service', () => {
   describe('replyTicket', () => {
     it('should add a reply to an existing ticket', () => {
       const allTickets = service.getTickets()
-      const ticket = allTickets[0]
+      const ticket = allTickets[0]!
 
       const result = service.replyTicket(ticket.id, 'This is a test reply', 'Support Agent')
 
@@ -73,7 +73,7 @@ describe('Admin Ticket Service', () => {
   describe('closeTicket', () => {
     it('should close an existing ticket', () => {
       const allTickets = service.getTickets()
-      const ticket = allTickets[0]
+      const ticket = allTickets[0]!
 
       const result = service.closeTicket(ticket.id)
 

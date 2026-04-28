@@ -139,7 +139,7 @@ export const TenantCreatePage: React.FC = () => {
               <div className="text-sm text-gray-500 mb-4">选择适合您团队的套餐</div>
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(planFeatures).map(([plan, features]) => {
-                  const price = planPrices[plan]
+                  const price = planPrices[plan]!
                   const isSelected = selectedPlan === plan
 
                   return (

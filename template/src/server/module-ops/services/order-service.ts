@@ -32,7 +32,7 @@ const PRODUCTS = [
 ]
 
 function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
+  return array[Math.floor(Math.random() * array.length)]!
 }
 
 export const MOCK_ORDERS: Order[] = Array.from({ length: 25 }, (_, index) => {

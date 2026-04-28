@@ -37,6 +37,8 @@ import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
 import { noLazyInSchemas } from './eslint-rules/no-lazy-in-schemas.js'
 import { noZodFileType } from './eslint-rules/no-zod-file-type.js'
+import { routeLocation } from './eslint-rules/route-location.js'
+import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
 
 const localRules = {
   rules: {
@@ -73,6 +75,8 @@ const localRules = {
     'require-antd-generic-types': requireAntdGenericTypes,
     'no-lazy-in-schemas': noLazyInSchemas,
     'no-zod-file-type': noZodFileType,
+    'route-location': routeLocation,
+    'no-disable-type-safe-client': noDisableTypeSafeClient,
   },
 }
 
@@ -100,7 +104,16 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/prefer-ts-expect-error': 'off',
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      eqeqeq: ['error', 'always'],
+      'no-unsafe-negation': 'error',
+      'max-depth': 'off',
+      complexity: 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       'local-rules/no-ambiguous-file-paths': 'error',
       'local-rules/no-direct-ws-sse': 'error',
     },
@@ -109,6 +122,10 @@ export default tseslint.config(
     files: ['src/server/**/*.ts'],
     rules: {
       'no-console': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       'local-rules/require-hono-chain-syntax': 'error',
       'local-rules/no-util-functions-in-service': 'warn',
       'local-rules/no-boolean-success': 'error',
@@ -120,6 +137,7 @@ export default tseslint.config(
       'local-rules/no-middleware-in-routes': 'error',
       'local-rules/no-new-old-service-naming': 'error',
       'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
+      'local-rules/route-location': 'error',
     },
   },
   {
@@ -154,6 +172,7 @@ export default tseslint.config(
     rules: {
       'no-console': 'off',
       'local-rules/require-type-safe-test-client': 'error',
+      'local-rules/no-disable-type-safe-client': 'off',
       'local-rules/require-hono-chain-syntax': 'off',
     },
   },

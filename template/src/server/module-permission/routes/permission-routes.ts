@@ -13,9 +13,9 @@ import {
   PermissionCategoriesSchema,
   RoleLabelsSchema,
   PermissionLabelsSchema,
-  Permission,
   PermissionInitSchema,
 } from '@platform/shared/permission'
+import type { Permission } from '@platform/shared/permission'
 import * as permissionServiceOld from '../services/permission-service'
 
 const getRolesRoute = createRoute({

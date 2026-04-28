@@ -1,4 +1,4 @@
-import { MiddlewareHandler } from 'hono'
+import type { MiddlewareHandler } from 'hono'
 import { getAuthUser } from '../utils/auth'
 import { permissionService } from '../module-permission/services/permission-service-impl'
 import { roleService } from '../module-permission/services/role-service'
@@ -53,7 +53,7 @@ function matchRoute(requestPath: string, requestMethod: string): RouteConfig | u
 
     let match = true
     for (let i = 0; i < routeParts.length; i++) {
-      if (routeParts[i].startsWith(':')) {
+      if (routeParts[i]!.startsWith(':')) {
         continue
       }
       if (routeParts[i] !== requestParts[i]) {

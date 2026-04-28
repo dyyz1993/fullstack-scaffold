@@ -1,4 +1,4 @@
-import { Permission, Role } from '@platform/shared/permission'
+import type { Permission, Role } from '@platform/shared/permission'
 
 export interface AuthUser {
   id: string

@@ -39,7 +39,7 @@ export class RoleService {
         updatedAt: new Date(),
       })
       .returning()
-    return transformRole(rows[0])
+    return transformRole(rows[0]!)
   }
 
   async update(

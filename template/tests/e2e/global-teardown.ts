@@ -1,4 +1,4 @@
-import { spawn } from 'child_process'
+import type { spawn } from 'child_process'
 
 declare global {
   var __DEV_SERVER__: ReturnType<typeof spawn> | undefined

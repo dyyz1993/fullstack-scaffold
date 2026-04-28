@@ -464,7 +464,7 @@ describe('Todo Routes - Business Logic Tests', () => {
           new Date(t.createdAt).getTime()
         )
         for (let i = 0; i < timestamps.length - 1; i++) {
-          expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i + 1])
+          expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i + 1]!)
         }
       }
     })

@@ -79,16 +79,16 @@ export function auditLogMiddleware(): MiddlewareHandler {
     ]
     let foundIndex = -1
     for (let i = 0; i < pathParts.length; i++) {
-      if (resourceKeywords.includes(pathParts[i])) {
+      if (resourceKeywords.includes(pathParts[i]!)) {
         foundIndex = i
         break
       }
     }
     if (foundIndex !== -1) {
-      resourceType = PATH_TO_RESOURCE_TYPE[pathParts[foundIndex]] || ('unknown' as ResourceType)
+      resourceType = PATH_TO_RESOURCE_TYPE[pathParts[foundIndex]!] || ('unknown' as ResourceType)
     } else {
       resourceType =
-        PATH_TO_RESOURCE_TYPE[pathParts[pathParts.length - 1]] || ('unknown' as ResourceType)
+        PATH_TO_RESOURCE_TYPE[pathParts[pathParts.length - 1]!] || ('unknown' as ResourceType)
     }
 
     try {

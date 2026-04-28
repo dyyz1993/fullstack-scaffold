@@ -51,7 +51,7 @@ const SUBJECTS = [
 const AGENTS = ['客服小王', '客服小李', '客服小张']
 
 function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
+  return array[Math.floor(Math.random() * array.length)]!
 }
 
 export const MOCK_TICKETS: Ticket[] = Array.from({ length: 20 }, (_, index) => {
@@ -90,7 +90,7 @@ export const MOCK_TICKETS: Ticket[] = Array.from({ length: 20 }, (_, index) => {
     category,
     assignedTo,
     createdAt,
-    updatedAt: replies.length > 0 ? replies[replies.length - 1].createdAt : createdAt,
+    updatedAt: replies.length > 0 ? replies[replies.length - 1]!.createdAt : createdAt,
     replies,
   }
 })

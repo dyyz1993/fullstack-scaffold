@@ -38,7 +38,7 @@ const RESOLUTIONS = [
 ]
 
 function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
+  return array[Math.floor(Math.random() * array.length)]!
 }
 
 export const MOCK_DISPUTES: Dispute[] = Array.from({ length: 15 }, (_, index) => {
@@ -52,8 +52,8 @@ export const MOCK_DISPUTES: Dispute[] = Array.from({ length: 15 }, (_, index) =>
     disputeNo: generateDisputeNo(),
     orderId: `order-${Math.floor(Math.random() * 25) + 1}`,
     orderNo: `ORD${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-    customerName: ['张三', '李四', '王五', '赵六', '钱七'][index % 5],
-    customerEmail: ['zhangsan', 'lisi', 'wangwu', 'zhaoliu', 'qianqi'][index % 5] + '@example.com',
+    customerName: ['张三', '李四', '王五', '赵六', '钱七'][index % 5]!,
+    customerEmail: ['zhangsan', 'lisi', 'wangwu', 'zhaoliu', 'qianqi'][index % 5]! + '@example.com',
     type,
     status,
     description: randomElement(DISPUTE_DESCRIPTIONS),

@@ -357,7 +357,7 @@ describe('TenantPage', () => {
     it('should open create modal when clicking create button', () => {
       render(<TenantPage />)
       const createButtons = screen.getAllByText('创建租户')
-      fireEvent.click(createButtons[0])
+      fireEvent.click(createButtons[0]!)
       expect(screen.getByPlaceholderText('我的公司')).toBeInTheDocument()
     })
   })
