@@ -19,6 +19,58 @@ export interface ParseSessionResult {
   toolCallMap: ToolCallMap
 }
 
+function collectToolCalls(msg: PiAssistantMessage, toolCallMap: ToolCallMap) {
+  for (const block of msg.content) {
+    if (block.type === 'toolCall') {
+      toolCallMap.set(block.id, block as ToolCallWithResult)
+    }
+  }
+}
+
+function applyToolResult(toolResult: PiToolResultMessage, toolCallMap: ToolCallMap) {
+  const toolCall = toolCallMap.get(toolResult.toolCallId)
+  if (!toolCall) return
+  toolCall.result = toolResult.content
+  if (toolResult.isError) {
+    toolCall.error = 'Tool execution failed'
+  }
+}
+
+function processEntry(entry: PiSessionLine, messages: PiMessage[], toolCallMap: ToolCallMap) {
+  if (entry.type !== 'message' || !('message' in entry)) return
+  const msg = entry.message
+
+  if (msg.role === 'user' || msg.role === 'assistant') {
+    const entryTimestamp = entry.timestamp ? new Date(entry.timestamp).getTime() : msg.timestamp
+    messages.push({
+      ...msg,
+      timestamp: entryTimestamp,
+    })
+  }
+
+  if (msg.role === 'assistant') {
+    collectToolCalls(msg as PiAssistantMessage, toolCallMap)
+  } else if (msg.role === 'toolResult') {
+    applyToolResult(msg as PiToolResultMessage, toolCallMap)
+  }
+}
+
+function parseSessionLines(content: string, messages: PiMessage[], toolCallMap: ToolCallMap) {
+  const lines = content.trim().split('\n')
+
+  for (const line of lines) {
+    if (!line.trim()) continue
+    try {
+      const entry = JSON.parse(line) as PiSessionLine
+      if (entry.type !== 'message' || !entry.message) continue
+
+      processEntry(entry, messages, toolCallMap)
+    } catch (e) {
+      console.warn('[SessionParser] Failed to parse line:', e)
+    }
+  }
+}
+
 export async function parseSessionJsonl(
   userId: string,
   _workspacePath?: string
@@ -59,48 +111,7 @@ export async function parseSessionJsonl(
 
     for (const sessionFile of sessionFiles) {
       const content = await readFile(sessionFile.path, 'utf-8')
-      const lines = content.trim().split('\n')
-
-      for (const line of lines) {
-        if (!line.trim()) continue
-        try {
-          const entry = JSON.parse(line) as PiSessionLine
-
-          if (entry.type === 'message' && entry.message) {
-            const msg = entry.message
-
-            if (msg.role === 'user' || msg.role === 'assistant') {
-              const entryTimestamp = entry.timestamp
-                ? new Date(entry.timestamp).getTime()
-                : msg.timestamp
-              messages.push({
-                ...msg,
-                timestamp: entryTimestamp,
-              })
-            }
-
-            if (msg.role === 'assistant') {
-              const assistantMsg = msg as PiAssistantMessage
-              for (const block of assistantMsg.content) {
-                if (block.type === 'toolCall') {
-                  toolCallMap.set(block.id, block as ToolCallWithResult)
-                }
-              }
-            } else if (msg.role === 'toolResult') {
-              const toolResult = msg as PiToolResultMessage
-              const toolCall = toolCallMap.get(toolResult.toolCallId)
-              if (toolCall) {
-                toolCall.result = toolResult.content
-                if (toolResult.isError) {
-                  toolCall.error = 'Tool execution failed'
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.warn('[SessionParser] Failed to parse line:', e)
-        }
-      }
+      parseSessionLines(content, messages, toolCallMap)
     }
 
     const seenTimestamps = new Set<number>()

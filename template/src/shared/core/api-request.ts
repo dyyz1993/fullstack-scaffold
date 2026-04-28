@@ -86,13 +86,32 @@ export class ApiRequest<T> {
     return this
   }
 
-  async json(): Promise<T> {
-    const { loading, retry = 0, retryDelay = 1000, silentError } = this.options
-
+  private startLoading(loading: boolean | string | undefined): void {
     if (loading !== undefined && loading !== false && loadingStore) {
       const text = typeof loading === 'string' ? loading : undefined
       loadingStore.startLoading(text)
     }
+  }
+
+  private stopLoading(loading: boolean | string | undefined): void {
+    if (loading !== undefined && loading !== false && loadingStore) {
+      loadingStore.stopLoading()
+    }
+  }
+
+  private handleError(error: Error, silentError: boolean | undefined): void {
+    if (silentError) return
+    if (error instanceof ApiRequestError) {
+      messageApi?.error(error.message)
+    } else {
+      messageApi?.error('请求失败，请稍后重试')
+    }
+  }
+
+  async json(): Promise<T> {
+    const { loading, retry = 0, retryDelay = 1000, silentError } = this.options
+
+    this.startLoading(loading)
 
     let lastError: Error | null = null
     let attempts = 0
@@ -109,9 +128,7 @@ export class ApiRequest<T> {
         const result = await response.json()
 
         if (result.success) {
-          if (loading !== undefined && loading !== false && loadingStore) {
-            loadingStore.stopLoading()
-          }
+          this.stopLoading(loading)
           return result.data
         }
 
@@ -129,21 +146,9 @@ export class ApiRequest<T> {
       }
     }
 
-    if (loading !== undefined && loading !== false && loadingStore) {
-      loadingStore.stopLoading()
-    }
-
-    const error = lastError!
-
-    if (!silentError) {
-      if (error instanceof ApiRequestError) {
-        messageApi?.error(error.message)
-      } else {
-        messageApi?.error('请求失败，请稍后重试')
-      }
-    }
-
-    throw error
+    this.stopLoading(loading)
+    this.handleError(lastError!, silentError)
+    throw lastError!
   }
 
   private async tryParseError(response: HonoClientResponse<unknown>): Promise<ApiErrorType> {

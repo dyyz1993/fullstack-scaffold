@@ -11,6 +11,34 @@ import {
 
 const log = logger.api()
 
+function detectResourceType(path: string): ResourceType {
+  const pathParts = path.split('/').filter(Boolean)
+  const resourceKeywords = [
+    'users',
+    'roles',
+    'permissions',
+    'contents',
+    'orders',
+    'tickets',
+    'disputes',
+    'files',
+    'chats',
+    'notifications',
+    'captchas',
+  ]
+  let foundIndex = -1
+  for (let i = 0; i < pathParts.length; i++) {
+    if (resourceKeywords.includes(pathParts[i]!)) {
+      foundIndex = i
+      break
+    }
+  }
+  if (foundIndex !== -1) {
+    return PATH_TO_RESOURCE_TYPE[pathParts[foundIndex]!] || ('unknown' as ResourceType)
+  }
+  return PATH_TO_RESOURCE_TYPE[pathParts[pathParts.length - 1]!] || ('unknown' as ResourceType)
+}
+
 export function auditLogMiddleware(): MiddlewareHandler {
   return async (c, next) => {
     const startTime = Date.now()
@@ -63,33 +91,7 @@ export function auditLogMiddleware(): MiddlewareHandler {
     }
 
     const pathParts = path.split('/').filter(Boolean)
-    let resourceType: ResourceType = 'user' as ResourceType
-    const resourceKeywords = [
-      'users',
-      'roles',
-      'permissions',
-      'contents',
-      'orders',
-      'tickets',
-      'disputes',
-      'files',
-      'chats',
-      'notifications',
-      'captchas',
-    ]
-    let foundIndex = -1
-    for (let i = 0; i < pathParts.length; i++) {
-      if (resourceKeywords.includes(pathParts[i]!)) {
-        foundIndex = i
-        break
-      }
-    }
-    if (foundIndex !== -1) {
-      resourceType = PATH_TO_RESOURCE_TYPE[pathParts[foundIndex]!] || ('unknown' as ResourceType)
-    } else {
-      resourceType =
-        PATH_TO_RESOURCE_TYPE[pathParts[pathParts.length - 1]!] || ('unknown' as ResourceType)
-    }
+    const resourceType = detectResourceType(path)
 
     try {
       await auditLogService.create({

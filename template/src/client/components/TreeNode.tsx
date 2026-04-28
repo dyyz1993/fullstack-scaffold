@@ -17,25 +17,34 @@ interface TreeNodeProps {
   onSelect?: (node: FileNode) => void
 }
 
+function nodeMatchesQuery(node: FileNode, query: string): boolean {
+  return node.name.toLowerCase().includes(query.toLowerCase())
+}
+
+function shouldShowNode(
+  node: FileNode,
+  isDirectory: boolean,
+  hasChildren: boolean,
+  searchQuery?: string
+): boolean {
+  if (!searchQuery) return true
+  if (nodeMatchesQuery(node, searchQuery)) return true
+  return !!(
+    isDirectory &&
+    hasChildren &&
+    node.children!.some(child => nodeMatchesQuery(child, searchQuery))
+  )
+}
+
 export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery, onSelect }) => {
   const [isExpanded, setIsExpanded] = useState(level < 2)
 
   const isDirectory = node.type === 'directory'
   const hasChildren = isDirectory && node.children && node.children.length > 0
 
-  const matchesSearch = searchQuery
-    ? node.name.toLowerCase().includes(searchQuery.toLowerCase())
-    : true
+  const matchesSearch = searchQuery ? nodeMatchesQuery(node, searchQuery) : true
 
-  const shouldShow =
-    matchesSearch ||
-    (isDirectory &&
-      hasChildren &&
-      node.children!.some(child =>
-        child.name.toLowerCase().includes(searchQuery?.toLowerCase() || '')
-      ))
-
-  if (!shouldShow && searchQuery) return null
+  if (!shouldShowNode(node, isDirectory, !!hasChildren, searchQuery)) return null
 
   const getFileIcon = () => {
     if (isDirectory) {

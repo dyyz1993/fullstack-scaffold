@@ -49,6 +49,23 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
     return this._status
   }
 
+  private parseSSEMessage(message: string) {
+    let eventType = 'message'
+    let dataBuffer = ''
+
+    for (const line of message.split('\n')) {
+      if (line.startsWith('event:')) {
+        eventType = line.slice(6).trim()
+      } else if (line.startsWith('data:')) {
+        dataBuffer = line.slice(5).trim()
+      }
+    }
+
+    if (dataBuffer) {
+      this.handleMessage(eventType, dataBuffer)
+    }
+  }
+
   private async _connect() {
     this._status = 'connecting'
     this.abortController = new AbortController()
@@ -77,8 +94,6 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
 
       const decoder = new TextDecoder()
       let buffer = ''
-      let eventType = 'message'
-      let dataBuffer = ''
 
       while (true) {
         const { done, value } = await reader.read()
@@ -92,21 +107,7 @@ export class SSEClientImpl<P extends SSEProtocol = SSEProtocol> implements SSECl
         buffer = messages.pop() || ''
 
         for (const message of messages) {
-          const lines = message.split('\n')
-          eventType = 'message'
-          dataBuffer = ''
-
-          for (const line of lines) {
-            if (line.startsWith('event:')) {
-              eventType = line.slice(6).trim()
-            } else if (line.startsWith('data:')) {
-              dataBuffer = line.slice(5).trim()
-            }
-          }
-
-          if (dataBuffer) {
-            this.handleMessage(eventType, dataBuffer)
-          }
+          this.parseSSEMessage(message)
         }
       }
 
