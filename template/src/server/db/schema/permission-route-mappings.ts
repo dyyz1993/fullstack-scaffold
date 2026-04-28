@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 import { permissions } from './permissions'
 import { routes } from './api-endpoints'
 
@@ -11,7 +12,9 @@ export const permissionRouteMappings = sqliteTable(
     routeId: text('route_id')
       .notNull()
       .references(() => routes.id, { onDelete: 'cascade' }),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
   },
   table => ({
     pk: primaryKey({ columns: [table.permissionId, table.routeId] }),

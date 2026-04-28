@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 import { tenants } from './tenants'
 import { tenantRoles } from './tenant-roles'
 
@@ -16,7 +17,9 @@ export const tenantMembers = sqliteTable(
     status: text('status').notNull().default('active'),
     invitedBy: text('invited_by'),
     invitedAt: integer('invited_at', { mode: 'timestamp' }),
-    joinedAt: integer('joined_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    joinedAt: integer('joined_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
     lastActiveAt: integer('last_active_at', { mode: 'timestamp' }),
   },
   table => ({

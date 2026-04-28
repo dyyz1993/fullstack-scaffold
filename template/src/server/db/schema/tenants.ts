@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 
 export const tenants = sqliteTable('tenants', {
   id: text('id').primaryKey(),
@@ -14,8 +15,12 @@ export const tenants = sqliteTable('tenants', {
   settings: text('settings'),
   metadata: text('metadata'),
   ownerId: text('owner_id').notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
 })
 
 export type Tenant = typeof tenants.$inferSelect

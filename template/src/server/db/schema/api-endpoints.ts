@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, unique } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 
 export const routes = sqliteTable(
   'routes',
@@ -11,8 +12,12 @@ export const routes = sqliteTable(
     module: text('module'),
     isPublic: integer('is_public', { mode: 'boolean' }).default(false),
     isActive: integer('is_active', { mode: 'boolean' }).default(true),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
   },
   table => ({
     pathMethodUnique: unique().on(table.path, table.method),

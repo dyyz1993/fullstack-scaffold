@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 import { tenants } from './tenants'
 import { tenantRoles } from './tenant-roles'
 
@@ -16,7 +17,9 @@ export const tenantInvitations = sqliteTable('tenant_invitations', {
   status: text('status').notNull().default('pending'),
   expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
   acceptedAt: integer('accepted_at', { mode: 'timestamp' }),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
 })
 
 export type TenantInvitation = typeof tenantInvitations.$inferSelect
