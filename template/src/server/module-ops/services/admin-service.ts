@@ -290,7 +290,7 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
   )
 
   const updatedUser: User = {
-    ...mockUsers[userIndex],
+    ...mockUsers[userIndex]!,
     ...filteredData,
     updatedAt: new Date().toISOString(),
   }
@@ -350,6 +350,29 @@ export async function getAllTodos(): Promise<
     completed: r.status === 'completed',
     createdAt: toISOString(r.createdAt),
   }))
+}
+
+export async function getTodoDailyCounts(
+  days: number = 7
+): Promise<Array<{ date: string; count: number }>> {
+  const db = await getDb()
+  const allTodos = await db.select().from(todos)
+
+  const now = new Date()
+  const result: Array<{ date: string; count: number }> = []
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]!
+    const count = allTodos.filter(t => {
+      const created = toISOString(t.createdAt).split('T')[0]!
+      return created === dateStr
+    }).length
+    result.push({ date: dateStr, count })
+  }
+
+  return result
 }
 
 const avatarCache = new Map<string, { data: Blob; contentType: string }>()

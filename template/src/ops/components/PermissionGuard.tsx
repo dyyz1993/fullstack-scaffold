@@ -1,6 +1,6 @@
 import React from 'react'
 import { usePermissions } from '../hooks/usePermissions'
-import { Permission } from '@platform/shared/permission'
+import type { Permission } from '@platform/shared/permission'
 
 interface PermissionGuardProps {
   permissions?: Permission[]
@@ -95,7 +95,7 @@ export function Cannot({ I, children, fallback = null, mode = 'all' }: CannotPro
 
   const hasAccess =
     permissions.length === 1
-      ? hasPermission(permissions[0])
+      ? hasPermission(permissions[0]!)
       : mode === 'any'
         ? hasAnyPermission(permissions)
         : hasAllPermissions(permissions)

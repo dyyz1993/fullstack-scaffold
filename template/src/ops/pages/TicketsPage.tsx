@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Table, Card, Tag, Button, Space, Modal, Descriptions } from 'antd'
-import { Eye, MessageCircle, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { Table, Card, Tag, Button, Space, Modal, Descriptions, Input } from 'antd'
+import { Eye, MessageCircle, CheckCircle, AlertCircle, Clock, Send } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@platform/shared/permission'
 import { apiClient } from '../services/apiClient'
@@ -43,6 +43,8 @@ export const TicketsPage: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
+  const [replyContent, setReplyContent] = useState('')
+  const [replying, setReplying] = useState(false)
 
   const fetchTickets = useCallback(async () => {
     setLoading(true)
@@ -86,7 +88,30 @@ export const TicketsPage: React.FC = () => {
 
   const showDetail = (ticket: Ticket) => {
     setSelectedTicket(ticket)
+    setReplyContent('')
     setDetailVisible(true)
+  }
+
+  const handleReply = async () => {
+    if (!selectedTicket || !replyContent.trim()) return
+    setReplying(true)
+    try {
+      const response = await apiClient.api.tickets[':id'].reply.$post({
+        param: { id: selectedTicket.id },
+        json: { content: replyContent, author: 'Admin' },
+      })
+      const result = await response.json()
+      if (result.success) {
+        message.success('回复成功')
+        setSelectedTicket(result.data)
+        setReplyContent('')
+        fetchTickets()
+      }
+    } catch {
+      message.error('回复失败')
+    } finally {
+      setReplying(false)
+    }
   }
 
   const columns = [
@@ -286,6 +311,32 @@ export const TicketsPage: React.FC = () => {
                     <div className="text-gray-700">{reply.content}</div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {selectedTicket.status !== 'closed' && (
+              <div className="mt-4 border-t pt-4">
+                <h4 className="font-semibold mb-2">回复工单</h4>
+                <Input.TextArea
+                  rows={3}
+                  value={replyContent}
+                  onChange={e => setReplyContent(e.target.value)}
+                  placeholder="输入回复内容..."
+                  className="mb-2"
+                />
+                <div className="flex justify-end">
+                  <PermissionGuard permission={Permission.TICKET_REPLY}>
+                    <Button
+                      type="primary"
+                      icon={<Send className="w-4 h-4" />}
+                      loading={replying}
+                      disabled={!replyContent.trim()}
+                      onClick={handleReply}
+                    >
+                      发送回复
+                    </Button>
+                  </PermissionGuard>
+                </div>
               </div>
             )}
           </div>

@@ -1,20 +1,71 @@
-import { Card, Form, Input, Button, Switch, Divider } from 'antd'
-import { useMessage } from '../hooks/useAntdStatic'
-
-interface SettingsFormValues {
-  siteName?: string
-  siteDescription?: string
-  currentPassword?: string
-  newPassword?: string
-  confirmPassword?: string
-}
+import { useState, useEffect } from 'react'
+import { Card, Form, Input, Button, Switch, Divider, message } from 'antd'
+import { apiClient } from '../services/apiClient'
+import type { Settings } from '@shared/modules/ops'
 
 export const SettingsPage: React.FC = () => {
-  const message = useMessage()
-  const [form] = Form.useForm<SettingsFormValues>()
+  const [generalForm] = Form.useForm()
+  const [securityForm] = Form.useForm()
+  const [, setSettings] = useState<Settings | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
-  const handleSave = () => {
-    message.success('Settings saved successfully!')
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await apiClient.api.admin.settings.$get()
+        const result = await response.json()
+        if (result.success) {
+          setSettings(result.data)
+          generalForm.setFieldsValue({
+            siteName: result.data.siteName,
+            siteDescription: result.data.siteDescription,
+          })
+          setNotificationsEnabled(result.data.notificationsEnabled)
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error)
+      }
+    }
+    fetchSettings()
+  }, [generalForm])
+
+  const handleSaveGeneral = async () => {
+    try {
+      const values = await generalForm.validateFields()
+      setSaving(true)
+      const response = await apiClient.api.admin.settings.$put({
+        json: {
+          ...values,
+          notificationsEnabled,
+        },
+      })
+      const result = await response.json()
+      if (result.success) {
+        setSettings(result.data)
+        message.success('Settings saved successfully!')
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        message.error(error.message)
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveSecurity = async () => {
+    try {
+      const values = await securityForm.validateFields()
+      if (values.newPassword !== values.confirmPassword) {
+        message.error('Passwords do not match')
+        return
+      }
+      message.success('Password updated successfully!')
+      securityForm.resetFields()
+    } catch {
+      // validation error
+    }
   }
 
   return (
@@ -22,7 +73,7 @@ export const SettingsPage: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
 
       <Card title="General Settings" className="mb-6">
-        <Form form={form} layout="vertical">
+        <Form form={generalForm} layout="vertical">
           <Form.Item label="Site Name" name="siteName">
             <Input placeholder="Enter site name" />
           </Form.Item>
@@ -36,26 +87,22 @@ export const SettingsPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Email Notifications</p>
+              <p className="font-medium">Enable Notifications</p>
               <p className="text-sm text-gray-500">
-                Receive email notifications for important updates
+                Enable or disable system notification broadcasting
               </p>
             </div>
-            <Switch defaultChecked />
-          </div>
-          <Divider />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Push Notifications</p>
-              <p className="text-sm text-gray-500">Receive push notifications in browser</p>
-            </div>
-            <Switch />
+            <Switch checked={notificationsEnabled} onChange={setNotificationsEnabled} />
           </div>
         </div>
+        <Divider />
+        <Button type="primary" loading={saving} onClick={handleSaveGeneral}>
+          Save Changes
+        </Button>
       </Card>
 
       <Card title="Security Settings">
-        <Form form={form} layout="vertical">
+        <Form form={securityForm} layout="vertical">
           <Form.Item label="Current Password" name="currentPassword">
             <Input.Password placeholder="Enter current password" />
           </Form.Item>
@@ -65,8 +112,8 @@ export const SettingsPage: React.FC = () => {
           <Form.Item label="Confirm New Password" name="confirmPassword">
             <Input.Password placeholder="Confirm new password" />
           </Form.Item>
-          <Button type="primary" onClick={handleSave}>
-            Save Changes
+          <Button type="primary" onClick={handleSaveSecurity}>
+            Update Password
           </Button>
         </Form>
       </Card>

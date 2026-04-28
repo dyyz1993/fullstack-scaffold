@@ -1,19 +1,49 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ConfigProvider, App as AntdApp } from 'antd'
+import { ConfigProvider, App as AntdApp, Spin } from 'antd'
 import { Layout } from './layouts/Layout'
-import { DashboardPage } from './pages/DashboardPage'
-import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { PermissionsPage } from './pages/PermissionsPage'
-import { RolesPage } from './pages/RolesPage'
-import { SystemLogsPage } from './pages/SystemLogsPage'
-import { StaffPage } from './pages/StaffPage'
-import { OrdersPage } from './pages/OrdersPage'
-import { TicketsPage } from './pages/TicketsPage'
-import { DisputesPage } from './pages/DisputesPage'
-import { ContentPage } from './pages/ContentPage'
 import { ProtectedRoute, CaptchaModal } from './components'
+
+const DashboardPage = lazy(() =>
+  import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage }))
+)
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })))
+const RegisterPage = lazy(() =>
+  import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage }))
+)
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage }))
+)
+const PermissionsPage = lazy(() =>
+  import('./pages/PermissionsPage').then(m => ({ default: m.PermissionsPage }))
+)
+const RolesPage = lazy(() => import('./pages/RolesPage').then(m => ({ default: m.RolesPage })))
+const SystemLogsPage = lazy(() =>
+  import('./pages/SystemLogsPage').then(m => ({ default: m.SystemLogsPage }))
+)
+const StaffPage = lazy(() => import('./pages/StaffPage').then(m => ({ default: m.StaffPage })))
+const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })))
+const TicketsPage = lazy(() =>
+  import('./pages/TicketsPage').then(m => ({ default: m.TicketsPage }))
+)
+const DisputesPage = lazy(() =>
+  import('./pages/DisputesPage').then(m => ({ default: m.DisputesPage }))
+)
+const ContentPage = lazy(() =>
+  import('./pages/ContentPage').then(m => ({ default: m.ContentPage }))
+)
+const MonitorPage = lazy(() =>
+  import('./pages/MonitorPage').then(m => ({ default: m.MonitorPage }))
+)
+const NotFoundPage = lazy(() =>
+  import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage }))
+)
+
+const SuspenseFallback = (
+  <div className="flex items-center justify-center h-64">
+    <Spin size="large" />
+  </div>
+)
 
 export const App: React.FC = () => {
   return (
@@ -26,33 +56,36 @@ export const App: React.FC = () => {
     >
       <AntdApp>
         <BrowserRouter basename="/ops">
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                      <Route path="/dashboard" element={<DashboardPage />} />
-                      <Route path="/orders" element={<OrdersPage />} />
-                      <Route path="/tickets" element={<TicketsPage />} />
-                      <Route path="/disputes" element={<DisputesPage />} />
-                      <Route path="/content" element={<ContentPage />} />
-                      <Route path="/system/staff" element={<StaffPage />} />
-                      <Route path="/system/settings" element={<SettingsPage />} />
-                      <Route path="/system/logs" element={<SystemLogsPage />} />
-                      <Route path="/system/monitor" element={<div>系统监控页面（待开发）</div>} />
-                      <Route path="/system/permissions" element={<PermissionsPage />} />
-                      <Route path="/system/roles" element={<RolesPage />} />
-                    </Routes>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <Suspense fallback={SuspenseFallback}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Routes>
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/orders" element={<OrdersPage />} />
+                        <Route path="/tickets" element={<TicketsPage />} />
+                        <Route path="/disputes" element={<DisputesPage />} />
+                        <Route path="/content" element={<ContentPage />} />
+                        <Route path="/system/staff" element={<StaffPage />} />
+                        <Route path="/system/settings" element={<SettingsPage />} />
+                        <Route path="/system/logs" element={<SystemLogsPage />} />
+                        <Route path="/system/monitor" element={<MonitorPage />} />
+                        <Route path="/system/permissions" element={<PermissionsPage />} />
+                        <Route path="/system/roles" element={<RolesPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Suspense>
           <CaptchaModal />
         </BrowserRouter>
       </AntdApp>

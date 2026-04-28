@@ -1,13 +1,8 @@
 import { create } from 'zustand'
 import { useOpsStore } from '../stores/opsStore'
 import { apiClient } from '../services/apiClient'
-import {
-  Permission,
-  Role,
-  hasPermission,
-  hasAnyPermission,
-  hasAllPermissions,
-} from '@platform/shared/permission'
+import type { Permission, Role } from '@platform/shared/permission'
+import { hasPermission, hasAnyPermission, hasAllPermissions } from '@platform/shared/permission'
 import type {
   RoleInfo,
   PermissionInfo,

@@ -53,7 +53,7 @@ export const PermissionTree: React.FC<PermissionTreeProps> = ({
               {perm.permission}
             </span>
             {PERMISSION_DEPENDENCIES[perm.permission] && (
-              <Tooltip title={`需要权限: ${PERMISSION_DEPENDENCIES[perm.permission].join(', ')}`}>
+              <Tooltip title={`需要权限: ${PERMISSION_DEPENDENCIES[perm.permission]!.join(', ')}`}>
                 <InfoCircleOutlined style={{ marginLeft: '4px', color: '#1890ff' }} />
               </Tooltip>
             )}

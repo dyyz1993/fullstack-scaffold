@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { apiClient } from '../services/apiClient'
-import type { SystemStats } from '@shared/modules/ops'
+import type { SystemStats, TodoDailyCount } from '@shared/modules/ops'
 import type { NotificationType } from '@shared/schemas'
 import { Activity, CheckCircle, Clock, TrendingUp, Bell, BellRing } from 'lucide-react'
-import { Button, Select } from 'antd'
+import { Button, Select, Skeleton, Card } from 'antd'
 import { useMessage } from '../hooks/useAntdStatic'
 
 export const DashboardPage: React.FC = () => {
@@ -12,6 +12,7 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [sendingNotification, setSendingNotification] = useState(false)
   const [notificationType, setNotificationType] = useState<NotificationType>('info')
+  const [dailyCounts, setDailyCounts] = useState<TodoDailyCount[]>([])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -28,7 +29,20 @@ export const DashboardPage: React.FC = () => {
       }
     }
 
+    const fetchDailyCounts = async () => {
+      try {
+        const response = await apiClient.api.admin.stats.daily.$get()
+        const result = await response.json()
+        if (result.success) {
+          setDailyCounts(result.data)
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     fetchStats()
+    fetchDailyCounts()
   }, [])
 
   const handleSendTestNotification = async () => {
@@ -53,8 +67,18 @@ export const DashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
+      <div>
+        <Skeleton.Input active style={{ width: 200, height: 32, marginBottom: 24 }} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i}>
+              <Skeleton active paragraph={{ rows: 2 }} />
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <Skeleton active paragraph={{ rows: 3 }} />
+        </Card>
       </div>
     )
   }
@@ -80,11 +104,13 @@ export const DashboardPage: React.FC = () => {
     },
     {
       title: 'Last Updated',
-      value: stats?.lastUpdated || '-',
+      value: stats?.lastUpdated ? new Date(stats.lastUpdated).toLocaleString('zh-CN') : '-',
       icon: Activity,
       color: 'bg-purple-500',
     },
   ]
+
+  const maxCount = Math.max(...dailyCounts.map(d => d.count), 1)
 
   return (
     <div>
@@ -107,6 +133,28 @@ export const DashboardPage: React.FC = () => {
         })}
       </div>
 
+      {dailyCounts.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">最近 7 天 Todo 创建趋势</h2>
+          <div className="flex items-end gap-3" style={{ height: 180 }}>
+            {dailyCounts.map(item => {
+              const height = Math.max((item.count / maxCount) * 140, 4)
+              const label = item.date.slice(5)
+              return (
+                <div key={item.date} className="flex-1 flex flex-col items-center">
+                  <span className="text-xs text-gray-500 mb-1">{item.count}</span>
+                  <div
+                    className="w-full bg-blue-400 rounded-t transition-all hover:bg-blue-500"
+                    style={{ height }}
+                  />
+                  <span className="text-xs text-gray-400 mt-2">{label}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center gap-3 mb-4">
           <BellRing className="w-5 h-5 text-gray-600" />
@@ -122,10 +170,10 @@ export const DashboardPage: React.FC = () => {
             onChange={setNotificationType}
             style={{ width: 120 }}
             options={[
-              { value: 'info', label: 'ℹ️ Info' },
-              { value: 'success', label: '✅ Success' },
-              { value: 'warning', label: '⚠️ Warning' },
-              { value: 'error', label: '❌ Error' },
+              { value: 'info', label: 'Info' },
+              { value: 'success', label: 'Success' },
+              { value: 'warning', label: 'Warning' },
+              { value: 'error', label: 'Error' },
             ]}
           />
           <Button

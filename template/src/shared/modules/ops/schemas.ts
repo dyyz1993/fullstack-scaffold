@@ -79,6 +79,40 @@ export const ClearTodosResultSchema = z.object({
   deletedCount: z.number(),
 })
 
+export const SettingsSchema = z.object({
+  siteName: z.string(),
+  siteDescription: z.string(),
+  notificationsEnabled: z.boolean(),
+})
+
+export const UpdateSettingsSchema = z.object({
+  siteName: z.string().min(1).optional().nullable(),
+  siteDescription: z.string().optional().nullable(),
+  notificationsEnabled: z.boolean().optional().nullable(),
+})
+
+export const MonitorDataSchema = z.object({
+  status: z.enum(['ok', 'degraded', 'down']),
+  uptime: z.number(),
+  memory: z.object({
+    rss: z.number(),
+    heapTotal: z.number(),
+    heapUsed: z.number(),
+    external: z.number(),
+  }),
+  database: z.enum(['connected', 'disconnected']),
+  timestamp: z.string(),
+  requestCount24h: z.number().optional().nullable(),
+  avgResponseTime: z.number().optional().nullable(),
+})
+
+export const TodoDailyCountSchema = z.object({
+  date: z.string(),
+  count: z.number(),
+})
+
+export const TodoDailyCountsSchema = z.array(TodoDailyCountSchema)
+
 export const SuccessSchema = z.object({})
 
 export const DownloadTokenSchema = z.object({
@@ -98,3 +132,8 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>
 export type User = z.infer<typeof UserSchema>
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
 export type ClearTodosResult = z.infer<typeof ClearTodosResultSchema>
+export type Settings = z.infer<typeof SettingsSchema>
+export type UpdateSettings = z.infer<typeof UpdateSettingsSchema>
+export type MonitorData = z.infer<typeof MonitorDataSchema>
+export type TodoDailyCount = z.infer<typeof TodoDailyCountSchema>
+export type TodoDailyCounts = z.infer<typeof TodoDailyCountsSchema>

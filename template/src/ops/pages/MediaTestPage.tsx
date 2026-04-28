@@ -13,7 +13,7 @@ export const MediaTestPage: React.FC = () => {
   const [avatarId, setAvatarId] = useState('test-user')
   const [iconName, setIconName] = useState('home')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [svgContent, setSvgContent] = useState<string | null>(null)
+  const [svgDataUrl, setSvgDataUrl] = useState<string | null>(null)
   const [loadingAvatar, setLoadingAvatar] = useState(false)
   const [loadingSvg, setLoadingSvg] = useState(false)
   const [streamProgress, setStreamProgress] = useState(0)
@@ -46,7 +46,7 @@ export const MediaTestPage: React.FC = () => {
       const svg = await apiClient.api.admin.icon[':name'].$svg({
         param: { name: iconName },
       })
-      setSvgContent(svg)
+      setSvgDataUrl(`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`)
       message.success('SVG 图标获取成功')
     } catch (error) {
       console.error('Failed to fetch SVG:', error)
@@ -321,7 +321,7 @@ export const MediaTestPage: React.FC = () => {
                 获取 SVG
               </Button>
             </Space>
-            {svgContent && (
+            {svgDataUrl && (
               <div style={{ marginTop: 16 }}>
                 <Text type="secondary">获取结果：</Text>
                 <div
@@ -335,33 +335,17 @@ export const MediaTestPage: React.FC = () => {
                     gap: 16,
                   }}
                 >
-                  <div
-                    dangerouslySetInnerHTML={{ __html: svgContent }}
+                  <img
+                    src={svgDataUrl}
+                    alt="SVG Icon"
                     style={{
                       width: 48,
                       height: 48,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       background: '#fff',
                       borderRadius: 8,
                       padding: 8,
                     }}
                   />
-                  <div
-                    style={{
-                      flex: 1,
-                      padding: 8,
-                      background: '#fff',
-                      borderRadius: 4,
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                      overflow: 'auto',
-                      maxHeight: 100,
-                    }}
-                  >
-                    <code>{svgContent}</code>
-                  </div>
                 </div>
               </div>
             )}

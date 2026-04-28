@@ -33,14 +33,16 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface SidebarProps {
   isOpen: boolean
+  onCloseMobile?: () => void
 }
 
 interface MenuItemComponentProps {
   item: MenuItem
   level?: number
+  onNavigate?: () => void
 }
 
-const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }) => {
+const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0, onNavigate }) => {
   const [expanded, setExpanded] = useState(false)
   const location = useLocation()
   const Icon = ICON_MAP[item.icon] || LayoutDashboard
@@ -63,7 +65,12 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }
         {expanded && (
           <div className="ml-4">
             {item.children!.map(child => (
-              <MenuItemComponent key={child.path} item={child} level={level + 1} />
+              <MenuItemComponent
+                key={child.path}
+                item={child}
+                level={level + 1}
+                onNavigate={onNavigate}
+              />
             ))}
           </div>
         )}
@@ -74,6 +81,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }
   return (
     <NavLink
       to={item.path}
+      onClick={onNavigate}
       className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
         level > 0 ? 'pl-8 text-sm' : ''
       }`}
@@ -94,7 +102,7 @@ const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }
   )
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
   const { menuConfig, loading, initialized } = usePermissions()
 
   if (loading || !initialized) {
@@ -122,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       </div>
       <nav className="p-4">
         {menuConfig.map((item: MenuItem) => (
-          <MenuItemComponent key={item.path} item={item} />
+          <MenuItemComponent key={item.path} item={item} onNavigate={onCloseMobile} />
         ))}
       </nav>
     </aside>

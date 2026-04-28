@@ -10,9 +10,10 @@ import { useEffect, useState } from 'react'
 
 interface HeaderProps {
   onToggleSidebar: () => void
+  onToggleMobileSidebar?: () => void
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleMobileSidebar }) => {
   const navigate = useNavigate()
   const { user, logout } = useOpsStore()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -57,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     <>
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
         <button
-          onClick={onToggleSidebar}
+          onClick={onToggleMobileSidebar || onToggleSidebar}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           data-testid="toggle-sidebar-button"
         >
