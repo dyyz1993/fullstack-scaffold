@@ -5,6 +5,14 @@ export {
   createErrorHandlerMiddleware,
   type ErrorHandlerOptions,
 } from './error-handler'
+export { securityHeadersMiddleware } from './security-headers'
+export {
+  rateLimitMiddleware,
+  globalRateLimitMiddleware,
+  loginRateLimitMiddleware,
+  apiRateLimitMiddleware,
+  type RateLimitOptions,
+} from './rate-limit'
 export {
   authMiddleware,
   requireSuperAdminMiddleware,

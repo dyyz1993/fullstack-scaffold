@@ -4,13 +4,15 @@ import { ZodError } from 'zod'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, authMiddleware } from './middleware'
+import { securityHeadersMiddleware } from './middleware/security-headers'
+import { globalRateLimitMiddleware, apiRateLimitMiddleware } from './middleware/rate-limit'
 import { realtimeEnvMiddleware } from './middleware/realtime-env'
 import { captchaMiddleware } from './middleware/captcha'
 import { auditLogMiddleware } from './middleware/audit-log'
+import { bodyLimitMiddleware } from './middleware/body-limit'
 import { createModuleLoggerSync } from './utils/logger'
 import { AppError, toAppError } from './utils/app-error'
 import { opsApiRoutes, clientApiRoutes } from './route-registry'
-import { fileRoutes } from './module-file/routes/file-routes'
 
 export { type AppBindings, type CreateAppOptions } from './types/bindings'
 
@@ -140,11 +142,17 @@ function globalErrorHandler(err: Error, c: any) {
   )
 }
 
+const BODY_LIMIT = 10 * 1024 * 1024
+
 export function createApp<T extends AppBindings = AppBindings>(_options: CreateAppOptions = {}) {
   const app = new OpenAPIHono<{ Bindings: T }>()
     .use('*', loggerMiddleware())
     .use('*', corsMiddleware())
+    .use('*', securityHeadersMiddleware())
+    .use('*', bodyLimitMiddleware(BODY_LIMIT))
     .use('*', realtimeEnvMiddleware())
+    .use('*', globalRateLimitMiddleware())
+    .use('/api/*', apiRateLimitMiddleware())
     .use('/api/*', auditLogMiddleware())
     .use('/api/agents/*', authMiddleware())
     .use('/api/workspace/*', authMiddleware())
@@ -157,7 +165,6 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     )
     .route('/', clientApiRoutes)
     .route('/', opsApiRoutes)
-    .route('/files', fileRoutes)
     .get('/health', async c => {
       try {
         const { getDb } = await import('./db')
@@ -167,7 +174,9 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
       }
     })
-    .post('/api/__test__/cleanup', async c => {
+
+  if (process.env.NODE_ENV === 'test') {
+    app.post('/api/__test__/cleanup', async c => {
       try {
         const { cleanupTestDatabase } = await import('./db/test-setup')
         await cleanupTestDatabase()
@@ -177,7 +186,9 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ success: false, message: 'Failed to cleanup database' }, 500)
       }
     })
-    .onError(globalErrorHandler)
+  }
+
+  app.onError(globalErrorHandler)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   autoRegisterRealtime(app as any)

@@ -11,7 +11,7 @@ export type CorsOptions = {
 }
 
 const defaultCorsOptions: Required<Omit<CorsOptions, 'exposeHeaders' | 'maxAge'>> & CorsOptions = {
-  origin: ['*'],
+  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],

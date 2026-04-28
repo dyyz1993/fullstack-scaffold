@@ -1,6 +1,7 @@
 import type { MiddlewareHandler } from 'hono'
 import { createModuleLoggerSync } from '../utils/logger'
-import { Role, Permission, getPermissionsByRole } from '@platform/shared/permission'
+import { Role, getPermissionsByRole } from '@platform/shared/permission'
+import type { Permission } from '@platform/shared/permission'
 import { AuthenticationError, AuthorizationError } from '../utils/app-error'
 
 export type UserRole = Role
@@ -39,7 +40,15 @@ function extractToken(authHeader: string | undefined): string | null {
   return token || null
 }
 
+/**
+ * Dev token verifier — ONLY for development and testing.
+ * Production should use proper JWT / session-based authentication.
+ * These hardcoded tokens must NEVER be reachable in production.
+ */
 function verifyDevToken(token: string): AuthUser | null {
+  if (process.env.NODE_ENV === 'production') {
+    return null
+  }
   if (token === 'admin-token' || token === 'super-admin-token') {
     return {
       id: 'super-admin-1',
@@ -123,6 +132,13 @@ function verifyToken(token: string, secretKey: string): AuthUser | null {
 export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareHandler {
   const secretKey = options.secretKey ?? process.env.AUTH_SECRET_KEY ?? defaultSecretKey
   const log = createModuleLoggerSync('auth')
+
+  if (process.env.NODE_ENV === 'production' && secretKey === defaultSecretKey) {
+    console.warn(
+      '[SECURITY] auth: Default secret key detected in production. ' +
+        'Replace with a proper AUTH_SECRET_KEY and implement real authentication.'
+    )
+  }
 
   return async (c, next) => {
     const authHeader = c.req.header('Authorization')
