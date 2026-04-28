@@ -62,6 +62,7 @@ export const TodoPage: React.FC = () => {
   }
 
   const handleDelete = async (id: number) => {
+    if (!window.confirm('确定删除此 Todo？')) return
     await deleteTodo(id)
   }
 

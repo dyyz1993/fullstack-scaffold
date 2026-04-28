@@ -87,7 +87,7 @@ export const WebSocketPage: React.FC = () => {
     <div className="max-w-3xl mx-auto p-6" data-testid="websocket-container">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Plug className="w-8 h-8 text-indigo-500" />
+          <Plug className="w-8 h-8 text-blue-500" />
           WebSocket Demo
         </h1>
         <p className="text-gray-500 mt-2">
@@ -147,7 +147,7 @@ export const WebSocketPage: React.FC = () => {
           <select
             value={messageType}
             onChange={e => setMessageType(e.target.value as typeof messageType)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             data-testid="ws-message-type-select"
           >
             <option value="echo">Echo (RPC)</option>
@@ -164,7 +164,7 @@ export const WebSocketPage: React.FC = () => {
               messageType === 'ping' ? 'No message needed for ping' : 'Type a message...'
             }
             disabled={status !== 'open' || messageType === 'ping'}
-            className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
             data-testid="ws-message-input"
           />
           <button
@@ -173,7 +173,7 @@ export const WebSocketPage: React.FC = () => {
             className={`flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg transition-colors ${
               status !== 'open' || (messageType !== 'ping' && !inputMessage.trim())
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-indigo-500 text-white hover:bg-indigo-600'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
             }`}
             data-testid="send-message-button"
           >

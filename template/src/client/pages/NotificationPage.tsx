@@ -84,7 +84,7 @@ export const NotificationPage: React.FC = () => {
     <div className="max-w-3xl mx-auto p-6" data-testid="notification-container">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Bell className="w-8 h-8 text-purple-500" />
+          <Bell className="w-8 h-8 text-blue-500" />
           Notifications
         </h1>
         <p className="text-gray-500 mt-2">
@@ -170,7 +170,7 @@ export const NotificationPage: React.FC = () => {
           <select
             value={type}
             onChange={e => setType(e.target.value as NotificationType)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             data-testid="notification-type-select"
           >
             <option value="info">Info</option>
@@ -183,7 +183,7 @@ export const NotificationPage: React.FC = () => {
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Title..."
-            className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+            className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             data-testid="notification-title-input"
           />
         </div>
@@ -192,14 +192,14 @@ export const NotificationPage: React.FC = () => {
             value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder="Message..."
-            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none min-h-[100px]"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none min-h-[100px]"
             data-testid="notification-message-input"
           />
         </div>
         <button
           type="submit"
           disabled={!title.trim() || !message.trim() || loading}
-          className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           data-testid="create-notification-button"
         >
           {loading ? <LoadingSpinner size="sm" color="text-white" /> : <Send className="w-5 h-5" />}

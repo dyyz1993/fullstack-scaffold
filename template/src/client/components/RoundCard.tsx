@@ -356,7 +356,7 @@ const toolTypeConfig: Record<string, { icon: string; color: string; bgColor: str
 }
 
 function ToolCallCard({ toolCall }: ToolCallCardProps) {
-  const config = toolTypeConfig[toolCall.name] || toolTypeConfig.default
+  const config = toolTypeConfig[toolCall.name] || toolTypeConfig.default!
 
   return (
     <div className="p-3 bg-white border border-gray-200 rounded-lg text-xs max-w-full">

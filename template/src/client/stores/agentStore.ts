@@ -286,6 +286,8 @@ export const useAgentStore = create<AgentState>((set, get) => {
         if (lastRoundIndex < 0) return state
 
         const lastRound = state.rounds[lastRoundIndex]
+        if (!lastRound) return state
+
         const newRounds = [
           ...state.rounds.slice(0, lastRoundIndex),
           {
@@ -311,7 +313,9 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const rounds = get().rounds
       const round = rounds[roundIdx]
+      if (!round) return
       const agentMsg = round.agentMessages[msgIdx]
+      if (!agentMsg) return
 
       const subRounds = agentMsg.subRounds || []
       const lastSubRound = subRounds[subRounds.length - 1]
@@ -343,7 +347,9 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const state = get()
       const round = state.rounds[roundIdx]
+      if (!round) return
       const agentMsg = round.agentMessages[msgIdx]
+      if (!agentMsg) return
 
       const subRounds = agentMsg.subRounds || []
       if (subRounds.length === 0) return
@@ -351,8 +357,8 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const lastIndex = subRounds.length - 1
       const updatedSubRounds = [...subRounds]
       updatedSubRounds[lastIndex] = {
-        ...updatedSubRounds[lastIndex],
-        thinking: updater(updatedSubRounds[lastIndex].thinking || ''),
+        ...updatedSubRounds[lastIndex]!,
+        thinking: updater(updatedSubRounds[lastIndex]!.thinking || ''),
       }
 
       const newRounds = [...state.rounds]
@@ -370,7 +376,9 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const state = get()
       const round = state.rounds[roundIdx]
+      if (!round) return
       const agentMsg = round.agentMessages[msgIdx]
+      if (!agentMsg) return
 
       const subRounds = agentMsg.subRounds || []
       if (subRounds.length === 0) return
@@ -378,8 +386,8 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const lastIndex = subRounds.length - 1
       const updatedSubRounds = [...subRounds]
       updatedSubRounds[lastIndex] = {
-        ...updatedSubRounds[lastIndex],
-        content: updater(updatedSubRounds[lastIndex].content || ''),
+        ...updatedSubRounds[lastIndex]!,
+        content: updater(updatedSubRounds[lastIndex]!.content || ''),
       }
 
       const newRounds = [...state.rounds]
@@ -400,14 +408,16 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const state = get()
       const round = state.rounds[roundIdx]
+      if (!round) return
       const agentMsg = round.agentMessages[msgIdx]
+      if (!agentMsg) return
 
       const subRounds = agentMsg.subRounds || []
       if (subRounds.length === 0) return
 
       const lastIndex = subRounds.length - 1
       const updatedSubRounds = [...subRounds]
-      const currentSubRound = updatedSubRounds[lastIndex]
+      const currentSubRound = updatedSubRounds[lastIndex]!
 
       updatedSubRounds[lastIndex] = {
         ...currentSubRound,
@@ -437,7 +447,9 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const state = get()
       const round = state.rounds[roundIdx]
+      if (!round) return
       const agentMsg = round.agentMessages[msgIdx]
+      if (!agentMsg) return
 
       const updatedSubRounds = agentMsg.subRounds?.map(subRound => {
         if (!subRound.toolCalls) return subRound
@@ -447,7 +459,7 @@ export const useAgentStore = create<AgentState>((set, get) => {
 
         const updatedToolCalls = [...subRound.toolCalls]
         updatedToolCalls[toolCallIndex] = {
-          ...updatedToolCalls[toolCallIndex],
+          ...updatedToolCalls[toolCallIndex]!,
           result,
           error: error || null,
         }
@@ -470,10 +482,11 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const state = get()
       const round = state.rounds[roundIdx]
+      if (!round) return
 
       const newRounds = [...state.rounds]
       const newRound = { ...round, agentMessages: [...round.agentMessages] }
-      newRound.agentMessages[msgIdx] = { ...newRound.agentMessages[msgIdx], isStreaming }
+      newRound.agentMessages[msgIdx] = { ...newRound.agentMessages[msgIdx]!, isStreaming }
       newRounds[roundIdx] = newRound
 
       set(updateRoundsWithIndex(newRounds))
@@ -493,10 +506,11 @@ export const useAgentStore = create<AgentState>((set, get) => {
       const { roundIdx, msgIdx } = pos
       const state = get()
       const round = state.rounds[roundIdx]
+      if (!round) return
 
       const newRounds = [...state.rounds]
       const newRound = { ...round, agentMessages: [...round.agentMessages] }
-      newRound.agentMessages[msgIdx] = { ...newRound.agentMessages[msgIdx], error }
+      newRound.agentMessages[msgIdx] = { ...newRound.agentMessages[msgIdx]!, error }
       newRounds[roundIdx] = newRound
 
       set(updateRoundsWithIndex(newRounds))

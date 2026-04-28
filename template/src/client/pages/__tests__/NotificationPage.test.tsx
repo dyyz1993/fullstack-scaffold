@@ -95,7 +95,7 @@ describe('NotificationPage', () => {
     it('should call connectSSE when connect button is clicked', () => {
       render(<NotificationPage />)
       const connectButtons = screen.getAllByText('Connect')
-      fireEvent.click(connectButtons[0])
+      fireEvent.click(connectButtons[0]!)
       expect(mockStore.connectSSE).toHaveBeenCalledTimes(1)
     })
 
@@ -103,7 +103,7 @@ describe('NotificationPage', () => {
       mockStore.sseConnected = true
       render(<NotificationPage />)
       const disconnectButtons = screen.getAllByText('Disconnect')
-      fireEvent.click(disconnectButtons[0])
+      fireEvent.click(disconnectButtons[0]!)
       expect(mockStore.disconnectSSE).toHaveBeenCalledTimes(1)
     })
   })

@@ -214,9 +214,9 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages).toHaveLength(1)
-      expect(rounds[0].agentMessages[0].id).toBe('agent-msg-1')
-      expect(rounds[0].agentMessages[0].role).toBe('agent')
+      expect(rounds[0]!.agentMessages).toHaveLength(1)
+      expect(rounds[0]!.agentMessages[0]!.id).toBe('agent-msg-1')
+      expect(rounds[0]!.agentMessages[0]!.role).toBe('agent')
     })
 
     it('should not add agent message when no agent is set', () => {
@@ -281,7 +281,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds).toHaveLength(2)
+      expect(rounds[0]!.agentMessages[0]!.subRounds).toHaveLength(2)
     })
 
     it('should not add sub round when last sub round has no tool calls', () => {
@@ -323,7 +323,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds).toHaveLength(1)
+      expect(rounds[0]!.agentMessages[0]!.subRounds).toHaveLength(1)
     })
   })
 
@@ -367,7 +367,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds?.[0].thinking).toBe('Initial thought updated')
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.thinking).toBe('Initial thought updated')
     })
 
     it('should handle empty thinking', () => {
@@ -408,7 +408,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds?.[0].thinking).toBe('new')
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.thinking).toBe('new')
     })
   })
 
@@ -452,7 +452,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds?.[0].content).toBe('Initial content more')
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.content).toBe('Initial content more')
     })
   })
 
@@ -499,8 +499,8 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds?.[0].toolCalls).toHaveLength(1)
-      expect(rounds[0].agentMessages[0].subRounds?.[0].toolCalls?.[0].name).toBe('testTool')
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.toolCalls).toHaveLength(1)
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.toolCalls?.[0]!.name).toBe('testTool')
     })
 
     it('should not add tool call when no sub rounds exist', () => {
@@ -539,7 +539,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds).toBeUndefined()
+      expect(rounds[0]!.agentMessages[0]!.subRounds).toBeUndefined()
     })
   })
 
@@ -585,7 +585,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds?.[0].toolCalls?.[0].result).toEqual({
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.toolCalls?.[0]!.result).toEqual({
         success: true,
       })
     })
@@ -631,7 +631,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].subRounds?.[0].toolCalls?.[0].error).toBe('Tool failed')
+      expect(rounds[0]!.agentMessages[0]!.subRounds?.[0]!.toolCalls?.[0]!.error).toBe('Tool failed')
     })
   })
 
@@ -669,7 +669,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].isStreaming).toBe(false)
+      expect(rounds[0]!.agentMessages[0]!.isStreaming).toBe(false)
     })
   })
 
@@ -710,7 +710,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].error).toEqual({
+      expect(rounds[0]!.agentMessages[0]!.error).toEqual({
         code: 'api_error',
         message: 'API Error occurred',
         recoverable: true,
@@ -753,7 +753,7 @@ describe('Agent Store', () => {
       })
 
       const rounds = useAgentStore.getState().rounds
-      expect(rounds[0].agentMessages[0].error?.code).toBe('rate_limit')
+      expect(rounds[0]!.agentMessages[0]!.error?.code).toBe('rate_limit')
     })
   })
 
