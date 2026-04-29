@@ -95,6 +95,15 @@ export class TenantService {
     return rows[0]
   }
 
+  async getMemberCount(tenantId: string): Promise<number> {
+    const db = await getDb()
+    const members = await db
+      .select()
+      .from(tenantMembers)
+      .where(and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.status, 'active')))
+    return members.length
+  }
+
   async getTenantBySlug(slug: string): Promise<Tenant | undefined> {
     const db = await getDb()
     const rows = await db.select().from(tenants).where(eq(tenants.slug, slug))
@@ -114,7 +123,12 @@ export class TenantService {
     const tenantRows = await db.select().from(tenants).where(inArray(tenants.id, tenantIds))
 
     return tenantRows.filter(row => {
-      const result = TenantSchema.safeParse(row)
+      const normalized = {
+        ...row,
+        createdAt: row.createdAt instanceof Date ? row.createdAt.getTime() : row.createdAt,
+        updatedAt: row.updatedAt instanceof Date ? row.updatedAt.getTime() : row.updatedAt,
+      }
+      const result = TenantSchema.safeParse(normalized)
       if (!result.success) {
         log.error({ err: result.error, row }, 'Invalid tenant data')
         return false

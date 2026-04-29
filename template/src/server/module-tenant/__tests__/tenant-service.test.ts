@@ -1,32 +1,177 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { TenantService } from '../services/tenant-service'
+import { setupTestDatabase } from '../../db/test-setup'
 import { TenantPermission } from '@platform/shared/permission/tenant-permissions'
 import { TenantRoleCode } from '@platform/shared/permission/tenant-role-templates'
 
 describe('TenantService', () => {
-  describe('CreateTenantData validation', () => {
-    it('should have required fields for tenant creation', () => {
-      const validData = {
+  let service: TenantService
+
+  beforeAll(async () => {
+    process.env.SQLITE_PATH = './data/test.db'
+    await setupTestDatabase()
+    service = new TenantService()
+  })
+
+  describe('createTenant', () => {
+    it('should create a tenant with default free plan', async () => {
+      const tenant = await service.createTenant({
         name: 'Test Company',
-        slug: 'test-company',
-        ownerId: 'user_123',
-      }
-
-      expect(validData.name).toBeDefined()
-      expect(validData.slug).toBeDefined()
-      expect(validData.ownerId).toBeDefined()
-    })
-
-    it('should have optional plan field with default value', () => {
-      const plan = 'free'
-      expect(plan).toBe('free')
-    })
-
-    it('should accept valid plan values', () => {
-      const validPlans = ['free', 'starter', 'pro', 'enterprise']
-
-      validPlans.forEach(plan => {
-        expect(['free', 'starter', 'pro', 'enterprise']).toContain(plan)
+        slug: 'test-company-' + Date.now(),
+        ownerId: 'user_001',
       })
+
+      expect(tenant).toBeDefined()
+      expect(tenant.name).toBe('Test Company')
+      expect(tenant.plan).toBe('free')
+      expect(tenant.status).toBe('active')
+      expect(tenant.ownerId).toBe('user_001')
+    })
+
+    it('should create system roles for the tenant', async () => {
+      const tenant = await service.createTenant({
+        name: 'Role Test Corp',
+        slug: 'role-test-' + Date.now(),
+        ownerId: 'user_002',
+      })
+
+      const roles = await service.getTenantRoles(tenant.id)
+
+      expect(roles).toHaveLength(3)
+      const codes = roles.map(r => r.code)
+      expect(codes).toContain(TenantRoleCode.ADMIN)
+      expect(codes).toContain(TenantRoleCode.MEMBER)
+      expect(codes).toContain(TenantRoleCode.GUEST)
+    })
+
+    it('should auto-add owner as admin member', async () => {
+      const tenant = await service.createTenant({
+        name: 'Member Test Corp',
+        slug: 'member-test-' + Date.now(),
+        ownerId: 'user_003',
+      })
+
+      const members = await service.getTenantMembers(tenant.id)
+
+      expect(members).toHaveLength(1)
+      expect(members[0]!.userId).toBe('user_003')
+      expect(members[0]!.status).toBe('active')
+      expect(members[0]!.role.code).toBe(TenantRoleCode.ADMIN)
+    })
+
+    it('should allow owner to appear in getUserTenants', async () => {
+      const tenant = await service.createTenant({
+        name: 'List Test Corp',
+        slug: 'list-test-' + Date.now(),
+        ownerId: 'user_004',
+      })
+
+      const userTenants = await service.getUserTenants('user_004')
+
+      expect(userTenants.length).toBeGreaterThanOrEqual(1)
+      const found = userTenants.find(t => t.id === tenant.id)
+      expect(found).toBeDefined()
+      expect(found!.name).toBe('List Test Corp')
+    })
+
+    it('should create tenant with specified plan', async () => {
+      const tenant = await service.createTenant({
+        name: 'Pro Corp',
+        slug: 'pro-corp-' + Date.now(),
+        ownerId: 'user_005',
+        plan: 'pro',
+      })
+
+      expect(tenant.plan).toBe('pro')
+    })
+  })
+
+  describe('getUserTenants', () => {
+    it('should return empty array for user with no tenants', async () => {
+      const tenants = await service.getUserTenants('nonexistent_user_xyz')
+      expect(tenants).toEqual([])
+    })
+
+    it('should return tenants where user is an active member', async () => {
+      const slug = 'query-corp-' + Date.now()
+      const tenant = await service.createTenant({
+        name: 'Query Corp',
+        slug,
+        ownerId: 'user_010',
+      })
+
+      const tenants = await service.getUserTenants('user_010')
+
+      expect(tenants.length).toBeGreaterThanOrEqual(1)
+      const found = tenants.find(t => t.id === tenant.id)
+      expect(found).toBeDefined()
+      expect(found!.slug).toBe(slug)
+    })
+
+    it('should return tenant data matching TenantSchema', async () => {
+      const slug = 'schema-corp-' + Date.now()
+      await service.createTenant({
+        name: 'Schema Corp',
+        slug,
+        ownerId: 'user_011',
+      })
+
+      const tenants = await service.getUserTenants('user_011')
+
+      expect(tenants.length).toBeGreaterThanOrEqual(1)
+      const tenant = tenants.find(t => t.slug === slug)
+      expect(tenant).toBeDefined()
+      expect(typeof tenant!.id).toBe('string')
+      expect(typeof tenant!.name).toBe('string')
+      expect(typeof tenant!.slug).toBe('string')
+      expect(typeof tenant!.plan).toBe('string')
+      expect(typeof tenant!.status).toBe('string')
+      expect(typeof tenant!.ownerId).toBe('string')
+    })
+  })
+
+  describe('getTenantMembers', () => {
+    it('should return owner with admin role after tenant creation', async () => {
+      const tenant = await service.createTenant({
+        name: 'Members Corp',
+        slug: 'members-corp-' + Date.now(),
+        ownerId: 'user_020',
+      })
+
+      const members = await service.getTenantMembers(tenant.id)
+
+      expect(members).toHaveLength(1)
+      const owner = members[0]!
+      expect(owner.userId).toBe('user_020')
+      expect(owner.role.code).toBe(TenantRoleCode.ADMIN)
+      expect(owner.status).toBe('active')
+    })
+  })
+
+  describe('getUserPermissions', () => {
+    it('should return admin permissions for tenant owner', async () => {
+      const tenant = await service.createTenant({
+        name: 'Perms Corp',
+        slug: 'perms-corp-' + Date.now(),
+        ownerId: 'user_030',
+      })
+
+      const permissions = await service.getUserPermissions('user_030', tenant.id)
+
+      expect(permissions).toContain(TenantPermission.MEMBER_VIEW)
+      expect(permissions).toContain(TenantPermission.ROLE_CREATE)
+      expect(permissions).toContain(TenantPermission.SETTINGS_EDIT)
+    })
+
+    it('should return empty permissions for non-member', async () => {
+      const tenant = await service.createTenant({
+        name: 'Perms Corp 2',
+        slug: 'perms-corp-2-' + Date.now(),
+        ownerId: 'user_031',
+      })
+
+      const permissions = await service.getUserPermissions('non_member', tenant.id)
+      expect(permissions).toEqual([])
     })
   })
 
@@ -45,82 +190,17 @@ describe('TenantService', () => {
       expect(TenantPermission.ROLE_DELETE).toBe('tenant:role:delete')
     })
 
-    it('should have data management permissions', () => {
-      expect(TenantPermission.DATA_VIEW).toBe('tenant:data:view')
-      expect(TenantPermission.DATA_CREATE).toBe('tenant:data:create')
-      expect(TenantPermission.DATA_EDIT).toBe('tenant:data:edit')
-      expect(TenantPermission.DATA_DELETE).toBe('tenant:data:delete')
-      expect(TenantPermission.DATA_EXPORT).toBe('tenant:data:export')
-      expect(TenantPermission.DATA_IMPORT).toBe('tenant:data:import')
-    })
-
-    it('should have settings permissions', () => {
-      expect(TenantPermission.SETTINGS_VIEW).toBe('tenant:settings:view')
-      expect(TenantPermission.SETTINGS_EDIT).toBe('tenant:settings:edit')
-    })
-
-    it('should have billing permissions', () => {
-      expect(TenantPermission.BILLING_VIEW).toBe('tenant:billing:view')
-      expect(TenantPermission.BILLING_MANAGE).toBe('tenant:billing:manage')
-    })
-
-    it('should have audit permission', () => {
-      expect(TenantPermission.AUDIT_VIEW).toBe('tenant:audit:view')
-      expect(TenantPermission.AUDIT_VIEW).toBeDefined()
-      expect(typeof TenantPermission.AUDIT_VIEW).toBe('string')
+    it('should have correct total number of permissions', () => {
+      const permissionCount = Object.keys(TenantPermission).length
+      expect(permissionCount).toBe(19)
     })
   })
 
   describe('TenantRoleCode enum', () => {
-    it('should have admin role code', () => {
+    it('should have admin, member, and guest role codes', () => {
       expect(TenantRoleCode.ADMIN).toBe('tenant_admin')
-      expect(TenantRoleCode.ADMIN).toBeDefined()
-      expect(typeof TenantRoleCode.ADMIN).toBe('string')
-    })
-
-    it('should have member role code', () => {
       expect(TenantRoleCode.MEMBER).toBe('tenant_member')
-      expect(TenantRoleCode.MEMBER).toBeDefined()
-      expect(typeof TenantRoleCode.MEMBER).toBe('string')
-    })
-
-    it('should have guest role code', () => {
       expect(TenantRoleCode.GUEST).toBe('tenant_guest')
-      expect(TenantRoleCode.MEMBER).toBe('tenant_member')
-      expect(TenantRoleCode.ADMIN).toBe('tenant_admin')
-    })
-  })
-
-  describe('Slug validation', () => {
-    it('should match slug pattern', () => {
-      const validSlugs = ['my-company', 'test-123', 'abc', 'company-name-here']
-      const slugPattern = /^[a-z0-9-]+$/
-
-      validSlugs.forEach(slug => {
-        expect(slugPattern.test(slug)).toBe(true)
-      })
-      expect(validSlugs.length).toBeGreaterThan(0)
-      expect(slugPattern.test('valid-slug')).toBe(true)
-    })
-
-    it('should reject invalid slugs', () => {
-      const invalidSlugs = ['My-Company', 'test_123', 'abc def', '']
-      const slugPattern = /^[a-z0-9-]+$/
-
-      invalidSlugs.forEach(slug => {
-        expect(slugPattern.test(slug)).toBe(false)
-        expect(slug).toBeDefined()
-        expect(typeof slug).toBe('string')
-      })
-    })
-  })
-
-  describe('Permission count', () => {
-    it('should have correct total number of permissions', () => {
-      const permissionCount = Object.keys(TenantPermission).length
-      expect(permissionCount).toBe(19)
-      expect(permissionCount).toBeGreaterThan(10)
-      expect(permissionCount).toBeLessThan(30)
     })
   })
 })

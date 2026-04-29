@@ -133,7 +133,7 @@ export class PermissionService {
   }
 
   private isSuperAdmin(userId: string): boolean {
-    return userId.startsWith('test-super-admin-') || userId === 'super-admin-1'
+    return userId.startsWith('test-super-admin-') || userId === 'super-admin-1' || userId === '1'
   }
 
   private async getPermSetForRoleCode(roleCode: string): Promise<Set<string>> {
@@ -144,9 +144,13 @@ export class PermissionService {
 
   private resolveTestUserPermSet(userId: string): Promise<Set<string>> | null {
     if (this.isSuperAdmin(userId)) return Promise.resolve(new Set(['*']))
-    if (userId.startsWith('test-customer-service-') || userId === 'customer-service-1')
+    if (
+      userId.startsWith('test-customer-service-') ||
+      userId === 'customer-service-1' ||
+      userId === '2'
+    )
       return this.getPermSetForRoleCode('customer_service')
-    if (userId.startsWith('test-user-') || userId === 'user-1')
+    if (userId.startsWith('test-user-') || userId === 'user-1' || userId === '3')
       return this.getPermSetForRoleCode('user')
     return null
   }

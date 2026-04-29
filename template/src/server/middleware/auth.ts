@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from 'hono'
+import { verify as verifyJWT } from 'hono/jwt'
 import { createModuleLoggerSync } from '../utils/logger'
 import { Role, getPermissionsByRole } from '@platform/shared/permission'
 import type { Permission } from '@platform/shared/permission'
@@ -106,7 +107,7 @@ function verifyDevToken(token: string): AuthUser | null {
   return null
 }
 
-function verifyToken(token: string, secretKey: string): AuthUser | null {
+async function verifyToken(token: string, secretKey: string): Promise<AuthUser | null> {
   if (secretKey === defaultSecretKey) {
     if (isProduction()) {
       createModuleLoggerSync('auth').error(
@@ -126,7 +127,23 @@ function verifyToken(token: string, secretKey: string): AuthUser | null {
     }
   }
 
-  return null
+  const jwtSecret = process.env.JWT_SECRET || 'dev-secret-change-in-production'
+  try {
+    const payload = await verifyJWT(token, jwtSecret, 'HS256')
+    const role = (payload as Record<string, unknown>).role as Role
+    if (!Object.values(Role).includes(role)) {
+      return null
+    }
+    return {
+      id: (payload as Record<string, unknown>).userId as string,
+      username: (payload as Record<string, unknown>).userId as string,
+      email: `${(payload as Record<string, unknown>).userId as string}@jwt.local`,
+      role,
+      permissions: getPermissionsByRole(role),
+    }
+  } catch {
+    return null
+  }
 }
 
 export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareHandler {
@@ -150,7 +167,7 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
       throw AuthenticationError.tokenMissing()
     }
 
-    const user = verifyToken(token, secretKey)
+    const user = await verifyToken(token, secretKey)
 
     if (!user) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Invalid auth token')

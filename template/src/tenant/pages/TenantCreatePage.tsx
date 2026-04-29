@@ -40,6 +40,7 @@ export const TenantCreatePage: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedPlan, setSelectedPlan] = useState<string>('free')
+  const [formValues, setFormValues] = useState<{ name: string; slug: string } | null>(null)
   const [form] = Form.useForm()
 
   const handleCreate = async (values: { name: string; slug: string }) => {
@@ -63,13 +64,12 @@ export const TenantCreatePage: React.FC = () => {
 
   const handleNext = () => {
     if (currentStep === 0) {
-      form.validateFields().then(() => {
+      form.validateFields().then((values: { name: string; slug: string }) => {
+        setFormValues(values)
         setCurrentStep(1)
       })
-    } else {
-      form.validateFields().then(values => {
-        handleCreate(values)
-      })
+    } else if (formValues) {
+      handleCreate(formValues)
     }
   }
 

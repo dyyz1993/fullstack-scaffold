@@ -320,7 +320,8 @@ export const tenantRoutes = new OpenAPIHono()
       return c.json({ success: false, error: '租户不存在' }, 404)
     }
 
-    return c.json(success(tenant), 200)
+    const memberCount = await tenantService.getMemberCount(tenantId)
+    return c.json(success({ ...tenant, memberCount }), 200)
   })
   .openapi(updateTenantRoute, async c => {
     const { tenantId } = c.req.valid('param')

@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { CreditCard, Check, ArrowUp, Download } from 'lucide-react'
-import { Card, Button, Tag, Table, Empty, Modal } from 'antd'
+import { Card, Button, Tag, Table, Empty, Modal, Spin, message } from 'antd'
 import { useTenantStore } from '../stores/tenantStore'
+import { tenantApi } from '../services/tenantApi'
 
 const planLabels: Record<string, string> = {
   free: '免费版',
@@ -39,13 +41,47 @@ const mockInvoices: Invoice[] = [
 ]
 
 export const BillingPage: React.FC = () => {
-  const { currentTenant } = useTenantStore()
+  const { tenantId } = useParams<{ tenantId: string }>()
+  const navigate = useNavigate()
+  const { currentTenant, setCurrentTenant } = useTenantStore()
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [billingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const [loadingTenant, setLoadingTenant] = useState(false)
+
+  const loadTenant = useCallback(async () => {
+    if (!tenantId) return
+    setLoadingTenant(true)
+    try {
+      const tenant = await tenantApi.getTenant(tenantId)
+      setCurrentTenant(tenant)
+    } catch {
+      message.error('加载租户信息失败')
+    } finally {
+      setLoadingTenant(false)
+    }
+  }, [tenantId, setCurrentTenant])
+
+  useEffect(() => {
+    loadTenant()
+  }, [loadTenant])
+
+  if (loadingTenant) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spin size="large" />
+      </div>
+    )
+  }
 
   if (!currentTenant) {
-    return <Empty description="未找到租户信息" />
+    return (
+      <Empty description="未找到租户信息" className="py-16">
+        <Button type="primary" onClick={() => navigate('/tenants')}>
+          返回租户列表
+        </Button>
+      </Empty>
+    )
   }
 
   const invoiceColumns = [
@@ -114,7 +150,9 @@ export const BillingPage: React.FC = () => {
                   <CreditCard className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-lg font-medium">{planLabels[currentTenant.plan]}</div>
+                  <div className="text-lg font-medium">
+                    {planLabels[currentTenant.plan] || currentTenant.plan || '未知'}
+                  </div>
                   <div className="text-gray-500">
                     {currentTenant.plan === 'free'
                       ? '免费使用'

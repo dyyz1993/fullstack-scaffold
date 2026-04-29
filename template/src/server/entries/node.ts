@@ -32,6 +32,7 @@ const indexHtmlPath = hasDist
 const adminHtmlPath = hasDist
   ? resolve(distPath, 'admin.html')
   : resolve(process.cwd(), 'admin.html')
+const opsHtmlPath = hasDist ? resolve(distPath, 'ops.html') : resolve(process.cwd(), 'ops.html')
 
 const indexHtml = existsSync(indexHtmlPath)
   ? readFileSync(indexHtmlPath, 'utf-8')
@@ -39,6 +40,9 @@ const indexHtml = existsSync(indexHtmlPath)
 const adminHtml = existsSync(adminHtmlPath)
   ? readFileSync(adminHtmlPath, 'utf-8')
   : '<html><body>admin.html not found</body></html>'
+const opsHtml = existsSync(opsHtmlPath)
+  ? readFileSync(opsHtmlPath, 'utf-8')
+  : '<html><body>ops.html not found</body></html>'
 
 const log = logger.api()
 
@@ -93,7 +97,12 @@ if (config.enableDocs) {
 if (hasDist) {
   app.use('/*', async (c, next) => {
     // API 路由不走静态资源
-    if (c.req.path.startsWith('/api/') || c.req.path.startsWith('/files/')) {
+    if (
+      c.req.path.startsWith('/api/') ||
+      c.req.path.startsWith('/files/') ||
+      c.req.path.startsWith('/admin') ||
+      c.req.path.startsWith('/ops')
+    ) {
       return await next()
     }
     return serveStatic({ root: distPath })(c, next)
@@ -103,6 +112,11 @@ if (hasDist) {
 // Admin 路由返回 admin.html
 app.get('/admin/*', c => {
   return c.html(adminHtml)
+})
+
+// Ops 路由返回 ops.html
+app.get('/ops/*', c => {
+  return c.html(opsHtml)
 })
 
 // 其他非 API 路由返回 index.html
