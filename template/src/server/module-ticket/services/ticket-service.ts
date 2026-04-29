@@ -144,13 +144,15 @@ export async function updateTicket(id: string, data: UpdateTicketInput): Promise
   return null
 }
 
-export async function deleteTicket(id: string): Promise<{ message: string }> {
+export async function deleteTicket(
+  id: string
+): Promise<{ success: boolean; data?: { id: string } }> {
   const index = MOCK_TICKETS.findIndex(t => t.id === id)
   if (index !== -1) {
     MOCK_TICKETS.splice(index, 1)
-    return { message: '工单已删除' }
+    return { success: true, data: { id } }
   }
-  return { message: '工单不存在' }
+  return { success: false }
 }
 
 export async function replyTicket(id: string, data: ReplyTicketInput): Promise<Ticket | null> {

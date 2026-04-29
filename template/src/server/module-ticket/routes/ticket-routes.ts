@@ -185,8 +185,8 @@ export const ticketRoutes = new OpenAPIHono()
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await ticketService.deleteTicket(id)
-    if (result.message === '工单不存在') throw new NotFoundError('Ticket', id)
-    return c.json(success({ message: 'Deleted successfully' }), 200)
+    if (!result.success) throw new NotFoundError('Ticket', id)
+    return c.json(success(result), 200)
   })
   .openapi(replyRoute, async c => {
     const { id } = c.req.valid('param')

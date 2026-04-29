@@ -121,7 +121,7 @@ describe('Ticket Service', () => {
       const created = await service.createTicket(data)
 
       const result = await service.deleteTicket(created.id)
-      expect(result.message).toBe('工单已删除')
+      expect(result).toEqual({ success: true, data: { id: created.id } })
 
       const deleted = await service.getTicketById(created.id)
       expect(deleted).toBeNull()
@@ -129,9 +129,7 @@ describe('Ticket Service', () => {
 
     it('should return false for non-existent ticket', async () => {
       const result = await service.deleteTicket('non-existent-ticket-id-xyz')
-      expect(result.message).toBe('工单不存在')
-      expect(result).toBeDefined()
-      expect(result.message).toBeDefined()
+      expect(result.success).toBe(false)
     })
   })
 

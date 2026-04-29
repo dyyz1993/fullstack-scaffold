@@ -15,7 +15,8 @@ import { WebSocketServer } from 'ws'
 import { getAppConfig } from '../config'
 import { logger } from '../utils/logger'
 import { createApp } from '../app'
-import { getDb, runMigrations } from '../db'
+import { getDb, runMigrations, closeDb } from '../db'
+import { createShutdownHandler } from './shutdown'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 
@@ -172,12 +173,7 @@ export async function startServer() {
     bootstrapLog.info({ url: `http://localhost:${port}/docs` }, 'API docs available')
   }
 
-  const shutdown = async () => {
-    bootstrapLog.info({}, 'Shutting down...')
-    server.close()
-    process.exit(0)
-  }
-
+  const shutdown = createShutdownHandler(server, closeDb)
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
 }

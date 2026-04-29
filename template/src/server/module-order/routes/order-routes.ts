@@ -185,8 +185,8 @@ export const orderRoutes = new OpenAPIHono()
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await orderService.deleteOrder(id)
-    if (!result) throw new NotFoundError('Order', id)
-    return c.json(success({ message: 'Deleted successfully' }), 200)
+    if (!result.success) throw new NotFoundError('Order', id)
+    return c.json(success(result), 200)
   })
   .openapi(processRoute, async c => {
     const { id } = c.req.valid('param')

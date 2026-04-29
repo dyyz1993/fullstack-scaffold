@@ -132,13 +132,15 @@ export async function updateOrder(id: string, data: UpdateOrderInput): Promise<O
   return null
 }
 
-export async function deleteOrder(id: string): Promise<{ message: string }> {
+export async function deleteOrder(
+  id: string
+): Promise<{ success: boolean; data?: { id: string } }> {
   const index = MOCK_ORDERS.findIndex(o => o.id === id)
   if (index !== -1) {
     MOCK_ORDERS.splice(index, 1)
-    return { message: '订单已删除' }
+    return { success: true, data: { id } }
   }
-  return { message: '订单不存在' }
+  return { success: false }
 }
 
 export async function processOrder(id: string): Promise<Order | null> {

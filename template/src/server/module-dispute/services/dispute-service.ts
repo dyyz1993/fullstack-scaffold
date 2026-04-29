@@ -112,13 +112,15 @@ export async function updateDispute(id: string, data: UpdateDisputeInput): Promi
   return null
 }
 
-export async function deleteDispute(id: string): Promise<{ success: boolean; message: string }> {
+export async function deleteDispute(
+  id: string
+): Promise<{ success: boolean; data?: { id: string } }> {
   const index = MOCK_DISPUTES.findIndex(d => d.id === id)
   if (index !== -1) {
     MOCK_DISPUTES.splice(index, 1)
-    return { success: true, message: '争议已删除' }
+    return { success: true, data: { id } }
   }
-  return { success: false, message: '争议不存在' }
+  return { success: false }
 }
 
 export async function investigateDispute(id: string): Promise<Dispute | null> {

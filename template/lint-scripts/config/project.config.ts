@@ -300,6 +300,9 @@ export const testQualityConfig: TestQualityConfig = {
     'toBeFalsy\\(\\)',
     'rejects',
     'toThrow',
+    'toBeTruthy',
+    'toHaveBeenCalled',
+    'toHaveBeenCalledTimes',
   ],
   edgeCasePatterns: [
     'empty',

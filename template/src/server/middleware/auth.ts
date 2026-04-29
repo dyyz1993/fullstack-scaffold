@@ -184,9 +184,12 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     if (options.requiredPermissions && options.requiredPermissions.length > 0) {
       const { permissionService } = await import('@platform/server/module-permission')
 
+      const permissionResults = await permissionService.hasPermissionBatch(
+        user.id,
+        options.requiredPermissions
+      )
       for (const requiredPermission of options.requiredPermissions) {
-        const hasPermission = await permissionService.hasPermission(user.id, requiredPermission)
-        if (!hasPermission) {
+        if (!permissionResults[requiredPermission]) {
           log.warn(
             {
               path: c.req.path,

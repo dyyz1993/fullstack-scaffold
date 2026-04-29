@@ -78,6 +78,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
   },
 
   markAsRead: async (id: string) => {
+    set({ error: null })
     try {
       const response = await apiClient.api.notifications[':id'].read.$patch({
         param: { id },
@@ -90,11 +91,12 @@ export const useNotificationStore = create<NotificationState>(set => ({
         }))
       }
     } catch (error) {
-      console.error('Failed to mark as read:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
   markAllAsRead: async () => {
+    set({ error: null })
     try {
       const response = await apiClient.api.notifications['read-all'].$patch()
       const result = await response.json()
@@ -105,11 +107,12 @@ export const useNotificationStore = create<NotificationState>(set => ({
         }))
       }
     } catch (error) {
-      console.error('Failed to mark all as read:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
   deleteNotification: async (id: string) => {
+    set({ error: null })
     try {
       const response = await apiClient.api.notifications[':id'].$delete({
         param: { id },
@@ -126,11 +129,12 @@ export const useNotificationStore = create<NotificationState>(set => ({
         })
       }
     } catch (error) {
-      console.error('Failed to delete:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
   fetchUnreadCount: async () => {
+    set({ error: null })
     try {
       const response = await apiClient.api.notifications['unread-count'].$get()
       const result = await response.json()
@@ -138,7 +142,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
         set({ unreadCount: result.data.count })
       }
     } catch (error) {
-      console.error('Failed to fetch unread count:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
@@ -179,7 +183,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       connectSSEClient(conn)
       console.log('[SSE] Client initialized')
     } catch (error) {
-      console.error('[SSE] Failed to connect:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 

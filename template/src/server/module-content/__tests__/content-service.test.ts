@@ -49,7 +49,7 @@ describe('Content Service', () => {
       }
       const created = await service.createContent(data)
       const result = await service.deleteContent(created.id)
-      expect(result.success).toBe(true)
+      expect(result).toEqual({ success: true, data: { id: created.id } })
     })
 
     it('should return false for non-existent content', async () => {

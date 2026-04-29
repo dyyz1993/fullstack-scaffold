@@ -135,7 +135,7 @@ export const disputeRoutes = new OpenAPIHono()
     const { id } = c.req.valid('param')
     const result = await disputeService.deleteDispute(id)
     if (!result.success) throw NotFoundError.dispute(id)
-    return c.json(success({ message: 'Deleted successfully' }), 200)
+    return c.json(success(result), 200)
   })
   .openapi(resolveRoute, async c => {
     const { id } = c.req.valid('param')

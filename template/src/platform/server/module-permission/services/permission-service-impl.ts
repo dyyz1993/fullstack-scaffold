@@ -120,6 +120,64 @@ export class PermissionService {
     return this.getRolePermissions(role.id)
   }
 
+  private buildBatchResult(
+    permissionCodes: string[],
+    valueOrSet: boolean | Set<string>
+  ): Record<string, boolean> {
+    const result: Record<string, boolean> = {}
+    const isSet = valueOrSet instanceof Set
+    for (const code of permissionCodes) {
+      result[code] = isSet ? (valueOrSet as Set<string>).has(code) : (valueOrSet as boolean)
+    }
+    return result
+  }
+
+  private isSuperAdmin(userId: string): boolean {
+    return userId.startsWith('test-super-admin-') || userId === 'super-admin-1'
+  }
+
+  private async getPermSetForRoleCode(roleCode: string): Promise<Set<string>> {
+    const role = await roleService.getByCode(roleCode)
+    if (!role) return new Set<string>()
+    return new Set((await this.getRolePermissions(role.id)).map(p => p.code))
+  }
+
+  private resolveTestUserPermSet(userId: string): Promise<Set<string>> | null {
+    if (this.isSuperAdmin(userId)) return Promise.resolve(new Set(['*']))
+    if (userId.startsWith('test-customer-service-') || userId === 'customer-service-1')
+      return this.getPermSetForRoleCode('customer_service')
+    if (userId.startsWith('test-user-') || userId === 'user-1')
+      return this.getPermSetForRoleCode('user')
+    return null
+  }
+
+  async hasPermissionBatch(
+    userId: string,
+    permissionCodes: string[]
+  ): Promise<Record<string, boolean>> {
+    if (permissionCodes.length === 0) return {}
+
+    const testPermSet = await this.resolveTestUserPermSet(userId)
+    if (testPermSet) {
+      if (testPermSet.has('*')) return this.buildBatchResult(permissionCodes, true)
+      return this.buildBatchResult(permissionCodes, testPermSet)
+    }
+
+    const userRoles = await roleService.getUserRoles(userId)
+    if (!userRoles || userRoles.length === 0) {
+      return this.buildBatchResult(permissionCodes, false)
+    }
+
+    const permSet = new Set<string>()
+    for (const role of userRoles) {
+      if (role.code === 'super_admin') return this.buildBatchResult(permissionCodes, true)
+      const rolePerms = await this.getRolePermissions(role.id)
+      for (const p of rolePerms) permSet.add(p.code)
+    }
+
+    return this.buildBatchResult(permissionCodes, permSet)
+  }
+
   async hasPermission(_userId: string, permissionCode: string): Promise<boolean> {
     if (_userId.startsWith('test-super-admin-') || _userId === 'super-admin-1') {
       return true

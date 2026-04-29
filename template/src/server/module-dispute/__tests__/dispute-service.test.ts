@@ -54,6 +54,31 @@ describe('Dispute Service', () => {
     })
   })
 
+  describe('deleteDispute', () => {
+    it('should delete an existing dispute', async () => {
+      const data: CreateDisputeInput = {
+        orderId: 'order-1',
+        orderNo: 'ORD123',
+        customerName: 'Test Customer',
+        customerEmail: 'test@example.com',
+        type: 'refund',
+        description: 'Test Description',
+        amount: 100,
+      }
+      const created = await service.createDispute(data)
+      const result = await service.deleteDispute(created.id)
+      expect(result).toEqual({ success: true, data: { id: created.id } })
+
+      const found = await service.getDisputeById(created.id)
+      expect(found).toBeNull()
+    })
+
+    it('should return failure for non-existent dispute', async () => {
+      const result = await service.deleteDispute('non-existent-dispute-id-xyz')
+      expect(result.success).toBe(false)
+    })
+  })
+
   describe('investigateDispute', () => {
     it('should investigate a pending dispute', async () => {
       const data: CreateDisputeInput = {
