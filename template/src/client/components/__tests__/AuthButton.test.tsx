@@ -64,8 +64,8 @@ describe('AuthButton', () => {
 
     render(<AuthButton />)
 
-    expect(screen.getByText('登录')).toBeInTheDocument()
-    expect(screen.queryByText('退出')).not.toBeInTheDocument()
+    expect(screen.getByText('Login')).toBeInTheDocument()
+    expect(screen.queryByText('Logout')).not.toBeInTheDocument()
   })
 
   it('should show logout button when authenticated', () => {
@@ -84,9 +84,9 @@ describe('AuthButton', () => {
 
     render(<AuthButton />)
 
-    expect(screen.getByText('已登录')).toBeInTheDocument()
-    expect(screen.getByText('退出')).toBeInTheDocument()
-    expect(screen.queryByText('登录')).not.toBeInTheDocument()
+    expect(screen.getByText('Logged in')).toBeInTheDocument()
+    expect(screen.getByText('Logout')).toBeInTheDocument()
+    expect(screen.queryByText('Login')).not.toBeInTheDocument()
   })
 
   it('should call setToken and reload on login', () => {
@@ -105,7 +105,7 @@ describe('AuthButton', () => {
 
     render(<AuthButton />)
 
-    fireEvent.click(screen.getByText('登录'))
+    fireEvent.click(screen.getByText('Login'))
 
     expect(mockSetToken).toHaveBeenCalledWith('user-token')
     expect(window.location.reload).toHaveBeenCalled()
@@ -127,7 +127,7 @@ describe('AuthButton', () => {
 
     render(<AuthButton />)
 
-    fireEvent.click(screen.getByText('退出'))
+    fireEvent.click(screen.getByText('Logout'))
 
     expect(mockLogout).toHaveBeenCalled()
     expect(window.location.reload).toHaveBeenCalled()

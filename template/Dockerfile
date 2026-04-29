@@ -32,9 +32,14 @@ RUN npm ci --omit=dev
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/drizzle ./drizzle
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
+# Create non-root user and data directory
+RUN mkdir -p /app/data && \
+    adduser -D -g '' appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
 
 # Expose port
 EXPOSE 3010
@@ -43,4 +48,4 @@ EXPOSE 3010
 CMD ["node", "dist/server/node.js"]
 
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD curl -f http://localhost:3010/health || exit 1
+  CMD wget -q --spider http://localhost:3010/health || exit 1

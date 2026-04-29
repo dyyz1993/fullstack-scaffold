@@ -35,6 +35,7 @@ const BillingPage = lazy(() =>
 const InviteAcceptPage = lazy(() =>
   import('../tenant/pages/InviteAcceptPage').then(m => ({ default: m.InviteAcceptPage }))
 )
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 export const App: React.FC = () => {
   return (
@@ -65,6 +66,7 @@ export const App: React.FC = () => {
             </Route>
 
             <Route path="/invite/:token" element={<InviteAcceptPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </Layout>

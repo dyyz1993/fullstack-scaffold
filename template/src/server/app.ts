@@ -169,9 +169,12 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
       try {
         const { getDb } = await import('./db')
         await getDb()
-        return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'connected' })
+        return c.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() })
       } catch {
-        return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
+        return c.json(
+          { status: 'error', database: 'disconnected', timestamp: new Date().toISOString() },
+          503
+        )
       }
     })
 

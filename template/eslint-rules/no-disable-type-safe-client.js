@@ -31,9 +31,13 @@ export const noDisableTypeSafeClient = {
       filename.includes('file-upload.test.') ||
       filename.includes('-upload.test.')
 
+    const isInfrastructureTest =
+      filename.includes('health-endpoint.test.') || filename.includes('graceful-shutdown.test.')
+
     const isRouteTestFile =
       !isMiddlewareTest &&
       !isBinaryFileTest &&
+      !isInfrastructureTest &&
       (filename.includes('-rpc.test.') ||
         filename.includes('-route.test.') ||
         (filename.includes('__tests__') && filename.includes('.test.')))

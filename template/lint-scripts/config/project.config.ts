@@ -293,6 +293,7 @@ export const testQualityConfig: TestQualityConfig = {
     'toBe\\(403\\)',
     'toBe\\(404\\)',
     'toBe\\(500\\)',
+    'toBe\\(503\\)',
     'toBe\\(false\\)',
     'toBeNull\\(\\)',
     'toBeUndefined\\(\\)',

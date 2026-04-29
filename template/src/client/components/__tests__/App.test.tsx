@@ -76,4 +76,31 @@ describe('App Component', () => {
       expect(screen.getByTestId('app-container')).toBeInTheDocument()
     })
   })
+
+  describe('404 Page', () => {
+    it('should render 404 page for unknown routes', async () => {
+      vi.resetModules()
+
+      vi.doMock('react-router-dom', async () => {
+        const mod = await vi.importActual('react-router-dom')
+        const ActualMemoryRouter = (mod as Record<string, unknown>).MemoryRouter as React.FC<{
+          initialEntries: string[]
+          children: React.ReactNode
+        }>
+        return {
+          ...mod,
+          BrowserRouter: ({ children }: { children: React.ReactNode }) => (
+            <ActualMemoryRouter initialEntries={['/nonexistent-page']}>
+              {children}
+            </ActualMemoryRouter>
+          ),
+        }
+      })
+
+      const { App: FreshApp } = await import('../../App')
+      render(<FreshApp />)
+
+      expect(await screen.findByText(/not found/i)).toBeInTheDocument()
+    })
+  })
 })
