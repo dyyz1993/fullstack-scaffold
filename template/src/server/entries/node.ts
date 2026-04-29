@@ -180,7 +180,7 @@ export async function startServer() {
 
 if (process.env.NODE_ENV === 'production') {
   startServer().catch(err => {
-    console.error('Failed to start server:', err)
+    log.error({ err }, 'Failed to start server')
     process.exit(1)
   })
 }

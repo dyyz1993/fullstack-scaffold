@@ -10,7 +10,24 @@
  * 4. 私有方法（以 _ 开头）不以 Middleware 结尾是允许的
  */
 
-const HELPER_FUNCTIONS = ['getAuthUser', 'requireAuth', 'hasPermission']
+const HELPER_FUNCTIONS = [
+  'getAuthUser',
+  'requireAuth',
+  'hasPermission',
+  'hashPassword',
+  'verifyPassword',
+  'generateToken',
+]
+const HELPER_TYPES = [
+  'RateLimitEntry',
+  'RateLimitStore',
+  'MemoryRateLimitStore',
+  'setRateLimitStore',
+]
+
+function isHelper(name) {
+  return HELPER_FUNCTIONS.includes(name) || HELPER_TYPES.includes(name)
+}
 
 function isPrivateMethod(name) {
   return name.startsWith('_')
@@ -40,12 +57,7 @@ export const middlewareLocation = {
 
         if (node.declaration?.type === 'FunctionDeclaration') {
           const name = node.declaration.id?.name
-          if (
-            name &&
-            !name.endsWith('Middleware') &&
-            !HELPER_FUNCTIONS.includes(name) &&
-            !isPrivateMethod(name)
-          ) {
+          if (name && !name.endsWith('Middleware') && !isHelper(name) && !isPrivateMethod(name)) {
             context.report({
               node: node.declaration,
               messageId: 'invalidName',
@@ -58,11 +70,7 @@ export const middlewareLocation = {
           for (const decl of node.declaration.declarations) {
             if (decl.id.type === 'Identifier') {
               const name = decl.id.name
-              if (
-                !name.endsWith('Middleware') &&
-                !HELPER_FUNCTIONS.includes(name) &&
-                !isPrivateMethod(name)
-              ) {
+              if (!name.endsWith('Middleware') && !isHelper(name) && !isPrivateMethod(name)) {
                 context.report({
                   node: decl,
                   messageId: 'invalidName',
@@ -81,24 +89,23 @@ export const middlewareLocation = {
           if (statement.type === 'ExportNamedDeclaration') {
             if (statement.declaration?.type === 'FunctionDeclaration') {
               const name = statement.declaration.id?.name
-              return (
-                name?.endsWith('Middleware') ||
-                HELPER_FUNCTIONS.includes(name) ||
-                isPrivateMethod(name)
-              )
+              return name?.endsWith('Middleware') || isHelper(name) || isPrivateMethod(name)
             }
             if (statement.declaration?.type === 'VariableDeclaration') {
               return statement.declaration.declarations.some(decl => {
                 if (decl.id.type === 'Identifier') {
                   const name = decl.id.name
-                  return (
-                    name.endsWith('Middleware') ||
-                    HELPER_FUNCTIONS.includes(name) ||
-                    isPrivateMethod(name)
-                  )
+                  return name.endsWith('Middleware') || isHelper(name) || isPrivateMethod(name)
                 }
                 return false
               })
+            }
+            if (
+              statement.declaration?.type === 'ClassDeclaration' ||
+              statement.declaration?.type === 'TSInterfaceDeclaration'
+            ) {
+              const name = statement.declaration.id?.name
+              return isHelper(name)
             }
           }
           return false

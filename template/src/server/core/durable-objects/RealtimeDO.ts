@@ -9,6 +9,9 @@
  */
 
 import { createRealtimeCore, type RealtimeCore } from '../realtime-core'
+import { logger } from '../../utils/logger'
+
+const log = logger.module('realtime-do')
 
 export class RealtimeDurableObject {
   private core: RealtimeCore
@@ -100,9 +103,7 @@ export class RealtimeDurableObject {
     let keepAliveTimeout: ReturnType<typeof setTimeout> | null = null
     let isActive = true
 
-    console.warn(
-      `[SSE-DO] New connection, clientId: ${clientId}, current sseClients: ${this.core.sseClients.size}`
-    )
+    log.debug({ clientId, sseClients: this.core.sseClients.size }, 'SSE-DO new connection')
 
     const scheduleKeepAlive = (controller: ReadableStreamDefaultController) => {
       if (!isActive) return
@@ -133,7 +134,7 @@ export class RealtimeDurableObject {
           },
         })
 
-        console.warn(`[SSE-DO] Client added, total sseClients: ${this.core.sseClients.size}`)
+        log.debug({ sseClients: this.core.sseClients.size }, 'SSE-DO client added')
 
         // Send initial connected event
         const connectMsg = `event: connected\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`
@@ -143,7 +144,7 @@ export class RealtimeDurableObject {
         scheduleKeepAlive(controller)
       },
       cancel: () => {
-        console.warn(`[SSE-DO] Connection cancelled, clientId: ${clientId}`)
+        log.debug({ clientId }, 'SSE-DO connection cancelled')
         isActive = false
         if (keepAliveTimeout) {
           clearTimeout(keepAliveTimeout)
@@ -164,7 +165,7 @@ export class RealtimeDurableObject {
   }
 
   private async handleBroadcast(request: Request): Promise<Response> {
-    console.warn('[RealtimeDO] handleBroadcast called')
+    log.debug({}, 'handleBroadcast called')
     const body = (await request.clone().json()) as {
       event: string
       data: unknown
@@ -175,9 +176,7 @@ export class RealtimeDurableObject {
       return Response.json({ success: false, error: 'event is required' }, { status: 400 })
     }
 
-    console.warn(
-      `[RealtimeDO] broadcasting event: ${body.event}, data: ${JSON.stringify(body.data)}, sseClients: ${this.core.sseClients.size}`
-    )
+    log.debug({ event: body.event, sseClients: this.core.sseClients.size }, 'Broadcasting event')
     this.core.broadcast(body.data, body.exclude || [], body.event)
     return Response.json({
       success: true,

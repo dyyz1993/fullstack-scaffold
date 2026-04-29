@@ -11,8 +11,11 @@ import type {
 } from '@shared/modules/agent/pi-types'
 import type { AgentSubRound } from '@shared/modules/agent'
 import { Paths } from './paths'
+import { logger } from '../../utils/logger'
 
 import type { ToolCallWithResult, ToolCallMap } from './types'
+
+const log = logger.module('session-parser')
 
 export interface ParseSessionResult {
   messages: PiMessage[]
@@ -66,7 +69,7 @@ function parseSessionLines(content: string, messages: PiMessage[], toolCallMap: 
 
       processEntry(entry, messages, toolCallMap)
     } catch (e) {
-      console.warn('[SessionParser] Failed to parse line:', e)
+      log.warn({ err: e }, 'Failed to parse line')
     }
   }
 }
@@ -80,7 +83,7 @@ export async function parseSessionJsonl(
   try {
     await access(sessionDir)
   } catch {
-    console.warn('[SessionParser] Session dir not found:', sessionDir)
+    log.warn({ sessionDir }, 'Session dir not found')
     return { messages: [], toolCallMap: new Map() }
   }
 
@@ -125,7 +128,7 @@ export async function parseSessionJsonl(
 
     return { messages: deduplicated, toolCallMap }
   } catch (error) {
-    console.warn('[SessionParser] Failed to load session:', error)
+    log.warn({ err: error }, 'Failed to load session')
     return { messages: [], toolCallMap: new Map() }
   }
 }

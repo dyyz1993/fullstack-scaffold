@@ -14,6 +14,9 @@ import type { LLMLCallbacks } from '../types'
 import { createSandboxedBashOperations, initializeSandbox } from './sandbox-bash'
 import { parseSessionJsonl, toLLMMessages } from './session-parser'
 import { Paths } from './paths'
+import { logger } from '../../utils/logger'
+
+const log = logger.module('llm-service')
 
 interface ModelsConfig {
   providers: Record<
@@ -44,7 +47,7 @@ async function loadPiModelsConfig(): Promise<ModelsConfig | null> {
     const content = await readFile(configPath, 'utf-8')
     return JSON.parse(content) as ModelsConfig
   } catch (error) {
-    console.warn('[LLM] Failed to load PI settings config:', error)
+    log.warn({ err: error }, 'Failed to load PI settings config')
   }
   return null
 }
@@ -99,13 +102,13 @@ export async function createPILLMService(
     await access(userWorkspace)
   } catch {
     await mkdir(userWorkspace, { recursive: true })
-    console.warn('[LLM] Created user workspace:', userWorkspace)
+    log.info({ userWorkspace }, 'Created user workspace')
   }
   try {
     await access(sessionDir)
   } catch {
     await mkdir(sessionDir, { recursive: true })
-    console.warn('[LLM] Created session dir:', sessionDir)
+    log.info({ sessionDir }, 'Created session dir')
   }
 
   await initializeSandbox({ workspacePath: userWorkspace })
@@ -179,7 +182,7 @@ export async function createPILLMService(
       try {
         await session.abort()
       } catch (error) {
-        console.warn('[LLM] Abort error:', error)
+        log.warn({ err: error }, 'Abort error')
       }
     },
 

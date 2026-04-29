@@ -2,6 +2,9 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import type { LLMService, MockConfig } from '../types'
+import { logger } from '../../utils/logger'
+
+const log = logger.module('mock-service')
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -14,7 +17,7 @@ export function loadMockConfig(): MockConfig | null {
       return JSON.parse(fs.readFileSync(configPath, 'utf-8')) as MockConfig
     }
   } catch (error) {
-    console.warn('[Mock] Failed to load mock config:', error)
+    log.warn({ err: error }, 'Failed to load mock config')
   }
   return null
 }
@@ -30,7 +33,7 @@ export function findMockScenario(userMessage: string): string | null {
         const dataFilePath = path.join(MOCK_DIR, scenario.dataFile)
         const resolvedPath = path.resolve(dataFilePath)
         if (!resolvedPath.startsWith(path.resolve(MOCK_DIR))) {
-          console.error('[Mock] Invalid data file path:', scenario.dataFile)
+          log.error({ dataFile: scenario.dataFile }, 'Invalid data file path')
           return null
         }
         return resolvedPath
@@ -95,7 +98,7 @@ export function createMockLLMService(): LLMService {
               break
           }
         } catch {
-          console.warn('[Mock] Failed to parse mock line:', line)
+          log.warn({ line }, 'Failed to parse mock line')
         }
       }
 

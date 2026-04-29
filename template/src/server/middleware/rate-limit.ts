@@ -1,28 +1,20 @@
 import type { MiddlewareHandler } from 'hono'
 import { HTTPException } from 'hono/http-exception'
+import { MemoryRateLimitStore, type RateLimitStore } from './rate-limit-store'
 
-interface RateLimitEntry {
-  count: number
-  resetTime: number
-}
+const stores = new Map<string, RateLimitStore>()
 
-const stores = new Map<string, Map<string, RateLimitEntry>>()
-
-function getStore(key: string): Map<string, RateLimitEntry> {
+function getStore(key: string): RateLimitStore {
   let store = stores.get(key)
   if (!store) {
-    store = new Map()
+    store = new MemoryRateLimitStore()
     stores.set(key, store)
   }
   return store
 }
 
-function cleanup(store: Map<string, RateLimitEntry>, now: number) {
-  for (const [k, entry] of store) {
-    if (now > entry.resetTime) {
-      store.delete(k)
-    }
-  }
+export function setRateLimitStore(key: string, newStore: RateLimitStore) {
+  stores.set(key, newStore)
 }
 
 function getClientIp(c: { req: { header: (n: string) => string | undefined } }): string {
@@ -40,28 +32,16 @@ export interface RateLimitOptions {
 export function rateLimitMiddleware(options: RateLimitOptions): MiddlewareHandler {
   const { windowMs, maxRequests, key = 'default' } = options
   const store = getStore(key)
+  const windowSeconds = Math.ceil(windowMs / 1000)
 
   return async (c, next) => {
-    const now = Date.now()
     const ip = getClientIp(c)
-
-    if (Math.random() < 0.01) {
-      cleanup(store, now)
-    }
-
-    let entry = store.get(ip)
-    if (!entry || now > entry.resetTime) {
-      entry = { count: 0, resetTime: now + windowMs }
-      store.set(ip, entry)
-    }
-
-    entry.count++
+    const count = await store.increment(`${key}:${ip}`, windowSeconds)
 
     c.header('X-RateLimit-Limit', maxRequests.toString())
-    c.header('X-RateLimit-Remaining', Math.max(0, maxRequests - entry.count).toString())
-    c.header('X-RateLimit-Reset', new Date(entry.resetTime).toISOString())
+    c.header('X-RateLimit-Remaining', Math.max(0, maxRequests - count).toString())
 
-    if (entry.count > maxRequests) {
+    if (count > maxRequests) {
       throw new HTTPException(429, {
         message: 'Too many requests, please try again later',
       })

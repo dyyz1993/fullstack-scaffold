@@ -12,8 +12,11 @@ import { getDb } from '../../db'
 import { agents, type AgentTable } from '../../db/schema'
 import { toISOString } from '../../utils/date'
 import { generateId } from '../../utils/id'
+import { logger } from '../../utils/logger'
 import { parseSessionJsonl, extractTextContent, parseAssistantSubRounds } from './session-parser'
 import { Paths } from './paths'
+
+const log = logger.module('agent-service')
 
 export async function getOrCreateAgent(
   workspaceId: string,
@@ -204,7 +207,7 @@ export async function getMessages(
       oldestTimestamp,
     }
   } catch (error) {
-    console.error(`Failed to get messages for agent ${agentId}:`, error)
+    log.error({ err: error, agentId }, 'Failed to get messages for agent')
     return { rounds: [], hasMore: false }
   }
 }
@@ -225,7 +228,7 @@ export async function clearMessages(_agentId: string, workspacePath: string): Pr
     try {
       await unlink(filePath)
     } catch (e) {
-      console.warn('[Agent] Failed to delete session file:', filePath, e)
+      log.warn({ err: e, filePath }, 'Failed to delete session file')
     }
   }
 }

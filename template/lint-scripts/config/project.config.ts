@@ -303,6 +303,8 @@ export const testQualityConfig: TestQualityConfig = {
     'toBeTruthy',
     'toHaveBeenCalled',
     'toHaveBeenCalledTimes',
+    'toEqual',
+    'toBe',
   ],
   edgeCasePatterns: [
     'empty',

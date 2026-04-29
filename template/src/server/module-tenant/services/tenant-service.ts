@@ -3,6 +3,7 @@ import { getDb } from '../../db'
 import { tenants, tenantRoles, tenantMembers, tenantInvitations } from '../../db/schema'
 import { eq, and, inArray } from 'drizzle-orm'
 import { generateId, generateToken } from '../../utils/id'
+import { logger } from '../../utils/logger'
 import {
   TENANT_ROLE_TEMPLATES,
   PLAN_ROLE_LIMITS,
@@ -11,6 +12,8 @@ import {
 import type { TenantPermission } from '@platform/shared/permission/tenant-permissions'
 import type { TenantPlan } from '../../db/schema'
 import { TenantSchema } from '@shared/modules/tenant/schemas'
+
+const log = logger.module('tenant-service')
 
 export interface CreateTenantData {
   name: string
@@ -113,7 +116,7 @@ export class TenantService {
     return tenantRows.filter(row => {
       const result = TenantSchema.safeParse(row)
       if (!result.success) {
-        console.error('Invalid tenant data:', result.error.flatten(), row)
+        log.error({ err: result.error, row }, 'Invalid tenant data')
         return false
       }
       return true

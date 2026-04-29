@@ -134,7 +134,8 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
   const log = createModuleLoggerSync('auth')
 
   if (process.env.NODE_ENV === 'production' && secretKey === defaultSecretKey) {
-    console.warn(
+    log.warn(
+      {},
       '[SECURITY] auth: Default secret key detected in production. ' +
         'Replace with a proper AUTH_SECRET_KEY and implement real authentication.'
     )

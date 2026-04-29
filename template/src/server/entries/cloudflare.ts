@@ -15,6 +15,9 @@ import { getDb } from '../db/driver-cloudflare'
 import { RealtimeDurableObject } from '@server/core'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getCloudflareRuntimeAdapter } from '@server/core/runtime-cloudflare'
+import { logger } from '../utils/logger'
+
+const log = logger.module('cloudflare')
 
 export interface CloudflareBindings extends AppBindings {
   DB: D1Database
@@ -39,7 +42,7 @@ const wrappedApp = app
     })
   )
   .onError((err, c) => {
-    console.error('Server error:', err)
+    log.error({ err }, 'Server error')
     c.res.headers.set('Content-Type', 'application/json')
     const statusCode =
       err instanceof Error && 'status' in err ? (err as { status: number }).status : 500

@@ -1,3 +1,7 @@
+import { logger } from '../../utils/logger'
+
+const log = logger.module('sse-manager')
+
 type SSEEventHandler = (event: string, data: unknown) => void
 
 interface SSEConnection {
@@ -34,7 +38,7 @@ class SSEManager {
       try {
         conn.send(event, data)
       } catch (error) {
-        console.error('SSE send error:', error)
+        log.error({ err: error }, 'SSE send error')
       }
     }
   }

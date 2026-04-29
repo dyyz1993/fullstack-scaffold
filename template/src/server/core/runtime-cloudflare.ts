@@ -10,6 +10,9 @@
 
 import { createRealtimeCore, type RealtimeCore } from './realtime-core'
 import type { RuntimeAdapter, RuntimePlatform, WSConnection, SSEConnection } from './runtime'
+import { logger } from '../utils/logger'
+
+const log = logger.module('runtime-cf')
 
 class CloudflareWSConnection implements WSConnection {
   readonly id: string
@@ -61,9 +64,7 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
   }
 
   broadcast(event: string, data: unknown, exclude: string[] = []): void {
-    console.warn(
-      `[Broadcast] event: ${event}, data: ${JSON.stringify(data)}, exclude: ${exclude}, sseClients: ${this.core.sseClients.size}`
-    )
+    log.debug({ event, exclude, sseClients: this.core.sseClients.size }, 'Broadcast')
     this.core.broadcast(data, exclude, event)
   }
 
@@ -120,9 +121,7 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
     let keepAliveTimeout: ReturnType<typeof setTimeout> | null = null
     let isActive = true
 
-    console.warn(
-      `[SSE] New connection, clientId: ${clientId}, current sseClients: ${this.core.sseClients.size}`
-    )
+    log.debug({ clientId, sseClients: this.core.sseClients.size }, 'SSE new connection')
 
     const scheduleKeepAlive = (controller: ReadableStreamDefaultController) => {
       if (!isActive) return
@@ -155,7 +154,7 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
           },
         })
 
-        console.warn(`[SSE] Client added, total sseClients: ${this.core.sseClients.size}`)
+        log.debug({ sseClients: this.core.sseClients.size }, 'SSE client added')
 
         // Send initial connected event
         const connectMsg = `event: connected\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`
@@ -165,7 +164,7 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
         scheduleKeepAlive(controller)
       },
       cancel: () => {
-        console.warn(`[SSE] Connection cancelled, clientId: ${clientId}`)
+        log.debug({ clientId }, 'SSE connection cancelled')
         isActive = false
         if (keepAliveTimeout) {
           clearTimeout(keepAliveTimeout)

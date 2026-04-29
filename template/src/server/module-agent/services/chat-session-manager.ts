@@ -3,6 +3,9 @@ import { createMockLLMService, isMockEnabled } from './mock-service'
 import type { LLMService } from '../types'
 import { sseManager } from './sse-manager'
 import { getOrCreateWorkspace } from './workspace-service'
+import { logger } from '../../utils/logger'
+
+const log = logger.module('chat-session')
 
 interface RunningChat {
   agentId: string
@@ -98,7 +101,7 @@ class ChatSessionManager {
       const session = cached.service.session
       if (session.resourceLoader) {
         await session.resourceLoader.reload()
-        console.warn('[ChatSessionManager] Reloaded resources for user:', userId)
+        log.info({ userId }, 'Reloaded resources for user')
       }
     }
   }

@@ -185,7 +185,8 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         await cleanupTestDatabase()
         return c.json({ success: true, message: 'Database cleaned up' })
       } catch (error) {
-        console.error('Error during database cleanup:', error)
+        const log = createModuleLoggerSync('api')
+        log.error({ err: error }, 'Error during database cleanup')
         return c.json({ success: false, message: 'Failed to cleanup database' }, 500)
       }
     })
