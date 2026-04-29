@@ -40,4 +40,31 @@
 
 ---
 
-## Batch C — EXECUTING
+## Batch C — COMPLETED
+
+**Commit:** `b6cc23a` fix: batch c — jwt 认证、console→logger、rate limit 抽象、租户隔离中间件
+
+| Task                 | Files                                                        | Test                           |
+| -------------------- | ------------------------------------------------------------ | ------------------------------ |
+| 12. JWT auth         | jwt-auth.ts, jwt-auth.test.ts, package.json                  | 6 tests PASS                   |
+| 9. Console→logger    | 11 files, no-console-logger.test.ts                          | 29 calls replaced, 1 test PASS |
+| 10. Rate limit store | rate-limit-store.ts, rate-limit.ts, rate-limit-store.test.ts | 4 tests PASS                   |
+| 11. Tenant isolation | tenant-isolation.ts, tenant-isolation.test.ts                | 6 tests PASS                   |
+
+**Review fixes:**
+
+- middleware-location.js: added HELPER_TYPES (RateLimitEntry, RateLimitStore, MemoryRateLimitStore, setRateLimitStore), added isHelper(), added ClassDeclaration/TSInterfaceDeclaration handling
+- rate-limit-store.test.ts: removed unused eslint-disable
+- project.config.ts: added toBe/toEqual to errorAssertionPatterns
+
+---
+
+## Summary
+
+**3 commits, 12 tasks, all validations passed:**
+
+| Commit            | Tasks                                                                    |
+| ----------------- | ------------------------------------------------------------------------ |
+| `a48a37b` Batch A | 404 route, AuthButton EN, Health 503, Dockerfile                         |
+| `49b4c70` Batch B | Graceful shutdown, Notification errors, Batch permission, Delete unified |
+| `b6cc23a` Batch C | JWT auth, Console→logger, Rate limit store, Tenant isolation             |

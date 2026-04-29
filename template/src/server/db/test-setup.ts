@@ -14,8 +14,11 @@ export async function setupTestDatabase(): Promise<void> {
       description TEXT,
       status TEXT DEFAULT 'pending' NOT NULL,
       created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      deleted_at INTEGER
     );
+    CREATE INDEX IF NOT EXISTS idx_todos_status ON todos(status);
+    CREATE INDEX IF NOT EXISTS idx_todos_created_at ON todos(created_at);
     
     CREATE TABLE IF NOT EXISTS todo_attachments (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

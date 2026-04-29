@@ -5,6 +5,7 @@ import { toISOString } from '../../utils/date'
 import { getMockUsers } from '../../utils/auth'
 import { Role, getPermissionsByRole } from '@platform/shared/permission'
 import { AuthenticationError } from '../../utils/app-error'
+import { verifyPassword, generateToken } from '../../middleware/jwt-auth'
 import type {
   SystemStats,
   HealthCheck,
@@ -210,6 +211,8 @@ export async function getRecentActivity(limit: number = 10): Promise<
   }))
 }
 
+const DEV_PASSWORD_HASH = '$2b$10$Bm/NJYCKlgddrd8zvuyVouQVXcXTF/nrNxuvL933BO/aeniuN4Cfe'
+
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const mockUsers = getMockUsers()
   const user = mockUsers.find(u => u.username === data.username)
@@ -218,18 +221,16 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     throw AuthenticationError.tokenInvalid()
   }
 
-  if (data.password !== '123456') {
+  const isValid = await verifyPassword(data.password, DEV_PASSWORD_HASH)
+  if (!isValid) {
     throw AuthenticationError.tokenInvalid()
   }
 
-  let token: string
-  if (user.role === Role.SUPER_ADMIN) {
-    token = `test-super-admin-${user.id}`
-  } else if (user.role === Role.CUSTOMER_SERVICE) {
-    token = `test-customer-service-${user.id}`
-  } else {
-    token = `test-user-${user.id}`
-  }
+  const token = await generateToken({
+    userId: user.id,
+    role: user.role,
+    tenantId: 'default',
+  })
 
   return {
     user: {

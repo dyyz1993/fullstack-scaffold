@@ -20,7 +20,7 @@ const FileContentSchema = z.any()
 
 const publicFileRoute = createRoute({
   method: 'get',
-  path: '/public/{namespace}/{filename}',
+  path: '/files/public/{namespace}/{filename}',
   tags: ['files'],
   request: {
     params: FileDownloadSchema,
@@ -40,7 +40,7 @@ const publicFileRoute = createRoute({
 
 const privateFileRoute = createRoute({
   method: 'get',
-  path: '/private/{namespace}/{filename}',
+  path: '/files/private/{namespace}/{filename}',
   tags: ['files'],
   request: {
     params: FileDownloadSchema,
@@ -62,7 +62,7 @@ const privateFileRoute = createRoute({
 
 const generateUrlRoute = createRoute({
   method: 'post',
-  path: '/generate-url',
+  path: '/api/generate-url',
   tags: ['files'],
   request: {
     body: {
@@ -82,7 +82,7 @@ const generateUrlRoute = createRoute({
 
 const checkFileRoute = createRoute({
   method: 'head',
-  path: '/public/{namespace}/{filename}',
+  path: '/files/public/{namespace}/{filename}',
   tags: ['files'],
   request: {
     params: FileDownloadSchema,
@@ -102,7 +102,7 @@ const checkFileRoute = createRoute({
 
 const checkPrivateFileRoute = createRoute({
   method: 'head',
-  path: '/private/{namespace}/{filename}',
+  path: '/files/private/{namespace}/{filename}',
   tags: ['files'],
   request: {
     params: FileDownloadSchema,

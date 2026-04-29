@@ -2,8 +2,20 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '../../middleware/auth'
+import { tenantIsolationMiddleware } from '../../middleware/tenant-isolation'
 import { tenantService } from '../services/tenant-service'
 import { successResponse, errorResponse, success, created } from '../../utils/route-helpers'
+import type { Context } from 'hono'
+
+function requireTenantOwnership(c: Context, tenantId: string): Response | null {
+  const bypass = c.get('tenantBypass')
+  if (bypass) return null
+  const userTenantId = c.get('tenantId')
+  if (userTenantId !== tenantId) {
+    return c.json({ success: false, error: 'Cross-tenant access denied' }, 403)
+  }
+  return null
+}
 import {
   TenantSchema,
   TenantRoleSchema,
@@ -57,7 +69,7 @@ const getTenantRoute = createRoute({
   path: '/tenants/:tenantId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
   },
@@ -73,7 +85,7 @@ const updateTenantRoute = createRoute({
   path: '/tenants/:tenantId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
     body: {
@@ -93,7 +105,7 @@ const deleteTenantRoute = createRoute({
   path: '/tenants/:tenantId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
   },
@@ -109,7 +121,7 @@ const getTenantRolesRoute = createRoute({
   path: '/tenants/:tenantId/roles',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
   },
@@ -124,7 +136,7 @@ const createTenantRoleRoute = createRoute({
   path: '/tenants/:tenantId/roles',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
     body: {
@@ -143,7 +155,7 @@ const updateTenantRoleRoute = createRoute({
   path: '/tenants/:tenantId/roles/:roleId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string(), roleId: z.string() }),
     body: {
@@ -163,7 +175,7 @@ const deleteTenantRoleRoute = createRoute({
   path: '/tenants/:tenantId/roles/:roleId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string(), roleId: z.string() }),
   },
@@ -179,7 +191,7 @@ const getTenantMembersRoute = createRoute({
   path: '/tenants/:tenantId/members',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
   },
@@ -194,7 +206,7 @@ const inviteMemberRoute = createRoute({
   path: '/tenants/:tenantId/members/invite',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string() }),
     body: {
@@ -213,7 +225,7 @@ const updateMemberRoute = createRoute({
   path: '/tenants/:tenantId/members/:memberId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string(), memberId: z.string() }),
     body: {
@@ -233,7 +245,7 @@ const removeMemberRoute = createRoute({
   path: '/tenants/:tenantId/members/:memberId',
   tags: ['tenants'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware(), tenantIsolationMiddleware],
   request: {
     params: z.object({ tenantId: z.string(), memberId: z.string() }),
   },
@@ -299,6 +311,9 @@ export const tenantRoutes = new OpenAPIHono()
   })
   .openapi(getTenantRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const tenant = await tenantService.getTenantById(tenantId)
 
     if (!tenant) {
@@ -309,6 +324,9 @@ export const tenantRoutes = new OpenAPIHono()
   })
   .openapi(updateTenantRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const data = c.req.valid('json')
 
     const updateData: Record<string, unknown> = {}
@@ -327,16 +345,25 @@ export const tenantRoutes = new OpenAPIHono()
   })
   .openapi(deleteTenantRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     await tenantService.deleteTenant(tenantId)
     return c.json(success({ success: true }), 200)
   })
   .openapi(getTenantRolesRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const roles = await tenantService.getTenantRoles(tenantId)
     return c.json(success({ roles }), 200)
   })
   .openapi(createTenantRoleRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const data = c.req.valid('json')
 
     try {
@@ -357,7 +384,10 @@ export const tenantRoutes = new OpenAPIHono()
     }
   })
   .openapi(updateTenantRoleRoute, async c => {
-    const { roleId } = c.req.valid('param')
+    const { tenantId, roleId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const data = c.req.valid('json')
 
     const updateData: Record<string, unknown> = {}
@@ -375,7 +405,10 @@ export const tenantRoutes = new OpenAPIHono()
     return c.json(success(role), 200)
   })
   .openapi(deleteTenantRoleRoute, async c => {
-    const { roleId } = c.req.valid('param')
+    const { tenantId, roleId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const deleted = await tenantService.deleteTenantRole(roleId)
 
     if (!deleted) {
@@ -386,11 +419,17 @@ export const tenantRoutes = new OpenAPIHono()
   })
   .openapi(getTenantMembersRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const members = await tenantService.getTenantMembers(tenantId)
     return c.json(success({ members }), 200)
   })
   .openapi(inviteMemberRoute, async c => {
     const { tenantId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const user = c.get('authUser')
     const data = c.req.valid('json')
 
@@ -399,7 +438,10 @@ export const tenantRoutes = new OpenAPIHono()
     return c.json(created(invitation), 201)
   })
   .openapi(updateMemberRoute, async c => {
-    const { memberId } = c.req.valid('param')
+    const { tenantId, memberId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     const data = c.req.valid('json')
 
     const member = await tenantService.updateMemberRole(memberId, data.roleId)
@@ -410,7 +452,10 @@ export const tenantRoutes = new OpenAPIHono()
     return c.json(success(member), 200)
   })
   .openapi(removeMemberRoute, async c => {
-    const { memberId } = c.req.valid('param')
+    const { tenantId, memberId } = c.req.valid('param')
+    const denied = requireTenantOwnership(c, tenantId)
+    if (denied) return denied
+
     await tenantService.removeMember(memberId)
     return c.json(success({ success: true }), 200)
   })

@@ -230,6 +230,7 @@ describe('TodoPage', () => {
     })
 
     it('should call deleteTodo when delete button is clicked', async () => {
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
       mockStore.todos = [createMockTodo({ id: 1 })]
       render(<TodoPage />)
       const deleteButton = screen.getByTestId('delete-button')
@@ -237,6 +238,7 @@ describe('TodoPage', () => {
       await waitFor(() => {
         expect(mockStore.deleteTodo).toHaveBeenCalledWith(1)
       })
+      confirmSpy.mockRestore()
     })
   })
 

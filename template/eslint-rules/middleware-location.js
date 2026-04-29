@@ -22,6 +22,8 @@ const HELPER_TYPES = [
   'RateLimitEntry',
   'RateLimitStore',
   'MemoryRateLimitStore',
+  'RedisRateLimitStore',
+  'createRateLimitStore',
   'setRateLimitStore',
 ]
 
