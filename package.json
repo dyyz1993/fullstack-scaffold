@@ -60,9 +60,6 @@
       "prettier --write",
       "eslint --fix"
     ],
-    "template/src/**/*.{ts,tsx}": [
-      "prettier --write"
-    ],
     "template/lint-scripts/**/*.ts": [
       "prettier --write"
     ],

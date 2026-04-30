@@ -61,4 +61,15 @@ Thumbs.db
 *.tsbuildinfo
 .pi/
 uploads/**/
+!uploads/.gitkeep
 !settings.json
+
+# Test artifacts
+tests/e2e/case-*.spec.ts
+auth-inject.html
+
+# Runtime directories
+data/*.db
+logs/
+uploads/*
+!uploads/.gitkeep

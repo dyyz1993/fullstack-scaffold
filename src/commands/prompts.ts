@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import readline from 'node:readline'
 import chalk from 'chalk'
 import type {
