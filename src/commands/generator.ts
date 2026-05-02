@@ -169,6 +169,28 @@ async function deleteLinesByIndices(filePath: string, lineIndices: number[]): Pr
   await fs.writeFile(filePath, filtered.join('\n'))
 }
 
+function removeLazyImportByVarName(content: string, varName: string): string {
+  const regex = new RegExp(`const ${varName} = lazy\\(`, 'm')
+  const match = regex.exec(content)
+  if (!match) return content
+  const startIdx = match.index
+  const afterOpen = startIdx + match[0].length
+  let parenDepth = 1
+  let endIdx = afterOpen
+  for (let i = afterOpen; i < content.length; i++) {
+    if (content[i] === '(') parenDepth++
+    if (content[i] === ')') {
+      parenDepth--
+      if (parenDepth === 0) {
+        endIdx = i + 1
+        break
+      }
+    }
+  }
+  if (endIdx < content.length && content[endIdx] === '\n') endIdx++
+  return content.slice(0, startIdx) + content.slice(endIdx)
+}
+
 async function cleanRouteRegistry(targetDir: string, config: ProjectConfig): Promise<void> {
   const filePath = path.join(targetDir, 'src/server/route-registry.ts')
   if (!(await fs.pathExists(filePath))) return
@@ -382,23 +404,77 @@ async function cleanClientApp(targetDir: string, config: ProjectConfig): Promise
   const allModules = Object.keys(moduleRegistry) as BackendModule[]
   const removedModules = allModules.filter(m => !config.modules.includes(m))
 
-  const importLinesToRemove = new Set<number>()
-  const routeLinesToRemove = new Set<number>()
+  let content = await fs.readFile(filePath, 'utf-8')
+
+  const moduleLazyImports: Record<string, string[]> = {
+    todos: ['TodoPage'],
+    notifications: ['NotificationPage'],
+    chat: ['WebSocketPage'],
+    agent: ['ChatPage'],
+  }
 
   for (const modKey of removedModules) {
-    const refs = moduleRegistry[modKey]?.references?.clientApp
-    if (!refs) continue
-    refs.importLines.forEach(l => importLinesToRemove.add(l))
-    refs.routeLines.forEach(l => routeLinesToRemove.add(l))
+    const varNames = moduleLazyImports[modKey]
+    if (varNames) {
+      for (const varName of varNames) {
+        content = removeLazyImportByVarName(content, varName)
+      }
+    }
   }
 
-  await deleteLinesByIndices(filePath, [...importLinesToRemove, ...routeLinesToRemove])
-
-  if (!config.modules.includes('tenant')) {
-    const content = await fs.readFile(filePath, 'utf-8')
-    const updated = content.replace(/\/\/ tenant start[\s\S]*?\/\/ tenant end\n?/gi, '')
-    await fs.writeFile(filePath, updated)
+  if (removedModules.includes('tenant')) {
+    const lazyVarRegex = /const (\w+) = lazy\(/g
+    const tenantVarNames: string[] = []
+    let m
+    while ((m = lazyVarRegex.exec(content)) !== null) {
+      const varName = m[1]
+      const afterOpen = m.index + m[0].length
+      let parenDepth = 1
+      let endIdx = afterOpen
+      for (let i = afterOpen; i < content.length; i++) {
+        if (content[i] === '(') parenDepth++
+        if (content[i] === ')') {
+          parenDepth--
+          if (parenDepth === 0) {
+            endIdx = i + 1
+            break
+          }
+        }
+      }
+      const block = content.slice(m.index, endIdx)
+      if (block.includes('../tenant/')) {
+        tenantVarNames.push(varName)
+      }
+    }
+    for (const varName of tenantVarNames) {
+      content = removeLazyImportByVarName(content, varName)
+    }
   }
+
+  const moduleRoutePaths: Record<string, string[]> = {
+    todos: ['/todos'],
+    notifications: ['/notifications'],
+    chat: ['/websocket'],
+    agent: ['/chat'],
+  }
+
+  for (const modKey of removedModules) {
+    if (modKey === 'tenant') continue
+    const paths = moduleRoutePaths[modKey]
+    if (!paths) continue
+    for (const routePath of paths) {
+      content = content.replace(new RegExp(`^\\s*<Route path="${routePath}".*$\\n?`, 'gm'), '')
+    }
+  }
+
+  if (removedModules.includes('tenant')) {
+    content = content.replace(/^\s*<Route path="\/tenants".*$\n?/gm, '')
+    content = content.replace(/^\s*<Route path="\/tenants\/new".*$\n?/gm, '')
+    content = content.replace(/^\s*<Route path="\/tenants\/:tenantId"[\s\S]*?<\/Route>.*$\n?/gm, '')
+    content = content.replace(/^\s*<Route path="\/invite\/:token".*$\n?/gm, '')
+  }
+
+  content = content.replace(/\n{3,}/g, '\n\n')
 
   const clientModulesWithRoutes: BackendModule[] = ['todos', 'chat', 'notifications', 'tenant']
   const hasClientRoutes = config.modules.some(m => clientModulesWithRoutes.includes(m))
@@ -423,7 +499,6 @@ async function cleanClientApp(targetDir: string, config: ProjectConfig): Promise
       )
     }
 
-    let content = await fs.readFile(filePath, 'utf-8')
     content = content.replace(
       /<Route path="\/" element=\{<Navigate to="\/todos" replace \/>\} \/>/g,
       '<Route path="/" element={<HomePage />} />'
@@ -452,8 +527,9 @@ async function cleanClientApp(targetDir: string, config: ProjectConfig): Promise
           content.slice(insertPos)
       }
     }
-    await fs.writeFile(filePath, content)
   }
+
+  await fs.writeFile(filePath, content)
 }
 
 async function cleanOpsApp(targetDir: string, config: ProjectConfig): Promise<void> {
@@ -465,17 +541,55 @@ async function cleanOpsApp(targetDir: string, config: ProjectConfig): Promise<vo
   const allModules = Object.keys(moduleRegistry) as BackendModule[]
   const removedModules = allModules.filter(m => !config.modules.includes(m))
 
-  const importLinesToRemove = new Set<number>()
-  const routeLinesToRemove = new Set<number>()
+  let content = await fs.readFile(filePath, 'utf-8')
 
-  for (const modKey of removedModules) {
-    const refs = moduleRegistry[modKey]?.references?.opsApp
-    if (!refs) continue
-    refs.importLines.forEach(l => importLinesToRemove.add(l))
-    refs.routeLines.forEach(l => routeLinesToRemove.add(l))
+  const moduleLazyImports: Record<string, string[]> = {
+    ops: [
+      'DashboardPage',
+      'LoginPage',
+      'RegisterPage',
+      'SettingsPage',
+      'StaffPage',
+      'SystemLogsPage',
+      'MonitorPage',
+      'NotFoundPage',
+    ],
+    permission: ['PermissionsPage', 'RolesPage'],
+    order: ['OrdersPage'],
+    ticket: ['TicketsPage'],
+    dispute: ['DisputesPage'],
+    content: ['ContentPage'],
   }
 
-  await deleteLinesByIndices(filePath, [...importLinesToRemove, ...routeLinesToRemove])
+  const moduleRoutePaths: Record<string, string[]> = {
+    ops: ['/dashboard', '/system/staff', '/system/settings', '/system/logs', '/system/monitor'],
+    permission: ['/system/permissions', '/system/roles'],
+    order: ['/orders'],
+    ticket: ['/tickets'],
+    dispute: ['/disputes'],
+    content: ['/content'],
+  }
+
+  for (const modKey of removedModules) {
+    const varNames = moduleLazyImports[modKey]
+    if (varNames) {
+      for (const varName of varNames) {
+        content = removeLazyImportByVarName(content, varName)
+      }
+    }
+  }
+
+  for (const modKey of removedModules) {
+    const paths = moduleRoutePaths[modKey]
+    if (!paths) continue
+    for (const routePath of paths) {
+      content = content.replace(new RegExp(`^\\s*<Route path="${routePath}".*$\\n?`, 'gm'), '')
+    }
+  }
+
+  content = content.replace(/\n{3,}/g, '\n\n')
+
+  await fs.writeFile(filePath, content)
 }
 
 async function cleanClientNavigation(targetDir: string, config: ProjectConfig): Promise<void> {
@@ -513,82 +627,40 @@ async function cleanClientNavigation(targetDir: string, config: ProjectConfig): 
   let updated = content
 
   if (keptKeys.length === 0) {
-    updated = updated.replace(routeKeyLineRegex, `type RouteKey = never`)
+    await fs.writeFile(
+      filePath,
+      `import { AuthButton } from './AuthButton'
 
-    const routeDeclStart = updated.indexOf('const routes:')
-    if (routeDeclStart !== -1) {
-      const routeObjStart = updated.indexOf('= {', routeDeclStart)
-      if (routeObjStart !== -1) {
-        let depth = 0
-        let routeObjEnd = -1
-        for (let i = routeObjStart + 2; i < updated.length; i++) {
-          if (updated[i] === '{') depth++
-          if (updated[i] === '}') {
-            depth--
-            if (depth === 0) {
-              routeObjEnd = i
-              break
-            }
-          }
-        }
-        if (routeObjEnd !== -1) {
-          updated =
-            updated.slice(0, routeDeclStart) +
-            'const routes: Record<RouteKey, { label: string; icon: React.FC<{ className?: string }>; path: string }> = {}' +
-            updated.slice(routeObjEnd + 1)
-        }
-      }
-    }
-
-    const navItemsRegex =
-      /\{[\s\S]*?\(Object\.keys\(routes\) as RouteKey\[\]\)[\s\S]*?\}\s*\n\s*\)\s*\n\s*\}\s*<\/div>/
-    updated = updated.replace(navItemsRegex, '')
-
-    const navDivRegex = /<div className="flex items-center gap-1">[\s\S]*?<\/div>\s*\n/
-    updated = updated.replace(navDivRegex, '')
-
-    updated = updated.replace(
-      /import\s*\{[^}]*NavLink[^}]*\}\s*from\s*['"]react-router-dom['"]\s*;?\s*\n?/g,
-      ''
+export const Navigation: React.FC = () => {
+  return (
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50" data-testid="app-nav">
+      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <h1
+          className="text-xl font-bold text-gray-900 flex items-center gap-2"
+          data-testid="app-title"
+        >
+          <span className="text-2xl">🚀</span>
+          Biomimic App
+        </h1>
+        <div className="flex items-center gap-4">
+          <AuthButton />
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="github-link"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            GitHub
+          </a>
+        </div>
+      </div>
+    </nav>
+  )
+}
+`
     )
-    updated = updated.replace(/^type RouteKey = never\s*\n?/m, '')
-
-    const routeDeclStart2 = updated.indexOf('const routes:')
-    if (routeDeclStart2 !== -1) {
-      const routeDeclEnd2 = updated.indexOf('\n', updated.indexOf('= {}', routeDeclStart2))
-      if (routeDeclEnd2 !== -1) {
-        updated = updated.slice(0, routeDeclStart2) + updated.slice(routeDeclEnd2 + 1)
-      }
-    }
-
-    const allIconNames = [
-      'CheckCircle',
-      'Bell',
-      'Plug',
-      'Rocket',
-      'Github',
-      'Building2',
-      'MessageSquare',
-    ]
-    const importLineRegex = /import\s*\{([^}]*)\}\s*from\s*'lucide-react'/m
-    const importMatch = updated.match(importLineRegex)
-    if (importMatch) {
-      const remaining = importMatch[1]
-        .split(',')
-        .map((s: string) => s.trim())
-        .filter((s: string) => !allIconNames.includes(s.split(/\s+as\s+/)[0].trim()))
-      if (remaining.length === 0) {
-        updated = updated.replace(importLineRegex, '')
-      } else {
-        updated = updated.replace(
-          importLineRegex,
-          `import { ${remaining.join(', ')} } from 'lucide-react'`
-        )
-      }
-    }
-
-    updated = updated.replace(/<Rocket[^/]*\/>/g, '🚀')
-    updated = updated.replace(/<Github[^/]*\/>/g, '')
+    return
   } else {
     updated = updated.replace(
       routeKeyLineRegex,
@@ -904,6 +976,15 @@ async function handleCloudflareCleanup(targetDir: string, config: ProjectConfig)
       content = content.replace(/\bdatabase\b\s*:\s*D1Database[^,\n]*,?\s*\n?/g, '')
       content = content.replace(/D1Database/g, 'never')
       content = content.replace(/\|\s*D1Database/g, '')
+
+      const defaultDriver = config.database || 'sqlite'
+      if (defaultDriver !== 'd1') {
+        content = content.replace(
+          /envString\('DB_DRIVER',\s*'d1'\)/,
+          `envString('DB_DRIVER', '${defaultDriver}')`
+        )
+      }
+
       await fs.writeFile(configPath, content)
     }
 
@@ -922,12 +1003,12 @@ async function handleCloudflareCleanup(targetDir: string, config: ProjectConfig)
         /import\s*\{\s*drizzle\s+as\s+drizzleD1\s*\}\s*from\s*['"]drizzle-orm\/d1['"]\s*;?\s*\n?/g,
         ''
       )
-      content = content.replace(/type\s+D1Db\s*=\s*[^;]*;\s*\n?/g, '')
-      content = content.replace(/\|\s*D1Db/g, '')
-      content = content.replace(/D1Database/g, 'never')
+      content = content.replace(/^type\s+D1Db\s*=.*$/gm, '')
+      content = content.replace(/\s*\|\s*D1Db/g, '')
+      content = content.replace(/\s*\|\s*D1Database/g, '')
       content = content.replace(
-        /function\s+createD1Db[\s\S]*?^}/m,
-        "function createD1Db(_config: DatabaseConfig): never { throw new Error('D1 not available') }"
+        /function\s+createD1Db\([^)]*\)[^{]*\{[\s\S]*?\n\}/,
+        "function createD1Db(_config: DatabaseConfig): never {\n  throw new Error('D1 not available')\n}"
       )
       await fs.writeFile(driverPath, content)
     }
@@ -1587,6 +1668,10 @@ async function cleanServerCrossModuleRefs(targetDir: string, config: ProjectConf
       await fs.writeFile(serverIndexPath, content)
     }
   }
+
+  if (!config.modules.includes('ops')) {
+    await fs.remove(path.join(targetDir, 'src/server/module-ops/services/settings-service.ts'))
+  }
 }
 
 async function handleMiddleware(targetDir: string, config: ProjectConfig): Promise<void> {
@@ -1611,6 +1696,22 @@ async function handleMiddleware(targetDir: string, config: ProjectConfig): Promi
       content = content.replace(/export\s*\*\s*from\s*['"]\.\/schemas['"]\s*;?\s*\n?/g, '')
       content = content.replace(/export\s*\*\s*from\s*['"]\.\/types['"]\s*;?\s*\n?/g, '')
       await fs.writeFile(authIndexPath, content)
+    }
+
+    await fs.remove(path.join(targetDir, 'src/server/middleware/tenant-isolation.ts'))
+
+    const tenantIsoExportPath = path.join(targetDir, 'src/server/middleware/index.ts')
+    if (await fs.pathExists(tenantIsoExportPath)) {
+      let mContent = await fs.readFile(tenantIsoExportPath, 'utf-8')
+      mContent = mContent.replace(
+        /export\s*\{[^}]*tenantIsolation[^}]*\}\s*from\s*['"]\.\/tenant-isolation['"]\s*;?\s*\n?/g,
+        ''
+      )
+      mContent = mContent.replace(
+        /export\s*\*\s*from\s*['"]\.\/tenant-isolation['"]\s*;?\s*\n?/g,
+        ''
+      )
+      await fs.writeFile(tenantIsoExportPath, mContent)
     }
   }
 
@@ -1914,6 +2015,33 @@ async function cleanClientCrossRefs(targetDir: string, config: ProjectConfig): P
     await fs.writeFile(compIndexPath, content)
   }
 
+  if (config.modules.includes('file') && !config.modules.includes('agent')) {
+    await fs.remove(path.join(targetDir, 'src/client/components/FilePreview.tsx'))
+    await fs.remove(path.join(targetDir, 'src/client/components/FileTree.tsx'))
+    await fs.remove(path.join(targetDir, 'src/client/components/TreeNode.tsx'))
+    await fs.remove(path.join(targetDir, 'src/client/components/__tests__/FilePreview.test.tsx'))
+    await fs.remove(path.join(targetDir, 'src/client/components/__tests__/FileTree.test.tsx'))
+    await fs.remove(path.join(targetDir, 'src/client/components/__tests__/TreeNode.test.tsx'))
+
+    const compIndexPath = path.join(targetDir, 'src/client/components/index.ts')
+    if (await fs.pathExists(compIndexPath)) {
+      let content = await fs.readFile(compIndexPath, 'utf-8')
+      content = content.replace(
+        /export\s*\{[^}]*FilePreview[^}]*\}\s*from\s*['"][^'"]*['"]\s*;?\s*\n?/g,
+        ''
+      )
+      content = content.replace(
+        /export\s*\{[^}]*FileTree[^}]*\}\s*from\s*['"][^'"]*['"]\s*;?\s*\n?/g,
+        ''
+      )
+      content = content.replace(
+        /export\s*\{[^}]*TreeNode[^}]*\}\s*from\s*['"][^'"]*['"]\s*;?\s*\n?/g,
+        ''
+      )
+      await fs.writeFile(compIndexPath, content)
+    }
+  }
+
   if (!config.modules.includes('file') && config.modules.includes('agent')) {
     const chatAreaPath = path.join(targetDir, 'src/client/components/ChatArea.tsx')
     if (await fs.pathExists(chatAreaPath)) {
@@ -2021,7 +2149,9 @@ async function cleanServerTestFiles(targetDir: string, config: ProjectConfig): P
       'src/server/module-ops/__tests__/ticket-service.test.ts',
       'src/server/module-ops/__tests__/order-service.test.ts',
       'src/server/module-ops/__tests__/dispute-service.test.ts',
-      'src/server/module-ops/__tests__/content-service.test.ts'
+      'src/server/module-ops/__tests__/content-service.test.ts',
+      'src/server/module-ops/__tests__/jwt-login.test.ts',
+      'src/server/module-ops/__tests__/settings-service.test.ts'
     )
   }
 
@@ -2032,8 +2162,16 @@ async function cleanServerTestFiles(targetDir: string, config: ProjectConfig): P
       'src/server/module-permission/__tests__/permission-service-impl.test.ts',
       'src/server/module-permission/__tests__/role-routes.test.ts',
       'src/server/module-permission/__tests__/permission-middleware.test.ts',
+      'src/server/module-permission/__tests__/permission-batch.test.ts',
       'src/server/middleware/__tests__/auth.test.ts',
       'src/server/middleware/__tests__/auth-simple.test.ts'
+    )
+  }
+
+  if (!config.modules.includes('permission')) {
+    testFilesToRemove.push(
+      'src/server/middleware/__tests__/tenant-access-control.test.ts',
+      'src/server/middleware/__tests__/tenant-isolation.test.ts'
     )
   }
 

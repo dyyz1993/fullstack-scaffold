@@ -20,6 +20,7 @@ export interface AuthMiddlewareOptions {
   secretKey?: string
   requiredRole?: UserRole
   requiredPermissions?: Permission[]
+  skipAuthInDev?: boolean
 }
 
 declare module 'hono' {
@@ -162,12 +163,32 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     const authHeader = c.req.header('Authorization')
     const token = extractToken(authHeader)
 
-    if (!token) {
+    const isDevelopment = process.env.NODE_ENV !== 'production'
+    const skipAuth = options.skipAuthInDev !== false && isDevelopment
+
+    if (!token && !skipAuth) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Missing auth token')
       throw AuthenticationError.tokenMissing()
     }
 
-    const user = await verifyToken(token, secretKey)
+    if (!token && skipAuth) {
+      const devUser: AuthUser = {
+        id: 'dev-anonymous',
+        username: 'dev-user',
+        email: 'dev@example.com',
+        role: Role.USER,
+        permissions: getPermissionsByRole(Role.USER),
+      }
+      c.set('authUser', devUser)
+      log.info(
+        { path: c.req.path, method: c.req.method },
+        'Dev mode: skipping auth (default behavior)'
+      )
+      await next()
+      return
+    }
+
+    const user = token ? await verifyToken(token, secretKey) : null
 
     if (!user) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Invalid auth token')
@@ -228,13 +249,13 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
 }
 
 export function requireSuperAdminMiddleware(): MiddlewareHandler {
-  return authMiddleware({ requiredRole: Role.SUPER_ADMIN })
+  return authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false })
 }
 
 export function requireCustomerServiceMiddleware(): MiddlewareHandler {
-  return authMiddleware({ requiredRole: Role.CUSTOMER_SERVICE })
+  return authMiddleware({ requiredRole: Role.CUSTOMER_SERVICE, skipAuthInDev: false })
 }
 
 export function requirePermissionsMiddleware(...permissions: Permission[]): MiddlewareHandler {
-  return authMiddleware({ requiredPermissions: permissions })
+  return authMiddleware({ requiredPermissions: permissions, skipAuthInDev: false })
 }

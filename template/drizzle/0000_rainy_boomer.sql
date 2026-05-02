@@ -4,8 +4,12 @@ CREATE TABLE `todos` (
 	`description` text,
 	`status` text DEFAULT 'pending' NOT NULL,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	`deleted_at` integer
 );
+--> statement-breakpoint
+CREATE INDEX `idx_todos_status` ON `todos` (`status`);--> statement-breakpoint
+CREATE INDEX `idx_todos_created_at` ON `todos` (`created_at`);
 --> statement-breakpoint
 CREATE TABLE `notifications` (
 	`id` text PRIMARY KEY NOT NULL,

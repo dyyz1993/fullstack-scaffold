@@ -16,7 +16,6 @@ import {
   created,
 } from '@server/utils/route-helpers'
 import { NotFoundError } from '@server/utils/app-error'
-import { getRuntimeAdapter } from '@server/core/runtime'
 
 const streamRoute = createRoute({
   method: 'get',
@@ -139,15 +138,54 @@ export const notificationRoutes = new OpenAPIHono()
       return stub.fetch(doRequest)
     }
 
-    // Fallback for Node environment
+    // Fallback for Node environment - create SSE stream
+    const { getRuntimeAdapter } = await import('@server/core/runtime')
     const adapter = getRuntimeAdapter()
-    if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
-      const response = await (
-        adapter as { handleSSERequest: () => Response | Promise<Response> }
-      ).handleSSERequest()
-      return response
-    }
-    return c.json({ success: false, error: 'SSE not supported' }, 500)
+    const sseConnections = adapter.getSSEConnections()
+    const { generateUUID } = await import('@server/utils/uuid')
+
+    const clientId = generateUUID()
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder()
+
+        const send = (data: string) => {
+          try {
+            controller.enqueue(encoder.encode(data))
+          } catch {
+            sseConnections.delete(clientId)
+          }
+        }
+
+        // Register SSE connection with adapter
+        sseConnections.set(clientId, {
+          id: clientId,
+          send,
+        })
+
+        send(`event: connected\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`)
+
+        const keepAlive = setInterval(() => {
+          send(`event: heartbeat\ndata: ${JSON.stringify({ timestamp: Date.now() })}\n\n`)
+        }, 30000)
+
+        controller.close = () => {
+          clearInterval(keepAlive)
+          sseConnections.delete(clientId)
+        }
+      },
+      cancel() {
+        sseConnections.delete(clientId)
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    })
   })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')
