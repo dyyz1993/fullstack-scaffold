@@ -164,7 +164,9 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     const token = extractToken(authHeader)
 
     const isDevelopment = process.env.NODE_ENV !== 'production'
-    const skipAuth = options.skipAuthInDev !== false && isDevelopment
+    const hasRequiredRole = !!options.requiredRole
+    const hasRequiredPermissions = !!options.requiredPermissions && options.requiredPermissions.length > 0
+    const skipAuth = options.skipAuthInDev !== false && isDevelopment && !hasRequiredRole && !hasRequiredPermissions
 
     if (!token && !skipAuth) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Missing auth token')

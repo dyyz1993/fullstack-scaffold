@@ -52,7 +52,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should reject request without Authorization header', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test')
@@ -66,7 +66,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should reject request with invalid token format', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test', {
@@ -82,7 +82,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should reject request with invalid token', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test', {
@@ -98,7 +98,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should reject user with insufficient role', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test', {
@@ -114,7 +114,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should reject customer service user for super admin routes', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test', {
@@ -130,7 +130,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should handle empty Authorization header', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test', {
@@ -146,7 +146,7 @@ describe('Auth Middleware Simple Test', () => {
     it('should handle Bearer prefix without token', async () => {
       const app = new Hono()
       app.onError(createAppErrorHandler())
-      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
       app.get('/test', c => c.json({ success: true }))
 
       const res = await app.request('/test', {

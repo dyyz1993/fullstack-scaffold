@@ -19,7 +19,7 @@ describe('Auth Middleware', () => {
 
   describe('authMiddleware', () => {
     it('should reject request without Authorization header', async () => {
-      app.use('/protected', authMiddleware())
+      app.use('/protected', authMiddleware({ skipAuthInDev: false }))
       app.get('/protected', c => c.json({ success: true }))
 
       const res = await app.request('/protected')
@@ -29,7 +29,7 @@ describe('Auth Middleware', () => {
     })
 
     it('should reject request with invalid Authorization format', async () => {
-      app.use('/protected', authMiddleware())
+      app.use('/protected', authMiddleware({ skipAuthInDev: false }))
       app.get('/protected', c => c.json({ success: true }))
 
       const res = await app.request('/protected', {
@@ -41,7 +41,7 @@ describe('Auth Middleware', () => {
     })
 
     it('should reject request with invalid token', async () => {
-      app.use('/protected', authMiddleware())
+      app.use('/protected', authMiddleware({ skipAuthInDev: false }))
       app.get('/protected', c => c.json({ success: true }))
 
       const res = await app.request('/protected', {

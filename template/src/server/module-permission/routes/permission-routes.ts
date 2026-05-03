@@ -41,7 +41,7 @@ const getUserPermissionsRoute = createRoute({
   path: '/permissions/me',
   tags: ['permissions'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ skipAuthInDev: false })],
   responses: {
     200: successResponse(UserPermissionsSchema, 'Get current user permissions'),
     401: errorResponse('Unauthorized'),
@@ -98,7 +98,7 @@ const getMyMenuRoute = createRoute({
   path: '/permissions/my-menu',
   tags: ['permissions'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ skipAuthInDev: false })],
   responses: {
     200: successResponse(MenuConfigSchema, 'Get user menu configuration'),
     401: errorResponse('Unauthorized'),
@@ -110,7 +110,7 @@ const getPermissionInitRoute = createRoute({
   path: '/permissions/init',
   tags: ['permissions'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ skipAuthInDev: false })],
   responses: {
     200: successResponse(PermissionInitSchema, 'Get permission initialization data'),
     401: errorResponse('Unauthorized'),
