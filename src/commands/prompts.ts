@@ -40,13 +40,13 @@ async function selectOne<T extends string>(
   console.log('')
 
   const answer = await ask(rl, chalk.gray('  请输入序号: '))
-  if (!answer) return options[defaultIndex].value
+  if (!answer) return options[defaultIndex]!.value
 
   const idx = parseInt(answer, 10) - 1
-  if (idx >= 0 && idx < options.length) return options[idx].value
+  if (idx >= 0 && idx < options.length) return options[idx]!.value
 
-  console.log(chalk.yellow(`  无效选择，使用默认: ${options[defaultIndex].label}`))
-  return options[defaultIndex].value
+  console.log(chalk.yellow(`  无效选择，使用默认: ${options[defaultIndex]!.label}`))
+  return options[defaultIndex]!.value
 }
 
 async function selectMultiple<T extends string>(
@@ -85,17 +85,17 @@ async function selectMultiple<T extends string>(
   if (!answer) {
     selectedIndices = options
       .map((_, i) => i)
-      .filter(i => options[i].checked || options[i].disabled)
+      .filter(i => options[i]?.checked || options[i]?.disabled)
   } else {
     const parsed = answer
       .split(/[,\s]+/)
       .map(s => parseInt(s.trim(), 10) - 1)
       .filter(i => i >= 0 && i < options.length)
-    const forced = options.map((_, i) => i).filter(i => options[i].disabled)
+    const forced = options.map((_, i) => i).filter(i => options[i]?.disabled)
     selectedIndices = [...new Set([...parsed, ...forced])].sort((a, b) => a - b)
   }
 
-  return selectedIndices.map(i => options[i].value)
+  return selectedIndices.map(i => options[i]!.value)
 }
 
 async function confirm(

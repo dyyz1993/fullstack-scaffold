@@ -1,14 +1,13 @@
-echo "Running TypeScript type check for root project..."
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running TypeScript type check..."
 npm run typecheck
 
-echo "Running TypeScript type check for template..."
-npm run typecheck:template
+echo "Running all tests..."
+npm run test
 
-echo "Running validators for template..."
-npm run validate:template
+echo "Running template tests..."
+npm run test -- --config template/vitest.config.ts
 
-echo "Running tests for template..."
-npm run test:template
-
-echo "Running lint-staged..."
 npx lint-staged

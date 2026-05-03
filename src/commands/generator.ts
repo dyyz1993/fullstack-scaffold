@@ -32,7 +32,7 @@ async function copyTemplate(targetDir: string): Promise<void> {
       const relative = path.relative(templateDir, src)
       if (relative === '') return true
       const topDir = relative.split(path.sep)[0]
-      return !EXCLUDE_COPY.includes(topDir)
+      return !EXCLUDE_COPY.includes(topDir ?? '')
     },
     dereference: false,
   })
@@ -242,13 +242,13 @@ async function cleanRouteRegistry(targetDir: string, config: ProjectConfig): Pro
         /(export const clientApiRoutes = new OpenAPIHono\(\)(?:\s*\.route\([^)]+\)[^\n]*\n)*)/
       )
       if (clientBlockMatch) {
-        const lastRouteMatch = clientBlockMatch[1].match(/(\s*\.route\([^)]+\))\s*$/)
+        const lastRouteMatch = clientBlockMatch[1]!.match(/(\s*\.route\([^)]+\))\s*$/)
         if (lastRouteMatch) {
           const insertRoutes = routeVarsToMigrate.map(v => `\n  .route('/api', ${v})`).join('')
           const insertPos =
             clientBlockMatch.index! +
-            clientBlockMatch[1].lastIndexOf(lastRouteMatch[1]) +
-            lastRouteMatch[1].length
+            clientBlockMatch[1]!.lastIndexOf(lastRouteMatch[1]!) +
+            lastRouteMatch[1]!.length
           updated = updated.slice(0, insertPos) + insertRoutes + updated.slice(insertPos)
         }
       }
@@ -261,13 +261,13 @@ async function cleanRouteRegistry(targetDir: string, config: ProjectConfig): Pro
       let m
       while ((m = importLineRegex.exec(updated)) !== null) {
         const fullLine = m[0]
-        const parsedVars = m[1]
+        const parsedVars = m[1]!
           .split(',')
           .map(s => {
             const parts = s.trim().split(/\s+as\s+/)
             return {
-              original: parts[0].trim(),
-              alias: parts.length > 1 ? parts[1].trim() : parts[0].trim(),
+              original: parts[0]?.trim() ?? '',
+              alias: parts.length > 1 ? parts[1]!.trim() : parts[0]!.trim(),
             }
           })
           .filter(v => v.original)
@@ -302,7 +302,7 @@ async function cleanRouteRegistry(targetDir: string, config: ProjectConfig): Pro
     /export const clientApiRoutes = new OpenAPIHono\(\)([\s\S]*?)\n\n/
   )
   if (clientRoutesMatch) {
-    const chainBlock = clientRoutesMatch[1].trim()
+    const chainBlock = clientRoutesMatch[1]!.trim()
     if (!chainBlock) {
       content = content.replace(/export const clientApiRoutes = new OpenAPIHono\(\)\n\n/g, '')
       content = content.replace(/export type ClientApiRoutes[^\n]*\n/g, '')
@@ -430,7 +430,7 @@ async function cleanClientApp(targetDir: string, config: ProjectConfig): Promise
       }
       const block = content.slice(m.index, endIdx)
       if (block.includes('../tenant/')) {
-        tenantVarNames.push(varName)
+        tenantVarNames.push(varName!)
       }
     }
     for (const varName of tenantVarNames) {
@@ -605,8 +605,8 @@ async function cleanClientNavigation(targetDir: string, config: ProjectConfig): 
   const allKeys: string[] = []
   const keyRegex = /'([^']+)'/g
   let m
-  while ((m = keyRegex.exec(routeKeyMatch[1])) !== null) {
-    allKeys.push(m[1])
+  while ((m = keyRegex.exec(routeKeyMatch[1]!)) !== null) {
+    allKeys.push(m[1]!)
   }
 
   const keptKeys = allKeys.filter(k => !keysToRemove.has(k))
@@ -679,7 +679,7 @@ export const Navigation: React.FC = () => {
           .split(',')
           .map((s: string) => s.trim())
           .filter((s: string) => {
-            const name = s.split(/\s+as\s+/)[0].trim()
+            const name = s.split(/\s+as\s+/)[0]!.trim()
             return !iconImportsToRemove.has(name)
           })
           .join(', ')
@@ -744,8 +744,8 @@ async function cleanCliModulesIndex(targetDir: string, config: ProjectConfig): P
   for (const modKey of removedModules) {
     const mapping = cliModuleMap[modKey]
     if (!mapping) continue
-    removedImports.add(mapping[0])
-    removedCalls.add(mapping[1])
+    removedImports.add(mapping[0]!)
+    removedCalls.add(mapping[1]!)
   }
 
   if (removedImports.size === 0) return
@@ -1026,7 +1026,7 @@ async function handleCloudflareCleanup(targetDir: string, config: ProjectConfig)
           let depth = 0
           let endIdx = startIdx
           for (let i = startIdx; i < lines.length; i++) {
-            for (const ch of lines[i]) {
+            for (const ch of lines[i] ?? '') {
               if (ch === '{') depth++
               if (ch === '}') depth--
             }
@@ -1110,14 +1110,14 @@ async function updateTsupConfig(targetDir: string, config: ProjectConfig): Promi
     if (markerIdx === -1) return src
 
     let objStart = markerIdx
-    while (objStart > 0 && !lines[objStart].trimStart().startsWith('{')) {
+    while (objStart > 0 && !lines[objStart]!.trimStart().startsWith('{')) {
       objStart--
     }
 
     let depth = 0
     let objEnd = objStart
     for (let i = objStart; i < lines.length; i++) {
-      for (const ch of lines[i]) {
+      for (const ch of lines[i] ?? '') {
         if (ch === '{') depth++
         if (ch === '}') depth--
       }
@@ -2081,7 +2081,7 @@ async function cleanClientCrossRefs(targetDir: string, config: ProjectConfig): P
       const lines2 = content.split('\n')
       const toRemove: Set<number> = new Set()
       for (let i = 0; i < lines2.length; i++) {
-        const trimmed = lines2[i].trim()
+        const trimmed = lines2[i]?.trim() ?? ''
         if (
           /^const\s+handleRefresh\s*=\s*\(/.test(trimmed) ||
           /^const\s+handleSelectFile\s*=\s*\(/.test(trimmed)
@@ -2091,7 +2091,7 @@ async function cleanClientCrossRefs(targetDir: string, config: ProjectConfig): P
           depth = 0
         }
         if (inFunc) {
-          for (const ch of lines2[i]) {
+          for (const ch of lines2[i] ?? '') {
             if (ch === '{') depth++
             if (ch === '}') depth--
           }

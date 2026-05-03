@@ -13,7 +13,7 @@ export default defineConfig({
       '**/__tests__/**/*.test.tsx',
       '**/integration/**/*.test.ts',
     ],
-    exclude: ['**/node_modules/**', '**/dist/**', 'src/**', 'lint-scripts/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'template/**'],
     testTimeout: 60000,
     hookTimeout: 60000,
     env: {
@@ -49,8 +49,6 @@ export default defineConfig({
       '@client': resolve(__dirname, 'src/client'),
       '@server': resolve(__dirname, 'src/server'),
       '@ops': resolve(__dirname, 'src/ops'),
-      'react': resolve(__dirname, 'node_modules/react'),
-      'react-dom': resolve(__dirname, 'node_modules/react-dom'),
     },
     dedupe: ['react', 'react-dom'],
   },
