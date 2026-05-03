@@ -1,4 +1,7 @@
+// @module-start:chat
 export { ChatProtocolSchema, type ChatProtocol } from './chat'
+// @module-end:chat
+// @module-start:agent
 export {
   MessageRoleSchema,
   ChatMessageSchema,
@@ -29,6 +32,8 @@ export {
   type PiAgentEndEvent,
   type ChatSSEProtocol,
 } from './agent'
+// @module-end:agent
+// @module-start:todos
 export {
   TodoSchema,
   TodoStatusSchema,
@@ -40,6 +45,8 @@ export {
   type CreateTodoInput,
   type UpdateTodoInput,
 } from './todos'
+// @module-end:todos
+// @module-start:file
 export {
   FileDownloadSchema,
   PrivateFileQuerySchema,
@@ -49,6 +56,8 @@ export {
   FileUrlResponseSchema,
   EmptySchema,
 } from './files'
+// @module-end:file
+// @module-start:notifications
 export {
   NotificationSchema,
   NotificationTypeSchema,
@@ -63,6 +72,8 @@ export {
   type SSEEvent,
   type AppSSEProtocol,
 } from './notifications'
+// @module-end:notifications
+// @module-start:ops
 export {
   SystemStatsSchema,
   HealthCheckSchema,
@@ -76,8 +87,10 @@ export {
   type AuthUserResponse,
   type ClearTodosResult,
 } from './ops'
+// @module-end:ops
 
 // Re-export from platform layer
+// @module-start:permission
 export {
   RoleEnum,
   RoleInfoSchema,
@@ -118,3 +131,4 @@ export {
   type ActionType,
   type AuditLogType,
 } from '@platform/shared/audit'
+// @module-end:permission

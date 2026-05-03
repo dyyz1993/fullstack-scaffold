@@ -18,6 +18,7 @@ export {
   createSSEClient,
 } from '../core'
 
+// @module-start:chat
 // Re-export modules
 export {
   ChatProtocolSchema,
@@ -25,6 +26,8 @@ export {
   type ChatProtocol,
   type WebSocketStatus,
 } from '../modules/chat'
+// @module-end:chat
+// @module-start:file
 export {
   FileDownloadSchema,
   PrivateFileQuerySchema,
@@ -34,6 +37,8 @@ export {
   FileUrlResponseSchema,
   EmptySchema,
 } from '../modules/files'
+// @module-end:file
+// @module-start:todos
 export {
   TodoSchema,
   TodoStatusSchema,
@@ -54,6 +59,8 @@ export {
   type TodoAttachment,
   type TodoWithAttachments,
 } from '../modules/todos'
+// @module-end:todos
+// @module-start:notifications
 export {
   NotificationSchema,
   NotificationTypeSchema,
@@ -74,3 +81,4 @@ export {
   type NotificationId,
   type UnreadCountEvent,
 } from '../modules/notifications'
+// @module-end:notifications

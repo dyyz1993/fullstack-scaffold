@@ -24,12 +24,6 @@ export interface ModuleDefinition {
   }
 
   references: {
-    routeRegistry: { importLines: number[]; routeLines: number[] }
-    dbSchemaIndex: number[]
-    sharedSchemasIndex: number[]
-    sharedModulesIndex: number[]
-    clientApp: { importLines: number[]; routeLines: number[] }
-    opsApp: { importLines: number[]; routeLines: number[] }
     clientNavigation: string[]
   }
 
@@ -68,14 +62,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: ['todo/index.ts'],
     },
     references: {
-      routeRegistry: { importLines: [2], routeLines: [22] },
-      dbSchemaIndex: [1, 2],
-      sharedSchemasIndex: [
-        37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
-      ],
-      sharedModulesIndex: [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42],
-      clientApp: { importLines: [3], routeLines: [24] },
-      opsApp: { importLines: [], routeLines: [] },
       clientNavigation: ['todos'],
     },
     dependencies: {},
@@ -112,12 +98,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [7], routeLines: [20] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [22, 23, 24, 25, 26, 27],
-      sharedModulesIndex: [1],
-      clientApp: { importLines: [5], routeLines: [26] },
-      opsApp: { importLines: [], routeLines: [] },
       clientNavigation: ['websocket'],
     },
     dependencies: {
@@ -158,14 +138,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: ['notification/index.ts'],
     },
     references: {
-      routeRegistry: { importLines: [6], routeLines: [21] },
-      dbSchemaIndex: [3],
-      sharedSchemasIndex: [
-        57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
-      ],
-      sharedModulesIndex: [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65],
-      clientApp: { importLines: [4], routeLines: [25] },
-      opsApp: { importLines: [], routeLines: [] },
       clientNavigation: ['notifications'],
     },
     dependencies: {},
@@ -200,12 +172,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [14], routeLines: [35] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [28, 29, 30, 31, 32, 33, 34, 35, 36],
-      sharedModulesIndex: [43, 44, 45, 46, 47, 48, 49, 50, 51],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [], routeLines: [] },
       clientNavigation: [],
     },
     dependencies: {},
@@ -278,15 +244,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [16], routeLines: [24, 25, 26] },
-      dbSchemaIndex: [11, 12],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-        27, 28, 29, 30, 31,
-      ],
-      clientApp: { importLines: [6], routeLines: [27] },
-      opsApp: { importLines: [], routeLines: [] },
       clientNavigation: ['chat'],
     },
     dependencies: {
@@ -348,15 +305,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [3, 4, 5], routeLines: [37, 38, 39] },
-      dbSchemaIndex: [4, 5, 6, 7, 8, 9, 10],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [
-        80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101,
-        102, 103, 104, 105, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-      ],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [8, 9], routeLines: [48, 49] },
       clientNavigation: [],
     },
     dependencies: {},
@@ -422,15 +370,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [8], routeLines: [40] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: {
-        importLines: [4, 5, 6, 7, 10, 11, 16],
-        routeLines: [38, 39, 44, 45, 46, 47, 48, 49],
-      },
       clientNavigation: [],
     },
     dependencies: {
@@ -468,12 +407,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [10], routeLines: [31] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [12], routeLines: [40] },
       clientNavigation: [],
     },
     dependencies: {},
@@ -509,12 +442,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [11], routeLines: [32] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [13], routeLines: [41] },
       clientNavigation: [],
     },
     dependencies: {},
@@ -550,12 +477,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [12], routeLines: [33] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [14], routeLines: [42] },
       clientNavigation: [],
     },
     dependencies: {},
@@ -591,12 +512,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [13], routeLines: [34] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [15], routeLines: [43] },
       clientNavigation: [],
     },
     dependencies: {},
@@ -649,15 +564,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [15], routeLines: [23] },
-      dbSchemaIndex: [14, 15, 16, 17],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [],
-      clientApp: {
-        importLines: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-        routeLines: [29, 30, 31, 32, 33, 34, 35, 36, 37, 39],
-      },
-      opsApp: { importLines: [], routeLines: [] },
       clientNavigation: ['tenants'],
     },
     dependencies: {},
@@ -693,12 +599,6 @@ export const moduleRegistry: Record<string, ModuleDefinition> = {
       cliModules: [],
     },
     references: {
-      routeRegistry: { importLines: [9], routeLines: [36] },
-      dbSchemaIndex: [],
-      sharedSchemasIndex: [],
-      sharedModulesIndex: [],
-      clientApp: { importLines: [], routeLines: [] },
-      opsApp: { importLines: [16], routeLines: [56] },
       clientNavigation: [],
     },
     dependencies: {},

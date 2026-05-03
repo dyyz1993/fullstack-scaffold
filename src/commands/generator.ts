@@ -6,6 +6,7 @@ import chalk from 'chalk'
 import ora from 'ora'
 import type { BackendModule, ProjectConfig } from '../types.js'
 import { moduleRegistry } from '../module-registry.js'
+import { escapeRegExp } from '../utils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -157,16 +158,22 @@ async function deleteFrontendChannels(targetDir: string, config: ProjectConfig):
   }
 }
 
-async function deleteLinesByIndices(filePath: string, lineIndices: number[]): Promise<void> {
+async function deleteBlocksByMarker(filePath: string, moduleName: string): Promise<void> {
   if (!(await fs.pathExists(filePath))) return
-  if (lineIndices.length === 0) return
 
   const content = await fs.readFile(filePath, 'utf-8')
-  const lines = content.split('\n')
-  const indexSet = new Set(lineIndices)
+  const startMarker = `// @module-start:${moduleName}`
+  const endMarker = `// @module-end:${moduleName}`
 
-  const filtered = lines.filter((_, i) => !indexSet.has(i + 1))
-  await fs.writeFile(filePath, filtered.join('\n'))
+  const regex = new RegExp(
+    `${escapeRegExp(startMarker)}\\n([\\s\\S]*?)${escapeRegExp(endMarker)}\\n?`,
+    'g'
+  )
+  const updated = content.replace(regex, '')
+
+  if (updated !== content) {
+    await fs.writeFile(filePath, updated)
+  }
 }
 
 function removeLazyImportByVarName(content: string, varName: string): string {
@@ -198,17 +205,9 @@ async function cleanRouteRegistry(targetDir: string, config: ProjectConfig): Pro
   const allModules = Object.keys(moduleRegistry) as BackendModule[]
   const removedModules = allModules.filter(m => !config.modules.includes(m))
 
-  const importLinesToRemove = new Set<number>()
-  const routeLinesToRemove = new Set<number>()
-
   for (const modKey of removedModules) {
-    const refs = moduleRegistry[modKey]?.references?.routeRegistry
-    if (!refs) continue
-    refs.importLines.forEach(l => importLinesToRemove.add(l))
-    refs.routeLines.forEach(l => routeLinesToRemove.add(l))
+    await deleteBlocksByMarker(filePath, modKey)
   }
-
-  await deleteLinesByIndices(filePath, [...importLinesToRemove, ...routeLinesToRemove])
 
   const opsRelatedModules: BackendModule[] = [
     'ops',
@@ -342,13 +341,9 @@ async function cleanDbSchemaIndex(targetDir: string, config: ProjectConfig): Pro
   const allModules = Object.keys(moduleRegistry) as BackendModule[]
   const removedModules = allModules.filter(m => !config.modules.includes(m))
 
-  const linesToRemove: number[] = []
   for (const modKey of removedModules) {
-    const refs = moduleRegistry[modKey]?.references?.dbSchemaIndex
-    if (refs) linesToRemove.push(...refs)
+    await deleteBlocksByMarker(filePath, modKey)
   }
-
-  await deleteLinesByIndices(filePath, linesToRemove)
 }
 
 async function cleanSharedSchemasIndex(targetDir: string, config: ProjectConfig): Promise<void> {
@@ -358,13 +353,9 @@ async function cleanSharedSchemasIndex(targetDir: string, config: ProjectConfig)
   const allModules = Object.keys(moduleRegistry) as BackendModule[]
   const removedModules = allModules.filter(m => !config.modules.includes(m))
 
-  const linesToRemove: number[] = []
   for (const modKey of removedModules) {
-    const refs = moduleRegistry[modKey]?.references?.sharedSchemasIndex
-    if (refs) linesToRemove.push(...refs)
+    await deleteBlocksByMarker(filePath, modKey)
   }
-
-  await deleteLinesByIndices(filePath, linesToRemove)
 
   if (await fs.pathExists(filePath)) {
     let content = await fs.readFile(filePath, 'utf-8')
@@ -386,13 +377,9 @@ async function cleanSharedModulesIndex(targetDir: string, config: ProjectConfig)
   const allModules = Object.keys(moduleRegistry) as BackendModule[]
   const removedModules = allModules.filter(m => !config.modules.includes(m))
 
-  const linesToRemove: number[] = []
   for (const modKey of removedModules) {
-    const refs = moduleRegistry[modKey]?.references?.sharedModulesIndex
-    if (refs) linesToRemove.push(...refs)
+    await deleteBlocksByMarker(filePath, modKey)
   }
-
-  await deleteLinesByIndices(filePath, linesToRemove)
 }
 
 async function cleanClientApp(targetDir: string, config: ProjectConfig): Promise<void> {
