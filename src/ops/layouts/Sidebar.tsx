@@ -1,0 +1,138 @@
+import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  Users,
+  ShoppingCart,
+  Headphones,
+  FileText,
+  AlertTriangle,
+  Settings,
+  Shield,
+  UserCog,
+  Activity,
+  ChevronDown,
+  ChevronRight,
+  type LucideIcon,
+} from 'lucide-react'
+import { usePermissions } from '../hooks/usePermissions'
+import type { MenuItem } from '@platform/shared/permission'
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Users,
+  ShoppingCart,
+  Headphones,
+  FileText,
+  AlertTriangle,
+  Settings,
+  Shield,
+  UserCog,
+  Activity,
+}
+
+interface SidebarProps {
+  isOpen: boolean
+  onCloseMobile?: () => void
+}
+
+interface MenuItemComponentProps {
+  item: MenuItem
+  level?: number
+  onNavigate?: () => void
+}
+
+const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0, onNavigate }) => {
+  const [expanded, setExpanded] = useState(false)
+  const location = useLocation()
+  const Icon = ICON_MAP[item.icon] || LayoutDashboard
+  const hasChildren = item.children && item.children.length > 0
+  const isActive = location.pathname === item.path
+
+  if (hasChildren) {
+    return (
+      <div>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors text-gray-300 hover:bg-gray-800 ${
+            level > 0 ? 'pl-8' : ''
+          }`}
+        >
+          <Icon className="w-5 h-5" />
+          <span className="flex-1 text-left">{item.label}</span>
+          {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </button>
+        {expanded && (
+          <div className="ml-4">
+            {item.children!.map(child => (
+              <MenuItemComponent
+                key={child.path}
+                item={child}
+                level={level + 1}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <NavLink
+      to={item.path}
+      onClick={onNavigate}
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
+        level > 0 ? 'pl-8 text-sm' : ''
+      }`}
+      style={{
+        backgroundColor: isActive ? '#2563eb' : undefined,
+        color: isActive ? '#ffffff' : '#d1d5db',
+      }}
+      onMouseEnter={e => {
+        if (!isActive) e.currentTarget.style.backgroundColor = '#1f2937'
+      }}
+      onMouseLeave={e => {
+        if (!isActive) e.currentTarget.style.backgroundColor = ''
+      }}
+    >
+      <Icon className="w-5 h-5" />
+      <span>{item.label}</span>
+    </NavLink>
+  )
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
+  const { menuConfig, loading, initialized } = usePermissions()
+
+  if (loading || !initialized) {
+    return (
+      <aside className="bg-gray-900 text-white w-64 overflow-hidden" data-testid="ops-sidebar">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
+          <h1 className="text-lg font-bold">Admin Panel</h1>
+        </div>
+        <nav className="p-4">
+          <div className="text-gray-400">加载中...</div>
+        </nav>
+      </aside>
+    )
+  }
+
+  return (
+    <aside
+      className={`bg-gray-900 text-white transition-all duration-300 ${
+        isOpen ? 'w-64' : 'w-0'
+      } overflow-hidden`}
+      data-testid="ops-sidebar"
+    >
+      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
+        <h1 className="text-lg font-bold">Admin Panel</h1>
+      </div>
+      <nav className="p-4">
+        {menuConfig.map((item: MenuItem) => (
+          <MenuItemComponent key={item.path} item={item} onNavigate={onCloseMobile} />
+        ))}
+      </nav>
+    </aside>
+  )
+}

@@ -1,0 +1,2 @@
+import{generateProject as g}from'/Users/xuyingzhou/Project/create-biomimic-app/src/commands/generator.ts'
+g({name:'/tmp/biomimic-full-verify/_ref',channels:["web","ops"],backend:true,modules:["todos","chat","notifications","permission","ops","order","ticket","dispute","content","captcha","tenant","file","agent"],deploy:'node',database:'sqlite'}).catch(e=>{console.error(e.message);process.exit(1)})

@@ -1,0 +1,162 @@
+import { describe, it, expect } from 'vitest'
+import { Hono } from 'hono'
+import { createAppErrorHandler } from '../error-handler'
+import { authMiddleware } from '../auth'
+import { Role } from '@platform/shared/permission'
+import { createModuleLoggerSync } from '../../utils/logger'
+
+describe('Auth Middleware Simple Test', () => {
+  describe('Logger Test', () => {
+    it('should create logger correctly in test environment', () => {
+      const log = createModuleLoggerSync('auth')
+      expect(log).toBeDefined()
+      expect(typeof log.warn).toBe('function')
+      expect(typeof log.info).toBe('function')
+      expect(typeof log.error).toBe('function')
+    })
+  })
+
+  describe('Success Scenarios', () => {
+    it('should allow super admin with requiredRole', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'Bearer super-admin-token' },
+      })
+
+      expect(res.status).toBe(200)
+      const data = (await res.json()) as { success: boolean }
+      expect(data.success).toBe(true)
+    })
+
+    it('should allow super admin with admin-token', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'Bearer admin-token' },
+      })
+
+      expect(res.status).toBe(200)
+      const data = (await res.json()) as { success: boolean }
+      expect(data.success).toBe(true)
+    })
+  })
+
+  describe('Error Scenarios', () => {
+    it('should reject request without Authorization header', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test')
+
+      expect(res.status).toBe(401)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+
+    it('should reject request with invalid token format', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'InvalidFormat token123' },
+      })
+
+      expect(res.status).toBe(401)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+
+    it('should reject request with invalid token', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'Bearer invalid-token-xyz' },
+      })
+
+      expect(res.status).toBe(401)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+
+    it('should reject user with insufficient role', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'Bearer user-token' },
+      })
+
+      expect(res.status).toBe(403)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+
+    it('should reject customer service user for super admin routes', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'Bearer customer-service-token' },
+      })
+
+      expect(res.status).toBe(403)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+
+    it('should handle empty Authorization header', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: '' },
+      })
+
+      expect(res.status).toBe(401)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+
+    it('should handle Bearer prefix without token', async () => {
+      const app = new Hono()
+      app.onError(createAppErrorHandler())
+      app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN, skipAuthInDev: false }))
+      app.get('/test', c => c.json({ success: true }))
+
+      const res = await app.request('/test', {
+        headers: { Authorization: 'Bearer ' },
+      })
+
+      expect(res.status).toBe(401)
+      const data = (await res.json()) as { success: boolean; error: string }
+      expect(data.success).toBe(false)
+      expect(data.error).toBeDefined()
+    })
+  })
+})

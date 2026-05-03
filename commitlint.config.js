@@ -9,4 +9,4 @@ export default {
     'subject-max-length': [2, 'always', 80],
     'body-max-line-length': [2, 'always', 200],
   },
-};
+}

@@ -1,22 +1,371 @@
-import globals from 'globals';
-import pluginJs from '@eslint/js';
-import tseslint from 'typescript-eslint';
+/**
+ * @framework-baseline 876c959a17e0af75
+ */
 
-export default [
-  { languageOptions: { globals: globals.node } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    ignores: ['template/**', 'node_modules/**', 'dist/**'],
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { requireHonoChainSyntax } from './eslint-rules/require-hono-chain-syntax.js'
+import { requireTypeSafeTestClient } from './eslint-rules/require-type-safe-test-client.js'
+import { noAmbiguousFilePaths } from './eslint-rules/no-ambiguous-file-paths.js'
+import { noUtilFunctionsInService } from './eslint-rules/no-util-functions-in-service.js'
+import { noDirectWsSse } from './eslint-rules/no-direct-ws-sse.js'
+import { protectWsSseInterface } from './eslint-rules/protect-ws-sse-interface.js'
+import { noBooleanSuccess } from './eslint-rules/no-boolean-success.js'
+import { middlewareLocation, noMiddlewareOutsideDir } from './eslint-rules/middleware-location.js'
+import { e2eTestLocation, noE2ETestOutsideDir } from './eslint-rules/e2e-test-location.js'
+import { layerBoundary } from './eslint-rules/layer-boundary.js'
+import { requireResponseHelpers } from './eslint-rules/require-response-helpers.js'
+import { noInlineSchema } from './eslint-rules/no-inline-schema.js'
+import { enforceValidMethod } from './eslint-rules/enforce-valid-method.js'
+import { frameworkProtect } from './eslint-rules/framework-protect.js'
+import { preferSharedTypes } from './eslint-rules/prefer-shared-types.js'
+import { noTypeAssertionInRpc } from './eslint-rules/no-type-assertion-in-rpc.js'
+import { noAnyOnApiclient } from './eslint-rules/no-any-on-apiclient.js'
+import { noTypeAssertionOnSharedTypes } from './eslint-rules/no-type-assertion-on-shared-types.js'
+import { noDirectFetch } from './eslint-rules/no-direct-fetch.js'
+import { flatRoutesServices } from './eslint-rules/flat-routes-services.js'
+import { noMiddlewareInRoutes } from './eslint-rules/no-middleware-in-routes.js'
+import { noDisableDirectFetch } from './eslint-rules/no-disable-direct-fetch.js'
+import { noNewOldServiceNaming } from './eslint-rules/no-new-old-service-naming.js'
+import { noDirectZodImportInFileRoutes } from './eslint-rules/no-direct-zod-import-in-file-routes.js'
+import { requireFileOpenapiProps } from './eslint-rules/require-file-openapi-props.js'
+import { requireNullableForOptional } from './eslint-rules/require-nullable-for-optional.js'
+import { moduleBoundary } from './eslint-rules/module-boundary.js'
+import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
+import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
+import { noLazyInSchemas } from './eslint-rules/no-lazy-in-schemas.js'
+import { noZodFileType } from './eslint-rules/no-zod-file-type.js'
+import { routeLocation } from './eslint-rules/route-location.js'
+import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
+import { routesPermission } from './eslint-rules/routes-permission.js'
+import { routeAuth } from './eslint-rules/route-auth.js'
+
+const localRules = {
+  rules: {
+    'require-hono-chain-syntax': requireHonoChainSyntax,
+    'require-type-safe-test-client': requireTypeSafeTestClient,
+    'no-ambiguous-file-paths': noAmbiguousFilePaths,
+    'no-util-functions-in-service': noUtilFunctionsInService,
+    'no-direct-ws-sse': noDirectWsSse,
+    'protect-ws-sse-interface': protectWsSseInterface,
+    'no-boolean-success': noBooleanSuccess,
+    'middleware-location': middlewareLocation,
+    'no-middleware-outside-dir': noMiddlewareOutsideDir,
+    'e2e-test-location': e2eTestLocation,
+    'no-e2e-test-outside-dir': noE2ETestOutsideDir,
+    'layer-boundary': layerBoundary,
+    'require-response-helpers': requireResponseHelpers,
+    'no-inline-schema': noInlineSchema,
+    'enforce-valid-method': enforceValidMethod,
+    'framework-protect': frameworkProtect,
+    'prefer-shared-types': preferSharedTypes,
+    'no-type-assertion-in-rpc': noTypeAssertionInRpc,
+    'no-any-on-apiclient': noAnyOnApiclient,
+    'no-type-assertion-on-shared-types': noTypeAssertionOnSharedTypes,
+    'no-direct-fetch': noDirectFetch,
+    'flat-routes-services': flatRoutesServices,
+    'no-middleware-in-routes': noMiddlewareInRoutes,
+    'no-disable-direct-fetch': noDisableDirectFetch,
+    'no-new-old-service-naming': noNewOldServiceNaming,
+    'no-direct-zod-import-in-file-routes': noDirectZodImportInFileRoutes,
+    'require-file-openapi-props': requireFileOpenapiProps,
+    'require-nullable-for-optional': requireNullableForOptional,
+    'module-boundary': moduleBoundary,
+    'limit-type-complexity': limitTypeComplexity,
+    'require-antd-generic-types': requireAntdGenericTypes,
+    'no-lazy-in-schemas': noLazyInSchemas,
+    'no-zod-file-type': noZodFileType,
+    'route-location': routeLocation,
+    'no-disable-type-safe-client': noDisableTypeSafeClient,
+    'routes-permission': routesPermission,
+    'route-auth': routeAuth,
   },
+}
+
+export default tseslint.config(
+  { ignores: ['dist', '.pi', 'lint-scripts', 'e2e', 'scripts', '.claude'] },
   {
+    extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        browser: true,
+        es2020: true,
+        node: true,
+      },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+      'local-rules': localRules,
+    },
     rules: {
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/prefer-ts-expect-error': 'off',
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-      'max-depth': ['warn', { max: 6 }],
-      complexity: ['warn', { max: 32 }],
-      eqeqeq: ['error', 'always'],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      eqeqeq: ['error', 'always'],
+      'no-unsafe-negation': 'error',
+      'max-depth': ['warn', { max: 4 }],
+      complexity: ['warn', { max: 20 }],
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      'local-rules/no-ambiguous-file-paths': 'error',
+      'local-rules/no-direct-ws-sse': 'error',
     },
   },
-];
+  {
+    files: ['src/server/**/*.ts'],
+    rules: {
+      'no-console': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      'local-rules/require-hono-chain-syntax': 'error',
+      'local-rules/no-util-functions-in-service': 'warn',
+      'local-rules/no-boolean-success': 'error',
+      'local-rules/no-middleware-outside-dir': 'error',
+      'local-rules/require-response-helpers': 'error',
+      'local-rules/no-inline-schema': 'error',
+      'local-rules/enforce-valid-method': 'error',
+      'local-rules/flat-routes-services': 'error',
+      'local-rules/no-middleware-in-routes': 'error',
+      'local-rules/no-new-old-service-naming': 'error',
+      'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
+      'local-rules/route-location': 'error',
+      'local-rules/routes-permission': [
+        'error',
+        {
+          publicRoutes: [
+            { method: 'post', path: '/admin/login' },
+            { method: 'post', path: '/admin/register' },
+            { method: 'get', path: '/captcha' },
+            { method: 'post', path: '/verify-captcha' },
+            { method: 'get', path: '/permissions/roles' },
+            { method: 'get', path: '/permissions' },
+            { method: 'get', path: '/permissions/menu-config' },
+            { method: 'get', path: '/permissions/page-permissions' },
+            { method: 'get', path: '/permissions/categories' },
+            { method: 'get', path: '/permissions/role-labels' },
+            { method: 'get', path: '/permissions/permission-labels' },
+            { method: 'get', path: '/files/public/{namespace}/{filename}' },
+            { method: 'head', path: '/files/public/{namespace}/{filename}' },
+            { method: 'get', path: '/files/private/{namespace}/{filename}' },
+            { method: 'head', path: '/files/private/{namespace}/{filename}' },
+            { method: 'post', path: '/api/generate-url' },
+            { method: 'get', path: '/admin/todos/export/download/:token' },
+            { method: 'get', path: '/todos' },
+            { method: 'get', path: '/todos/{id}' },
+            { method: 'post', path: '/todos' },
+            { method: 'put', path: '/todos/{id}' },
+            { method: 'delete', path: '/todos/{id}' },
+            { method: 'post', path: '/todos/{id}/attachments' },
+            { method: 'get', path: '/todos/{id}/attachments' },
+            { method: 'get', path: '/todos/{id}/with-attachments' },
+            { method: 'delete', path: '/todos/{todoId}/attachments/{attachmentId}' },
+            { method: 'get', path: '/notifications/stream' },
+            { method: 'get', path: '/notifications' },
+            { method: 'get', path: '/notifications/unread-count' },
+            { method: 'get', path: '/notifications/{id}' },
+            { method: 'post', path: '/notifications' },
+            { method: 'patch', path: '/notifications/read-all' },
+            { method: 'patch', path: '/notifications/{id}/read' },
+            { method: 'delete', path: '/notifications/{id}' },
+            { method: 'get', path: '/chat/ws/status' },
+            { method: 'get', path: '/chat/ws' },
+            { method: 'get', path: '/agents' },
+            { method: 'put', path: '/agents/{id}' },
+            { method: 'get', path: '/agents/{id}/messages' },
+            { method: 'get', path: '/agents/{id}/rounds' },
+            { method: 'post', path: '/agents/{id}/chat' },
+            { method: 'delete', path: '/agents/{id}/messages' },
+            { method: 'post', path: '/agents/{id}/chat/stop' },
+            { method: 'get', path: '/agents/{id}/chat/stream' },
+            { method: 'get', path: '/workspace' },
+            { method: 'put', path: '/workspace' },
+            { method: 'delete', path: '/workspace' },
+            { method: 'get', path: '/workspace/files' },
+            { method: 'get', path: '/workspace/files/{path}' },
+            { method: 'get', path: '/tenants/invitations/:token' },
+          ],
+        },
+      ],
+      'local-rules/route-auth': [
+        'error',
+        {
+          publicRoutes: [
+            { method: 'post', path: '/admin/login' },
+            { method: 'post', path: '/admin/register' },
+            { method: 'get', path: '/captcha' },
+            { method: 'post', path: '/verify-captcha' },
+            { method: 'get', path: '/permissions/roles' },
+            { method: 'get', path: '/permissions' },
+            { method: 'get', path: '/permissions/menu-config' },
+            { method: 'get', path: '/permissions/page-permissions' },
+            { method: 'get', path: '/permissions/categories' },
+            { method: 'get', path: '/permissions/role-labels' },
+            { method: 'get', path: '/permissions/permission-labels' },
+            { method: 'get', path: '/files/public/{namespace}/{filename}' },
+            { method: 'head', path: '/files/public/{namespace}/{filename}' },
+            { method: 'get', path: '/files/private/{namespace}/{filename}' },
+            { method: 'head', path: '/files/private/{namespace}/{filename}' },
+            { method: 'post', path: '/api/generate-url' },
+            { method: 'get', path: '/admin/todos/export/download/:token' },
+            { method: 'get', path: '/todos' },
+            { method: 'get', path: '/todos/{id}' },
+            { method: 'post', path: '/todos' },
+            { method: 'put', path: '/todos/{id}' },
+            { method: 'delete', path: '/todos/{id}' },
+            { method: 'post', path: '/todos/{id}/attachments' },
+            { method: 'get', path: '/todos/{id}/attachments' },
+            { method: 'get', path: '/todos/{id}/with-attachments' },
+            { method: 'delete', path: '/todos/{todoId}/attachments/{attachmentId}' },
+            { method: 'get', path: '/notifications/stream' },
+            { method: 'get', path: '/notifications' },
+            { method: 'get', path: '/notifications/unread-count' },
+            { method: 'get', path: '/notifications/{id}' },
+            { method: 'post', path: '/notifications' },
+            { method: 'patch', path: '/notifications/read-all' },
+            { method: 'patch', path: '/notifications/{id}/read' },
+            { method: 'delete', path: '/notifications/{id}' },
+            { method: 'get', path: '/chat/ws/status' },
+            { method: 'get', path: '/chat/ws' },
+            { method: 'get', path: '/agents' },
+            { method: 'put', path: '/agents/{id}' },
+            { method: 'get', path: '/agents/{id}/messages' },
+            { method: 'get', path: '/agents/{id}/rounds' },
+            { method: 'post', path: '/agents/{id}/chat' },
+            { method: 'delete', path: '/agents/{id}/messages' },
+            { method: 'post', path: '/agents/{id}/chat/stop' },
+            { method: 'get', path: '/agents/{id}/chat/stream' },
+            { method: 'get', path: '/workspace' },
+            { method: 'put', path: '/workspace' },
+            { method: 'delete', path: '/workspace' },
+            { method: 'get', path: '/workspace/files' },
+            { method: 'get', path: '/workspace/files/{path}' },
+            { method: 'get', path: '/tenants/invitations/:token' },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/server/middleware/**/*.ts'],
+    ignores: ['src/server/middleware/index.ts'],
+    rules: {
+      'local-rules/middleware-location': 'error',
+    },
+  },
+  {
+    files: [
+      'src/client/**/*.ts',
+      'src/client/**/*.tsx',
+      'src/admin/**/*.ts',
+      'src/admin/**/*.tsx',
+      'src/cli/**/*.ts',
+    ],
+    rules: {
+      'no-console': 'off',
+      'local-rules/prefer-shared-types': ['warn', { similarityThreshold: 0.6 }],
+      'local-rules/no-type-assertion-in-rpc': 'error',
+      'local-rules/no-direct-fetch': 'error',
+      'local-rules/no-any-on-apiclient': 'error',
+      'local-rules/no-type-assertion-on-shared-types': 'error',
+      'local-rules/no-disable-direct-fetch': 'error',
+      'local-rules/module-boundary': 'error',
+      'local-rules/require-antd-generic-types': 'error',
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+      'local-rules/require-type-safe-test-client': 'error',
+      'local-rules/no-disable-type-safe-client': 'error',
+      'local-rules/require-hono-chain-syntax': 'off',
+    },
+  },
+  {
+    files: ['src/server/module-file/routes/file-routes.ts'],
+    rules: {
+      'local-rules/no-direct-zod-import-in-file-routes': 'error',
+    },
+  },
+  {
+    files: ['src/shared/modules/**/schemas.ts'],
+    rules: {
+      'local-rules/require-file-openapi-props': 'error',
+      'local-rules/require-nullable-for-optional': 'error',
+      'local-rules/no-lazy-in-schemas': 'error',
+      'local-rules/no-zod-file-type': 'error',
+    },
+  },
+  {
+    files: ['src/shared/core/ws-client.ts', 'src/shared/core/sse-client.ts'],
+    rules: {
+      'local-rules/protect-ws-sse-interface': 'error',
+    },
+  },
+  {
+    files: ['tests/e2e/**/*.ts'],
+    rules: {
+      'local-rules/e2e-test-location': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      'local-rules/no-e2e-test-outside-dir': 'error',
+    },
+  },
+  {
+    files: [
+      'src/shared/modules/**/*.ts',
+      'src/server/module-*/services/**/*.ts',
+      'src/server/module-*/routes/*.ts',
+      'src/client/stores/**/*.ts',
+      'src/client/pages/**/*.tsx',
+    ],
+    ignores: [
+      '**/__tests__/**/*.ts',
+      '**/*.test.ts',
+      '**/*.spec.ts',
+      '**/routes/index.ts',
+      'src/client/services/apiClient.ts',
+      'src/server/module-chat/routes/chat-routes.ts',
+      'src/server/module-chat/services/chat-service.ts',
+      'src/server/module-notifications/routes/notification-routes.ts',
+    ],
+    rules: {
+      'local-rules/layer-boundary': 'error',
+    },
+  },
+  {
+    files: [
+      'src/shared/core/**/*.ts',
+      'src/server/core/**/*.ts',
+      'src/server/entries/**/*.ts',
+      'src/server/test-utils/**/*.ts',
+      'src/server/index.ts',
+      'src/client/services/**/*.ts',
+      'eslint-rules/**/*.js',
+      'eslint.config.js',
+      'patches/**/*',
+    ],
+    plugins: {
+      'local-rules': localRules,
+    },
+    rules: {
+      'local-rules/framework-protect': 'error',
+    },
+  }
+)
