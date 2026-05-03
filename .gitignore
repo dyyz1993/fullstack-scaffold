@@ -75,7 +75,6 @@ uploads/*
 !uploads/.gitkeep
 # AI tool artifacts
 .agents/
-.claude/
 .trae/
 template/.trae/
 template/.sessions/
