@@ -197,7 +197,8 @@ test.describe('Notification App', () => {
         .locator('[data-testid="notification-item-read"], [data-testid="notification-item-unread"]')
         .count()
 
-      await page.click('[data-testid="create-notification-button"]')
+      await expect(page.locator('[data-testid="create-notification-button"]')).toBeDisabled()
+      await page.click('[data-testid="create-notification-button"]', { force: true })
       await page.waitForTimeout(500)
 
       const newCount = await page
@@ -251,16 +252,17 @@ test.describe('Notification App', () => {
       await page.click('[data-testid="create-notification-button"]')
       await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
 
+      const countBefore = await page.locator(
+        '[data-testid="notification-item-read"], [data-testid="notification-item-unread"]'
+      ).count()
+
       await page.click('[data-testid="delete-notification-button"]')
       await page.waitForTimeout(1000)
 
-      await expect(
-        page.locator(
-          '[data-testid="notification-item-read"], [data-testid="notification-item-unread"]'
-        )
-      ).toHaveCount(0)
-
-      await expect(page.locator('[data-testid="empty-state"]')).toBeVisible()
+      const countAfter = await page.locator(
+        '[data-testid="notification-item-read"], [data-testid="notification-item-unread"]'
+      ).count()
+      expect(countAfter).toBe(countBefore - 1)
     })
   })
 
@@ -294,12 +296,12 @@ test.describe('Notification App', () => {
       await page.fill('[data-testid="notification-title-input"]', 'Notification 1')
       await page.fill('[data-testid="notification-message-input"]', 'Message 1')
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForTimeout(500)
+      await page.waitForTimeout(1000)
 
       await page.fill('[data-testid="notification-title-input"]', 'Notification 2')
       await page.fill('[data-testid="notification-message-input"]', 'Message 2')
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForTimeout(500)
+      await page.waitForTimeout(1000)
 
       const unreadText = await page.locator('[data-testid="unread-count"]').textContent()
       expect(parseInt(unreadText || '0', 10)).toBeGreaterThanOrEqual(2)

@@ -8,6 +8,7 @@ interface MessageCardProps {
   colorScheme?: ColorScheme
   borderColor?: string
   className?: string
+  'data-testid'?: string
 }
 
 const colorMap: Record<ColorScheme, { bg: string }> = {
@@ -30,6 +31,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
   colorScheme = 'gray',
   borderColor,
   className = '',
+  'data-testid': dataTestId = 'message-card',
 }) => {
   const colors = colorMap[colorScheme]
   const displayType = type.includes('_') ? type.toUpperCase().replace('_', ' ') : type.toUpperCase()
@@ -38,7 +40,7 @@ export const MessageCard: React.FC<MessageCardProps> = ({
     <div
       className={`p-4 bg-white rounded-lg border-l-4 shadow-sm ${className}`}
       style={{ borderLeftColor: borderColor || undefined }}
-      data-testid="message-card"
+      data-testid={dataTestId}
     >
       <div className="flex items-center justify-between mb-2">
         <span

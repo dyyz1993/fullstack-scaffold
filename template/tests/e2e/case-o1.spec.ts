@@ -7,17 +7,17 @@ function getBaseUrl(): string {
 test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   async function loginAs(page, username = 'superadmin', password = '123456') {
     await page.goto(`${getBaseUrl()}/admin/login`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForSelector('[data-testid="admin-login-form"], input[placeholder*="用户名"]', { timeout: 10000 })
     await page.getByPlaceholder('用户名').fill(username)
     await page.getByPlaceholder('密码').fill(password)
     await page.getByRole('button', { name: /登.*录/ }).click()
     await page.waitForURL('**/admin/dashboard', { timeout: 10000 })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
   }
 
   test('Step 1 - Login to Ops', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/admin/login`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForSelector('input[placeholder*="用户名"]', { timeout: 10000 })
 
     await expect(page.getByPlaceholder('用户名')).toBeVisible()
     await expect(page.getByPlaceholder('密码')).toBeVisible()
@@ -51,8 +51,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   test('Step 3 - Navigate to Monitor', async ({ page }) => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/monitor`)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
 
     await expect(page).toHaveURL(/\/admin\/system\/monitor/)
     await expect(page.locator('body')).toContainText('系统监控')
@@ -61,8 +60,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   test('Step 4 - Navigate to Settings', async ({ page }) => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/settings`)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
 
     await expect(page.locator('h1').last()).toContainText('Settings')
     await expect(page.getByText('General Settings')).toBeVisible()
@@ -79,8 +77,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   test('Step 5 - Navigate to Permissions', async ({ page }) => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/permissions`)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
 
     await expect(page).toHaveURL(/\/admin\/system\/permissions/)
     await expect(page.locator('h1').last()).toContainText('权限管理')
@@ -94,8 +91,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   test('Step 6 - Navigate to Roles', async ({ page }) => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/roles`)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(2000)
 
     await expect(page).toHaveURL(/\/admin\/system\/roles/)
     await expect(page.locator('h1').last()).toContainText('角色管理')
