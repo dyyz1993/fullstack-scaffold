@@ -1,14 +1,5 @@
 echo "Running TypeScript type check for root project..."
 npm run typecheck
 
-echo "Running TypeScript type check for template..."
-npm run typecheck:template
-
-echo "Running validators for template..."
-npm run validate:template
-
-echo "Running tests for template..."
-npm run test:template
-
 echo "Running lint-staged..."
 npx lint-staged

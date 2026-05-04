@@ -9,3 +9,8 @@ lib/**.trae/
 /template/.trae/documents/
 my-biomimic-app
 .wrangler/
+
+# Playwright
+playwright-report/
+playwright-artifacts/
+test-results/
