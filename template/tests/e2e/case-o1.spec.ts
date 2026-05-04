@@ -1,8 +1,7 @@
-/* eslint-disable no-console */
 import { test, expect } from '@playwright/test'
 
 test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
-  test.use({ baseURL: 'http://localhost:3010' })
+  test.use({ baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010' })
 
   async function loginAs(page, username = 'superadmin', password = '123456') {
     await page.goto('/admin/login')

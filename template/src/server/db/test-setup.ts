@@ -443,7 +443,11 @@ export async function cleanupTestDatabase(): Promise<void> {
   const client = await getRawClient()
 
   if (client && 'execute' in client) {
-    await client.execute('DELETE FROM todo_attachments')
+    try {
+      await client.execute('DELETE FROM todo_attachments')
+    } catch {
+      // Table may not exist in some test environments
+    }
     await client.execute('DELETE FROM todos')
     await client.execute('DELETE FROM notifications')
     await client.execute('DELETE FROM permission_routes')
