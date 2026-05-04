@@ -77,7 +77,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   test('Step 5 - Navigate to Permissions', async ({ page }) => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/permissions`)
-    await page.waitForTimeout(2000)
+    await page.waitForSelector('table', { timeout: 10000 })
 
     await expect(page).toHaveURL(/\/admin\/system\/permissions/)
     await expect(page.locator('h1').last()).toContainText('权限管理')

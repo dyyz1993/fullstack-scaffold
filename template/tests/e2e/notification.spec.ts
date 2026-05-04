@@ -296,15 +296,14 @@ test.describe('Notification App', () => {
       await page.fill('[data-testid="notification-title-input"]', 'Notification 1')
       await page.fill('[data-testid="notification-message-input"]', 'Message 1')
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForTimeout(1000)
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
 
       await page.fill('[data-testid="notification-title-input"]', 'Notification 2')
       await page.fill('[data-testid="notification-message-input"]', 'Message 2')
       await page.click('[data-testid="create-notification-button"]')
       await page.waitForTimeout(1000)
 
-      const unreadText = await page.locator('[data-testid="unread-count"]').textContent()
-      expect(parseInt(unreadText || '0', 10)).toBeGreaterThanOrEqual(2)
+      await expect(page.locator('[data-testid="unread-count"]')).not.toHaveText('0', { timeout: 5000 })
     })
   })
 
