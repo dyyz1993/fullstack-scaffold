@@ -59,3 +59,18 @@ jobs:
         run: cd template && npx playwright install --with-deps chromium
       - name: Run E2E tests
         run: cd template && npm run test:e2e
+
+  feishu-notify:
+    name: Feishu Notification
+    if: always()
+    needs: [cli-checks, template-checks, template-e2e]
+    uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
+    with:
+      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","template-checks":"${{ needs.template-checks.result }}","template-e2e":"${{ needs.template-e2e.result }}"}'
+      sha: ${{ github.sha }}
+      ref: ${{ github.ref_name }}
+      actor: ${{ github.actor }}
+      repo: ${{ github.repository }}
+      run-id: ${{ github.run_id }}
+    secrets:
+      FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
