@@ -63,6 +63,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       if (result.success) {
         set(state => ({
           notifications: [result.data, ...state.notifications],
+          unreadCount: state.unreadCount + 1,
           loading: false,
         }))
       } else {
