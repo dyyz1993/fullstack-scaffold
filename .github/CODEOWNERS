@@ -1,0 +1,5 @@
+# Default owner for everything in the repo
+* @dyyz1993
+
+# Framework layer requires explicit review
+/src/shared/core/ @dyyz1993
