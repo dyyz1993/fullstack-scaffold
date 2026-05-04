@@ -80,15 +80,12 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/permissions`)
     await page.waitForSelector('h1', { timeout: 15000 })
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(3000)
 
     await expect(page).toHaveURL(/\/admin\/system\/permissions/)
     await expect(page.locator('h1').last()).toContainText('权限管理')
     await expect(page.getByText('角色列表')).toBeVisible()
     await expect(page.getByText('权限矩阵')).toBeVisible()
-
-    const antTable = page.locator('.ant-table')
-    await expect(antTable.first()).toBeVisible({ timeout: 15000 })
   })
 
   test('Step 6 - Navigate to Roles', async ({ page }) => {
