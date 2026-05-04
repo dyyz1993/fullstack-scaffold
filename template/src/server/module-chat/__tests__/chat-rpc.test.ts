@@ -18,8 +18,8 @@ describe('Chat Routes with Type-Safe Test Client', () => {
   }, 15000)
 
   afterAll(async () => {
-    await testServer.close()
-  }, 15000)
+    await Promise.race([testServer.close(), new Promise(resolve => setTimeout(resolve, 5000))])
+  }, 10000)
 
   describe('GET /api/chat/ws/status', () => {
     it('should return WebSocket status', async () => {

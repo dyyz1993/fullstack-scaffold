@@ -118,6 +118,7 @@ export function createTestServer<E extends Env, S extends Schema, BasePath exten
           close: () =>
             new Promise<void>(res => {
               wss.close(() => {
+                server.closeAllConnections()
                 server.close(() => res())
               })
             }),
