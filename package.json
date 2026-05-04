@@ -57,7 +57,11 @@
     "framework:check": "node --import tsx/esm lint-scripts/framework/check-modify.ts",
     "dev:context": "node --import tsx/esm lint-scripts/dev-context-analyzer.ts",
     "dev:guide": "node --import tsx/esm lint-scripts/dev-guide-generator.ts",
-    "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts"
+    "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts",
+    "typecheck:template": "cd template && npx tsc --noEmit",
+    "lint:template": "cd template && npx eslint src/ --max-warnings=0",
+    "validate:template": "cd template && npm run validate:all",
+    "test:template": "cd template && npx vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sandbox-runtime": "^0.0.42",
