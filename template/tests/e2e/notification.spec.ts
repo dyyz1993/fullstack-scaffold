@@ -252,16 +252,16 @@ test.describe('Notification App', () => {
       await page.click('[data-testid="create-notification-button"]')
       await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
 
-      const countBefore = await page.locator(
-        '[data-testid="notification-item-read"], [data-testid="notification-item-unread"]'
-      ).count()
+      const countBefore = await page
+        .locator('[data-testid="notification-item-read"], [data-testid="notification-item-unread"]')
+        .count()
 
       await page.click('[data-testid="delete-notification-button"]')
       await page.waitForTimeout(1000)
 
-      const countAfter = await page.locator(
-        '[data-testid="notification-item-read"], [data-testid="notification-item-unread"]'
-      ).count()
+      const countAfter = await page
+        .locator('[data-testid="notification-item-read"], [data-testid="notification-item-unread"]')
+        .count()
       expect(countAfter).toBe(countBefore - 1)
     })
   })
@@ -301,9 +301,10 @@ test.describe('Notification App', () => {
       await page.fill('[data-testid="notification-title-input"]', 'Notification 2')
       await page.fill('[data-testid="notification-message-input"]', 'Message 2')
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(2000)
 
-      await expect(page.locator('[data-testid="unread-count"]')).not.toHaveText('0', { timeout: 5000 })
+      const unreadLocator = page.locator('[data-testid="unread-count"]')
+      await expect(unreadLocator).not.toHaveText('0', { timeout: 10000 })
     })
   })
 

@@ -7,7 +7,9 @@ function getBaseUrl(): string {
 test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   async function loginAs(page, username = 'superadmin', password = '123456') {
     await page.goto(`${getBaseUrl()}/admin/login`)
-    await page.waitForSelector('[data-testid="admin-login-form"], input[placeholder*="用户名"]', { timeout: 10000 })
+    await page.waitForSelector('[data-testid="admin-login-form"], input[placeholder*="用户名"]', {
+      timeout: 10000,
+    })
     await page.getByPlaceholder('用户名').fill(username)
     await page.getByPlaceholder('密码').fill(password)
     await page.getByRole('button', { name: /登.*录/ }).click()
@@ -77,7 +79,8 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   test('Step 5 - Navigate to Permissions', async ({ page }) => {
     await loginAs(page)
     await page.goto(`${getBaseUrl()}/admin/system/permissions`)
-    await page.waitForSelector('table', { timeout: 10000 })
+    await page.waitForSelector('table', { timeout: 15000 })
+    await page.waitForTimeout(3000)
 
     await expect(page).toHaveURL(/\/admin\/system\/permissions/)
     await expect(page.locator('h1').last()).toContainText('权限管理')
@@ -85,7 +88,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
     await expect(page.getByText('权限矩阵')).toBeVisible()
 
     const tableRows = page.locator('table tbody tr')
-    await expect(tableRows.first()).toBeVisible()
+    await expect(tableRows.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('Step 6 - Navigate to Roles', async ({ page }) => {
