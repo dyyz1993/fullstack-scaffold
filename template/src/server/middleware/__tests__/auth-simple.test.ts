@@ -1,12 +1,25 @@
 import { describe, it, expect } from 'vitest'
 import { Hono } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { authMiddleware } from '../auth'
 import { Role } from '@shared/modules/permission'
+import { AppError } from '../../utils/app-error'
+
+function createTestApp() {
+  const app = new Hono()
+  app.onError((err, c) => {
+    if (AppError.isAppError(err)) {
+      return c.json({ success: false, error: err.message }, err.statusCode as ContentfulStatusCode)
+    }
+    return c.json({ success: false, error: err.message }, 500)
+  })
+  return app
+}
 
 describe('Auth Middleware Simple Test', () => {
   describe('Success Scenarios', () => {
     it('should allow super admin with requiredRole', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -20,7 +33,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should allow super admin with admin-token', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -36,7 +49,7 @@ describe('Auth Middleware Simple Test', () => {
 
   describe('Error Scenarios', () => {
     it('should reject request without Authorization header', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -48,7 +61,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should reject request with invalid token format', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -62,7 +75,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should reject request with invalid token', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -76,7 +89,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should reject user with insufficient role', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -90,7 +103,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should reject customer service user for super admin routes', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -104,7 +117,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should handle empty Authorization header', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 
@@ -118,7 +131,7 @@ describe('Auth Middleware Simple Test', () => {
     })
 
     it('should handle Bearer prefix without token', async () => {
-      const app = new Hono()
+      const app = createTestApp()
       app.use('/test', authMiddleware({ requiredRole: Role.SUPER_ADMIN }))
       app.get('/test', c => c.json({ success: true }))
 

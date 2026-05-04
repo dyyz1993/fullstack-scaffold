@@ -12,14 +12,24 @@ const TEMPLATE_PROJECT_NAME = "biomimic-todo-app";
 const TEMPLATE_DB_NAME = "biomimic-todo-db";
 
 function parseGitignore(content: string): string[] {
-  return content
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#") && !line.startsWith("!"))
-    .map((pattern) => pattern.replace(/\/$/, ""))
-    .map((pattern) => pattern.replace(/^\*\./, ""))
-    .map((pattern) => pattern.replace(/^\/+/, ""))
-    .filter((pattern) => !pattern.includes("*"));
+    const negatePatterns: string[] = [];
+    const includePatterns = content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .map((line) => {
+        if (line.startsWith("!")) {
+          negatePatterns.push(line.slice(1));
+          return null;
+        }
+        return line;
+      })
+      .filter((line): line is string => line !== null)
+      .map((pattern) => pattern.replace(/\/$/, ""))
+      .map((pattern) => pattern.replace(/^\*\./, ""))
+      .map((pattern) => pattern.replace(/^\/+/, ""))
+      .filter((pattern) => !pattern.includes("*"));
+    return [...includePatterns, ...negatePatterns.map((p) => `!${p}`)];
 }
 
 /**
@@ -136,9 +146,8 @@ async function updateReadme(
 
   let content = await fs.readFile(readmePath, "utf-8");
 
-  // Replace project name in title
   content = content.replace(
-    new RegExp(`# ${TEMPLATE_PROJECT_NAME}`, "i"),
+    /^# (.+)$/m,
     `# ${projectName}`,
   );
 
@@ -183,7 +192,16 @@ export async function createProject(
       filter: (src: string) => {
         const relative = path.relative(templateDir, src);
         if (relative === "") return true;
-        return !ignorePatterns.some((pattern) => relative.startsWith(pattern));
+        const negated = ignorePatterns.filter((p) => p.startsWith("!"));
+        const excluded = ignorePatterns.filter(
+          (p) => !p.startsWith("!") && relative.startsWith(p),
+        );
+        if (excluded.length > 0) {
+          const allowed = negated.some((p) => relative === p.slice(1));
+          if (allowed) return true;
+          return false;
+        }
+        return true;
       },
       dereference: false,
     });

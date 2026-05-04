@@ -3,6 +3,13 @@ import { createTestClient } from '../../test-utils/test-client'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 import { getRawClient } from '../../db'
 import { Role } from '@shared/modules/permission'
+import * as adminService from '../services/admin-service'
+
+function authedClient(token = 'admin-token') {
+  return createTestClient(undefined, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
 
 describe('Admin Routes', () => {
   beforeAll(async () => {
@@ -27,20 +34,16 @@ describe('Admin Routes', () => {
     })
 
     it('should reject request with invalid token', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.stats.$get({
-        headers: { Authorization: 'Bearer invalid-token' },
-      })
+      const client = authedClient('invalid-token')
+      const res = await client.api.admin.stats.$get()
       expect(res.status).toBe(401)
       const text = await res.text()
       expect(text.length).toBeGreaterThan(0)
     })
 
     it('should reject non-admin user', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.stats.$get({
-        headers: { Authorization: 'Bearer user-token' },
-      })
+      const client = authedClient('user-token')
+      const res = await client.api.admin.stats.$get()
       expect(res.status).toBe(403)
       const text = await res.text()
       expect(text.length).toBeGreaterThan(0)
@@ -49,10 +52,8 @@ describe('Admin Routes', () => {
 
   describe('GET /api/admin/stats', () => {
     it('should return system stats for admin', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.stats.$get({
-        headers: { Authorization: 'Bearer admin-token' },
-      })
+      const client = authedClient('admin-token')
+      const res = await client.api.admin.stats.$get()
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -78,10 +79,8 @@ describe('Admin Routes', () => {
           args: ['Completed Todo', 'completed', now, now],
         })
 
-        const client = createTestClient()
-        const res = await client.api.admin.stats.$get({
-          headers: { Authorization: 'Bearer admin-token' },
-        })
+        const client = authedClient('admin-token')
+        const res = await client.api.admin.stats.$get()
 
         const data = await res.json()
         expect(data.success).toBe(true)
@@ -96,10 +95,8 @@ describe('Admin Routes', () => {
 
   describe('GET /api/admin/health', () => {
     it('should return health status for admin', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.health.$get({
-        headers: { Authorization: 'Bearer admin-token' },
-      })
+      const client = authedClient('admin-token')
+      const res = await client.api.admin.health.$get()
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -113,12 +110,9 @@ describe('Admin Routes', () => {
 
   describe('GET /api/admin/activity', () => {
     it('should return recent activity for admin', async () => {
-      const client = createTestClient()
+      const client = authedClient('admin-token')
       const res = await client.api.admin.activity.$get(
         { query: {} },
-        {
-          headers: { Authorization: 'Bearer admin-token' },
-        }
       )
 
       expect(res.status).toBe(200)
@@ -140,12 +134,9 @@ describe('Admin Routes', () => {
           })
         }
 
-        const client = createTestClient()
+        const client = authedClient('admin-token')
         const res = await client.api.admin.activity.$get(
           { query: { limit: '3' } },
-          {
-            headers: { Authorization: 'Bearer admin-token' },
-          }
         )
 
         const data = await res.json()
@@ -167,10 +158,8 @@ describe('Admin Routes', () => {
           args: ['Todo to delete', 'pending', now, now],
         })
 
-        const client = createTestClient()
-        const res = await client.api.admin.todos.all.$delete({
-          headers: { Authorization: 'Bearer admin-token' },
-        })
+        const client = authedClient('admin-token')
+        const res = await client.api.admin.todos.all.$delete()
 
         expect(res.status).toBe(200)
         const data = await res.json()
@@ -181,10 +170,8 @@ describe('Admin Routes', () => {
 
   describe('GET /api/admin/me', () => {
     it('should return current admin user info', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.me.$get({
-        headers: { Authorization: 'Bearer admin-token' },
-      })
+      const client = authedClient('admin-token')
+      const res = await client.api.admin.me.$get()
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -200,10 +187,8 @@ describe('Admin Routes', () => {
     })
 
     it('should return current user info for regular user', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.me.$get({
-        headers: { Authorization: 'Bearer user-token' },
-      })
+      const client = authedClient('user-token')
+      const res = await client.api.admin.me.$get()
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -252,12 +237,10 @@ describe('Admin Routes', () => {
         },
       })
 
-      // Registration returns 201 Created
       expect(res.status).toBe(201)
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        // The response data is the user object directly, not wrapped in user/token
         expect(data.data).toHaveProperty('id')
         expect(data.data).toHaveProperty('username')
         expect(data.data.username).toBe('newuser')
@@ -267,8 +250,7 @@ describe('Admin Routes', () => {
 
   describe('PUT /api/admin/users/:id', () => {
     it('should update user by super admin', async () => {
-      const client = createTestClient()
-      // First create a user, then update it
+      const client = authedClient('test-super-admin-1')
       const createRes = await client.api.admin.users.$post(
         {
           json: {
@@ -278,9 +260,6 @@ describe('Admin Routes', () => {
             role: Role.USER,
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
       )
 
       if (createRes.status === 200) {
@@ -291,9 +270,6 @@ describe('Admin Routes', () => {
               param: { id: createData.data.id },
               json: { status: 'locked' },
             },
-            {
-              headers: { Authorization: 'Bearer test-super-admin-1' },
-            }
           )
 
           expect(res.status).toBe(200)
@@ -306,7 +282,7 @@ describe('Admin Routes', () => {
 
   describe('POST /api/admin/users', () => {
     it('should create user by super admin', async () => {
-      const client = createTestClient()
+      const client = authedClient('test-super-admin-1')
       const uniqueId = Date.now()
       const res = await client.api.admin.users.$post(
         {
@@ -317,12 +293,8 @@ describe('Admin Routes', () => {
             role: Role.USER,
           },
         },
-        {
-          headers: { Authorization: 'Bearer test-super-admin-1' },
-        }
       )
 
-      // Accept 200 or 400 (if validation fails)
       expect([200, 201, 400]).toContain(res.status)
       const data = await res.json()
       expect(typeof data.success).toBe('boolean')
@@ -334,14 +306,16 @@ describe('Admin Routes', () => {
 
   describe('PUT /api/admin/notifications/:id/read', () => {
     it('should mark notification as read', async () => {
-      const client = createTestClient()
+      const notif = adminService.createNotification({
+        type: 'info',
+        title: 'Test',
+        message: 'Test notification',
+      })
+      const client = authedClient('admin-token')
       const res = await client.api.admin.notifications[':id'].read.$put(
         {
-          param: { id: '1' },
+          param: { id: notif.id },
         },
-        {
-          headers: { Authorization: 'Bearer admin-token' },
-        }
       )
 
       expect(res.status).toBe(200)
@@ -352,10 +326,8 @@ describe('Admin Routes', () => {
 
   describe('PUT /api/admin/notifications/read-all', () => {
     it('should mark all notifications as read', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.notifications['read-all'].$put({
-        headers: { Authorization: 'Bearer admin-token' },
-      })
+      const client = authedClient('admin-token')
+      const res = await client.api.admin.notifications['read-all'].$put()
 
       expect(res.status).toBe(200)
       const data = await res.json()
@@ -365,26 +337,20 @@ describe('Admin Routes', () => {
 
   describe('POST /api/admin/notifications/test', () => {
     it('should send test notification', async () => {
-      const client = createTestClient()
+      const client = authedClient('admin-token')
       const res = await client.api.admin.notifications.test.$post(
         {
           json: {
             type: 'info',
           },
         },
-        {
-          headers: { Authorization: 'Bearer admin-token' },
-        }
       )
 
-      // This endpoint may fail due to runtime adapter not initialized in tests
-      // We just verify the endpoint is accessible and returns a valid response
       expect([200, 500]).toContain(res.status)
       if (res.status === 200) {
         const data = await res.json()
         expect(typeof data.success).toBe('boolean')
       } else {
-        // For 500 errors, just verify we get a response
         const text = await res.text()
         expect(text.length).toBeGreaterThan(0)
       }
@@ -393,10 +359,8 @@ describe('Admin Routes', () => {
 
   describe('POST /api/admin/todos/export/token', () => {
     it('should generate download token', async () => {
-      const client = createTestClient()
-      const res = await client.api.admin.todos.export.token.$post({
-        headers: { Authorization: 'Bearer admin-token' },
-      })
+      const client = authedClient('admin-token')
+      const res = await client.api.admin.todos.export.token.$post()
 
       expect(res.status).toBe(200)
       const data = await res.json()

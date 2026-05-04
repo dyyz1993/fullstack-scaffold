@@ -213,12 +213,8 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   const mockUsers = getMockUsers()
   const user = mockUsers.find(u => u.username === data.username)
 
-  if (!user) {
-    throw new Error('User not found')
-  }
-
-  if (data.password !== '123456') {
-    throw new Error('Invalid password')
+  if (!user || data.password !== '123456') {
+    throw new Error('Invalid credentials')
   }
 
   let token: string

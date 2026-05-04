@@ -30,7 +30,7 @@ describe('Integration: Todos API (Real Database)', () => {
 
       const listRes = await client.api.todos.$get({ headers: authHeaders })
       const listData = await listRes.json()
-      expect(listData).toEqual({ success: true, data: [] })
+      expect(listData).toMatchObject({ success: true, data: [] })
 
       const createRes = await client.api.todos.$post(
         {

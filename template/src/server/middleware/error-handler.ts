@@ -3,6 +3,7 @@ import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import { createModuleLoggerSync } from '../utils/logger'
 import type { LogFnFields } from '../utils/logger'
+import { AppError } from '../utils/app-error'
 
 export type ErrorHandlerOptions = {
   includeStackTrace?: boolean
@@ -50,6 +51,22 @@ export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): Middl
     } catch (error) {
       // Always return JSON response
       c.res.headers.set('Content-Type', 'application/json')
+
+      if (AppError.isAppError(error)) {
+        if (mergedOptions.logErrors) {
+          const fields: LogFnFields = {
+            errorType: error.name,
+            code: error.code,
+            message: error.message,
+            status: error.statusCode,
+            path: c.req.path,
+            method: c.req.method,
+          }
+          log.warn(fields, error.message)
+        }
+
+        return c.json(createErrorResponse(error.statusCode, error.message, error.details), error.statusCode as import('hono/utils/http-status').ContentfulStatusCode)
+      }
 
       if (error instanceof ZodError) {
         const formattedErrors = formatZodError(error)

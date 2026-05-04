@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Hono } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import {
   authMiddleware,
   requireSuperAdminMiddleware,
@@ -7,12 +8,24 @@ import {
   type AuthUser,
 } from '../auth'
 import { Permission, Role } from '@shared/modules/permission'
+import { AppError } from '../../utils/app-error'
+
+function createTestApp(): Hono<{ Variables: { authUser: AuthUser } }> {
+  const app = new Hono<{ Variables: { authUser: AuthUser } }>()
+  app.onError((err, c) => {
+    if (AppError.isAppError(err)) {
+      return c.json({ success: false, error: err.message }, err.statusCode as ContentfulStatusCode)
+    }
+    return c.json({ success: false, error: err.message }, 500)
+  })
+  return app
+}
 
 describe('Auth Middleware', () => {
   let app: Hono<{ Variables: { authUser: AuthUser } }>
 
   beforeEach(() => {
-    app = new Hono<{ Variables: { authUser: AuthUser } }>()
+    app = createTestApp()
   })
 
   describe('authMiddleware', () => {
