@@ -109,7 +109,7 @@ describe('Export Routes', () => {
       )
 
       expect(res.status).toBe(403)
-      const data = await res.json() as any
+      const data = await res.json() as Record<string, unknown>
       expect(data.success).toBe(false)
       expect(data.error).toContain('Invalid or expired')
     })
