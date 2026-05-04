@@ -44,38 +44,65 @@ interface WSMessageBase {
   error?: string
 }
 
-export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WebSocket {
+const WS_OPEN = typeof WebSocket !== 'undefined' ? WebSocket.OPEN : 1
+const WS_CONNECTING = typeof WebSocket !== 'undefined' ? WebSocket.CONNECTING : 0
+
+const WebSocketClass: typeof WebSocket | null = typeof WebSocket !== 'undefined' ? WebSocket : null
+
+type WebSocketLike = InstanceType<typeof WebSocket>
+
+export class WSClientImpl<P extends WSProtocol = WSProtocol> implements WSClient<P> {
+  private socket: WebSocketLike | null = null
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private pendingRequests = new Map<string, PendingRequest>()
   private statusHandlers: ((status: WSStatus) => void)[] = []
   private messageBuffer: string[] = []
   private _status: WSStatus = 'closed'
 
+  get status(): WSStatus {
+    return this._status
+  }
+
+  getSocket(): WebSocketLike | null {
+    return this.socket
+  }
+
   constructor(url: string | URL, protocols?: string | string[]) {
-    super(url, protocols)
-    this.attachSocket()
+    if (WebSocketClass) {
+      this.socket = new WebSocketClass(url.toString(), protocols)
+      this.attachSocket()
+    }
+  }
+
+  send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
+    this.socket?.send(data as never)
+  }
+
+  close() {
+    this.socket?.close()
   }
 
   private attachSocket() {
-    if (this.readyState === WebSocket.OPEN) {
+    const ws = this.socket!
+    if (ws.readyState === WS_OPEN) {
       this._status = 'open'
-    } else if (this.readyState === WebSocket.CONNECTING) {
+    } else if (ws.readyState === WS_CONNECTING) {
       this._status = 'connecting'
     } else {
       this._status = 'closed'
     }
-    this.onmessage = msg => this.handleMessage(msg)
-    this.onclose = () => {
+    ws.onmessage = msg => this.handleMessage(msg)
+    ws.onclose = () => {
       if (this._status !== 'closed') {
         this.handleClose()
       }
     }
-    this.onerror = () => {
+    ws.onerror = () => {
       if (this._status !== 'closed') {
         this.updateStatus('closed')
       }
     }
-    this.onopen = () => {
+    ws.onopen = () => {
       if (this._status !== 'open') {
         this.handleOpen()
       }
@@ -163,14 +190,10 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WebSocket {
     }
   }
 
-  close() {
-    super.close()
-  }
-
   private sendRaw(data: unknown) {
     const msg = JSON.stringify(data)
-    if (this.readyState === WebSocket.OPEN) {
-      this.send(msg)
+    if (this.socket && this.socket.readyState === WS_OPEN) {
+      this.socket.send(msg as never)
     } else {
       this.messageBuffer.push(msg)
     }
