@@ -44,10 +44,14 @@ interface WSMessageBase {
   error?: string
 }
 
-const WS_OPEN = typeof WebSocket !== 'undefined' ? WebSocket.OPEN : 1
-const WS_CONNECTING = typeof WebSocket !== 'undefined' ? WebSocket.CONNECTING : 0
+const _hasWebSocket = typeof globalThis !== 'undefined' && 'WebSocket' in globalThis
 
-const WebSocketClass: typeof WebSocket | null = typeof WebSocket !== 'undefined' ? WebSocket : null
+const WS_OPEN = _hasWebSocket ? (globalThis.WebSocket as typeof WebSocket).OPEN : 1
+const WS_CONNECTING = _hasWebSocket ? (globalThis.WebSocket as typeof WebSocket).CONNECTING : 0
+
+const WebSocketClass: typeof WebSocket | null = _hasWebSocket
+  ? (globalThis.WebSocket as typeof WebSocket)
+  : null
 
 class StubWebSocket {
   binaryType: BinaryType = 'blob'
@@ -78,7 +82,7 @@ class StubWebSocket {
 type WSBaseClass = typeof WebSocket extends undefined ? typeof StubWebSocket : typeof WebSocket
 
 const WSBase: WSBaseClass = (
-  typeof WebSocket !== 'undefined' ? WebSocket : StubWebSocket
+  _hasWebSocket ? (globalThis.WebSocket as typeof WebSocket) : StubWebSocket
 ) as WSBaseClass
 
 export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase implements WSClient<P> {
