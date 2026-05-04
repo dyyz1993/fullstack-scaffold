@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
-  test.use({ baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010' })
+function getBaseUrl(): string {
+  return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010'
+}
 
+test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   async function loginAs(page, username = 'superadmin', password = '123456') {
-    await page.goto('/admin/login')
+    await page.goto(`${getBaseUrl()}/admin/login`)
     await page.waitForLoadState('networkidle')
     await page.getByPlaceholder('用户名').fill(username)
     await page.getByPlaceholder('密码').fill(password)
@@ -14,7 +16,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   }
 
   test('Step 1 - Login to Ops', async ({ page }) => {
-    await page.goto('/admin/login')
+    await page.goto(`${getBaseUrl()}/admin/login`)
     await page.waitForLoadState('networkidle')
 
     await expect(page.getByPlaceholder('用户名')).toBeVisible()
@@ -33,7 +35,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
     await loginAs(page)
     await page.waitForSelector('h1', { timeout: 10000 })
 
-    await expect(page.locator('h1')).toContainText('Dashboard')
+    await expect(page.locator('h1').last()).toContainText('Dashboard')
 
     await expect(page.getByText('Total Todos')).toBeVisible()
     await expect(page.getByText('Pending')).toBeVisible()
@@ -48,7 +50,7 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
 
   test('Step 3 - Navigate to Monitor', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/admin/system/monitor')
+    await page.goto(`${getBaseUrl()}/admin/system/monitor`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(3000)
 
@@ -58,11 +60,11 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
 
   test('Step 4 - Navigate to Settings', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/admin/system/settings')
+    await page.goto(`${getBaseUrl()}/admin/system/settings`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(3000)
 
-    await expect(page.locator('h1')).toContainText('Settings')
+    await expect(page.locator('h1').last()).toContainText('Settings')
     await expect(page.getByText('General Settings')).toBeVisible()
     await expect(page.getByText('Notification Settings')).toBeVisible()
     await expect(page.getByText('Security Settings')).toBeVisible()
@@ -76,12 +78,12 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
 
   test('Step 5 - Navigate to Permissions', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/admin/system/permissions')
+    await page.goto(`${getBaseUrl()}/admin/system/permissions`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(3000)
 
     await expect(page).toHaveURL(/\/admin\/system\/permissions/)
-    await expect(page.locator('h1')).toContainText('权限管理')
+    await expect(page.locator('h1').last()).toContainText('权限管理')
     await expect(page.getByText('角色列表')).toBeVisible()
     await expect(page.getByText('权限矩阵')).toBeVisible()
 
@@ -91,12 +93,12 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
 
   test('Step 6 - Navigate to Roles', async ({ page }) => {
     await loginAs(page)
-    await page.goto('/admin/system/roles')
+    await page.goto(`${getBaseUrl()}/admin/system/roles`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(3000)
 
     await expect(page).toHaveURL(/\/admin\/system\/roles/)
-    await expect(page.locator('h1')).toContainText('角色管理')
+    await expect(page.locator('h1').last()).toContainText('角色管理')
     await expect(page.getByRole('button', { name: /创建角色/ })).toBeVisible()
 
     const tableHeaders = page.locator('thead th')
