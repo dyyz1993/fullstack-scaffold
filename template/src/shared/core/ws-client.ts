@@ -4,8 +4,8 @@
  * 此文件属于框架层代码。如需修改，请添加以下说明：
  *
  * @framework-modify
- * @reason [必填] 修改原因
- * @impact [必填] 影响范围
+ * @reason WSClientImpl 不再 extends WebSocket，改为动态基类模式兼容 browser/node 环境
+ * @impact 所有使用 WSClientImpl 的地方不再需要 WebSocket 类型断言
  */
 
 type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
@@ -49,10 +49,40 @@ const WS_CONNECTING = typeof WebSocket !== 'undefined' ? WebSocket.CONNECTING : 
 
 const WebSocketClass: typeof WebSocket | null = typeof WebSocket !== 'undefined' ? WebSocket : null
 
-type WebSocketLike = InstanceType<typeof WebSocket>
+class StubWebSocket {
+  binaryType: BinaryType = 'blob'
+  bufferedAmount = 0
+  extensions = ''
+  onclose: ((ev: CloseEvent) => void) | null = null
+  onerror: ((ev: Event) => void) | null = null
+  onmessage: ((ev: MessageEvent) => void) | null = null
+  onopen: ((ev: Event) => void) | null = null
+  protocol = ''
+  readyState = 0
+  url = ''
+  send(_data: string | ArrayBufferLike | Blob | ArrayBufferView) {
+    return 0 as never
+  }
+  close(_code?: number, _reason?: string) {}
+  addEventListener() {}
+  removeEventListener() {}
+  dispatchEvent() {
+    return true
+  }
+  static readonly CONNECTING = 0
+  static readonly OPEN = 1
+  static readonly CLOSING = 2
+  static readonly CLOSED = 3
+}
 
-export class WSClientImpl<P extends WSProtocol = WSProtocol> implements WSClient<P> {
-  private socket: WebSocketLike | null = null
+type WSBaseClass = typeof WebSocket extends undefined ? typeof StubWebSocket : typeof WebSocket
+
+const WSBase: WSBaseClass = (
+  typeof WebSocket !== 'undefined' ? WebSocket : StubWebSocket
+) as WSBaseClass
+
+export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase implements WSClient<P> {
+  private socket: WebSocket | null = null
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private pendingRequests = new Map<string, PendingRequest>()
   private statusHandlers: ((status: WSStatus) => void)[] = []
@@ -63,22 +93,23 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> implements WSClient
     return this._status
   }
 
-  getSocket(): WebSocketLike | null {
+  getSocket(): WebSocket | null {
     return this.socket
   }
 
   constructor(url: string | URL, protocols?: string | string[]) {
+    super(url.toString(), protocols as string[])
     if (WebSocketClass) {
       this.socket = new WebSocketClass(url.toString(), protocols)
       this.attachSocket()
     }
   }
 
-  send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
+  override send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
     this.socket?.send(data as never)
   }
 
-  close() {
+  override close() {
     this.socket?.close()
   }
 
