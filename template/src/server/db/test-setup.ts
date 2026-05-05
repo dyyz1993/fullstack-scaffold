@@ -120,6 +120,77 @@ export async function setupTestDatabase(): Promise<void> {
       user_agent TEXT,
       created_at INTEGER
     );
+
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      order_no TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      customer_email TEXT NOT NULL,
+      product_name TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      status TEXT DEFAULT 'pending' NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      ticket_no TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      customer_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      description TEXT NOT NULL,
+      status TEXT DEFAULT 'open' NOT NULL,
+      priority TEXT DEFAULT 'medium' NOT NULL,
+      category TEXT NOT NULL,
+      assigned_to TEXT,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS ticket_replies (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      ticket_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      author TEXT NOT NULL,
+      is_customer INTEGER DEFAULT 0 NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS disputes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      dispute_no TEXT NOT NULL,
+      order_id TEXT NOT NULL,
+      order_no TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      customer_email TEXT NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT DEFAULT 'pending' NOT NULL,
+      description TEXT NOT NULL,
+      resolution TEXT,
+      amount INTEGER NOT NULL,
+      resolved_at INTEGER,
+      resolved_by TEXT,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS contents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      excerpt TEXT,
+      category TEXT NOT NULL,
+      tags TEXT,
+      status TEXT DEFAULT 'draft' NOT NULL,
+      author TEXT NOT NULL,
+      view_count INTEGER DEFAULT 0 NOT NULL,
+      like_count INTEGER DEFAULT 0 NOT NULL,
+      published_at INTEGER,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
   `
 
   const statements = migrationSQL.split(';').filter(s => s.trim())
@@ -388,6 +459,45 @@ async function seedTestData(client: Client): Promise<void> {
     },
   ]
 
+  // dispute category (5 permissions)
+  const disputePermissions = [
+    {
+      id: 'perm_dispute_view',
+      code: 'dispute:view',
+      name: '查看争议',
+      label: '查看争议',
+      category: 'dispute',
+    },
+    {
+      id: 'perm_dispute_create',
+      code: 'dispute:create',
+      name: '创建争议',
+      label: '创建争议',
+      category: 'dispute',
+    },
+    {
+      id: 'perm_dispute_edit',
+      code: 'dispute:edit',
+      name: '编辑争议',
+      label: '编辑争议',
+      category: 'dispute',
+    },
+    {
+      id: 'perm_dispute_delete',
+      code: 'dispute:delete',
+      name: '删除争议',
+      label: '删除争议',
+      category: 'dispute',
+    },
+    {
+      id: 'perm_dispute_resolve',
+      code: 'dispute:resolve',
+      name: '解决争议',
+      label: '解决争议',
+      category: 'dispute',
+    },
+  ]
+
   // Combine all permissions
   const allPermissions = [
     ...userPermissions,
@@ -396,6 +506,7 @@ async function seedTestData(client: Client): Promise<void> {
     ...orderPermissions,
     ...ticketPermissions,
     ...dataPermissions,
+    ...disputePermissions,
   ]
 
   for (const perm of allPermissions) {
@@ -461,6 +572,11 @@ async function seedTestData(client: Client): Promise<void> {
     'perm_ticket_delete',
     'perm_ticket_reply',
     'perm_ticket_close',
+    'perm_dispute_view',
+    'perm_dispute_create',
+    'perm_dispute_edit',
+    'perm_dispute_delete',
+    'perm_dispute_resolve',
   ]
   for (const permId of customerServicePermissions) {
     try {
@@ -522,5 +638,10 @@ export async function cleanupTestDatabase(): Promise<void> {
     await client.execute('DELETE FROM permissions')
     await client.execute('DELETE FROM roles')
     await client.execute('DELETE FROM routes')
+    await client.execute('DELETE FROM ticket_replies')
+    await client.execute('DELETE FROM tickets')
+    await client.execute('DELETE FROM orders')
+    await client.execute('DELETE FROM disputes')
+    await client.execute('DELETE FROM contents')
   }
 }

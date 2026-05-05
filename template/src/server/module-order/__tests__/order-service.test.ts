@@ -1,11 +1,9 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/order-service'
-import { resetMockOrders } from '../services/order-service'
 import type { CreateOrderInput, UpdateOrderInput } from '@shared/modules/order'
 import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Order Service', () => {
-  // Track created orders for cleanup
   let createdOrderIds: string[] = []
 
   beforeAll(async () => {
@@ -17,8 +15,6 @@ describe('Order Service', () => {
   })
 
   beforeEach(() => {
-    // 重置 mock orders 以确保测试隔离
-    resetMockOrders()
     createdOrderIds = []
   })
 
@@ -26,29 +22,46 @@ describe('Order Service', () => {
     it('should return all orders when no filters provided', async () => {
       const result = await service.getOrders()
       expect(Array.isArray(result)).toBe(true)
-      expect(result.length).toBeGreaterThan(0)
     })
 
     it('should filter orders by status', async () => {
-      const result = await service.getOrders({ status: 'pending' })
+      const data: CreateOrderInput = {
+        customerName: 'Filter Test',
+        customerEmail: 'filter@example.com',
+        productName: 'Filter Product',
+        amount: 100,
+      }
+      const created = await service.createOrder(data)
+      createdOrderIds.push(created.id)
+
+      await service.updateOrder(created.id, { status: 'processing' })
+
+      const result = await service.getOrders({ status: 'processing' })
       expect(Array.isArray(result)).toBe(true)
       result.forEach(order => {
-        expect(order.status).toBe('pending')
+        expect(order.status).toBe('processing')
       })
     })
   })
 
   describe('getOrderById', () => {
     it('should return order when id exists', async () => {
-      const allOrders = await service.getOrders()
-      const firstOrder = allOrders[0]
-      const result = await service.getOrderById(firstOrder.id)
+      const data: CreateOrderInput = {
+        customerName: 'Get Test',
+        customerEmail: 'get@example.com',
+        productName: 'Get Product',
+        amount: 100,
+      }
+      const created = await service.createOrder(data)
+      createdOrderIds.push(created.id)
+
+      const result = await service.getOrderById(created.id)
       expect(result).not.toBeNull()
-      expect(result?.id).toBe(firstOrder.id)
+      expect(result?.id).toBe(created.id)
     })
 
     it('should return null for non-existent order id', async () => {
-      const result = await service.getOrderById('non-existent-order-id')
+      const result = await service.getOrderById('order-999999')
       expect(result).toBeNull()
     })
   })
@@ -96,7 +109,7 @@ describe('Order Service', () => {
     })
 
     it('should return null when updating non-existent order', async () => {
-      const result = await service.updateOrder('non-existent-order-id', { status: 'completed' })
+      const result = await service.updateOrder('order-999999', { status: 'completed' })
       expect(result).toBeNull()
     })
   })
@@ -119,7 +132,7 @@ describe('Order Service', () => {
     })
 
     it('should return failure when deleting non-existent order', async () => {
-      const result = await service.deleteOrder('non-existent-order-id')
+      const result = await service.deleteOrder('order-999999')
       expect(result.message).toBe('订单不存在')
     })
   })
@@ -141,7 +154,7 @@ describe('Order Service', () => {
     })
 
     it('should return null when processing non-existent order', async () => {
-      const result = await service.processOrder('non-existent-order-id')
+      const result = await service.processOrder('order-999999')
       expect(result).toBeNull()
     })
   })
@@ -163,7 +176,7 @@ describe('Order Service', () => {
     })
 
     it('should return null when cancelling non-existent order', async () => {
-      const result = await service.cancelOrder('non-existent-order-id')
+      const result = await service.cancelOrder('order-999999')
       expect(result).toBeNull()
     })
   })
@@ -179,19 +192,17 @@ describe('Order Service', () => {
       const created = await service.createOrder(data)
       createdOrderIds.push(created.id)
 
-      // First process the order to change status from pending to processing
       const processed = await service.processOrder(created.id)
       expect(processed).not.toBeNull()
       expect(processed?.status).toBe('processing')
 
-      // Then complete the order
       const result = await service.completeOrder(created.id)
       expect(result).not.toBeNull()
       expect(result?.status).toBe('completed')
     })
 
     it('should return null when completing non-existent order', async () => {
-      const result = await service.completeOrder('non-existent-order-id')
+      const result = await service.completeOrder('order-999999')
       expect(result).toBeNull()
     })
 
@@ -204,7 +215,6 @@ describe('Order Service', () => {
       }
       const created = await service.createOrder(data)
       createdOrderIds.push(created.id)
-      // Order is in pending status, cannot complete directly
       const result = await service.completeOrder(created.id)
       expect(result).toBeNull()
     })

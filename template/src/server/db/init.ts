@@ -1,6 +1,10 @@
 import { getDb } from './driver'
 import { permissions, roles, rolePermissions } from './schema'
 import { logger } from '../utils/logger'
+import { seedOrdersIfEmpty } from '../module-order/services/order-service'
+import { seedTicketsIfEmpty } from '../module-ticket/services/ticket-service'
+import { seedDisputesIfEmpty } from '../module-dispute/services/dispute-service'
+import { seedContentsIfEmpty } from '../module-content/services/content-service'
 
 const log = logger.db()
 
@@ -118,12 +122,36 @@ const initialPermissions = [
     sortOrder: 1,
   },
   {
+    id: 'perm_order_create',
+    code: 'order:create',
+    name: '创建订单',
+    label: '创建订单',
+    category: 'order',
+    sortOrder: 2,
+  },
+  {
+    id: 'perm_order_edit',
+    code: 'order:edit',
+    name: '编辑订单',
+    label: '编辑订单',
+    category: 'order',
+    sortOrder: 3,
+  },
+  {
+    id: 'perm_order_delete',
+    code: 'order:delete',
+    name: '删除订单',
+    label: '删除订单',
+    category: 'order',
+    sortOrder: 4,
+  },
+  {
     id: 'perm_order_process',
     code: 'order:process',
     name: '处理订单',
     label: '处理订单',
     category: 'order',
-    sortOrder: 2,
+    sortOrder: 5,
   },
   {
     id: 'perm_ticket_view',
@@ -134,12 +162,36 @@ const initialPermissions = [
     sortOrder: 1,
   },
   {
+    id: 'perm_ticket_create',
+    code: 'ticket:create',
+    name: '创建工单',
+    label: '创建工单',
+    category: 'ticket',
+    sortOrder: 2,
+  },
+  {
+    id: 'perm_ticket_edit',
+    code: 'ticket:edit',
+    name: '编辑工单',
+    label: '编辑工单',
+    category: 'ticket',
+    sortOrder: 3,
+  },
+  {
+    id: 'perm_ticket_delete',
+    code: 'ticket:delete',
+    name: '删除工单',
+    label: '删除工单',
+    category: 'ticket',
+    sortOrder: 4,
+  },
+  {
     id: 'perm_ticket_reply',
     code: 'ticket:reply',
     name: '回复工单',
     label: '回复工单',
     category: 'ticket',
-    sortOrder: 2,
+    sortOrder: 5,
   },
   {
     id: 'perm_ticket_close',
@@ -147,7 +199,47 @@ const initialPermissions = [
     name: '关闭工单',
     label: '关闭工单',
     category: 'ticket',
+    sortOrder: 6,
+  },
+  {
+    id: 'perm_dispute_view',
+    code: 'dispute:view',
+    name: '查看争议',
+    label: '查看争议',
+    category: 'dispute',
+    sortOrder: 1,
+  },
+  {
+    id: 'perm_dispute_create',
+    code: 'dispute:create',
+    name: '创建争议',
+    label: '创建争议',
+    category: 'dispute',
+    sortOrder: 2,
+  },
+  {
+    id: 'perm_dispute_edit',
+    code: 'dispute:edit',
+    name: '编辑争议',
+    label: '编辑争议',
+    category: 'dispute',
     sortOrder: 3,
+  },
+  {
+    id: 'perm_dispute_delete',
+    code: 'dispute:delete',
+    name: '删除争议',
+    label: '删除争议',
+    category: 'dispute',
+    sortOrder: 4,
+  },
+  {
+    id: 'perm_dispute_resolve',
+    code: 'dispute:resolve',
+    name: '解决争议',
+    label: '解决争议',
+    category: 'dispute',
+    sortOrder: 5,
   },
   {
     id: 'perm_role_view',
@@ -225,16 +317,38 @@ const initialRolePermissions = [
   { roleId: 'role_super_admin', permissionId: 'perm_data_export' },
   { roleId: 'role_super_admin', permissionId: 'perm_data_import' },
   { roleId: 'role_super_admin', permissionId: 'perm_order_view' },
+  { roleId: 'role_super_admin', permissionId: 'perm_order_create' },
+  { roleId: 'role_super_admin', permissionId: 'perm_order_edit' },
+  { roleId: 'role_super_admin', permissionId: 'perm_order_delete' },
   { roleId: 'role_super_admin', permissionId: 'perm_order_process' },
   { roleId: 'role_super_admin', permissionId: 'perm_ticket_view' },
+  { roleId: 'role_super_admin', permissionId: 'perm_ticket_create' },
+  { roleId: 'role_super_admin', permissionId: 'perm_ticket_edit' },
+  { roleId: 'role_super_admin', permissionId: 'perm_ticket_delete' },
   { roleId: 'role_super_admin', permissionId: 'perm_ticket_reply' },
   { roleId: 'role_super_admin', permissionId: 'perm_ticket_close' },
+  { roleId: 'role_super_admin', permissionId: 'perm_dispute_view' },
+  { roleId: 'role_super_admin', permissionId: 'perm_dispute_create' },
+  { roleId: 'role_super_admin', permissionId: 'perm_dispute_edit' },
+  { roleId: 'role_super_admin', permissionId: 'perm_dispute_delete' },
+  { roleId: 'role_super_admin', permissionId: 'perm_dispute_resolve' },
   { roleId: 'role_customer_service', permissionId: 'perm_content_view' },
   { roleId: 'role_customer_service', permissionId: 'perm_order_view' },
+  { roleId: 'role_customer_service', permissionId: 'perm_order_create' },
+  { roleId: 'role_customer_service', permissionId: 'perm_order_edit' },
+  { roleId: 'role_customer_service', permissionId: 'perm_order_delete' },
   { roleId: 'role_customer_service', permissionId: 'perm_order_process' },
   { roleId: 'role_customer_service', permissionId: 'perm_ticket_view' },
+  { roleId: 'role_customer_service', permissionId: 'perm_ticket_create' },
+  { roleId: 'role_customer_service', permissionId: 'perm_ticket_edit' },
+  { roleId: 'role_customer_service', permissionId: 'perm_ticket_delete' },
   { roleId: 'role_customer_service', permissionId: 'perm_ticket_reply' },
   { roleId: 'role_customer_service', permissionId: 'perm_ticket_close' },
+  { roleId: 'role_customer_service', permissionId: 'perm_dispute_view' },
+  { roleId: 'role_customer_service', permissionId: 'perm_dispute_create' },
+  { roleId: 'role_customer_service', permissionId: 'perm_dispute_edit' },
+  { roleId: 'role_customer_service', permissionId: 'perm_dispute_delete' },
+  { roleId: 'role_customer_service', permissionId: 'perm_dispute_resolve' },
   { roleId: 'role_customer_service', permissionId: 'perm_data_export' },
   { roleId: 'role_customer_service', permissionId: 'perm_system_logs' },
   { roleId: 'role_user', permissionId: 'perm_content_view' },
@@ -286,4 +400,13 @@ export async function initializeDatabase() {
   }
 
   log.info({}, 'Database initialization complete!')
+
+  log.info({}, 'Seeding module data...')
+  await Promise.all([
+    seedOrdersIfEmpty(),
+    seedTicketsIfEmpty(),
+    seedDisputesIfEmpty(),
+    seedContentsIfEmpty(),
+  ])
+  log.info({}, 'Module data seeding complete!')
 }

@@ -185,7 +185,7 @@ export const orderRoutes = new OpenAPIHono()
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await orderService.deleteOrder(id)
-    if (!result) throw new NotFoundError('Order', id)
+    if (result.message === '订单不存在') throw new NotFoundError('Order', id)
     return c.json(success({ message: 'Deleted successfully' }), 200)
   })
   .openapi(processRoute, async c => {

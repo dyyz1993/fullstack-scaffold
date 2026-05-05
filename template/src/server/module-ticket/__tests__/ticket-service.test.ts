@@ -1,28 +1,37 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/ticket-service'
 import type { CreateTicketInput, UpdateTicketInput, ReplyTicketInput } from '@shared/modules/ticket'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Ticket Service', () => {
   const createdTicketIds: string[] = []
 
-  beforeEach(async () => {
-    const result = await service.getTickets()
-    for (const ticket of result) {
-      if (createdTicketIds.includes(ticket.id)) {
-        await service.deleteTicket(ticket.id)
-      }
-    }
-    createdTicketIds.length = 0
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
   })
 
   describe('getTickets', () => {
     it('should return all tickets', async () => {
       const result = await service.getTickets()
       expect(Array.isArray(result)).toBe(true)
-      expect(result.length).toBeGreaterThan(0)
     })
 
     it('should filter tickets by status', async () => {
+      const data: CreateTicketInput = {
+        customerName: 'Test Customer',
+        customerEmail: 'test@example.com',
+        subject: 'Test Subject',
+        description: 'Test Description',
+        category: 'technical',
+        priority: 'medium',
+      }
+      const created = await service.createTicket(data)
+      createdTicketIds.push(created.id)
+
       const result = await service.getTickets({ status: 'open' })
       expect(Array.isArray(result)).toBe(true)
       result.forEach(ticket => {
@@ -49,7 +58,7 @@ describe('Ticket Service', () => {
     })
 
     it('should return null for non-existent ticket', async () => {
-      const result = await service.getTicketById('non-existent-ticket-id-xyz')
+      const result = await service.getTicketById('ticket-999999')
       expect(result).toBeNull()
     })
   })
@@ -103,7 +112,7 @@ describe('Ticket Service', () => {
     })
 
     it('should return null for non-existent ticket', async () => {
-      const result = await service.updateTicket('non-existent-ticket-id-xyz', {})
+      const result = await service.updateTicket('ticket-999999', {})
       expect(result).toBeNull()
     })
   })
@@ -128,7 +137,7 @@ describe('Ticket Service', () => {
     })
 
     it('should return false for non-existent ticket', async () => {
-      const result = await service.deleteTicket('non-existent-ticket-id-xyz')
+      const result = await service.deleteTicket('ticket-999999')
       expect(result.message).toBe('工单不存在')
     })
   })
@@ -161,7 +170,7 @@ describe('Ticket Service', () => {
         content: 'This is a test reply',
         author: 'Support Agent',
       }
-      const result = await service.replyTicket('non-existent-ticket-id-xyz', replyData)
+      const result = await service.replyTicket('ticket-999999', replyData)
       expect(result).toBeNull()
     })
   })
@@ -185,7 +194,7 @@ describe('Ticket Service', () => {
     })
 
     it('should return null for non-existent ticket', async () => {
-      const result = await service.closeTicket('non-existent-ticket-id-xyz')
+      const result = await service.closeTicket('ticket-999999')
       expect(result).toBeNull()
     })
   })

@@ -1,8 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createTestClient } from '../../test-utils/test-client'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Ticket Routes', () => {
   const authHeaders = { Authorization: 'Bearer admin-token' }
+
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
 
   describe('GET /api/tickets', () => {
     it('should return list of tickets', async () => {

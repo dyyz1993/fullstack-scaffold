@@ -124,6 +124,6 @@ export const contentRoutes = new OpenAPIHono()
   .openapi(deleteRoute, async c => {
     const { id } = c.req.valid('param')
     const result = await contentService.deleteContent(id)
-    if (!result) throw new NotFoundError('Content', id)
-    return c.json(success(result), 200)
+    if (!result.success) throw new NotFoundError('Content', id)
+    return c.json(success({ message: 'Deleted successfully' }), 200)
   })

@@ -44,7 +44,16 @@ describe('Permission Service', () => {
 
     it('should return permissions with valid categories', async () => {
       const permissions = await service.getAll()
-      const validCategories = ['user', 'content', 'system', 'data', 'order', 'ticket']
+      const validCategories = [
+        'user',
+        'content',
+        'system',
+        'data',
+        'order',
+        'ticket',
+        'dispute',
+        'role',
+      ]
       expect(permissions.every(p => validCategories.includes(p.category))).toBe(true)
     })
   })

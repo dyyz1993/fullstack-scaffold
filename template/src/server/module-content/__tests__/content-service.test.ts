@@ -1,19 +1,27 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/content-service'
 import type { CreateContentInput } from '@shared/modules/content'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Content Service', () => {
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
   describe('getContents', () => {
     it('should return all contents', async () => {
       const result = await service.getContents()
       expect(Array.isArray(result)).toBe(true)
-      expect(result.length).toBeGreaterThan(0)
     })
   })
 
   describe('getContentById', () => {
     it('should return null for non-existent content', async () => {
-      const result = await service.getContentById('non-existent')
+      const result = await service.getContentById('content-999999')
       expect(result).toBeNull()
     })
   })
@@ -35,7 +43,7 @@ describe('Content Service', () => {
 
   describe('updateContent', () => {
     it('should return null for non-existent content', async () => {
-      const result = await service.updateContent('non-existent', {})
+      const result = await service.updateContent('content-999999', {})
       expect(result).toBeNull()
     })
   })
@@ -53,7 +61,7 @@ describe('Content Service', () => {
     })
 
     it('should return false for non-existent content', async () => {
-      const result = await service.deleteContent('non-existent')
+      const result = await service.deleteContent('content-999999')
       expect(result.success).toBe(false)
     })
   })
@@ -72,7 +80,7 @@ describe('Content Service', () => {
     })
 
     it('should return null for non-existent content', async () => {
-      const result = await service.publishContent('non-existent')
+      const result = await service.publishContent('content-999999')
       expect(result).toBeNull()
     })
   })
@@ -92,7 +100,7 @@ describe('Content Service', () => {
     })
 
     it('should return null for non-existent content', async () => {
-      const result = await service.archiveContent('non-existent')
+      const result = await service.archiveContent('content-999999')
       expect(result).toBeNull()
     })
   })

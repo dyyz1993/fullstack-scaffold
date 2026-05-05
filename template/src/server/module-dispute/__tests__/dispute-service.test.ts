@@ -1,28 +1,29 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/dispute-service'
 import type { CreateDisputeInput } from '@shared/modules/dispute'
+import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
 
 describe('Dispute Service', () => {
   const createdDisputeIds: string[] = []
 
-  beforeEach(async () => {
-    for (const id of createdDisputeIds) {
-      await service.deleteDispute(id)
-    }
-    createdDisputeIds.length = 0
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
   })
 
   describe('getDisputes', () => {
     it('should return all disputes', async () => {
       const result = await service.getDisputes()
       expect(Array.isArray(result)).toBe(true)
-      expect(result.length).toBeGreaterThan(0)
     })
   })
 
   describe('getDisputeById', () => {
     it('should return null for non-existent dispute', async () => {
-      const result = await service.getDisputeById('non-existent-dispute-id-xyz')
+      const result = await service.getDisputeById('dispute-999999')
       expect(result).toBeNull()
     })
   })
@@ -49,7 +50,7 @@ describe('Dispute Service', () => {
 
   describe('updateDispute', () => {
     it('should return null for non-existent dispute', async () => {
-      const result = await service.updateDispute('non-existent-dispute-id-xyz', {})
+      const result = await service.updateDispute('dispute-999999', {})
       expect(result).toBeNull()
     })
   })
@@ -73,7 +74,7 @@ describe('Dispute Service', () => {
     })
 
     it('should return null for non-existent dispute', async () => {
-      const result = await service.investigateDispute('non-existent-dispute-id-xyz')
+      const result = await service.investigateDispute('dispute-999999')
       expect(result).toBeNull()
     })
   })
@@ -100,7 +101,7 @@ describe('Dispute Service', () => {
     })
 
     it('should return null for non-existent dispute', async () => {
-      const result = await service.resolveDispute('non-existent-dispute-id-xyz', {
+      const result = await service.resolveDispute('dispute-999999', {
         resolution: 'Resolved',
         resolvedBy: 'Admin',
       })
@@ -127,7 +128,7 @@ describe('Dispute Service', () => {
     })
 
     it('should return null for non-existent dispute', async () => {
-      const result = await service.rejectDispute('non-existent-dispute-id-xyz', 'Rejected', 'Admin')
+      const result = await service.rejectDispute('dispute-999999', 'Rejected', 'Admin')
       expect(result).toBeNull()
     })
   })
