@@ -8,7 +8,7 @@ import type {
   TicketPriority,
   TicketCategory,
 } from '@shared/modules/ticket'
-import { generateTicketNo, randomDate } from '@server/utils/generate'
+import { generateTicketNo, randomDate, randomElement } from '@server/utils/generate'
 
 const PRIORITIES: TicketPriority[] = ['low', 'medium', 'high', 'urgent']
 const STATUSES: TicketStatus[] = ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed']
@@ -40,10 +40,6 @@ const SUBJECTS = [
 ]
 
 const AGENTS = ['客服小王', '客服小李', '客服小张']
-
-function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
-}
 
 const MOCK_TICKETS: Ticket[] = Array.from({ length: 20 }, (_, index) => {
   const customer = randomElement(CUSTOMERS)

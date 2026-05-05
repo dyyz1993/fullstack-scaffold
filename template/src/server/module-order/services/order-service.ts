@@ -8,7 +8,7 @@
  */
 
 import type { Order, CreateOrderInput, UpdateOrderInput, OrderStatus } from '@shared/modules/order'
-import { generateOrderNo, randomDate } from '@server/utils/generate'
+import { generateOrderNo, randomDate, randomElement } from '@server/utils/generate'
 
 const ORDER_STATUSES: OrderStatus[] = [
   'pending',
@@ -34,10 +34,6 @@ const PRODUCTS = [
   '技术支持套餐',
   '定制开发服务',
 ]
-
-function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
-}
 
 // 使用 let 而不是 const，允许在测试中重置
 let MOCK_ORDERS: Order[] = Array.from({ length: 25 }, (_, index) => {

@@ -6,7 +6,7 @@ import type {
   DisputeType,
   DisputeStatus,
 } from '@shared/modules/dispute'
-import { generateDisputeNo, randomDate } from '@server/utils/generate'
+import { generateDisputeNo, randomDate, randomElement } from '@server/utils/generate'
 
 const DISPUTE_TYPES: DisputeType[] = [
   'refund',
@@ -32,10 +32,6 @@ const RESOLUTIONS = [
   '已部分退款，问题已解决',
   '经核实，驳回争议申请',
 ]
-
-function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
-}
 
 const MOCK_DISPUTES: Dispute[] = Array.from({ length: 15 }, (_, index) => {
   const type = randomElement(DISPUTE_TYPES)

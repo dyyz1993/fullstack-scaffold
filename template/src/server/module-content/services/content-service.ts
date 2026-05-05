@@ -5,6 +5,7 @@ import type {
   ContentCategory,
   ContentStatus,
 } from '@shared/modules/content'
+import { randomDate, randomElement } from '@server/utils/generate'
 
 const CATEGORIES: ContentCategory[] = ['article', 'announcement', 'tutorial', 'news', 'policy']
 const STATUSES: ContentStatus[] = ['draft', 'published', 'archived']
@@ -32,15 +33,6 @@ const TAGS_LIST = [
   ['教程', '操作'],
   ['最佳实践', '经验'],
 ]
-
-function randomDate(start: Date, end: Date): string {
-  const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
-  return date.toISOString()
-}
-
-function randomElement<T>(array: readonly T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
-}
 
 const MOCK_CONTENTS: Content[] = Array.from({ length: 20 }, (_, index) => {
   const category = randomElement(CATEGORIES)

@@ -20,3 +20,7 @@ export function randomDate(start: Date, end: Date): string {
   const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
   return date.toISOString()
 }
+
+export function randomElement<T>(array: readonly T[]): T {
+  return array[Math.floor(Math.random() * array.length)]
+}
