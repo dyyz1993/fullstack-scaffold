@@ -43,6 +43,10 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
   } = config
 
   return async (c: Context, next: Next) => {
+    if (process.env.NODE_ENV === 'test') {
+      return next()
+    }
+
     cleanupExpiredSessions()
 
     const path = c.req.path

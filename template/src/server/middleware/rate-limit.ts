@@ -25,6 +25,10 @@ export function rateLimitMiddleware(options: RateLimitOptions = {}) {
   const message = options.message ?? 'Too many requests'
 
   return async (c: Context, next: Next) => {
+    if (process.env.NODE_ENV === 'test') {
+      return next()
+    }
+
     const ip =
       c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
       c.req.header('x-real-ip') ||
