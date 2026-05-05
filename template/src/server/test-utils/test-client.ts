@@ -13,14 +13,15 @@ import { createApp } from '@server/app'
 /**
  * 测试客户端类型
  *
- * 注意：TypeScript 5.8+ 和 Hono 4.12+ 已优化类型推导性能，
- * 无需修改 TypeScript 的类型实例化深度限制即可正常工作。
+ * 注意：TypeScript 在推导 Hono Client 类型时可能触发 TS2589，
+ * 该警告不影响运行时行为，测试客户端可正常工作。
  */
-// @ts-expect-error Hono UnionToIntersection<Client<AppType>> exceeds TypeScript type instantiation depth
+// @ts-ignore TS2589: Hono UnionToIntersection exceeds type instantiation depth
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {
   webSocket?: (url: string | URL) => WebSocket
+  sse?: (url: string | URL) => unknown
   headers?: Record<string, string>
 }
 
