@@ -36,12 +36,24 @@ export default defineConfig({
   },
   projects: [
     {
-      name: process.env.PLAYWRIGHT_TEST_BROWSER_TYPE || 'chromium',
+      name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
         ...(browserExecutablePath
           ? { launchOptions: { executablePath: browserExecutablePath } }
           : {}),
+      },
+    },
+    {
+      name: 'firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+      },
+    },
+    {
+      name: 'webkit',
+      use: {
+        ...devices['Desktop Safari'],
       },
     },
   ],
