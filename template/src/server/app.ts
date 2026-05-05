@@ -1,4 +1,5 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
+import { type Context } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
@@ -55,7 +56,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
   // Last-resort error handler for framework-level errors (e.g. 404 Not Found).
   // The canonical error handler is errorHandlerMiddleware (middleware/error-handler.ts).
-  app.onError((err: Error, c: any) => {
+  app.onError((err: Error, c: Context<{ Bindings: T }>) => {
     const log = createModuleLoggerSync('api')
     c.res.headers.set('Content-Type', 'application/json')
 
