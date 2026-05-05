@@ -16,7 +16,7 @@ describe('Ticket Routes', () => {
   describe('GET /api/tickets', () => {
     it('should return list of tickets', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api['tickets'].$get()
+      const res = await client.api['tickets'].$get({ query: {} })
       expect(res.status).toBe(200)
 
       const data = await res.json()

@@ -53,7 +53,7 @@ describe('File Routes', () => {
       expect(res.status).toBe(404)
       const data = (await res.json()) as { success: boolean; error: string }
       expect(data.success).toBe(false)
-      expect(data.error).toBe('File not found')
+      expect(data.error).toContain('File not found')
     })
 
     it('should return 404 for non-existent namespace', async () => {
@@ -173,7 +173,7 @@ describe('File Routes', () => {
       expect(res.status).toBe(404)
       const data = (await res.json()) as { success: boolean; error: string }
       expect(data.success).toBe(false)
-      expect(data.error).toBe('File not found')
+      expect(data.error).toContain('File not found')
     })
 
     it('should return 400 for invalid request body', async () => {

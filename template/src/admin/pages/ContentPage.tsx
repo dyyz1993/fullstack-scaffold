@@ -40,7 +40,7 @@ export const ContentPage: React.FC = () => {
   const fetchContents = async () => {
     setLoading(true)
     try {
-      const response = await apiClient.api.contents.$get()
+      const response = await apiClient.api.contents.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
         setContents(result.data)

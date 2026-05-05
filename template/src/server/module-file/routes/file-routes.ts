@@ -7,13 +7,17 @@ import {
   verifySignature,
   getPublicFileUrl,
   getPrivateFileUrl,
+  saveFile,
 } from '../../utils/file-storage'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { NotFoundError, AuthorizationError } from '../../utils/app-error'
 import {
   FileDownloadSchema,
   PrivateFileQuerySchema,
   GenerateUrlRequestSchema,
   FileUrlResponseSchema,
+  UploadResultSchema,
+  UploadFileBodySchema,
 } from '@shared/schemas'
 
 const FileContentSchema = z.any()
@@ -122,13 +126,32 @@ const checkPrivateFileRoute = createRoute({
   },
 })
 
+const uploadFileRoute = createRoute({
+  method: 'post',
+  path: '/upload',
+  tags: ['files'],
+  request: {
+    body: {
+      content: {
+        'multipart/form-data': {
+          schema: UploadFileBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: successResponse(UploadResultSchema, 'File uploaded successfully'),
+    400: errorResponse('Invalid file or upload failed'),
+  },
+})
+
 export const fileRoutes = new OpenAPIHono()
   .openapi(publicFileRoute, async c => {
     const { namespace, filename } = c.req.valid('param')
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      throw new NotFoundError('File', `${namespace}/${filename}`)
     }
 
     const filePath = getFilePath(namespace, filename)
@@ -148,16 +171,16 @@ export const fileRoutes = new OpenAPIHono()
 
     const now = Math.floor(Date.now() / 1000)
     if (now > expiry) {
-      return c.json({ success: false as const, error: 'URL has expired' }, 403)
+      throw new AuthorizationError('URL has expired')
     }
 
     if (!verifySignature(namespace, filename, expiry, signature)) {
-      return c.json({ success: false as const, error: 'Invalid signature' }, 403)
+      throw new AuthorizationError('Invalid signature')
     }
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      throw new NotFoundError('File', `${namespace}/${filename}`)
     }
 
     const filePath = getFilePath(namespace, filename)
@@ -175,7 +198,7 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      throw new NotFoundError('File', `${namespace}/${filename}`)
     }
 
     const baseUrl = process.env.PUBLIC_URL || ''
@@ -198,7 +221,7 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      throw new NotFoundError('File', `${namespace}/${filename}`)
     }
 
     c.header('Content-Type', fileInfo.mimeType)
@@ -222,11 +245,42 @@ export const fileRoutes = new OpenAPIHono()
 
     const fileInfo = await getFileInfo(namespace, filename)
     if (!fileInfo) {
-      return c.json({ success: false as const, error: 'File not found' }, 404)
+      throw new NotFoundError('File', `${namespace}/${filename}`)
     }
 
     c.header('Content-Type', fileInfo.mimeType)
     c.header('Content-Length', fileInfo.size.toString())
 
     return c.body(null, 200)
+  })
+  .openapi(uploadFileRoute, async c => {
+    const body = await c.req.parseBody()
+    const file = body['file']
+
+    if (!file || !(file instanceof File)) {
+      return c.json({ success: false as const, error: 'No file provided' }, 400)
+    }
+
+    const namespace = typeof body['namespace'] === 'string' ? body['namespace'] : 'uploads'
+
+    const arrayBuffer = await file.arrayBuffer()
+    const uploaded = await saveFile(namespace, {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      data: arrayBuffer,
+    })
+
+    const url = getPublicFileUrl(namespace, uploaded.filename)
+
+    return c.json(
+      success({
+        filename: uploaded.filename,
+        originalName: uploaded.originalName,
+        mimeType: uploaded.mimeType,
+        size: uploaded.size,
+        url,
+      }),
+      200
+    )
   })

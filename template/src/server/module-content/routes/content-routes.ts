@@ -5,6 +5,7 @@ import { successResponse, errorResponse, success, created } from '../../utils/ro
 import { NotFoundError } from '@server/utils/app-error'
 import { authMiddleware } from '../../middleware/auth'
 import { Permission } from '@shared/modules/permission'
+import { z } from '@hono/zod-openapi'
 import {
   ContentSchema,
   CreateContentSchema,
@@ -12,6 +13,7 @@ import {
   ContentListSchema,
   DeleteResultSchema,
 } from '@shared/modules/content'
+import { BusinessError } from '@server/utils/app-error'
 
 const listRoute = createRoute({
   method: 'get',
@@ -19,6 +21,12 @@ const listRoute = createRoute({
   tags: ['contents'],
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_VIEW] })],
+  request: {
+    query: z.object({
+      limit: z.coerce.number().int().positive().max(100).default(20),
+      offset: z.coerce.number().int().min(0).default(0),
+    }),
+  },
   responses: {
     200: successResponse(ContentListSchema, 'List all contents'),
   },
@@ -98,10 +106,43 @@ const deleteRoute = createRoute({
   },
 })
 
+const publishRoute = createRoute({
+  method: 'put',
+  path: '/contents/{id}/publish',
+  tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_EDIT] })],
+  request: {
+    params: ContentSchema.pick({ id: true }),
+  },
+  responses: {
+    200: successResponse(ContentSchema, 'Content published'),
+    404: errorResponse('Content not found'),
+    422: errorResponse('Content cannot be published'),
+  },
+})
+
+const archiveRoute = createRoute({
+  method: 'put',
+  path: '/contents/{id}/archive',
+  tags: ['contents'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_EDIT] })],
+  request: {
+    params: ContentSchema.pick({ id: true }),
+  },
+  responses: {
+    200: successResponse(ContentSchema, 'Content archived'),
+    404: errorResponse('Content not found'),
+    422: errorResponse('Content cannot be archived'),
+  },
+})
+
 export const contentRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
+    const { limit, offset } = c.req.valid('query')
     const result = await contentService.getContents()
-    return c.json(success(result), 200)
+    return c.json(success(result.slice(offset, offset + limit)), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
@@ -126,4 +167,16 @@ export const contentRoutes = new OpenAPIHono()
     const result = await contentService.deleteContent(id)
     if (!result.success) throw new NotFoundError('Content', id)
     return c.json(success({ message: 'Deleted successfully' }), 200)
+  })
+  .openapi(publishRoute, async c => {
+    const { id } = c.req.valid('param')
+    const result = await contentService.publishContent(id)
+    if (!result) throw new BusinessError('Content cannot be published (must be in draft state)')
+    return c.json(success(result), 200)
+  })
+  .openapi(archiveRoute, async c => {
+    const { id } = c.req.valid('param')
+    const result = await contentService.archiveContent(id)
+    if (!result) throw new BusinessError('Content cannot be archived (must be in published state)')
+    return c.json(success(result), 200)
   })

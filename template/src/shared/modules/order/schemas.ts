@@ -36,6 +36,8 @@ export const OrderListSchema = z.array(OrderSchema)
 export const OrderQuerySchema = z.object({
   status: OrderStatusSchema.nullish(),
   customerName: z.string().nullish(),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
 })
 
 export const DeleteResultSchema = z.object({

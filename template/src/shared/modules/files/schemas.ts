@@ -29,3 +29,16 @@ export const GenerateUrlRequestSchema = z.object({
 export const FileUrlResponseSchema = z.union([PublicFileUrlSchema, PrivateFileUrlSchema])
 
 export const EmptySchema = z.object({})
+
+export const UploadResultSchema = z.object({
+  filename: z.string(),
+  originalName: z.string(),
+  mimeType: z.string(),
+  size: z.number(),
+  url: z.string(),
+})
+
+export const UploadFileBodySchema = z.object({
+  file: z.instanceof(File),
+  namespace: z.string().nullish().default('uploads'),
+})

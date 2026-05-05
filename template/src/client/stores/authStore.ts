@@ -1,10 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+interface UserProfile {
+  id: string
+  username: string
+  role: string
+}
+
 interface AuthState {
   token: string | null
   isAuthenticated: boolean
+  user: UserProfile | null
 
+  setAuth: (token: string, user: UserProfile) => void
   setToken: (token: string) => void
   logout: () => void
 }
@@ -14,6 +22,14 @@ export const useAuthStore = create<AuthState>()(
     set => ({
       token: null,
       isAuthenticated: false,
+      user: null,
+
+      setAuth: (token: string, user: UserProfile) =>
+        set({
+          token,
+          isAuthenticated: true,
+          user,
+        }),
 
       setToken: (token: string) =>
         set({
@@ -25,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           token: null,
           isAuthenticated: false,
+          user: null,
         }),
     }),
     {

@@ -1,4 +1,4 @@
-import { createRoute } from '@hono/zod-openapi'
+import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as ticketService from '../services/ticket-service'
 import { successResponse, errorResponse, success, created } from '../../utils/route-helpers'
@@ -20,6 +20,12 @@ const listRoute = createRoute({
   tags: ['tickets'],
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
+  request: {
+    query: z.object({
+      limit: z.coerce.number().int().positive().max(100).default(20),
+      offset: z.coerce.number().int().min(0).default(0),
+    }),
+  },
   responses: {
     200: successResponse(TicketListSchema, 'List all tickets'),
     401: errorResponse('Unauthorized'),
@@ -161,8 +167,9 @@ const closeRoute = createRoute({
 
 export const ticketRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
+    const { limit, offset } = c.req.valid('query')
     const result = await ticketService.getTickets()
-    return c.json(success(result), 200)
+    return c.json(success(result.slice(offset, offset + limit)), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')

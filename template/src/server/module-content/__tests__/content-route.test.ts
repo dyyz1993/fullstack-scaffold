@@ -16,7 +16,7 @@ describe('Content Routes', () => {
   describe('GET /api/contents', () => {
     it('should return list of contents', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api['contents'].$get()
+      const res = await client.api['contents'].$get({ query: {} })
       expect(res.status).toBe(200)
 
       const data = await res.json()

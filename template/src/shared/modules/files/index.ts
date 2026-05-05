@@ -6,4 +6,6 @@ export {
   GenerateUrlRequestSchema,
   FileUrlResponseSchema,
   EmptySchema,
+  UploadResultSchema,
+  UploadFileBodySchema,
 } from './schemas'

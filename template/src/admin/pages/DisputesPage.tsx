@@ -41,7 +41,7 @@ export const DisputesPage: React.FC = () => {
   const fetchDisputes = async () => {
     setLoading(true)
     try {
-      const response = await apiClient.api.disputes.$get()
+      const response = await apiClient.api.disputes.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
         setDisputes(result.data)

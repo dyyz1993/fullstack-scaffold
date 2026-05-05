@@ -49,7 +49,7 @@ export const TicketsPage: React.FC = () => {
   const fetchTickets = async () => {
     setLoading(true)
     try {
-      const response = await apiClient.api.tickets.$get()
+      const response = await apiClient.api.tickets.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
         setTickets(result.data)

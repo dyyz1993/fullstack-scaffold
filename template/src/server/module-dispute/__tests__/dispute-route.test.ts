@@ -16,7 +16,7 @@ describe('Dispute Routes', () => {
   describe('GET /api/disputes', () => {
     it('should return list of disputes', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
-      const res = await client.api['disputes'].$get({ headers: authHeaders })
+      const res = await client.api['disputes'].$get({ query: {} })
       expect(res.status).toBe(200)
 
       const data = await res.json()

@@ -4,6 +4,8 @@ import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as notificationService from '../../module-notifications/services/notification-service'
 import { realtime } from '@server/core'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { logger } from '../../utils/logger'
+import { NotFoundError } from '../../utils/app-error'
 import { Role } from '@shared/modules/permission'
 import {
   NotificationSchema,
@@ -131,13 +133,13 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
     const { id } = c.req.valid('param')
     const notification = notificationService.markAsRead(id)
     if (!notification) {
-      return c.json({ success: false as const, error: 'Notification not found' }, 404)
+      throw new NotFoundError('Notification', id)
     }
     try {
       const unreadCount = notificationService.getUnreadCount()
       await realtime.broadcast('unread-count', { count: unreadCount })
-    } catch {
-      // Ignore broadcast errors in test environment
+    } catch (err) {
+      logger.module('notification').debug({ error: String(err) }, 'Broadcast failed')
     }
     return c.json(success({}), 200)
   })
@@ -145,8 +147,8 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
     const count = notificationService.markAllAsRead()
     try {
       await realtime.broadcast('unread-count', { count: 0 })
-    } catch {
-      // Ignore broadcast errors in test environment
+    } catch (err) {
+      logger.module('notification').debug({ error: String(err) }, 'Broadcast failed')
     }
     return c.json(success({ count }), 200)
   })

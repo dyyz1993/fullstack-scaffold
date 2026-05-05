@@ -3,17 +3,19 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { AuthButton } from '../AuthButton'
 
 const mockSetToken = vi.fn()
+const mockSetAuth = vi.fn()
 const mockLogout = vi.fn()
 
 // Mock zustand
 vi.mock('../../stores/authStore', () => ({
   useAuthStore: vi.fn(selector => {
-    // Return different values based on selector
     const state = {
       isAuthenticated: false,
       token: null,
+      user: null,
       logout: mockLogout,
       setToken: mockSetToken,
+      setAuth: mockSetAuth,
     }
     if (selector) {
       return selector(state)
@@ -39,8 +41,10 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: false,
         token: null,
+        user: null,
         logout: mockLogout,
         setToken: mockSetToken,
+        setAuth: mockSetAuth,
       }
       return selector ? selector(state) : state
     })
@@ -56,8 +60,10 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: true,
         token: 'user-token',
+        user: { id: '1', username: 'admin', role: 'admin' },
         logout: mockLogout,
         setToken: mockSetToken,
+        setAuth: mockSetAuth,
       }
       return selector ? selector(state) : state
     })
@@ -74,8 +80,10 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: false,
         token: null,
+        user: null,
         logout: mockLogout,
         setToken: mockSetToken,
+        setAuth: mockSetAuth,
       }
       return selector ? selector(state) : state
     })
@@ -93,8 +101,10 @@ describe('AuthButton', () => {
       const state = {
         isAuthenticated: true,
         token: 'user-token',
+        user: { id: '1', username: 'admin', role: 'admin' },
         logout: mockLogout,
         setToken: mockSetToken,
+        setAuth: mockSetAuth,
       }
       return selector ? selector(state) : state
     })

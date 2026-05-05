@@ -1,6 +1,7 @@
 import type { AppNotification, CreateNotificationInput } from '@shared/schemas'
 import { generateUUID } from '../../utils/uuid'
 import { realtime } from '@server/core'
+import { logger } from '../../utils/logger'
 
 const notifications: AppNotification[] = []
 
@@ -59,8 +60,8 @@ export async function createNotificationAndBroadcast(
 
   try {
     await realtime.broadcast('notification', notification)
-  } catch {
-    // Ignore broadcast errors in test environment
+  } catch (err) {
+    logger.module('notification').debug({ error: String(err) }, 'Broadcast failed')
   }
 
   return notification

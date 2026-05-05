@@ -157,12 +157,12 @@ const cancelRoute = createRoute({
 
 export const orderRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const { status, customerName } = c.req.valid('query')
+    const { status, customerName, limit, offset } = c.req.valid('query')
     const result = await orderService.getOrders({
       status: status ?? undefined,
       customerName: customerName ?? undefined,
     })
-    return c.json(success(result), 200)
+    return c.json(success(result.slice(offset, offset + limit)), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')

@@ -3,6 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
 import * as adminService from '../services/admin-service'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { sanitizeCsvField } from '../../utils/file-storage'
 import { DownloadTokenSchema } from '@shared/modules/admin'
 
 const downloadTokens = new Map<string, { createdAt: number; expiresIn: number }>()
@@ -107,22 +108,12 @@ export const exportRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } 
     const todos = await adminService.getAllTodos()
     const encoder = new TextEncoder()
 
-    const allTodos = [
-      ...todos,
-      ...Array.from({ length: 100 }, (_, i) => ({
-        id: 1000 + i,
-        title: `模拟数据 ${i + 1} - 这是一个比较长的标题用于增加数据量`,
-        completed: i % 2 === 0,
-        createdAt: new Date().toISOString(),
-      })),
-    ]
-
     const stream = new ReadableStream({
       async start(controller) {
         controller.enqueue(encoder.encode('id,title,completed,created_at\n'))
 
-        for (const todo of allTodos) {
-          const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
+        for (const todo of todos) {
+          const line = `${sanitizeCsvField(String(todo.id))},${sanitizeCsvField(todo.title)},${todo.completed},${sanitizeCsvField(todo.createdAt)}\n`
           controller.enqueue(encoder.encode(line))
           await new Promise(resolve => setTimeout(resolve, 100))
         }
@@ -162,22 +153,12 @@ export const exportRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } 
     const todos = await adminService.getAllTodos()
     const encoder = new TextEncoder()
 
-    const allTodos = [
-      ...todos,
-      ...Array.from({ length: 100 }, (_, i) => ({
-        id: 1000 + i,
-        title: `模拟数据 ${i + 1} - 这是一个比较长的标题用于增加数据量`,
-        completed: i % 2 === 0,
-        createdAt: new Date().toISOString(),
-      })),
-    ]
-
     const stream = new ReadableStream({
       async start(controller) {
         controller.enqueue(encoder.encode('id,title,completed,created_at\n'))
 
-        for (const todo of allTodos) {
-          const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
+        for (const todo of todos) {
+          const line = `${sanitizeCsvField(String(todo.id))},${sanitizeCsvField(todo.title)},${todo.completed},${sanitizeCsvField(todo.createdAt)}\n`
           controller.enqueue(encoder.encode(line))
           await new Promise(resolve => setTimeout(resolve, 100))
         }
@@ -203,19 +184,9 @@ export const exportRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } 
       async start(controller) {
         controller.enqueue(encoder.encode('id,title,completed,created_at\n'))
 
-        const allTodos = [
-          ...todos,
-          ...Array.from({ length: 10 }, (_, i) => ({
-            id: 1000 + i,
-            title: `模拟数据 ${i + 1}`,
-            completed: i % 2 === 0,
-            createdAt: new Date().toISOString(),
-          })),
-        ]
-
-        for (let i = 0; i < allTodos.length; i++) {
-          const todo = allTodos[i]
-          const line = `${todo.id},"${todo.title.replace(/"/g, '""')}",${todo.completed},${todo.createdAt}\n`
+        for (let i = 0; i < todos.length; i++) {
+          const todo = todos[i]
+          const line = `${sanitizeCsvField(String(todo.id))},${sanitizeCsvField(todo.title)},${todo.completed},${sanitizeCsvField(todo.createdAt)}\n`
           controller.enqueue(encoder.encode(line))
 
           await new Promise(resolve => setTimeout(resolve, 300))

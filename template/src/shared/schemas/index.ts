@@ -33,6 +33,8 @@ export {
   GenerateUrlRequestSchema,
   FileUrlResponseSchema,
   EmptySchema,
+  UploadResultSchema,
+  UploadFileBodySchema,
 } from '../modules/files'
 export {
   TodoSchema,
