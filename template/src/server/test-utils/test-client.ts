@@ -16,7 +16,6 @@ import { createApp } from '@server/app'
  * 注意：TypeScript 在推导 Hono Client 类型时可能触发 TS2589，
  * 该警告不影响运行时行为，测试客户端可正常工作。
  */
-// @ts-ignore TS2589: Hono UnionToIntersection exceeds type instantiation depth
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {
