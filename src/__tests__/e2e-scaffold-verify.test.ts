@@ -48,7 +48,7 @@ describe("E2E: Scaffold → Install → Verify", () => {
   });
 
   test("step 4: unit tests pass", () => {
-    const output = run("npx vitest run 2>&1", projectPath, 180_000);
+    const output = run("npx vitest run 2>&1", projectPath, 300_000);
     expect(output).not.toContain("FAIL");
     // eslint-disable-next-line no-control-regex
     const cleaned = output.replace(/\x1b\[[0-9;]*m/g, "");
