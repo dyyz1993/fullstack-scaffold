@@ -21,10 +21,11 @@ function validateProjectName(name: string): void {
   if (!name || name.trim().length === 0) {
     throw new ScaffoldError("Project name cannot be empty");
   }
-  const validNameRegex = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+  const validNameRegex =
+    /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
   if (!validNameRegex.test(name)) {
     throw new ScaffoldError(
-      `Invalid project name "${name}". Use lowercase letters, numbers, hyphens, and underscores only.`
+      `Invalid project name "${name}". Use lowercase letters, numbers, hyphens, and underscores only.`,
     );
   }
   if (name.length > 214) {
@@ -36,24 +37,24 @@ function validateProjectName(name: string): void {
 }
 
 function parseGitignore(content: string): string[] {
-    const negatePatterns: string[] = [];
-    const includePatterns = content
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#"))
-      .map((line) => {
-        if (line.startsWith("!")) {
-          negatePatterns.push(line.slice(1));
-          return null;
-        }
-        return line;
-      })
-      .filter((line): line is string => line !== null)
-      .map((pattern) => pattern.replace(/\/$/, ""))
-      .map((pattern) => pattern.replace(/^\*\./, ""))
-      .map((pattern) => pattern.replace(/^\/+/, ""))
-      .filter((pattern) => !pattern.includes("*"));
-    return [...includePatterns, ...negatePatterns.map((p) => `!${p}`)];
+  const negatePatterns: string[] = [];
+  const includePatterns = content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => {
+      if (line.startsWith("!")) {
+        negatePatterns.push(line.slice(1));
+        return null;
+      }
+      return line;
+    })
+    .filter((line): line is string => line !== null)
+    .map((pattern) => pattern.replace(/\/$/, ""))
+    .map((pattern) => pattern.replace(/^\*\./, ""))
+    .map((pattern) => pattern.replace(/^\/+/, ""))
+    .filter((pattern) => !pattern.includes("*"));
+  return [...includePatterns, ...negatePatterns.map((p) => `!${p}`)];
 }
 
 /**
@@ -170,10 +171,7 @@ async function updateReadme(
 
   let content = await fs.readFile(readmePath, "utf-8");
 
-  content = content.replace(
-    /^# (.+)$/m,
-    `# ${projectName}`,
-  );
+  content = content.replace(/^# (.+)$/m, `# ${projectName}`);
 
   await fs.writeFile(readmePath, content);
 }
@@ -195,7 +193,7 @@ export async function createProject(
   } else {
     targetDir = path.resolve(process.cwd(), projectName);
     if (await fs.pathExists(targetDir)) {
-      throw new ScaffoldError(`目录 ${projectName} 已存在`);
+      throw new ScaffoldError(`Directory ${projectName} already exists`);
     }
   }
 

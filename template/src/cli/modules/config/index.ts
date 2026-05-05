@@ -26,7 +26,7 @@ function loadConfig(): Config {
   } catch {
     // ignore
   }
-  return { baseUrl: 'http://localhost:3000' }
+  return { baseUrl: 'http://localhost:3010' }
 }
 
 function saveConfig(config: Config) {
@@ -114,7 +114,7 @@ export function registerConfigCommands(program: Command) {
     .description('Reset configuration to defaults')
     .action(() => {
       const logger = getLogger()
-      const defaultConfig: Config = { baseUrl: 'http://localhost:3000' }
+      const defaultConfig: Config = { baseUrl: 'http://localhost:3010' }
       saveConfig(defaultConfig)
       setBaseUrl(defaultConfig.baseUrl)
       logger.success('Configuration reset to defaults')

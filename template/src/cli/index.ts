@@ -8,7 +8,7 @@ program
   .description('Biomimic CLI - RPC service & code generation tools')
   .version('0.1.0')
   .option('-v, --verbose', 'Enable verbose output')
-  .option('-u, --url <url>', 'Server URL', 'http://localhost:3000')
+  .option('-u, --url <url>', 'Server URL', 'http://localhost:3010')
   .hook('preAction', thisCommand => {
     const options = thisCommand.opts()
     createLogger({ verbose: options.verbose })
