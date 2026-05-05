@@ -8,8 +8,11 @@ on:
 
 jobs:
   cli-checks:
-    name: CLI Code Quality
-    runs-on: ubuntu-latest
+    name: CLI Code Quality (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,9 +26,12 @@ jobs:
         run: npx eslint src/ --max-warnings=0
 
   cli-tests:
-    name: CLI Tests & Scaffold Verify
-    runs-on: ubuntu-latest
+    name: CLI Tests & Scaffold Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     needs: cli-checks
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,13 +46,17 @@ jobs:
         timeout-minutes: 15
 
   template-checks:
-    name: Template Code Quality
-    runs-on: ubuntu-latest
+    name: Template Quality (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [18, 20]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install root dependencies
@@ -65,7 +75,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-${{ matrix.os }}-node${{ matrix.node-version }}
           path: template/coverage/
 
   template-build:
