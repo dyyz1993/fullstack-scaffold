@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs'
 import { getDb, getRawClient } from '../../db'
 import { todos } from '../../db/schema'
 import { desc } from 'drizzle-orm'
@@ -209,11 +210,13 @@ export async function getRecentActivity(limit: number = 10): Promise<
   }))
 }
 
+const MOCK_PASSWORD_HASH = '$2b$10$9iWkIfjDcJ7Kv4wHSb8ONONnrlfGb6rcfiJlZuuY4G2xQMG78DBbm'
+
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const mockUsers = getMockUsers()
   const user = mockUsers.find(u => u.username === data.username)
 
-  if (!user || data.password !== '123456') {
+  if (!user || !(await bcrypt.compare(data.password, MOCK_PASSWORD_HASH))) {
     throw new Error('Invalid credentials')
   }
 

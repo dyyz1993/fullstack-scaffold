@@ -76,7 +76,8 @@ export function getFileStorageConfig(): FileStorageConfig {
   const tempDir = process.env.FILE_TEMP_PATH || join(baseDir, 'temp')
   const tempFileTTL = parseInt(process.env.FILE_TEMP_TTL || '3600000', 10)
   const privateUrlExpiry = parseInt(process.env.FILE_PRIVATE_URL_EXPIRY || '3600', 10)
-  const secretKey = process.env.FILE_SECRET_KEY || 'default-secret-key-change-in-production'
+  const secretKey = process.env.FILE_SECRET_KEY || (process.env.NODE_ENV === 'test' ? 'test-secret-key' : undefined)
+  if (!secretKey) throw new Error('FILE_SECRET_KEY environment variable is required in production')
 
   storageConfig = {
     baseDir,

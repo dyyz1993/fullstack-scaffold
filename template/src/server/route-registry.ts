@@ -1,4 +1,5 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
+import { rateLimitMiddleware } from './middleware/rate-limit'
 import { apiRoutes } from './module-todos/routes/todos-routes'
 import { permissionRoutes } from './module-permission/routes/permission-routes'
 import { roleRoutes } from './module-permission/routes/role-routes'
@@ -13,8 +14,15 @@ import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
 
+const apiRateLimit = rateLimitMiddleware({
+  windowMs: 60_000,
+  max: 100,
+  message: 'Too many requests',
+})
+
 // 客户端路由 - 普通用户使用的 API
 export const clientApiRoutes = new OpenAPIHono()
+  .use('*', apiRateLimit)
   .route('/api', chatRoutes)
   .route('/api', notificationRoutes)
   .route('/api', apiRoutes)

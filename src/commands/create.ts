@@ -7,9 +7,33 @@ import ora from "ora";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Template placeholder values that need to be replaced
 const TEMPLATE_PROJECT_NAME = "biomimic-todo-app";
 const TEMPLATE_DB_NAME = "biomimic-todo-db";
+
+export class ScaffoldError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ScaffoldError";
+  }
+}
+
+function validateProjectName(name: string): void {
+  if (!name || name.trim().length === 0) {
+    throw new ScaffoldError("Project name cannot be empty");
+  }
+  const validNameRegex = /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
+  if (!validNameRegex.test(name)) {
+    throw new ScaffoldError(
+      `Invalid project name "${name}". Use lowercase letters, numbers, hyphens, and underscores only.`
+    );
+  }
+  if (name.length > 214) {
+    throw new ScaffoldError("Project name must be 214 characters or less");
+  }
+  if (name.includes("..") || name.includes("/") || name.includes("\\")) {
+    throw new ScaffoldError("Project name cannot contain path separators");
+  }
+}
 
 function parseGitignore(content: string): string[] {
     const negatePatterns: string[] = [];
@@ -158,18 +182,20 @@ export async function createProject(
   projectName: string,
   useCurrentDir: boolean = false,
 ): Promise<void> {
+  if (!useCurrentDir) {
+    validateProjectName(projectName);
+  }
+
   const templateDir = path.join(__dirname, "../../template");
   let targetDir: string;
 
   if (useCurrentDir) {
     targetDir = process.cwd();
-    // When using current dir, use the directory name as project name
     projectName = path.basename(targetDir);
   } else {
     targetDir = path.resolve(process.cwd(), projectName);
     if (await fs.pathExists(targetDir)) {
-      console.error(chalk.red(`  ✖ 目录 ${projectName} 已存在`));
-      process.exit(1);
+      throw new ScaffoldError(`目录 ${projectName} 已存在`);
     }
   }
 
@@ -207,7 +233,6 @@ export async function createProject(
     });
     spinner.succeed(chalk.green("Template files copied"));
 
-    // Update configuration files
     spinner.start("Configuring package.json...");
     await updatePackageJson(targetDir, projectName);
     spinner.succeed(chalk.green("package.json configured"));
@@ -246,7 +271,7 @@ export async function createProject(
     console.log(chalk.gray("  Happy coding! 🐟"));
     console.log("");
   } catch (error) {
-    console.error(chalk.red("  ✖ Error creating project:"), error);
-    process.exit(1);
+    if (error instanceof ScaffoldError) throw error;
+    throw new ScaffoldError(`Error creating project: ${error}`);
   }
 }

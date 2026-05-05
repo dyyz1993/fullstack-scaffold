@@ -163,14 +163,12 @@ describe('CLI Scaffold', () => {
     }
   })
 
-  test('sanitizes special characters in database name', () => {
+  test('rejects invalid project name with special characters', () => {
     const parentDir = createTempDir()
-    runCli(['My_Special.Project'], parentDir)
-    const projectDir = path.join(parentDir, 'My_Special.Project')
+    const result = runCli(['My_Special.Project'], parentDir)
 
-    const wranglerPath = path.join(projectDir, 'wrangler.toml')
-    const content = fs.readFileSync(wranglerPath, 'utf-8')
-    expect(content).toContain('database_name = "my-special-project-db"')
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('Invalid project name')
   })
 
   test('default project name is my-biomimic-app', () => {

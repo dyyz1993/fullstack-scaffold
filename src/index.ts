@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import chalk from "chalk";
-import { createProject } from "./commands/create.js";
+import { createProject, ScaffoldError } from "./commands/create.js";
 
 const packageJson = await import("../package.json", {
   assert: { type: "json" },
@@ -36,7 +36,15 @@ program
       );
       console.log("");
 
-      await createProject(projectName, options?.currentDir);
+      try {
+        await createProject(projectName, options?.currentDir);
+      } catch (error) {
+        if (error instanceof ScaffoldError) {
+          console.error(chalk.red(`  ✖ ${error.message}`));
+          process.exit(1);
+        }
+        throw error;
+      }
     },
   );
 

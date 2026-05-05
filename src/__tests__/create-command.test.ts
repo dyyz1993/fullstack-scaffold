@@ -188,13 +188,10 @@ describe('create command - database name generation', () => {
     fs.rmSync(tempDir, { recursive: true, force: true })
   })
 
-  test('generates correct db name from project name with special chars', () => {
-    const projectDir = path.join(tempDir, 'My_Special.Project')
-    runCli(['My_Special.Project'], tempDir)
-    const wranglerPath = path.join(projectDir, 'wrangler.toml')
-    if (fs.existsSync(wranglerPath)) {
-      const content = fs.readFileSync(wranglerPath, 'utf-8')
-      expect(content).toContain('my-special-project-db')
-    }
+  test('rejects invalid project name with special characters', () => {
+    const result = runCli(['My_Special.Project'], tempDir)
+
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('Invalid project name')
   })
 })

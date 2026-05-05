@@ -113,12 +113,12 @@ app.get('*', c => {
   return c.html(indexHtml)
 })
 
+// TODO: errorHandlerMiddleware (from middleware/error-handler.ts) is the canonical error handler.
+// This onError is kept as a last-resort fallback for errors that escape the middleware chain.
 app.onError((err, c) => {
   log.error({ err, path: c.req.path }, 'server error')
-  // Always return JSON response
   c.res.headers.set('Content-Type', 'application/json')
-  const statusCode =
-    err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+  const statusCode = err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
   const message = err.message || 'Internal server error'
   const responseStatus = statusCode || 500
   return c.json({ success: false, error: message, status: responseStatus }, responseStatus as 500)

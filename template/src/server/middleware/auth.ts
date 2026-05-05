@@ -29,13 +29,11 @@ declare module 'hono' {
 const defaultSecretKey = 'dev-secret-key-change-in-production'
 
 const isDevTokensEnabled = (): boolean => {
-  const nodeEnv = process.env.NODE_ENV
-  const enableDevTokens = process.env.ENABLE_DEV_TOKENS
+  return process.env.ENABLE_DEV_TOKENS === 'true' && process.env.NODE_ENV !== 'production'
+}
 
-  if (enableDevTokens === 'true') return true
-  if (enableDevTokens === 'false') return false
-
-  return nodeEnv === 'development' || nodeEnv === 'test'
+if (isDevTokensEnabled()) {
+  console.warn('⚠️  WARNING: Dev tokens are ENABLED. Do not use in production!')
 }
 
 function extractToken(authHeader: string | undefined): string | null {

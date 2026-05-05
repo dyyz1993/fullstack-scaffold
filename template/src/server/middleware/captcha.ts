@@ -1,5 +1,6 @@
 import type { Context, Next } from 'hono'
 import { getCookie, setCookie } from 'hono/cookie'
+import { randomUUID } from 'crypto'
 
 export interface CaptchaConfig {
   skipPaths?: string[]
@@ -12,9 +13,27 @@ interface CaptchaSession {
   verifiedAt?: number
   requestCount: number
   windowStart: number
+  createdAt: number
 }
 
+const MAX_SESSIONS = 1000
+const SESSION_TTL = 5 * 60 * 1000
+
 const captchaSessions = new Map<string, CaptchaSession>()
+
+function cleanupExpiredSessions() {
+  const now = Date.now()
+  for (const [key, session] of captchaSessions) {
+    if (now - session.createdAt > SESSION_TTL) {
+      captchaSessions.delete(key)
+    }
+  }
+  if (captchaSessions.size > MAX_SESSIONS) {
+    const entries = [...captchaSessions.entries()].sort((a, b) => a[1].createdAt - b[1].createdAt)
+    const toDelete = entries.slice(0, captchaSessions.size - MAX_SESSIONS)
+    for (const [key] of toDelete) captchaSessions.delete(key)
+  }
+}
 
 export function captchaMiddleware(config: CaptchaConfig = {}) {
   const {
@@ -24,6 +43,8 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
   } = config
 
   return async (c: Context, next: Next) => {
+    cleanupExpiredSessions()
+
     const path = c.req.path
 
     if (skipPaths.some(skipPath => path.startsWith(skipPath))) {
@@ -41,13 +62,14 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
       })
     }
 
+    const now = Date.now()
     const session = captchaSessions.get(sessionId) || {
       verified: false,
       requestCount: 0,
-      windowStart: Date.now(),
+      windowStart: now,
+      createdAt: now,
     }
 
-    const now = Date.now()
     if (now - session.windowStart > windowMs) {
       session.requestCount = 0
       session.windowStart = now
@@ -107,7 +129,7 @@ export function verifyCaptchaMiddleware() {
 }
 
 function generateSessionId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+  return randomUUID()
 }
 
 function isSuspiciousRequest(c: Context): boolean {
