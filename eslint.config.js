@@ -13,6 +13,11 @@ export default [
       "dist/**",
       "playwright-report/**",
       "test-results/**",
+      "testapp/**",
+      "my-app/**",
+      "e2e-debug-app/**",
+      "my-biomimic-app/**",
+      "test-*/**",
     ],
   },
 ];
