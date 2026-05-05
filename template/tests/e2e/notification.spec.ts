@@ -77,9 +77,20 @@ test.describe('Notification App', () => {
     })
 
     test('should display empty state when no notifications', async ({ page }) => {
-      // Wait for empty state to appear
+      // Ensure clean database state for WebKit compatibility.
+      // The shared beforeEach cleanup may race with the page's fetch in WebKit,
+      // so we cleanup and reload here to guarantee a fresh empty state.
+      await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
+
+      const responsePromise = page.waitForResponse(
+        resp => resp.url().includes('/notifications') && resp.status() === 200,
+        { timeout: 10000 }
+      )
+      await page.reload()
+      await responsePromise
+
       await expect(page.locator('[data-testid="empty-state"]').first()).toBeVisible({
-        timeout: 30000,
+        timeout: 15000,
       })
     })
   })
