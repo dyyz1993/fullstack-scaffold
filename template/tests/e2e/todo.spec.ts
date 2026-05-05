@@ -229,8 +229,15 @@ test.describe('Todo App', () => {
     })
 
     test('should change todo status to completed', async ({ page }) => {
-      // Change status via select element
-      await page.selectOption('[data-testid="todo-status"]', 'completed')
+      // Wait for the todo item to be visible
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
+
+      // Change status via select element scoped to the first todo item
+      await page
+        .locator('[data-testid="todo-item"]')
+        .first()
+        .locator('[data-testid="todo-status"]')
+        .selectOption('completed')
 
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
@@ -242,22 +249,28 @@ test.describe('Todo App', () => {
     })
 
     test('should change todo status back to pending', async ({ page }) => {
+      // Wait for the todo item to be visible
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
+
+      const statusSelect = page
+        .locator('[data-testid="todo-item"]')
+        .first()
+        .locator('[data-testid="todo-status"]')
+
       // Change to completed first
-      await page.selectOption('[data-testid="todo-status"]', 'completed')
+      await statusSelect.selectOption('completed')
 
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
 
       // Change back to pending
-      await page.selectOption('[data-testid="todo-status"]', 'pending')
+      await statusSelect.selectOption('pending')
 
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
 
       // Verify status is back to pending
-      await expect(
-        page.locator('[data-testid="todo-item"]').first().locator('[data-testid="todo-status"]')
-      ).toHaveValue('pending')
+      await expect(statusSelect).toHaveValue('pending')
     })
   })
 
@@ -565,6 +578,9 @@ test.describe('Todo App', () => {
 
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
+
+      // Wait for the todo item to be visible (ensures filter buttons render)
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
 
       // Navigate to completed filter
       await page.click('[data-testid="filter-completed"]')

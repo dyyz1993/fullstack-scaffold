@@ -1,0 +1,56 @@
+{
+  "lastUpdated": "2026-05-03T17:47:51.650Z",
+  "totalRuns": 5,
+  "runs": [
+    {
+      "timestamp": "2026-05-03T17:47:51.646Z",
+      "commitSha": "44c2b63c4e0496cd5df5c56f21df16ee6a565ac0",
+      "shortSha": "44c2b63",
+      "commitMessage": "fix: .claude/ 规则文件纳入版本控制\n\n.claude/ 包含项目开发规则（49个文件），不应被 gitignore",
+      "branch": "feature/multi-tenant",
+      "passed": 1018,
+      "failed": 0,
+      "total": 1018
+    },
+    {
+      "timestamp": "2026-05-03T17:47:11.867Z",
+      "commitSha": "c8136531cfb45ff0dbe33e74fdc65c8397657f0e",
+      "shortSha": "c813653",
+      "commitMessage": "chore: 添加完整项目文件 + gitignore AI 产物\n\n- 添加 src/ 全部源码（client/server/shared/ops/tenant/platform）\n- 添加项目配置（vite/drizzle/eslint/playwright/wrangler 等）\n- 添加 lint-scripts/eslint-rules/patches/ 测试工具\n- 添加 docs/ 文档和 public/ 静态资源\n- gitignore: AI 工具产物（.agents/.claude/.trae 等）\n- 同步 modified 配置文件（tsconfig/eslint/CLAUDE.md 等）",
+      "branch": "feature/multi-tenant",
+      "passed": 1018,
+      "failed": 0,
+      "total": 1018
+    },
+    {
+      "timestamp": "2026-05-03T17:41:07.266Z",
+      "commitSha": "d4d73fa0ea0871f20412ae8359492ba2f90b5862",
+      "shortSha": "d4d73fa",
+      "commitMessage": "fix: auth 中间件 skipAuthInDev 修复 + permission 路由认证修正\n\n- auth.ts: requiredRole/requiredPermissions 时不再跳过认证\n- auth 测试: 加 skipAuthInDev: false 确保认证拒绝被正确测试\n- permission-routes: 需要认证的路由加 skipAuthInDev: false",
+      "branch": "feature/multi-tenant",
+      "passed": 1018,
+      "failed": 0,
+      "total": 1018
+    },
+    {
+      "timestamp": "2026-05-03T17:32:05.131Z",
+      "commitSha": "06ce4fb8594ee1aa59fe8c9a2a4b821e80d01555",
+      "shortSha": "06ce4fb",
+      "commitMessage": "fix: 修复测试配置 + pre-commit hook 加全量测试\n\n- pre-commit: 用 typecheck + 全量测试 + 模板测试替代增量测试\n- 修复 TS2532 Object possibly undefined (prompts.ts, generator.ts)\n- 安装 @types/fs-extra, @types/ora 解决类型声明缺失\n- vitest.config.ts: 根配置排除 template/, 模板配置排除 src/\n- 模板 vitest.config: 加 react/react-dom alias 防止双实例",
+      "branch": "feature/multi-tenant",
+      "passed": 1018,
+      "failed": 0,
+      "total": 1018
+    },
+    {
+      "timestamp": "2026-03-05T02:11:54.501Z",
+      "commitSha": "1584b9903b09c7556d735231e8c5be0bbe208414",
+      "shortSha": "1584b99",
+      "commitMessage": "refactor(server): reorganize entry points and fix tests\n\n- Create entries/ directory for Node.js and Cloudflare entry points\n- Merge main.ts into entries/node.ts to eliminate redundant file\n- Simplify index.ts to only export public APIs\n- Move durable-objects/ to module-realtime/ (better module cohesion)\n- Fix App.test.tsx: use data-testid for title element\n- Fix todo-service.test.ts: use toBeInstanceOf(Date) for timestamp checks\n\nAll tests passing (33/33)",
+      "branch": "master",
+      "passed": 33,
+      "failed": 0,
+      "total": 33
+    }
+  ]
+}
