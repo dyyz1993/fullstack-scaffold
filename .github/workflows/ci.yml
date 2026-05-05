@@ -122,7 +122,6 @@ jobs:
     name: Template E2E Cross-Browser
     runs-on: ubuntu-latest
     needs: template-checks
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
