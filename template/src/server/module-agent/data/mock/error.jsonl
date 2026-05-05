@@ -1,0 +1,2 @@
+{"type":"pi-thinking-delta","delta":"模拟一个错误场景..."}
+{"type":"pi-error","code":"api_error","message":"This is a simulated API error for testing","recoverable":true}

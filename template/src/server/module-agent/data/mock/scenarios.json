@@ -1,0 +1,16 @@
+{
+  "scenarios": [
+    {
+      "triggers": ["hello", "hi", "你好", "嗨"],
+      "dataFile": "hello.jsonl"
+    },
+    {
+      "triggers": ["search", "搜索", "查找"],
+      "dataFile": "search.jsonl"
+    },
+    {
+      "triggers": ["error", "错误"],
+      "dataFile": "error.jsonl"
+    }
+  ]
+}

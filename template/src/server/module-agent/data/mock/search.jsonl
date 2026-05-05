@@ -1,0 +1,5 @@
+{"type":"pi-thinking-delta","delta":"用户想要搜索，我需要调用搜索工具。"}
+{"type":"pi-tool-start","toolCallId":"tool_1","toolName":"search","args":{"query":"人工智能的最新发展"}}
+{"type":"pi-tool-end","toolCallId":"tool_1","result":{"items":[{"title":"AI发展报告","url":"https://example.com/ai-report"},{"title":"机器学习趋势","url":"https://example.com/ml-trends"}],"total":2}}
+{"type":"pi-text-delta","delta":"我帮你搜索到了以下结果：","isFinal":false}
+{"type":"pi-text-delta","delta":"","isFinal":true}
