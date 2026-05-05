@@ -4,7 +4,7 @@ import type { WSClient, WSStatus, ChatProtocol } from '@shared/schemas'
 
 interface WSMessage {
   type: string
-  payload: unknown
+  payload: Record<string, unknown>
   timestamp?: number
 }
 

@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from 'hono'
+import jwt from 'jsonwebtoken'
 import { createModuleLoggerSync } from '../utils/logger'
 import { Role, Permission, getPermissionsByRole } from '@shared/modules/permission'
 import { AuthenticationError, AuthorizationError } from '../utils/app-error'
@@ -27,6 +28,16 @@ declare module 'hono' {
 }
 
 const defaultSecretKey = 'dev-secret-key-change-in-production'
+
+const secretKey = process.env.AUTH_SECRET_KEY || defaultSecretKey
+
+if (secretKey === defaultSecretKey && process.env.NODE_ENV === 'production') {
+  console.error(
+    '⚠️  SECURITY WARNING: AUTH_SECRET_KEY is using the default value in production!\n' +
+      '   Please set a strong AUTH_SECRET_KEY environment variable.\n' +
+      '   Dev tokens should NEVER be used in production.'
+  )
+}
 
 const isDevTokensEnabled = (): boolean => {
   return process.env.ENABLE_DEV_TOKENS === 'true' && process.env.NODE_ENV !== 'production'
@@ -100,8 +111,8 @@ function verifyDevToken(token: string): AuthUser | null {
   return null
 }
 
-function verifyToken(token: string, secretKey: string): AuthUser | null {
-  if (secretKey === defaultSecretKey && isDevTokensEnabled()) {
+function verifyToken(token: string, key: string): AuthUser | null {
+  if (key === defaultSecretKey && isDevTokensEnabled()) {
     const devUser = verifyDevToken(token)
     if (devUser) {
       const log = createModuleLoggerSync('auth')
@@ -113,11 +124,31 @@ function verifyToken(token: string, secretKey: string): AuthUser | null {
     }
   }
 
+  if (key !== defaultSecretKey) {
+    try {
+      const decoded = jwt.verify(token, key) as {
+        userId: string
+        role: string
+        username: string
+        email: string
+      }
+      return {
+        id: decoded.userId,
+        username: decoded.username,
+        email: decoded.email,
+        role: decoded.role as UserRole,
+        permissions: getPermissionsByRole(decoded.role as UserRole),
+      }
+    } catch {
+      return null
+    }
+  }
+
   return null
 }
 
 export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareHandler {
-  const secretKey = options.secretKey ?? process.env.AUTH_SECRET_KEY ?? defaultSecretKey
+  const key = options.secretKey ?? secretKey
   const log = createModuleLoggerSync('auth')
 
   return async (c, next) => {
@@ -129,7 +160,7 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
       throw AuthenticationError.tokenMissing()
     }
 
-    const user = verifyToken(token, secretKey)
+    const user = verifyToken(token, key)
 
     if (!user) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Invalid auth token')
@@ -162,7 +193,6 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     }
 
     if (options.requiredPermissions && options.requiredPermissions.length > 0) {
-      // 从数据库读取权限，而不是使用硬编码的权限
       const { permissionService } =
         await import('../module-permission/services/permission-service-impl')
 

@@ -315,7 +315,7 @@ export const clientTestsConfig: ClientTestsConfig = {
 // Markdown 引用路径验证配置
 // ============================================
 export const mdRefsConfig: MdRefsConfig = {
-  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage'],
+  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage', '.trae'],
   checkDirs: ['.', 'src'],
 }
 

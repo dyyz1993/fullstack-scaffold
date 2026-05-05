@@ -202,7 +202,10 @@ export const WebSocketPage: React.FC = () => {
           <EmptyState icon={MessageSquare} title="No messages yet. Connect and send a message!" />
         ) : (
           messages.map(
-            (msg: { type: string; payload: unknown; timestamp?: number }, index: number) => {
+            (
+              msg: { type: string; payload: Record<string, unknown>; timestamp?: number },
+              index: number
+            ) => {
               const config = typeConfig[msg.type] || {
                 colorScheme: 'gray' as const,
                 icon: MessageSquare,

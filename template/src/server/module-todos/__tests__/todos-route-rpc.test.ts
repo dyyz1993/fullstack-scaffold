@@ -139,7 +139,7 @@ describe('Todo Routes - Business Logic Tests', () => {
       }
     })
 
-    it('should return 500 for GET with non-numeric id (parseInt returns NaN)', async () => {
+    it('should return 400 for GET with non-numeric id (Zod validation rejects)', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.todos[':id'].$get(
@@ -149,10 +149,10 @@ describe('Todo Routes - Business Logic Tests', () => {
         { headers: authHeaders }
       )
 
-      expect(res.status).toBe(500)
+      expect(res.status).toBe(400)
     })
 
-    it('should return 500 for DELETE with non-numeric id (parseInt returns NaN)', async () => {
+    it('should return 400 for DELETE with non-numeric id (Zod validation rejects)', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
 
       const res = await client.api.todos[':id'].$delete(
@@ -162,7 +162,7 @@ describe('Todo Routes - Business Logic Tests', () => {
         { headers: authHeaders }
       )
 
-      expect(res.status).toBe(500)
+      expect(res.status).toBe(400)
     })
   })
 

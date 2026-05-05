@@ -43,7 +43,9 @@ function createConsoleLogger(module: string, level: LogLevel = 'info'): SimpleLo
           console.warn(formatted)
           break
         default:
-          console.log(formatted)
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(formatted)
+          }
       }
     }
   }

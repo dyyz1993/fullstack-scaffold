@@ -1,4 +1,5 @@
 import { getRawClient } from './index'
+import type { Client } from '@libsql/client'
 
 export async function setupTestDatabase(): Promise<void> {
   const client = await getRawClient()
@@ -137,8 +138,7 @@ export async function setupTestDatabase(): Promise<void> {
   await seedTestData(client)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function seedTestData(client: any): Promise<void> {
+async function seedTestData(client: Client): Promise<void> {
   // Insert default roles - names must match test expectations
   const roles = [
     {

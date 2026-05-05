@@ -15,6 +15,7 @@ interface Config {
     lastCallAt?: string
     commands?: Record<string, number>
   }
+  [key: string]: string | number | boolean | undefined | Config['stats']
 }
 
 function loadConfig(): Config {
@@ -48,9 +49,8 @@ export function registerConfigCommands(program: Command) {
       const cfg = loadConfig()
 
       if (options.key) {
-        logger.info(
-          `${options.key}: ${(cfg as unknown as Record<string, unknown>)[options.key] || 'not set'}`
-        )
+        const value = cfg[options.key]
+        logger.info(`${options.key}: ${value ?? 'not set'}`)
       } else {
         logger.info(JSON.stringify(cfg, null, 2))
       }
@@ -98,8 +98,8 @@ export function registerConfigCommands(program: Command) {
       const client = getClient()
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const res = await (client as any).health.$get()
+        type HealthClient = { health: { $get: () => Promise<Response> } }
+        const res = await (client as unknown as HealthClient).health.$get()
         const data = await res.json()
         logger.success('Server is reachable')
         logger.info(JSON.stringify(data, null, 2))

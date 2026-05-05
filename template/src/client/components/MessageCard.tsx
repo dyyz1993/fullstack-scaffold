@@ -2,7 +2,7 @@ import type { ColorScheme } from './StatusBadge'
 
 interface MessageCardProps {
   type: string
-  payload: unknown
+  payload: Record<string, unknown> | unknown[] | string | number | boolean | null
   timestamp?: number
   icon?: React.ComponentType<{ className?: string }>
   colorScheme?: ColorScheme

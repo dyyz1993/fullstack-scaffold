@@ -145,8 +145,8 @@ export async function getSystemStats(): Promise<SystemStats> {
       "SELECT COUNT(*) as count FROM todos WHERE status = 'completed'"
     )
 
-    const getCount = (rows: unknown[]) => {
-      const row = rows[0] as Record<string, unknown> | undefined
+    const getCount = (rows: Array<Record<string, unknown>>) => {
+      const row = rows[0]
       return typeof row?.count === 'number' ? row.count : 0
     }
 

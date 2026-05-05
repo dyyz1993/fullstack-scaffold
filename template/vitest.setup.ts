@@ -39,6 +39,13 @@ if (typeof window !== 'undefined') {
   } as unknown as typeof IntersectionObserver
 }
 
+// Suppress JSDOM getComputedStyle warnings during tests
+const originalWarn = console.warn
+console.warn = (...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('getComputedStyle')) return
+  originalWarn.apply(console, args)
+}
+
 // EventSource can be used in both environments
 global.EventSource = EventSource as unknown as typeof globalThis.EventSource
 
