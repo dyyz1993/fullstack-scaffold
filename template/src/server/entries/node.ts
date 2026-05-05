@@ -113,7 +113,7 @@ app.get('*', c => {
   return c.html(indexHtml)
 })
 
-// TODO: errorHandlerMiddleware (from middleware/error-handler.ts) is the canonical error handler.
+// Note: errorHandlerMiddleware (from middleware/error-handler.ts) is the canonical error handler.
 // This onError is kept as a last-resort fallback for errors that escape the middleware chain.
 app.onError((err, c) => {
   log.error({ err, path: c.req.path }, 'server error')
