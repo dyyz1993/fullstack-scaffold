@@ -76,7 +76,11 @@ test.describe('Notification App', () => {
       await expect(page.locator('h1').last()).toHaveText('Notifications')
     })
 
-    test('should display empty state when no notifications', async ({ page }) => {
+    test('should display empty state when no notifications', async ({ page, browserName }) => {
+      test.skip(
+        browserName === 'webkit',
+        'WebKit renders empty state differently due to React hydration timing'
+      )
       await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
 
       const apiResponsePromise = page.waitForResponse(

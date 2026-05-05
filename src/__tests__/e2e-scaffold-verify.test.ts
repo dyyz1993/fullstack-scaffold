@@ -52,7 +52,15 @@ describe("E2E: Scaffold → Install → Verify", () => {
       // ignore
     }
     if (fs.existsSync(tmpDir)) {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      } catch {
+        try {
+          execSync(`rm -rf "${tmpDir}"`, { timeout: 10_000 });
+        } catch {
+          // best effort
+        }
+      }
     }
   });
 
@@ -102,7 +110,7 @@ describe("E2E: Scaffold → Install → Verify", () => {
         cwd: projectPath,
         stdio: "pipe",
         env: { ...process.env },
-        detached: false,
+        detached: true,
       },
     );
 
@@ -116,7 +124,12 @@ describe("E2E: Scaffold → Install → Verify", () => {
       });
       expect(body).toContain("<html");
     } finally {
-      devServer.kill("SIGTERM");
+      try {
+        if (devServer.pid) process.kill(-devServer.pid, "SIGKILL");
+      } catch {
+        // process group may already be dead
+      }
+      devServer.kill("SIGKILL");
       try {
         execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || true`, {
           timeout: 3_000,
