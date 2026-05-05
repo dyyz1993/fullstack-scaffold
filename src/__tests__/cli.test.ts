@@ -5,6 +5,7 @@ import path from "node:path";
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
 const CLI_PATH = path.join(PROJECT_ROOT, "src/index.ts");
+const TSX_BIN = path.join(PROJECT_ROOT, "node_modules/.bin/tsx");
 
 function tmpDir(prefix = "biomimic-test-"): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -15,7 +16,7 @@ function runCli(
   cwd?: string,
 ): { stdout: string; stderr: string; status: number | null } {
   try {
-    const stdout = execSync(`npx tsx "${CLI_PATH}" ${args.join(" ")}`, {
+    const stdout = execSync(`"${TSX_BIN}" "${CLI_PATH}" ${args.join(" ")}`, {
       cwd: cwd ?? os.tmpdir(),
       encoding: "utf-8",
       timeout: 30_000,
