@@ -19,6 +19,7 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       SQLITE_PATH: ':memory:',
+      ENABLE_DEV_TOKENS: 'true',
     },
     coverage: {
       provider: 'v8',
