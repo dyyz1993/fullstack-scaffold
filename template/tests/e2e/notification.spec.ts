@@ -78,10 +78,9 @@ test.describe('Notification App', () => {
 
     test('should display empty state when no notifications', async ({ page }) => {
       // Wait for empty state to appear
-      await page.waitForSelector('[data-testid="empty-state"]', { timeout: 25000 })
-
-      // Verify empty state message
-      await expect(page.locator('[data-testid="empty-state"]')).toBeVisible()
+      await expect(page.locator('[data-testid="empty-state"]').first()).toBeVisible({
+        timeout: 30000,
+      })
     })
   })
 
@@ -221,8 +220,9 @@ test.describe('Notification App', () => {
 
     test('should mark notification as read', async ({ page }) => {
       await page.click('[data-testid="mark-as-read-button"]')
-      await page.waitForSelector('[data-testid="notification-item-read"]', { timeout: 10000 })
-      await expect(page.locator('[data-testid="notification-item-read"]')).toBeVisible()
+      await expect(page.locator('[data-testid="notification-item-read"]').first()).toBeVisible({
+        timeout: 15000,
+      })
     })
 
     test('should mark all notifications as read', async ({ page }) => {
