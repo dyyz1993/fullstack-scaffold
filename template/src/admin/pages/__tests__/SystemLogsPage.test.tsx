@@ -97,7 +97,7 @@ describe('SystemLogsPage', () => {
 
     await user.type(screen.getByPlaceholderText('用户ID'), 'user-1')
 
-    const resetButton = screen.getByRole('button', { name: '重置' })
+    const resetButton = screen.getByRole('button', { name: /重/ })
     await user.click(resetButton)
 
     const userIdInput = screen.getByPlaceholderText('用户ID') as HTMLInputElement

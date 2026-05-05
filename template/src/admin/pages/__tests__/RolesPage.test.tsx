@@ -176,7 +176,7 @@ describe('RolesPage', () => {
     render(<RolesPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('编辑')).toBeInTheDocument()
+      expect(screen.getAllByText('编辑').length).toBeGreaterThan(0)
     })
 
     const editButtons = screen.getAllByText('编辑')

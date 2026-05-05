@@ -62,12 +62,12 @@ describe('PermissionsPage', () => {
 
     await waitFor(() => {
       expect(screen.getAllByText('超级管理员').length).toBeGreaterThanOrEqual(2)
-      expect(screen.getByText('客服人员')).toBeInTheDocument()
-      expect(screen.getByText('普通用户')).toBeInTheDocument()
+      expect(screen.getAllByText('客服人员').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getAllByText('普通用户').length).toBeGreaterThanOrEqual(2)
     })
 
     expect(screen.getByText('权限数量: 3')).toBeInTheDocument()
-    expect(screen.getByText('权限数量: 1')).toBeInTheDocument()
+    expect(screen.getAllByText('权限数量: 1').length).toBeGreaterThanOrEqual(2)
   })
 
   it('renders permission matrix grouped by category', async () => {

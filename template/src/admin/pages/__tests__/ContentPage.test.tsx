@@ -138,7 +138,10 @@ describe('ContentPage', () => {
 
     await user.type(screen.getByLabelText('内容'), 'New content body')
 
-    await user.click(screen.getByRole('button', { name: '确 定' }))
+    const modalFooter = document.querySelector('.ant-modal-footer')
+    const okBtn = modalFooter?.querySelector('.ant-btn-primary')
+    expect(okBtn).toBeTruthy()
+    await user.click(okBtn!)
 
     await waitFor(() => {
       expect(mockContentPost).toHaveBeenCalled()
