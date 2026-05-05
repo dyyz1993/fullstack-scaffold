@@ -1,7 +1,8 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '../../middleware/auth'
-import * as adminService from '../services/admin-service'
+import * as notificationService from '../../module-notifications/services/notification-service'
+import { realtime } from '@server/core'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import { Role } from '@shared/modules/permission'
 import {
@@ -116,31 +117,60 @@ const notificationSSERoute = createRoute({
 export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
   .openapi(getNotificationsRoute, async c => {
     const { unreadOnly, limit } = c.req.valid('query')
-    const notifications = adminService.getNotifications({
+    const result = notificationService.listNotifications({
       unreadOnly: unreadOnly === 'true',
       limit: limit ? parseInt(limit, 10) : 20,
     })
-    return c.json(success(notifications), 200)
+    return c.json(success(result.data), 200)
   })
   .openapi(getUnreadCountRoute, async c => {
-    const count = adminService.getUnreadCount()
+    const count = notificationService.getUnreadCount()
     return c.json(success({ count }), 200)
   })
   .openapi(markNotificationReadRoute, async c => {
     const { id } = c.req.valid('param')
-    const marked = await adminService.markNotificationRead(id)
-    if (!marked) {
+    const notification = notificationService.markAsRead(id)
+    if (!notification) {
       return c.json({ success: false as const, error: 'Notification not found' }, 404)
+    }
+    try {
+      const unreadCount = notificationService.getUnreadCount()
+      await realtime.broadcast('unread-count', { count: unreadCount })
+    } catch {
+      // Ignore broadcast errors in test environment
     }
     return c.json(success({}), 200)
   })
   .openapi(markAllNotificationsReadRoute, async c => {
-    const count = await adminService.markAllNotificationsRead()
+    const count = notificationService.markAllAsRead()
+    try {
+      await realtime.broadcast('unread-count', { count: 0 })
+    } catch {
+      // Ignore broadcast errors in test environment
+    }
     return c.json(success({ count }), 200)
   })
   .openapi(sendTestNotificationRoute, async c => {
     const { type } = c.req.valid('json')
-    const notification = await adminService.sendTestNotification(type ?? undefined)
+    const notification = await notificationService.createNotificationAndBroadcast({
+      type: type ?? 'info',
+      title:
+        type === 'warning'
+          ? '警告通知'
+          : type === 'error'
+            ? '错误通知'
+            : type === 'success'
+              ? '成功通知'
+              : '系统通知',
+      message:
+        type === 'warning'
+          ? '这是一条警告通知，请注意！'
+          : type === 'error'
+            ? '这是一条错误通知，请立即处理！'
+            : type === 'success'
+              ? '操作成功完成！'
+              : '这是一条普通信息通知',
+    })
     return c.json(success(notification), 200)
   })
   .openapi(notificationSSERoute, async c => {
