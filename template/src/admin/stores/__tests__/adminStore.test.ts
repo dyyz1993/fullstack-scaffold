@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Role } from '@shared/modules/permission'
+import { Role, Permission } from '@shared/modules/permission'
 import type { AuthUserResponse, SystemStats, LoginResponse } from '@shared/modules/admin'
 
 interface AdminState {
