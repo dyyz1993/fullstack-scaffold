@@ -103,8 +103,7 @@ export const DisputesPage: React.FC = () => {
     {
       title: '客户',
       key: 'customer',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (_: any, record: Dispute) => (
+      render: (_: unknown, record: Dispute) => (
         <div>
           <div className="font-medium">{record.customerName}</div>
           <div className="text-sm text-gray-500">{record.customerEmail}</div>
@@ -142,8 +141,7 @@ export const DisputesPage: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (_: any, record: Dispute) => (
+      render: (_: unknown, record: Dispute) => (
         <Space>
           <Button
             type="link"

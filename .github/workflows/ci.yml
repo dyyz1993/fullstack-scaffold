@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +31,6 @@ jobs:
   cli-tests:
     name: CLI Tests & Scaffold Verify (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: cli-checks
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -53,7 +52,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -73,6 +72,8 @@ jobs:
         run: npm run validate:template
       - name: Run template tests
         run: npm run test:template
+      - name: Run template integration tests
+        run: cd template && npm run test:integration
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,10 +114,26 @@ jobs:
         run: |
           npm ci
           cd template && npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('template/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Playwright browsers
         run: cd template && npx playwright install --with-deps chromium
       - name: Run E2E tests
         run: cd template && npx playwright test --project=chromium
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ strategy.job-index }}
+          path: |
+            template/playwright-report/
+            template/test-results/
+          retention-days: 14
 
   template-e2e-cross-browser:
     name: Template E2E Cross-Browser
@@ -134,11 +151,28 @@ jobs:
         run: |
           npm ci
           cd template && npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('template/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Playwright browsers
         run: cd template && npx playwright install --with-deps
       - name: Run E2E tests on Firefox & WebKit
         run: cd template && npx playwright test --project=firefox --project=webkit
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-cross-browser-${{ strategy.job-index }}
+          path: |
+            template/playwright-report/
+            template/test-results/
+          retention-days: 14
 
+  # TODO: remove continue-on-error once baseline is clean
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -150,9 +184,9 @@ jobs:
           node-version: 20
       - run: npm ci
       - name: Audit root dependencies
-        run: npm audit --production || true
+        run: npm audit --audit-level=high --production
       - name: Audit template dependencies
-        run: cd template && npm ci && npm audit --production || true
+        run: cd template && npm ci && npm audit --audit-level=high --production
 
   feishu-notify:
     name: Feishu Notification

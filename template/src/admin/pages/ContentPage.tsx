@@ -144,8 +144,7 @@ export const ContentPage: React.FC = () => {
     {
       title: '浏览/点赞',
       key: 'stats',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (_: any, record: Content) => (
+      render: (_: unknown, record: Content) => (
         <span>
           {record.viewCount} / {record.likeCount}
         </span>
@@ -160,8 +159,7 @@ export const ContentPage: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: (_: any, record: Content) => (
+      render: (_: unknown, record: Content) => (
         <Space>
           <PermissionGuard permission={Permission.CONTENT_EDIT}>
             <Button

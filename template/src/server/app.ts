@@ -53,8 +53,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
       }
     })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  autoRegisterRealtime(app as any)
+  autoRegisterRealtime(app as unknown as Parameters<typeof autoRegisterRealtime>[0])
 
   // Last-resort error handler for framework-level errors (e.g. 404 Not Found).
   // The canonical error handler is errorHandlerMiddleware (middleware/error-handler.ts).
@@ -64,13 +63,21 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
     if (AppError.isAppError(err)) {
       return c.json(
-        { success: false as const, error: err.message, status: err.statusCode, details: err.details },
+        {
+          success: false as const,
+          error: err.message,
+          status: err.statusCode,
+          details: err.details,
+        },
         err.statusCode as ContentfulStatusCode
       )
     }
 
     if (err instanceof HTTPException) {
-      return c.json({ success: false as const, error: err.message, status: err.status }, err.status as ContentfulStatusCode)
+      return c.json(
+        { success: false as const, error: err.message, status: err.status },
+        err.status as ContentfulStatusCode
+      )
     }
 
     if (err instanceof ZodError) {
@@ -78,7 +85,10 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         field: issue.path.join('.'),
         message: issue.message,
       }))
-      return c.json({ success: false as const, error: 'Validation failed', status: 400, details }, 400)
+      return c.json(
+        { success: false as const, error: 'Validation failed', status: 400, details },
+        400
+      )
     }
 
     log.error({ err, path: c.req.path }, 'Unhandled error')
