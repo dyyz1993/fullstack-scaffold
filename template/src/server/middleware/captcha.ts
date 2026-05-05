@@ -85,7 +85,7 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
     if (session.requestCount > maxRequests) {
       return c.json(
         {
-          success: false,
+          success: false as const,
           error: '请求过于频繁，请完成验证码验证',
           needCaptcha: true,
         },
@@ -96,7 +96,7 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
     if (isSuspiciousRequest(c)) {
       return c.json(
         {
-          success: false,
+          success: false as const,
           error: '检测到可疑行为，请完成验证码验证',
           needCaptcha: true,
         },
@@ -113,7 +113,7 @@ export function verifyCaptchaMiddleware() {
     const sessionId = getCookie(c, 'session_id')
 
     if (!sessionId) {
-      return c.json({ success: false, error: 'Session not found' }, 400)
+      return c.json({ success: false as const, error: 'Session not found' }, 400)
     }
 
     const session = captchaSessions.get(sessionId)

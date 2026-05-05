@@ -172,7 +172,7 @@ export class RealtimeDurableObject {
     }
 
     if (!body.event) {
-      return Response.json({ success: false, error: 'event is required' }, { status: 400 })
+      return Response.json({ success: false as const, error: 'event is required' }, { status: 400 })
     }
 
     console.warn(
@@ -180,7 +180,7 @@ export class RealtimeDurableObject {
     )
     this.core.broadcast(body.data, body.exclude || [], body.event)
     return Response.json({
-      success: true,
+      success: true as const,
       wsRecipients: this.core.wsClients.size,
       sseRecipients: this.core.sseClients.size,
     })
@@ -195,11 +195,11 @@ export class RealtimeDurableObject {
         client.send(body.data as string)
         return Response.json({ success: true })
       } catch {
-        return Response.json({ success: false, error: 'Failed to send' })
+        return Response.json({ success: false as const, error: 'Failed to send' })
       }
     }
 
-    return Response.json({ success: false, error: 'Client not found' })
+    return Response.json({ success: false as const, error: 'Client not found' })
   }
 }
 

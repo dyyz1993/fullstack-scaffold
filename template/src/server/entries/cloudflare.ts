@@ -45,7 +45,7 @@ const wrappedApp = app
       err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
     const message = err.message || 'Internal server error'
     const responseStatus = statusCode || 500
-    return c.json({ success: false, error: message, status: responseStatus }, responseStatus as 500)
+    return c.json({ success: false as const, error: message, status: responseStatus }, responseStatus as 500)
   })
 
 export default {

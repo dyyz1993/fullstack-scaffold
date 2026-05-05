@@ -116,7 +116,7 @@ export function permissionMiddleware(): MiddlewareHandler {
     )
     return c.json(
       {
-        success: false,
+        success: false as const,
         error: 'Forbidden: You do not have permission to access this resource',
       },
       403

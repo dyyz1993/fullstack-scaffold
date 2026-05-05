@@ -56,7 +56,7 @@ export const mediaRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
     const { id } = c.req.valid('param')
     const avatar = await adminService.getAvatar(id)
     if (!avatar) {
-      return c.json({ success: false, error: 'Avatar not found' }, 404)
+      return c.json({ success: false as const, error: 'Avatar not found' }, 404)
     }
     return new Response(avatar.data, {
       headers: {
@@ -68,7 +68,7 @@ export const mediaRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }
     const { name } = c.req.valid('param')
     const svg = await adminService.getIcon(name)
     if (!svg) {
-      return c.json({ success: false, error: 'Icon not found' }, 404)
+      return c.json({ success: false as const, error: 'Icon not found' }, 404)
     }
     return new Response(svg, {
       headers: {

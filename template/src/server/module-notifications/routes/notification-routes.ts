@@ -147,7 +147,7 @@ export const notificationRoutes = new OpenAPIHono()
       ).handleSSERequest()
       return response
     }
-    return c.json({ success: false, error: 'SSE not supported' }, 500)
+    return c.json({ success: false as const, error: 'SSE not supported' }, 500)
   })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')

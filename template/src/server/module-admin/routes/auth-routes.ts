@@ -73,7 +73,7 @@ export const authRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>
       const result = await adminService.login(data)
       return c.json(success(result), 200)
     } catch {
-      return c.json({ success: false, error: 'Invalid credentials' }, 401)
+      return c.json({ success: false as const, error: 'Invalid credentials' }, 401)
     }
   })
   .openapi(registerRoute, async c => {

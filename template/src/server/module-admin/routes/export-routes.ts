@@ -156,7 +156,7 @@ export const exportRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } 
     const { token } = c.req.valid('param')
 
     if (!consumeDownloadToken(token)) {
-      return c.json({ success: false, error: 'Invalid or expired token' }, 403)
+      return c.json({ success: false as const, error: 'Invalid or expired token' }, 403)
     }
 
     const todos = await adminService.getAllTodos()

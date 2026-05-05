@@ -31,7 +31,7 @@ function formatZodError(error: ZodError): ZodIssueFormatted[] {
 
 function createErrorResponse(status: number, message: string, details?: unknown) {
   const response: { success: false; error: string; status: number; details?: unknown } = {
-    success: false,
+    success: false as const,
     error: message,
     status,
   }
@@ -116,7 +116,7 @@ export function errorHandlerMiddleware(options: ErrorHandlerOptions = {}): Middl
 
       const message = error instanceof Error ? error.message : 'Internal server error'
       const response: { success: false; error: string; status: number; stack?: string } = {
-        success: false,
+        success: false as const,
         error: message,
         status: 500,
       }

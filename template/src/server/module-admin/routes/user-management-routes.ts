@@ -121,7 +121,7 @@ export const userManagementRoutes = new OpenAPIHono<{ Variables: { authUser: Aut
     const { id } = c.req.valid('param')
     const user = await adminService.getUserById(id)
     if (!user) {
-      return c.json({ success: false, error: 'User not found' }, 404)
+      return c.json({ success: false as const, error: 'User not found' }, 404)
     }
     return c.json(success(user), 200)
   })

@@ -34,7 +34,7 @@ export function rateLimitMiddleware(options: RateLimitOptions = {}) {
 
     if (entry && entry.resetAt > now && entry.count >= max) {
       c.header('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)))
-      return c.json({ success: false, error: message }, 429)
+      return c.json({ success: false as const, error: message }, 429)
     }
 
     if (!entry || entry.resetAt <= now) {

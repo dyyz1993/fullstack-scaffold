@@ -101,7 +101,7 @@ export class AppError extends Error {
 
   toJSON() {
     return {
-      success: false,
+      success: false as const,
       error: this.message,
       code: this.code,
       status: this.statusCode,
