@@ -132,7 +132,7 @@ jobs:
 
   feishu-notify:
     name: Feishu Notification
-    if: always()
+    if: always() && github.actor != 'dependabot[bot]'
     needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, security-audit]
     uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
     with:
