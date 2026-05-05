@@ -22,7 +22,7 @@ The generated app uses a monorepo-style architecture with single-port developmen
 
 ```bash
 # Clone the repo
-git clone https://github.com/dyyz1993/create-biomimic-app.git
+git clone https://github.com/dyyz1993/fullstack-scaffold.git
 cd create-biomimic-app
 
 # Install root dependencies

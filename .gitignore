@@ -14,3 +14,48 @@ my-biomimic-app
 playwright-report/
 playwright-artifacts/
 test-results/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Test history
+.test-history/
+
+# Generated test apps
+e2e-debug-app/
+my-app/
+testapp/
+test-*/
+my-biomimic-app/
+
+# AI tool artifacts
+.agents/
+.trae/
+
+# Build artifacts
+template/dist/
+
+# Dev context files
+.ai-context.md
+.dev-context.md
+.dev-context-compact.md
+.dev-guide.md
+
+# Session data
+.sessions/
+template/.sessions/
+
+# Playwright report (generated)
+template/playwright-report/
+template/playwright-artifacts/
+
+# Misc dev files
+auth-inject.html
+data/settings.json
+FRAMEWORK_HISTORY.md
+PROJECT_SUMMARY.md
+DEV_CONTEXT_GUIDE.md
+*.log

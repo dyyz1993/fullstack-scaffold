@@ -5,11 +5,6 @@ Create a new BioMimic app with full-stack React + Hono + TypeScript architecture
 ## 🚀 Usage
 
 ```bash
-# Local testing
-cd /Users/xuyingzhou/Project/create-biomimic-app
-npm install
-npx tsx src/index.ts my-app
-
 # After publishing to npm
 npx create-biomimic-app my-app
 ```
