@@ -51,7 +51,7 @@ const createRouteDef = createRoute({
   path: '/tickets',
   tags: ['tickets'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_CREATE] })],
   request: {
     body: {
       content: {
@@ -75,7 +75,7 @@ const updateRoute = createRoute({
   path: '/tickets/{id}',
   tags: ['tickets'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_EDIT] })],
   request: {
     params: TicketSchema.pick({ id: true }),
     body: {
@@ -101,7 +101,7 @@ const deleteRoute = createRoute({
   path: '/tickets/{id}',
   tags: ['tickets'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_DELETE] })],
   request: {
     params: TicketSchema.pick({ id: true }),
   },

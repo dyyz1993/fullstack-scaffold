@@ -197,7 +197,11 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
         await import('../module-permission/services/permission-service-impl')
 
       for (const requiredPermission of options.requiredPermissions) {
-        const hasPermission = await permissionService.hasPermission(user.id, requiredPermission)
+        const hasPermission = await permissionService.hasPermission(
+          user.id,
+          requiredPermission,
+          user.role
+        )
         if (!hasPermission) {
           log.warn(
             {

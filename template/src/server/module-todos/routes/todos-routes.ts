@@ -15,6 +15,7 @@ import {
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
 import { getAuthUser } from '../../utils/auth'
 import { NotFoundError, ValidationError } from '@server/utils/app-error'
+import { authMiddleware } from '../../middleware/auth'
 
 const TodoListSchema = z.array(TodoSchema)
 
@@ -22,6 +23,8 @@ const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   responses: {
     200: successResponse(TodoListSchema, 'List all todos'),
     500: errorResponse('Internal server error'),
@@ -32,6 +35,8 @@ const getRoute = createRoute({
   method: 'get',
   path: '/todos/{id}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
   },
@@ -45,6 +50,8 @@ const createRouteDef = createRoute({
   method: 'post',
   path: '/todos',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     body: {
       content: { 'application/json': { schema: CreateTodoSchema } },
@@ -60,6 +67,8 @@ const updateRoute = createRoute({
   method: 'put',
   path: '/todos/{id}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
     body: {
@@ -76,6 +85,8 @@ const deleteRoute = createRoute({
   method: 'delete',
   path: '/todos/{id}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
   },
@@ -89,6 +100,8 @@ const uploadAttachmentRoute = createRoute({
   method: 'post',
   path: '/todos/{id}/attachments',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
     body: {
@@ -111,6 +124,8 @@ const listAttachmentsRoute = createRoute({
   method: 'get',
   path: '/todos/{id}/attachments',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
   },
@@ -124,6 +139,8 @@ const getTodoWithAttachmentsRoute = createRoute({
   method: 'get',
   path: '/todos/{id}/with-attachments',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
   },
@@ -137,6 +154,8 @@ const deleteAttachmentRoute = createRoute({
   method: 'delete',
   path: '/todos/{todoId}/attachments/{attachmentId}',
   tags: ['todos'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: z.object({
       todoId: z.coerce.number().int().positive(),

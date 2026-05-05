@@ -28,6 +28,7 @@ interface UploadResponse {
 
 describe('Todo File Upload API', () => {
   const app = createApp()
+  const authHeaders = { Authorization: 'Bearer admin-token' }
 
   beforeAll(async () => {
     await setupTestDatabase()
@@ -79,6 +80,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(201)
@@ -103,6 +105,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(201)
@@ -122,6 +125,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request('/api/todos/99999/attachments', {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(404)
@@ -139,6 +143,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(400)
@@ -158,6 +163,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(400)
@@ -174,6 +180,7 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const listRes = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'GET',
+        headers: authHeaders,
       })
 
       expect(listRes.status).toBe(200)
@@ -187,6 +194,7 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const listRes = await app.request('/api/todos/99999/attachments', {
         method: 'GET',
+        headers: authHeaders,
       })
 
       expect(listRes.status).toBe(404)
@@ -203,6 +211,7 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments/99999`, {
         method: 'DELETE',
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(404)
@@ -222,6 +231,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request('/api/todos/invalid-id/attachments', {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       // Invalid ID format returns error status
@@ -242,6 +252,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(400)
@@ -262,6 +273,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(400)
@@ -282,6 +294,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(201)
@@ -301,6 +314,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(201)
@@ -320,6 +334,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(201)
@@ -338,6 +353,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(400)
@@ -355,6 +371,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request('/api/todos/99999/attachments', {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(404)
@@ -375,6 +392,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       // Should either succeed or fail gracefully
@@ -394,6 +412,7 @@ describe('Todo File Upload API', () => {
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'POST',
         body: formData,
+        headers: authHeaders,
       })
 
       expect(res.status).toBe(400)
@@ -408,6 +427,7 @@ describe('Todo File Upload API', () => {
       // eslint-disable-next-line local-rules/require-type-safe-test-client
       const res = await app.request(`/api/todos/${todoId}/attachments`, {
         method: 'PUT',
+        headers: authHeaders,
       })
 
       // Hono returns 404 for undefined routes, not 405

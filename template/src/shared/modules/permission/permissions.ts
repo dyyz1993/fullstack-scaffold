@@ -23,9 +23,15 @@ export enum Permission {
   DATA_IMPORT = 'data:import',
 
   ORDER_VIEW = 'order:view',
+  ORDER_CREATE = 'order:create',
+  ORDER_EDIT = 'order:edit',
+  ORDER_DELETE = 'order:delete',
   ORDER_PROCESS = 'order:process',
 
   TICKET_VIEW = 'ticket:view',
+  TICKET_CREATE = 'ticket:create',
+  TICKET_EDIT = 'ticket:edit',
+  TICKET_DELETE = 'ticket:delete',
   TICKET_REPLY = 'ticket:reply',
   TICKET_CLOSE = 'ticket:close',
 
@@ -69,8 +75,14 @@ export const ROLE_PERMISSIONS: RolePermissions = {
     Permission.USER_VIEW,
     Permission.CONTENT_VIEW,
     Permission.ORDER_VIEW,
+    Permission.ORDER_CREATE,
+    Permission.ORDER_EDIT,
+    Permission.ORDER_DELETE,
     Permission.ORDER_PROCESS,
     Permission.TICKET_VIEW,
+    Permission.TICKET_CREATE,
+    Permission.TICKET_EDIT,
+    Permission.TICKET_DELETE,
     Permission.TICKET_REPLY,
     Permission.TICKET_CLOSE,
     Permission.DATA_EXPORT,
@@ -105,9 +117,15 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   [Permission.DATA_IMPORT]: '数据导入',
 
   [Permission.ORDER_VIEW]: '查看订单',
+  [Permission.ORDER_CREATE]: '创建订单',
+  [Permission.ORDER_EDIT]: '编辑订单',
+  [Permission.ORDER_DELETE]: '删除订单',
   [Permission.ORDER_PROCESS]: '处理订单',
 
   [Permission.TICKET_VIEW]: '查看工单',
+  [Permission.TICKET_CREATE]: '创建工单',
+  [Permission.TICKET_EDIT]: '编辑工单',
+  [Permission.TICKET_DELETE]: '删除工单',
   [Permission.TICKET_REPLY]: '回复工单',
   [Permission.TICKET_CLOSE]: '关闭工单',
 
@@ -176,11 +194,24 @@ export const PERMISSION_CATEGORIES = {
   },
   order: {
     label: '订单管理',
-    permissions: [Permission.ORDER_VIEW, Permission.ORDER_PROCESS],
+    permissions: [
+      Permission.ORDER_VIEW,
+      Permission.ORDER_CREATE,
+      Permission.ORDER_EDIT,
+      Permission.ORDER_DELETE,
+      Permission.ORDER_PROCESS,
+    ],
   },
   ticket: {
     label: '工单管理',
-    permissions: [Permission.TICKET_VIEW, Permission.TICKET_REPLY, Permission.TICKET_CLOSE],
+    permissions: [
+      Permission.TICKET_VIEW,
+      Permission.TICKET_CREATE,
+      Permission.TICKET_EDIT,
+      Permission.TICKET_DELETE,
+      Permission.TICKET_REPLY,
+      Permission.TICKET_CLOSE,
+    ],
   },
   dispute: {
     label: '争议管理',

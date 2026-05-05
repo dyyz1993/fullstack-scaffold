@@ -185,20 +185,25 @@ describe('Permission Service', () => {
 
   describe('hasPermission', () => {
     it('should return true when user has permission', async () => {
-      // Use test-customer-service-1 which has user:view permission
-      const hasPermission = await service.hasPermission('test-customer-service-1', 'user:view')
+      const hasPermission = await service.hasPermission(
+        'test-customer-service-1',
+        'user:view',
+        'customer_service'
+      )
       expect(hasPermission).toBe(true)
     })
 
     it('should return false when user does not have permission', async () => {
-      // Use test-user-1 which doesn't have user:view permission
-      const hasPermission = await service.hasPermission('test-user-1', 'user:view')
+      const hasPermission = await service.hasPermission('test-user-1', 'user:view', 'user')
       expect(hasPermission).toBe(false)
     })
 
     it('should check permission by code', async () => {
-      // Use test-customer-service-1 which has content:view permission
-      const hasPermission = await service.hasPermission('test-customer-service-1', 'content:view')
+      const hasPermission = await service.hasPermission(
+        'test-customer-service-1',
+        'content:view',
+        'customer_service'
+      )
       expect(hasPermission).toBe(true)
     })
   })
@@ -319,12 +324,12 @@ describe('Permission Service', () => {
 
     it('should have correct number of order permissions', async () => {
       const permissions = await service.getByCategory('order')
-      expect(permissions.length).toBe(2)
+      expect(permissions.length).toBe(5)
     })
 
     it('should have correct number of ticket permissions', async () => {
       const permissions = await service.getByCategory('ticket')
-      expect(permissions.length).toBe(3)
+      expect(permissions.length).toBe(6)
     })
 
     it('should have correct number of data permissions', async () => {

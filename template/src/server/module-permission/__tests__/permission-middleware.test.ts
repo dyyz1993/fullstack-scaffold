@@ -13,34 +13,38 @@ describe('Permission Middleware Integration', () => {
   })
 
   describe('hasPermission', () => {
-    it('should return true when test customer service user has order:view permission', async () => {
+    it('should return true when customer service user has order:view permission', async () => {
       const hasPermission = await permissionService.hasPermission(
         'test-customer-service-2',
-        'order:view'
+        'order:view',
+        'customer_service'
       )
       expect(hasPermission).toBe(true)
     })
 
-    it('should return false when test customer service user does not have user:delete permission', async () => {
+    it('should return false when customer service user does not have user:delete permission', async () => {
       const hasPermission = await permissionService.hasPermission(
         'test-customer-service-2',
-        'user:delete'
+        'user:delete',
+        'customer_service'
       )
       expect(hasPermission).toBe(false)
     })
 
-    it('should return true when test customer service user has user:view permission', async () => {
+    it('should return true when customer service user has user:view permission', async () => {
       const hasPermission = await permissionService.hasPermission(
         'test-customer-service-2',
-        'user:view'
+        'user:view',
+        'customer_service'
       )
       expect(hasPermission).toBe(true)
     })
 
-    it('should return true for test super admin with any permission', async () => {
+    it('should return true for super admin with any permission', async () => {
       const hasPermission = await permissionService.hasPermission(
         'test-super-admin-1',
-        'user:delete'
+        'user:delete',
+        'super_admin'
       )
       expect(hasPermission).toBe(true)
     })

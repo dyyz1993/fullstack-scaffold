@@ -285,13 +285,34 @@ async function seedTestData(client: Client): Promise<void> {
     },
   ]
 
-  // order category (2 permissions)
+  // order category (5 permissions)
   const orderPermissions = [
     {
       id: 'perm_order_view',
       code: 'order:view',
       name: '查看订单',
       label: '查看订单',
+      category: 'order',
+    },
+    {
+      id: 'perm_order_create',
+      code: 'order:create',
+      name: '创建订单',
+      label: '创建订单',
+      category: 'order',
+    },
+    {
+      id: 'perm_order_edit',
+      code: 'order:edit',
+      name: '编辑订单',
+      label: '编辑订单',
+      category: 'order',
+    },
+    {
+      id: 'perm_order_delete',
+      code: 'order:delete',
+      name: '删除订单',
+      label: '删除订单',
       category: 'order',
     },
     {
@@ -303,13 +324,34 @@ async function seedTestData(client: Client): Promise<void> {
     },
   ]
 
-  // ticket category (3 permissions)
+  // ticket category (6 permissions)
   const ticketPermissions = [
     {
       id: 'perm_ticket_view',
       code: 'ticket:view',
       name: '查看工单',
       label: '查看工单',
+      category: 'ticket',
+    },
+    {
+      id: 'perm_ticket_create',
+      code: 'ticket:create',
+      name: '创建工单',
+      label: '创建工单',
+      category: 'ticket',
+    },
+    {
+      id: 'perm_ticket_edit',
+      code: 'ticket:edit',
+      name: '编辑工单',
+      label: '编辑工单',
+      category: 'ticket',
+    },
+    {
+      id: 'perm_ticket_delete',
+      code: 'ticket:delete',
+      name: '删除工单',
+      label: '删除工单',
       category: 'ticket',
     },
     {
@@ -409,8 +451,14 @@ async function seedTestData(client: Client): Promise<void> {
     'perm_user_view',
     'perm_content_view',
     'perm_order_view',
+    'perm_order_create',
+    'perm_order_edit',
+    'perm_order_delete',
     'perm_order_process',
     'perm_ticket_view',
+    'perm_ticket_create',
+    'perm_ticket_edit',
+    'perm_ticket_delete',
     'perm_ticket_reply',
     'perm_ticket_close',
   ]
@@ -419,6 +467,23 @@ async function seedTestData(client: Client): Promise<void> {
       await client.execute({
         sql: `INSERT OR IGNORE INTO role_permissions (role_id, permission_id, created_at) VALUES (?, ?, ?)`,
         args: ['role_customer_service', permId, Date.now()],
+      })
+    } catch {
+      // Ignore duplicate errors
+    }
+  }
+
+  // Assign test user-role mappings for dev token users
+  const testUserRoles = [
+    { userId: 'super-admin-1', roleId: 'role_super_admin' },
+    { userId: 'customer-service-1', roleId: 'role_customer_service' },
+    { userId: 'user-1', roleId: 'role_user' },
+  ]
+  for (const mapping of testUserRoles) {
+    try {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO user_roles (id, user_id, role_id, is_active, assigned_at) VALUES (?, ?, ?, ?, ?)`,
+        args: [`ur_${mapping.userId}`, mapping.userId, mapping.roleId, 1, Date.now()],
       })
     } catch {
       // Ignore duplicate errors

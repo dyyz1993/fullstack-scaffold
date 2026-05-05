@@ -54,7 +54,7 @@ const createRouteDef = createRoute({
   path: '/orders',
   tags: ['orders'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_CREATE] })],
   request: {
     body: {
       content: {
@@ -78,7 +78,7 @@ const updateRoute = createRoute({
   path: '/orders/{id}',
   tags: ['orders'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_EDIT] })],
   request: {
     params: OrderSchema.pick({ id: true }),
     body: {
@@ -104,7 +104,7 @@ const deleteRoute = createRoute({
   path: '/orders/{id}',
   tags: ['orders'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_VIEW] })],
+  middleware: [authMiddleware({ requiredPermissions: [Permission.ORDER_DELETE] })],
   request: {
     params: OrderSchema.pick({ id: true }),
   },

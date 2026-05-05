@@ -121,35 +121,25 @@ export class PermissionService {
     return this.getRolePermissions(role.id)
   }
 
-  async hasPermission(_userId: string, permissionCode: string): Promise<boolean> {
-    // 处理测试用户token
-    if (_userId.startsWith('test-super-admin-') || _userId === 'super-admin-1') {
-      // 超级管理员拥有所有权限
+  async hasPermission(
+    _userId: string,
+    permissionCode: string,
+    roleCode?: string
+  ): Promise<boolean> {
+    if (roleCode === 'super_admin') {
       return true
     }
 
-    if (_userId.startsWith('test-customer-service-') || _userId === 'customer-service-1') {
-      const role = await roleService.getByCode('customer_service')
+    if (roleCode) {
+      const role = await roleService.getByCode(roleCode)
       if (role) {
-        const rolePermissions = await this.getRolePermissions(role.id)
-        return rolePermissions.some(p => p.code === permissionCode)
+        const rolePerms = await this.getRolePermissions(role.id)
+        return rolePerms.some(p => p.code === permissionCode)
       }
-      return false
     }
 
-    if (_userId.startsWith('test-user-') || _userId === 'user-1') {
-      const role = await roleService.getByCode('user')
-      if (role) {
-        const rolePermissions = await this.getRolePermissions(role.id)
-        return rolePermissions.some(p => p.code === permissionCode)
-      }
-      return false
-    }
-
-    // 正常用户：从数据库获取用户角色
     const userRoles = await roleService.getUserRoles(_userId)
     for (const role of userRoles) {
-      // 超级管理员拥有所有权限
       if (role.code === 'super_admin') {
         return true
       }
