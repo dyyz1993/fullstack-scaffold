@@ -172,11 +172,9 @@ jobs:
             template/test-results/
           retention-days: 14
 
-  # TODO: remove continue-on-error once baseline is clean
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
