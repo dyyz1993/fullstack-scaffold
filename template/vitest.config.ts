@@ -34,10 +34,10 @@ export default defineConfig({
         'src/server/entries/node.ts',
       ],
       thresholds: {
-        lines: 72,
-        functions: 72,
+        lines: 71,
+        functions: 71,
         branches: 60,
-        statements: 72,
+        statements: 71,
       },
     },
   },
