@@ -9,7 +9,6 @@
 import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
-import type { SSEClient } from '@shared/schemas'
 
 /**
  * 测试客户端类型
@@ -17,18 +16,18 @@ import type { SSEClient } from '@shared/schemas'
  * 注意：TypeScript 5.8+ 和 Hono 4.12+ 已优化类型推导性能，
  * 无需修改 TypeScript 的类型实例化深度限制即可正常工作。
  */
+// @ts-expect-error Hono UnionToIntersection<Client<AppType>> exceeds TypeScript type instantiation depth
 export type TestClient = ReturnType<typeof hc<AppType>>
 
 export interface TestClientOptions {
   webSocket?: (url: string | URL) => WebSocket
-  sse?: (url: string | URL) => SSEClient
   headers?: Record<string, string>
 }
 
 /**
  * 创建测试客户端
  */
-export function createTestClient(baseUrl?: string, options?: TestClientOptions): TestClient {
+export function createTestClient(baseUrl?: string, options?: TestClientOptions) {
   const app = createApp()
   const defaultHeaders = {
     'User-Agent': 'TestClient/1.0 (Unit Test)',
@@ -39,7 +38,6 @@ export function createTestClient(baseUrl?: string, options?: TestClientOptions):
     return hc<AppType>(baseUrl, {
       headers: defaultHeaders,
       webSocket: options?.webSocket ? url => options.webSocket!(url) : undefined,
-      sse: options?.sse,
     })
   }
   return hc<AppType>('http://localhost', {
@@ -54,6 +52,5 @@ export function createTestClient(baseUrl?: string, options?: TestClientOptions):
       })
       return app.fetch(request)
     },
-    sse: options?.sse,
   })
 }

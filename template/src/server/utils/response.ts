@@ -9,7 +9,7 @@
 
 export function success<T>(data: T) {
   return {
-    success: true,
+    success: true as const,
     data,
     timestamp: new Date().toISOString(),
   }
@@ -17,7 +17,7 @@ export function success<T>(data: T) {
 
 export function created<T>(data: T) {
   return {
-    success: true,
+    success: true as const,
     data,
     timestamp: new Date().toISOString(),
   }
@@ -25,7 +25,7 @@ export function created<T>(data: T) {
 
 export function list<T>(items: T[], count?: number) {
   return {
-    success: true,
+    success: true as const,
     data: count !== undefined ? { items, count } : { items },
     timestamp: new Date().toISOString(),
   }
@@ -33,7 +33,7 @@ export function list<T>(items: T[], count?: number) {
 
 export function deleted(id: string) {
   return {
-    success: true,
+    success: true as const,
     data: { id },
     timestamp: new Date().toISOString(),
   }
