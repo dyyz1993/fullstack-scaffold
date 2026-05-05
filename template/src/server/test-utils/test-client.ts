@@ -9,6 +9,7 @@
 import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
+import { SSEClientImpl } from '@shared/core/sse-client'
 
 /**
  * 测试客户端类型
@@ -34,17 +35,21 @@ export function createTestClient(baseUrl?: string, options?: TestClientOptions) 
     ...options?.headers,
   }
 
+  const sseFactory = options?.sse
+    ? (url: string | URL) => options.sse!(url)
+    : (url: string | URL) => new SSEClientImpl(url, defaultHeaders)
+
   if (baseUrl) {
     return hc<AppType>(baseUrl, {
       headers: defaultHeaders,
-      webSocket: options?.webSocket ? url => options.webSocket!(url) : undefined,
+      webSocket: options?.webSocket ? (url: string | URL) => options.webSocket!(url) : undefined,
+      sse: sseFactory as (url: string) => unknown,
     })
   }
   return hc<AppType>('http://localhost', {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fetch: (input: any, init?: any) => {
       const request = new Request(input, init)
-      // Add default headers if not present
       Object.entries(defaultHeaders).forEach(([key, value]) => {
         if (!request.headers.has(key)) {
           request.headers.set(key, value)
@@ -52,5 +57,6 @@ export function createTestClient(baseUrl?: string, options?: TestClientOptions) 
       })
       return app.fetch(request)
     },
+    sse: sseFactory as (url: string) => unknown,
   })
 }

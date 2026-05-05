@@ -1,28 +1,33 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { createApp } from '../../app'
 import { createTestServer } from '../../test-utils/test-server'
+import { createTestClient } from '../../test-utils/test-client'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
-import { createSSEClient } from '@shared/core/sse-client'
+import { SSEClientImpl } from '@shared/core/sse-client'
 import * as notificationService from '../services/notification-service'
 import type { AppSSEProtocol } from '@shared/schemas'
 
 setRuntimeAdapter(getNodeRuntimeAdapter())
 
+let sseTestContext: { port: number; close: () => Promise<void> }
+let client: ReturnType<typeof createTestClient>
+
 function connectSSE() {
-  return createSSEClient<AppSSEProtocol>(
-    `http://localhost:${sseTestContext.port}/api/notifications/stream`,
-    { Authorization: 'Bearer admin-token' }
-  )
+  const conn = client.api.notifications.stream.$sse()
+  return conn as unknown as SSEClientImpl<AppSSEProtocol>
 }
 
-let sseTestContext: { port: number; close: () => Promise<void> }
-
-describe('SSE Routes with Type-Safe Test Client', () => {
+describe('SSE Routes with Patched $sse() RPC Method', () => {
   beforeAll(async () => {
     const app = createApp()
     const server = await createTestServer(app, ['/api/notifications/stream'])
     sseTestContext = { port: server.port, close: server.close }
+
+    client = createTestClient(`http://localhost:${server.port}`, {
+      sse: url => new SSEClientImpl(url, { Authorization: 'Bearer admin-token' }),
+      headers: { Authorization: 'Bearer admin-token' },
+    })
   }, 15000)
 
   afterAll(async () => {
@@ -37,8 +42,8 @@ describe('SSE Routes with Type-Safe Test Client', () => {
     notificationService.clearAllNotifications()
   })
 
-  describe('GET /api/notifications/stream', () => {
-    it('should use $sse() method for type-safe SSE connection', async () => {
+  describe('GET /api/notifications/stream via $sse()', () => {
+    it('should use patched $sse() method for type-safe SSE connection', async () => {
       const conn = connectSSE()
 
       expect(['connecting', 'open', 'closed']).toContain(conn.status)
@@ -243,9 +248,7 @@ describe('SSE Routes with Type-Safe Test Client', () => {
 
       unsubscribe()
 
-      // 状态可能是 'closed'、'connecting' 或其他状态
       expect(['closed', 'connecting', 'open']).toContain(conn.status)
-      // errorReceived 可能为 true 或 false，取决于是否收到错误事件
       expect(typeof errorReceived).toBe('boolean')
     })
 

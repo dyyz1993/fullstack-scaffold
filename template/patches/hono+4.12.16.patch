@@ -101,7 +101,7 @@ index 5bbbe00..b391357 100644
      buildSearchParams: buildSearchParamsOption
    });
 diff --git a/node_modules/hono/dist/types/client/types.d.ts b/node_modules/hono/dist/types/client/types.d.ts
-index 779df12..551db4b 100644
+index b4effd2..500e4bc 100644
 --- a/node_modules/hono/dist/types/client/types.d.ts
 +++ b/node_modules/hono/dist/types/client/types.d.ts
 @@ -4,6 +4,7 @@ import type { METHODS, METHOD_NAME_ALL_LOWERCASE } from '../router';
@@ -232,7 +232,7 @@ index 0000000..2cb2bd1
 +
 +type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
 diff --git a/node_modules/hono/dist/types/types.d.ts b/node_modules/hono/dist/types/types.d.ts
-index 18ac8e2..8311396 100644
+index 74c3409..2cfce1b 100644
 --- a/node_modules/hono/dist/types/types.d.ts
 +++ b/node_modules/hono/dist/types/types.d.ts
 @@ -524,7 +524,7 @@ export type AddParam<I, P extends string> = ParamKeys<P> extends never ? I : I e
