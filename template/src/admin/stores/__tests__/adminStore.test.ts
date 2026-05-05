@@ -1,5 +1,39 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useAdminStore } from '../adminStore'
+import { Role } from '@shared/modules/permission'
+import type { AuthUserResponse, SystemStats, LoginResponse } from '@shared/modules/admin'
+
+interface AdminState {
+  user: AuthUserResponse | null
+  token: string | null
+  isAuthenticated: boolean
+  stats: SystemStats | null
+  loading: boolean
+  login: (username: string, password: string) => Promise<LoginResponse>
+  logout: () => void
+  fetchStats: () => Promise<void>
+  setUser: (user: AuthUserResponse) => void
+  setToken: (token: string) => void
+}
+
+const localStorageStore: Record<string, string> = {}
+const localStorageMock = {
+  getItem: (key: string) => localStorageStore[key] ?? null,
+  setItem: (key: string, value: string) => {
+    localStorageStore[key] = String(value)
+  },
+  removeItem: (key: string) => {
+    delete localStorageStore[key]
+  },
+  clear: () => {
+    Object.keys(localStorageStore).forEach(k => delete localStorageStore[k])
+  },
+  get length() {
+    return Object.keys(localStorageStore).length
+  },
+  key: (_i: number) => null,
+}
+
+vi.stubGlobal('localStorage', localStorageMock)
 
 const mockLoginResponse = {
   success: true,
@@ -8,9 +42,9 @@ const mockLoginResponse = {
       id: '1',
       username: 'admin',
       email: 'admin@test.com',
-      role: 'super_admin' as const,
+      role: Role.SUPER_ADMIN,
       avatar: null,
-      permissions: [],
+      permissions: [Permission.USER_VIEW],
     },
     token: 'test-token',
   },
@@ -55,8 +89,12 @@ vi.mock('../../hooks/usePermissions', () => ({
 }))
 
 describe('useAdminStore', () => {
-  beforeEach(() => {
-    localStorage.clear()
+  let useAdminStore: { getState: () => AdminState; setState: (s: Partial<AdminState>) => void }
+
+  beforeEach(async () => {
+    const mod = await import('../adminStore')
+    useAdminStore = mod.useAdminStore
+    localStorageMock.clear()
     useAdminStore.setState({
       user: null,
       token: null,
@@ -112,9 +150,9 @@ describe('useAdminStore', () => {
       id: '2',
       username: 'testuser',
       email: 'test@test.com',
-      role: 'user' as const,
+      role: Role.USER,
       avatar: null,
-      permissions: [],
+      permissions: [Permission.USER_VIEW],
     }
     useAdminStore.getState().setUser(user)
     expect(useAdminStore.getState().user).toEqual(user)
@@ -127,12 +165,15 @@ describe('useAdminStore', () => {
 
   it('should handle login failure', async () => {
     const { apiClient } = await import('../../services/apiClient')
-    vi.mocked(apiClient.api.admin.login.$post).mockImplementationOnce(async () => ({
-      json: async () => ({
-        success: false,
-        error: 'Invalid credentials',
-      }),
-    }))
+    vi.mocked(apiClient.api.admin.login.$post).mockImplementationOnce(
+      async () =>
+        ({
+          json: async () => ({
+            success: false,
+            error: 'Invalid credentials',
+          }),
+        }) as never
+    )
 
     await expect(useAdminStore.getState().login('wrong', 'creds')).rejects.toThrow(
       'Invalid credentials'

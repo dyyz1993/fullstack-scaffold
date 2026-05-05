@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { UserTable } from '../UserTable'
+import { Role } from '@shared/modules/permission'
 import type { User } from '@shared/modules/admin'
 
 const mockUsers: User[] = [
@@ -8,7 +9,7 @@ const mockUsers: User[] = [
     id: '1',
     username: 'alice',
     email: 'alice@test.com',
-    role: 'admin',
+    role: Role.SUPER_ADMIN,
     status: 'active',
     avatar: null,
     createdAt: '2024-01-01',
@@ -18,7 +19,7 @@ const mockUsers: User[] = [
     id: '2',
     username: 'bob',
     email: 'bob@test.com',
-    role: 'user',
+    role: Role.USER,
     status: 'inactive',
     avatar: null,
     createdAt: '2024-01-02',
@@ -43,8 +44,8 @@ describe('UserTable', () => {
   it('should render role tags', () => {
     render(<UserTable data={mockUsers} />)
 
-    expect(screen.getByText('admin')).toBeInTheDocument()
-    expect(screen.getByText('user')).toBeInTheDocument()
+    expect(screen.getByText(Role.SUPER_ADMIN)).toBeInTheDocument()
+    expect(screen.getByText(Role.USER)).toBeInTheDocument()
   })
 
   it('should render status tags', () => {

@@ -4,27 +4,26 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '../ProtectedRoute'
 import { Role } from '@shared/modules/permission'
 
-let mockIsAuthenticated = false
-let mockUser: { id: string; role: string } | null = null
 const mockInitPermissions = vi.fn()
 const mockFetchStaticData = vi.fn()
-let mockInitialized = false
+
+const mockAdminState = {
+  isAuthenticated: false as boolean,
+  user: null as { id: string; role: string } | null,
+}
+
+const mockPermState = {
+  initialized: false as boolean,
+  initPermissions: mockInitPermissions,
+  fetchStaticData: mockFetchStaticData,
+}
 
 vi.mock('../../stores/adminStore', () => ({
-  useAdminStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({
-      isAuthenticated: mockIsAuthenticated,
-      user: mockUser,
-    }),
+  useAdminStore: () => mockAdminState,
 }))
 
 vi.mock('../../hooks/usePermissions', () => ({
-  usePermissionStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({
-      initialized: mockInitialized,
-      initPermissions: mockInitPermissions,
-      fetchStaticData: mockFetchStaticData,
-    }),
+  usePermissionStore: () => mockPermState,
 }))
 
 function renderWithRouter(ui: React.ReactElement, initialPath = '/protected') {
@@ -41,9 +40,9 @@ function renderWithRouter(ui: React.ReactElement, initialPath = '/protected') {
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    mockIsAuthenticated = false
-    mockUser = null
-    mockInitialized = false
+    mockAdminState.isAuthenticated = false
+    mockAdminState.user = null
+    mockPermState.initialized = false
     vi.clearAllMocks()
   })
 
@@ -62,8 +61,8 @@ describe('ProtectedRoute', () => {
   })
 
   it('should render children when authenticated', () => {
-    mockIsAuthenticated = true
-    mockUser = { id: '1', role: Role.SUPER_ADMIN }
+    mockAdminState.isAuthenticated = true
+    mockAdminState.user = { id: '1', role: Role.SUPER_ADMIN }
 
     renderWithRouter(
       <ProtectedRoute>
@@ -75,8 +74,8 @@ describe('ProtectedRoute', () => {
   })
 
   it('should redirect to /dashboard when user lacks required role', () => {
-    mockIsAuthenticated = true
-    mockUser = { id: '1', role: Role.USER }
+    mockAdminState.isAuthenticated = true
+    mockAdminState.user = { id: '1', role: Role.USER }
 
     renderWithRouter(
       <ProtectedRoute requiredRole={Role.SUPER_ADMIN}>
@@ -88,8 +87,8 @@ describe('ProtectedRoute', () => {
   })
 
   it('should allow access for super admin regardless of required role', () => {
-    mockIsAuthenticated = true
-    mockUser = { id: '1', role: Role.SUPER_ADMIN }
+    mockAdminState.isAuthenticated = true
+    mockAdminState.user = { id: '1', role: Role.SUPER_ADMIN }
 
     renderWithRouter(
       <ProtectedRoute requiredRole={Role.CUSTOMER_SERVICE}>
@@ -101,8 +100,8 @@ describe('ProtectedRoute', () => {
   })
 
   it('should init permissions when authenticated and not initialized', () => {
-    mockIsAuthenticated = true
-    mockUser = { id: '1', role: Role.SUPER_ADMIN }
+    mockAdminState.isAuthenticated = true
+    mockAdminState.user = { id: '1', role: Role.SUPER_ADMIN }
 
     renderWithRouter(
       <ProtectedRoute>
@@ -115,9 +114,9 @@ describe('ProtectedRoute', () => {
   })
 
   it('should not init permissions when already initialized', () => {
-    mockIsAuthenticated = true
-    mockUser = { id: '1', role: Role.SUPER_ADMIN }
-    mockInitialized = true
+    mockAdminState.isAuthenticated = true
+    mockAdminState.user = { id: '1', role: Role.SUPER_ADMIN }
+    mockPermState.initialized = true
 
     renderWithRouter(
       <ProtectedRoute>
