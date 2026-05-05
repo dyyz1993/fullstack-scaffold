@@ -56,6 +56,8 @@ export default async function globalSetup(_config: FullConfig) {
     env: {
       ...process.env,
       PORT: String(port),
+      ENABLE_DEV_TOKENS: 'true',
+      NODE_ENV: 'test',
     },
   })
 

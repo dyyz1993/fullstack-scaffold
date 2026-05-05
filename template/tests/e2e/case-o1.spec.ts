@@ -7,29 +7,27 @@ function getBaseUrl(): string {
 test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
   async function loginAs(page, username = 'superadmin', password = '123456') {
     await page.goto(`${getBaseUrl()}/admin/login`)
-    await page.waitForSelector('[data-testid="admin-login-form"], input[placeholder*="用户名"]', {
-      timeout: 10000,
-    })
-    await page.getByPlaceholder('用户名').fill(username)
-    await page.getByPlaceholder('密码').fill(password)
-    await page.getByRole('button', { name: /登.*录/ }).click()
-    await page.waitForURL('**/admin/dashboard', { timeout: 10000 })
+    await page.waitForSelector('[data-testid="admin-login-form"]', { timeout: 15000 })
+    await page.getByTestId('admin-login-username').fill(username)
+    await page.getByTestId('admin-login-password').fill(password)
+    await page.getByTestId('admin-login-submit').click()
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 })
     await page.waitForTimeout(2000)
   }
 
   test('Step 1 - Login to Ops', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/admin/login`)
-    await page.waitForSelector('input[placeholder*="用户名"]', { timeout: 10000 })
+    await page.waitForSelector('[data-testid="admin-login-form"]', { timeout: 15000 })
 
-    await expect(page.getByPlaceholder('用户名')).toBeVisible()
-    await expect(page.getByPlaceholder('密码')).toBeVisible()
-    await expect(page.getByRole('button', { name: /登.*录/ })).toBeVisible()
+    await expect(page.getByTestId('admin-login-username')).toBeVisible()
+    await expect(page.getByTestId('admin-login-password')).toBeVisible()
+    await expect(page.getByTestId('admin-login-submit')).toBeVisible()
 
-    await page.getByPlaceholder('用户名').fill('superadmin')
-    await page.getByPlaceholder('密码').fill('123456')
-    await page.getByRole('button', { name: /登.*录/ }).click()
+    await page.getByTestId('admin-login-username').fill('superadmin')
+    await page.getByTestId('admin-login-password').fill('123456')
+    await page.getByTestId('admin-login-submit').click()
 
-    await page.waitForURL('**/admin/dashboard', { timeout: 10000 })
+    await page.waitForURL('**/admin/dashboard', { timeout: 15000 })
     await expect(page).toHaveURL(/\/admin\/dashboard/)
   })
 

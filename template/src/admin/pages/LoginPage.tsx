@@ -60,15 +60,32 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md" title="管理后台登录">
         <Spin spinning={loading}>
-          <Form form={form} onFinish={handleSubmit} layout="vertical">
+          <Form form={form} onFinish={handleSubmit} layout="vertical" data-testid="admin-login-form">
             <Form.Item name="username" rules={[{ required: true, message: '请输入用户名！' }]}>
-              <Input prefix={<UserOutlined />} placeholder="用户名" size="large" />
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="用户名"
+                size="large"
+                data-testid="admin-login-username"
+              />
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: '请输入密码！' }]}>
-              <Input.Password prefix={<LockOutlined />} placeholder="密码" size="large" />
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="密码"
+                size="large"
+                data-testid="admin-login-password"
+              />
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                block
+                loading={loading}
+                data-testid="admin-login-submit"
+              >
                 登录
               </Button>
             </Form.Item>

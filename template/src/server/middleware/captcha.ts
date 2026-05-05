@@ -37,7 +37,7 @@ function cleanupExpiredSessions() {
 
 export function captchaMiddleware(config: CaptchaConfig = {}) {
   const {
-    skipPaths = ['/api/captcha', '/api/verify-captcha', '/admin/login', '/admin/register'],
+    skipPaths = ['/api/captcha', '/api/verify-captcha', '/api/admin/login', '/api/admin/register'],
     maxRequests = 10,
     windowMs = 60000,
   } = config
