@@ -50,3 +50,20 @@ export function rateLimitMiddleware(options: RateLimitOptions = {}) {
     await next()
   }
 }
+
+export const strictRateLimitMiddleware = rateLimitMiddleware({
+  windowMs: 15 * 60_000,
+  max: 5,
+  message: 'Too many attempts, please try again later',
+})
+
+export const mediumRateLimitMiddleware = rateLimitMiddleware({
+  windowMs: 60_000,
+  max: 20,
+  message: 'Too many upload requests, please slow down',
+})
+
+export const standardRateLimitMiddleware = rateLimitMiddleware({
+  windowMs: 60_000,
+  max: 100,
+})

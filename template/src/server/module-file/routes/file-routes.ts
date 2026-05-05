@@ -9,6 +9,7 @@ import {
   getPrivateFileUrl,
   saveFile,
 } from '../../utils/file-storage'
+import { mediumRateLimitMiddleware } from '../../middleware/rate-limit'
 import { successResponse, errorResponse, success } from '../../utils/route-helpers'
 import { NotFoundError, AuthorizationError } from '../../utils/app-error'
 import {
@@ -130,6 +131,7 @@ const uploadFileRoute = createRoute({
   method: 'post',
   path: '/upload',
   tags: ['files'],
+  middleware: [mediumRateLimitMiddleware] as const,
   request: {
     body: {
       content: {
