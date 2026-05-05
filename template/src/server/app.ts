@@ -1,8 +1,10 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 
 import { HTTPException } from 'hono/http-exception'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { ZodError } from 'zod'
 import type { AppBindings, CreateAppOptions } from './types/bindings'
+import { AppError } from './utils/app-error'
 import { autoRegisterRealtime } from './core/realtime-scanner'
 import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'
 import { realtimeEnvMiddleware } from './middleware/realtime-env'
@@ -60,8 +62,15 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
     const log = createModuleLoggerSync('api')
     c.res.headers.set('Content-Type', 'application/json')
 
+    if (AppError.isAppError(err)) {
+      return c.json(
+        { success: false, error: err.message, status: err.statusCode, details: err.details },
+        err.statusCode as ContentfulStatusCode
+      )
+    }
+
     if (err instanceof HTTPException) {
-      return c.json({ success: false, error: err.message, status: err.status }, err.status)
+      return c.json({ success: false, error: err.message, status: err.status }, err.status as ContentfulStatusCode)
     }
 
     if (err instanceof ZodError) {
