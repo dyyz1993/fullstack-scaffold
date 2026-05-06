@@ -50,11 +50,17 @@ export function autoRegisterRealtime<E extends Env, S extends Schema, BasePath e
     return
   }
 
-  const doc = app.getOpenAPIDocument({
-    openapi: '3.0.0',
-    info: { title: 'API', version: '1.0.0' },
-  })
-  const paths = (doc as unknown as OpenAPIDocument).paths
+  let doc: OpenAPIDocument
+  try {
+    doc = app.getOpenAPIDocument({
+      openapi: '3.0.0',
+      info: { title: 'API', version: '1.0.0' },
+    }) as unknown as OpenAPIDocument
+  } catch {
+    return
+  }
+
+  const paths = doc.paths
 
   if (!paths) return
 
