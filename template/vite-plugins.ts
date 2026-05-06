@@ -5,8 +5,6 @@ import http from 'http'
 
 let entryLoaded = false
 
-const _dynamicImport = (p: string) => import(p)
-
 export function websocketPlugin(): Plugin {
   return {
     name: 'websocket-upgrade',
@@ -48,12 +46,11 @@ export function websocketPlugin(): Plugin {
               return
             }
 
-            const { getRuntimeAdapter, setRuntimeAdapter } = (await _dynamicImport(
-              './src/server/core/runtime'
-            )) as typeof import('./src/server/core/runtime')
-            const { getNodeRuntimeAdapter } = (await _dynamicImport(
-              './src/server/core/runtime-node'
-            )) as typeof import('./src/server/core/runtime-node')
+            const runtimeModule = await server.ssrLoadModule('/src/server/core/runtime.ts')
+            const runtimeNodeModule = await server.ssrLoadModule('/src/server/core/runtime-node.ts')
+
+            const { getRuntimeAdapter, setRuntimeAdapter } = runtimeModule
+            const { getNodeRuntimeAdapter } = runtimeNodeModule
 
             let runtime:
               | InstanceType<typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter>
@@ -105,25 +102,22 @@ export function dbPlugin(): Plugin {
     name: 'db-bootstrap',
     configureServer(server) {
       server.httpServer?.once('listening', async () => {
-        const { getDb, runMigrations } = (await _dynamicImport(
-          './src/server/db'
-        )) as typeof import('./src/server/db')
-        const { logger } = (await _dynamicImport(
-          './src/server/utils/logger'
-        )) as typeof import('./src/server/utils/logger')
-        const log = logger.bootstrap()
-
         try {
+          const dbModule = await server.ssrLoadModule('/src/server/db/index.ts')
+          const loggerModule = await server.ssrLoadModule('/src/server/utils/logger.ts')
+
+          const log = loggerModule.logger.bootstrap()
           log.info({}, 'Initializing database...')
-          await getDb()
-          await runMigrations()
-          const { initializeDatabase } = (await _dynamicImport(
-            './src/server/db/init'
-          )) as typeof import('./src/server/db/init')
-          await initializeDatabase()
+
+          await dbModule.getDb()
+          await dbModule.runMigrations()
+
+          const dbInitModule = await server.ssrLoadModule('/src/server/db/init.ts')
+          await dbInitModule.initializeDatabase()
+
           log.info({}, 'Database ready')
         } catch (err) {
-          log.error({ err }, 'Database initialization failed')
+          console.error('[DB Plugin] Database initialization failed:', err)
         }
       })
     },

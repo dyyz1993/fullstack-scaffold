@@ -10,6 +10,10 @@ import { hc } from 'hono/client'
 import type { AppType } from '@server/index'
 import { createApp } from '@server/app'
 import { SSEClientImpl } from '@shared/core/sse-client'
+import { setRuntimeAdapter } from '@server/core/runtime'
+import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
+
+setRuntimeAdapter(getNodeRuntimeAdapter())
 
 /**
  * 测试客户端类型
