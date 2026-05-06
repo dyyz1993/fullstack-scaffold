@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/content-service'
 import type { CreateContentInput } from '@shared/modules/content'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Content Service', () => {
   beforeAll(async () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
 import * as adminService from '../services/admin-service'
-import { getRawClient } from '../../db'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { getRawClient } from '@server/db'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Admin Service', () => {
   beforeAll(async () => {

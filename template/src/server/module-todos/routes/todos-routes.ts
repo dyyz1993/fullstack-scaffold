@@ -13,9 +13,9 @@ import {
   AttachmentIdResponseSchema,
 } from '@shared/schemas'
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
-import { getAuthUser } from '../../utils/auth'
+import { getAuthUser } from '@server/utils/auth'
 import { NotFoundError, ValidationError } from '@server/utils/app-error'
-import { authMiddleware } from '../../middleware/auth'
+import { authMiddleware } from '@server/middleware/auth'
 
 const TodoListSchema = z.array(TodoSchema)
 

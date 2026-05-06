@@ -8,7 +8,7 @@ import {
   type AuthUser,
 } from '../auth'
 import { Permission, Role } from '@shared/modules/permission'
-import { AppError } from '../../utils/app-error'
+import { AppError } from '@server/utils/app-error'
 
 function createTestApp(): Hono<{ Variables: { authUser: AuthUser } }> {
   const app = new Hono<{ Variables: { authUser: AuthUser } }>()

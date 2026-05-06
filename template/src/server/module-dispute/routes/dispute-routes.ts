@@ -8,8 +8,8 @@ import {
   bodyRequest,
   success,
   created,
-} from '../../utils/route-helpers'
-import { authMiddleware } from '../../middleware/auth'
+} from '@server/utils/route-helpers'
+import { authMiddleware } from '@server/middleware/auth'
 import { Permission } from '@shared/modules/permission'
 import {
   DisputeSchema,
@@ -18,7 +18,7 @@ import {
   DisputeListSchema,
   ResolveDisputeSchema,
 } from '@shared/modules/dispute'
-import { NotFoundError, BusinessError } from '../../utils/app-error'
+import { NotFoundError, BusinessError } from '@server/utils/app-error'
 
 const listRoute = createRoute({
   method: 'get',

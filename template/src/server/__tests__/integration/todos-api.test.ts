@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
-import { createTestClient } from '../../test-utils/test-client'
-import { getDb } from '../../db'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { createTestClient } from '@server/test-utils/test-client'
+import { getDb } from '@server/db'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Integration: Todos API (Real Database)', () => {
   const authHeaders = { Authorization: 'Bearer admin-token' }

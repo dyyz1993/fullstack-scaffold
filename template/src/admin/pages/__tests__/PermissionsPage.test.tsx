@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { PermissionsPage } from '../PermissionsPage'
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => ({
     allPermissions: [
       { permission: 'user:view', label: '查看用户', category: 'user' },
@@ -26,7 +26,7 @@ vi.mock('../../hooks/usePermissions', () => ({
   }),
 }))
 
-vi.mock('../../hooks/useConfig', () => ({
+vi.mock('@admin/hooks/useConfig', () => ({
   usePermissionCategories: () => ({
     categories: {
       user: { label: '用户管理', permissions: ['user:view', 'user:create'] },
@@ -97,7 +97,7 @@ describe('PermissionsPage', () => {
   it('loading state while data fetches', async () => {
     vi.resetModules()
 
-    vi.doMock('../../hooks/usePermissions', () => ({
+    vi.doMock('@admin/hooks/usePermissions', () => ({
       usePermissions: () => ({
         allPermissions: [],
         roles: [],
@@ -105,7 +105,7 @@ describe('PermissionsPage', () => {
       }),
     }))
 
-    vi.doMock('../../hooks/useConfig', () => ({
+    vi.doMock('@admin/hooks/useConfig', () => ({
       usePermissionCategories: () => ({ categories: {}, loading: true }),
       useRoleLabels: () => ({ roleLabels: {}, loading: true }),
       usePermissionLabels: () => ({ permissionLabels: {}, loading: true }),

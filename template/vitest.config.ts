@@ -46,6 +46,8 @@ export default defineConfig({
       '@shared': resolve(__dirname, 'src/shared'),
       '@client': resolve(__dirname, 'src/client'),
       '@server': resolve(__dirname, 'src/server'),
+      '@admin': resolve(__dirname, 'src/admin'),
+      '@cli': resolve(__dirname, 'src/cli'),
     },
   },
 })

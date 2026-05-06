@@ -3,8 +3,8 @@
  */
 /* eslint-disable local-rules/require-type-safe-test-client */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { createApp } from '../../app'
-import { saveFile, generateSignature, cleanupTempFiles } from '../../utils/file-storage'
+import { createApp } from '@server/app'
+import { saveFile, generateSignature, cleanupTempFiles } from '@server/utils/file-storage'
 import { unlink } from 'fs/promises'
 import { existsSync } from 'fs'
 

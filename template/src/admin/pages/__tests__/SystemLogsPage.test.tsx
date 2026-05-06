@@ -32,7 +32,7 @@ const mockLogs = [
 
 const mockFetchLogs = vi.fn()
 
-vi.mock('../../hooks/useAuditLogs', () => ({
+vi.mock('@admin/hooks/useAuditLogs', () => ({
   useAuditLogStore: () => ({
     logs: mockLogs,
     loading: false,

@@ -18,11 +18,11 @@ const mockPermState = {
   fetchStaticData: mockFetchStaticData,
 }
 
-vi.mock('../../stores/adminStore', () => ({
+vi.mock('@admin/stores/adminStore', () => ({
   useAdminStore: () => mockAdminState,
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissionStore: () => mockPermState,
 }))
 

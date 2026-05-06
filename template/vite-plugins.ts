@@ -5,6 +5,8 @@ import http from 'http'
 
 let entryLoaded = false
 
+const _dynamicImport = (p: string) => import(p)
+
 export function websocketPlugin(): Plugin {
   return {
     name: 'websocket-upgrade',
@@ -46,9 +48,12 @@ export function websocketPlugin(): Plugin {
               return
             }
 
-            const { getRuntimeAdapter, setRuntimeAdapter } =
-              await import('./src/server/core/runtime')
-            const { getNodeRuntimeAdapter } = await import('./src/server/core/runtime-node')
+            const { getRuntimeAdapter, setRuntimeAdapter } = (await _dynamicImport(
+              './src/server/core/runtime'
+            )) as typeof import('./src/server/core/runtime')
+            const { getNodeRuntimeAdapter } = (await _dynamicImport(
+              './src/server/core/runtime-node'
+            )) as typeof import('./src/server/core/runtime-node')
 
             let runtime:
               | InstanceType<typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter>
@@ -100,15 +105,21 @@ export function dbPlugin(): Plugin {
     name: 'db-bootstrap',
     configureServer(server) {
       server.httpServer?.once('listening', async () => {
-        const { getDb, runMigrations } = await import('./src/server/db')
-        const { logger } = await import('./src/server/utils/logger')
+        const { getDb, runMigrations } = (await _dynamicImport(
+          './src/server/db'
+        )) as typeof import('./src/server/db')
+        const { logger } = (await _dynamicImport(
+          './src/server/utils/logger'
+        )) as typeof import('./src/server/utils/logger')
         const log = logger.bootstrap()
 
         try {
           log.info({}, 'Initializing database...')
           await getDb()
           await runMigrations()
-          const { initializeDatabase } = await import('./src/server/db/init')
+          const { initializeDatabase } = (await _dynamicImport(
+            './src/server/db/init'
+          )) as typeof import('./src/server/db/init')
           await initializeDatabase()
           log.info({}, 'Database ready')
         } catch (err) {

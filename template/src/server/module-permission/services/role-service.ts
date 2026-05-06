@@ -1,8 +1,8 @@
-import type { Role, NewRole } from '../../db/schema/roles'
-import { getDb } from '../../db'
-import { roles, userRoles } from '../../db/schema'
+import type { Role, NewRole } from '@server/db/schema/roles'
+import { getDb } from '@server/db'
+import { roles, userRoles } from '@server/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { transformRole } from '../../utils/date'
+import { transformRole } from '@server/utils/date'
 
 export class RoleService {
   async getAll(): Promise<ReturnType<typeof transformRole>[]> {

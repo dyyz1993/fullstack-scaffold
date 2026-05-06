@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createTestClient } from '../../test-utils/test-client'
+import { createTestClient } from '@server/test-utils/test-client'
 
 function authedClient(token: string) {
   return createTestClient(undefined, {

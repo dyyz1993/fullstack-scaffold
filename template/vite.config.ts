@@ -38,6 +38,7 @@ export default defineConfig({
       '@client': path.resolve(__dirname, 'src/client'),
       '@server': path.resolve(__dirname, 'src/server'),
       '@admin': path.resolve(__dirname, 'src/admin'),
+      '@cli': path.resolve(__dirname, 'src/cli'),
     },
   },
 })

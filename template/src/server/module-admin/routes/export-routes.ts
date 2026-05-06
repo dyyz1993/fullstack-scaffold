@@ -1,9 +1,9 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { authMiddleware, type AuthUser } from '../../middleware/auth'
+import { authMiddleware, type AuthUser } from '@server/middleware/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
-import { sanitizeCsvField } from '../../utils/file-storage'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
+import { sanitizeCsvField } from '@server/utils/file-storage'
 import { DownloadTokenSchema } from '@shared/modules/admin'
 
 const downloadTokens = new Map<string, { createdAt: number; expiresIn: number }>()

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
 import { PermissionService } from '../services/permission-service-impl'
 import { roleService } from '../services/role-service'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Permission Service', () => {
   let service: PermissionService

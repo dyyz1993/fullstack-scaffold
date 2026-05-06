@@ -33,7 +33,7 @@ const mockUsersPost = vi.fn()
 const mockUsersPut = vi.fn()
 const mockUsersDelete = vi.fn()
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       admin: {
@@ -68,7 +68,7 @@ vi.mock('../../services/apiClient', () => ({
   }),
 }))
 
-vi.mock('../../hooks/useConfig', () => ({
+vi.mock('@admin/hooks/useConfig', () => ({
   useRoleLabels: () => ({
     roleLabels: {
       super_admin: '超级管理员',
@@ -79,7 +79,7 @@ vi.mock('../../hooks/useConfig', () => ({
   }),
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => ({
     hasPermission: () => true,
     hasAnyPermission: () => true,

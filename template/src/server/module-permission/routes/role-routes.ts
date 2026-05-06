@@ -1,11 +1,11 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
-import { authMiddleware } from '../../middleware/auth'
+import { authMiddleware } from '@server/middleware/auth'
 import { Role } from '@shared/modules/permission'
 import { roleService } from '../services/role-service'
 import { permissionService } from '../services/permission-service-impl'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import {
   RoleSchema,
   CreateRoleSchema,
@@ -201,7 +201,10 @@ export const roleRoutes = new OpenAPIHono()
     const deleted = await roleService.delete(id)
 
     if (!deleted) {
-      return c.json({ success: false as const, error: 'Cannot delete system role or role not found' }, 400)
+      return c.json(
+        { success: false as const, error: 'Cannot delete system role or role not found' },
+        400
+      )
     }
 
     return c.json(success({}), 200)
@@ -216,7 +219,10 @@ export const roleRoutes = new OpenAPIHono()
     }
 
     if (role.code === 'super_admin') {
-      return c.json({ success: false as const, error: 'Cannot modify super admin permissions' }, 403)
+      return c.json(
+        { success: false as const, error: 'Cannot modify super admin permissions' },
+        403
+      )
     }
 
     const validation = validatePermissionDependencies(permissionIds)

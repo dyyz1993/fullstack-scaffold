@@ -1,11 +1,11 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { authMiddleware, type AuthUser } from '../../middleware/auth'
-import * as notificationService from '../../module-notifications/services/notification-service'
+import { authMiddleware, type AuthUser } from '@server/middleware/auth'
+import * as notificationService from '@server/module-notifications/services/notification-service'
 import { realtime } from '@server/core'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
-import { logger } from '../../utils/logger'
-import { NotFoundError } from '../../utils/app-error'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
+import { logger } from '@server/utils/logger'
+import { NotFoundError } from '@server/utils/app-error'
 import { Role } from '@shared/modules/permission'
 import {
   NotificationSchema,

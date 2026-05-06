@@ -1,6 +1,6 @@
 import { Command } from 'commander'
-import { getBaseUrl, setBaseUrl, getClient } from '../../utils/api'
-import { getLogger } from '../../utils/logger'
+import { getBaseUrl, setBaseUrl, getClient } from '@cli/utils/api'
+import { getLogger } from '@cli/utils/logger'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'

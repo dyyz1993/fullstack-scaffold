@@ -8,10 +8,10 @@ import {
   getPublicFileUrl,
   getPrivateFileUrl,
   saveFile,
-} from '../../utils/file-storage'
-import { mediumRateLimitMiddleware } from '../../middleware/rate-limit'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
-import { NotFoundError, AuthorizationError } from '../../utils/app-error'
+} from '@server/utils/file-storage'
+import { mediumRateLimitMiddleware } from '@server/middleware/rate-limit'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
+import { NotFoundError, AuthorizationError } from '@server/utils/app-error'
 import {
   FileDownloadSchema,
   PrivateFileQuerySchema,

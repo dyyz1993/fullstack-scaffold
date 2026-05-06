@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
 import * as todoService from '../services/todo-service'
-import { getRawClient, getDb } from '../../db'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { getRawClient, getDb } from '@server/db'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Todo Service', () => {
   beforeAll(async () => {

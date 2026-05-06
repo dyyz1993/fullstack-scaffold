@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest'
-import { createTestClient } from '../../test-utils/test-client'
+import { createTestClient } from '@server/test-utils/test-client'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 import * as notificationService from '../services/notification-service'

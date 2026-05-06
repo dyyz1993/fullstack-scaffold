@@ -41,7 +41,7 @@ const mockContentByIdGet = vi.fn()
 const mockContentByIdPut = vi.fn()
 const mockContentByIdDelete = vi.fn()
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       contents: {
@@ -57,7 +57,7 @@ vi.mock('../../services/apiClient', () => ({
   },
 }))
 
-vi.mock('../../components/PermissionGuard', () => ({
+vi.mock('@admin/components/PermissionGuard', () => ({
   PermissionGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 

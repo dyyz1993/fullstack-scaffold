@@ -1,5 +1,5 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
-import type { AuthUser } from '../../middleware/auth'
+import type { AuthUser } from '@server/middleware/auth'
 import { authRoutes } from './auth-routes'
 import { userManagementRoutes } from './user-management-routes'
 import { adminNotificationRoutes } from './admin-notification-routes'

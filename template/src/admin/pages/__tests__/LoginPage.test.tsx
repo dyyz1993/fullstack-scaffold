@@ -12,7 +12,7 @@ vi.mock('react-router-dom', () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }))
 
-vi.mock('../../stores/adminStore', () => ({
+vi.mock('@admin/stores/adminStore', () => ({
   useAdminStore: () => ({
     login: mockLogin,
     loading: mockLoading,

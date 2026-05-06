@@ -1,9 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { authMiddleware } from '../../middleware/auth'
-import { getAuthUser } from '../../utils/auth'
+import { authMiddleware } from '@server/middleware/auth'
+import { getAuthUser } from '@server/utils/auth'
 import { permissionService } from '../services/permission-service-impl'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import {
   RoleInfoSchema,
   PermissionInfoSchema,

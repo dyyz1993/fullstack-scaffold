@@ -16,7 +16,7 @@ const mockAdminState = {
   isAuthenticated: true,
 }
 
-vi.mock('../../stores/adminStore', () => ({
+vi.mock('@admin/stores/adminStore', () => ({
   useAdminStore: Object.assign(
     vi.fn(() => mockAdminState),
     {
@@ -45,7 +45,7 @@ const mockInitData = {
   },
 }
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       permissions: {

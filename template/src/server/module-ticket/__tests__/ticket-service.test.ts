@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/ticket-service'
 import type { CreateTicketInput, UpdateTicketInput, ReplyTicketInput } from '@shared/modules/ticket'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Ticket Service', () => {
   const createdTicketIds: string[] = []

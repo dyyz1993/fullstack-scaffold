@@ -2,8 +2,8 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { getCookie } from 'hono/cookie'
 import { generateCaptcha, verifyCaptcha } from '../services/captcha-service'
-import { markCaptchaVerifiedMiddleware } from '../../middleware/captcha'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { markCaptchaVerifiedMiddleware } from '@server/middleware/captcha'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import {
   CaptchaResponseSchema,
   VerifyCaptchaRequestSchema,

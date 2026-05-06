@@ -1,9 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
-import { authMiddleware } from '../../middleware/auth'
+import { authMiddleware } from '@server/middleware/auth'
 import { auditLogService } from '../services/audit-log-service'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { AuditLogSchema, ResourceTypeSchema, ActionTypeSchema } from '@shared/modules/audit'
 
 const getAuditLogsRoute = createRoute({

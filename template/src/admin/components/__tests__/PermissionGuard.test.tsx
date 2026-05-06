@@ -10,7 +10,7 @@ const mockPermissions = {
   hasAllPermissions: (ps: Permission[]) => ps.every(p => mockPermissions.permissions.includes(p)),
 }
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => mockPermissions,
 }))
 

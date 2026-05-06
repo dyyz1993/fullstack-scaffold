@@ -7,7 +7,7 @@ const mockSetAuth = vi.fn()
 const mockLogout = vi.fn()
 
 // Mock zustand
-vi.mock('../../stores/authStore', () => ({
+vi.mock('@client/stores/authStore', () => ({
   useAuthStore: vi.fn(selector => {
     const state = {
       isAuthenticated: false,
@@ -24,7 +24,7 @@ vi.mock('../../stores/authStore', () => ({
   }),
 }))
 
-import { useAuthStore } from '../../stores/authStore'
+import { useAuthStore } from '@client/stores/authStore'
 
 describe('AuthButton', () => {
   beforeEach(() => {

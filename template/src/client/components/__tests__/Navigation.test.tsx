@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { Navigation } from '../Navigation'
 
-vi.mock('../../stores/todoStore', () => ({
+vi.mock('@client/stores/todoStore', () => ({
   useTodoStore: () => ({
     todos: [{ id: 1, title: 'Test Todo', status: 'pending' }],
   }),

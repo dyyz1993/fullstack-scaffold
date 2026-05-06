@@ -6,7 +6,7 @@ import { DashboardPage } from '../DashboardPage'
 const mockStatsGet = vi.fn()
 const mockNotificationPost = vi.fn()
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       admin: {

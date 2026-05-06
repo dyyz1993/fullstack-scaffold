@@ -1,10 +1,10 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { authMiddleware, type AuthUser } from '../../middleware/auth'
-import { strictRateLimitMiddleware } from '../../middleware/rate-limit'
-import { getAuthUser } from '../../utils/auth'
+import { authMiddleware, type AuthUser } from '@server/middleware/auth'
+import { strictRateLimitMiddleware } from '@server/middleware/rate-limit'
+import { getAuthUser } from '@server/utils/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import {
   AuthUserSchema,
   LoginRequestSchema,

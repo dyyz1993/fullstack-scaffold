@@ -1,7 +1,7 @@
 import type { AppNotification, CreateNotificationInput } from '@shared/schemas'
-import { generateUUID } from '../../utils/uuid'
+import { generateUUID } from '@server/utils/uuid'
 import { realtime } from '@server/core'
-import { logger } from '../../utils/logger'
+import { logger } from '@server/utils/logger'
 
 const notifications: AppNotification[] = []
 

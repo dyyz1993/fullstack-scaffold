@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/order-service'
 import type { CreateOrderInput, UpdateOrderInput } from '@shared/modules/order'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Order Service', () => {
   let createdOrderIds: string[] = []

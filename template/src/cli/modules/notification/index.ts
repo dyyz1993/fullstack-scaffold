@@ -1,6 +1,6 @@
 import { Command } from 'commander'
-import { getClient } from '../../utils/api'
-import { getLogger } from '../../utils/logger'
+import { getClient } from '@cli/utils/api'
+import { getLogger } from '@cli/utils/logger'
 
 export function registerNotificationCommands(program: Command) {
   const notification = program

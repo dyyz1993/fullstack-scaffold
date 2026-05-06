@@ -60,7 +60,7 @@ const mockStatsResponse = {
   },
 }
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       admin: {
@@ -79,7 +79,7 @@ vi.mock('../../services/apiClient', () => ({
   },
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissionStore: {
     getState: () => ({
       initPermissions: vi.fn(),
@@ -164,7 +164,7 @@ describe('useAdminStore', () => {
   })
 
   it('should handle login failure', async () => {
-    const { apiClient } = await import('../../services/apiClient')
+    const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.admin.login.$post).mockImplementationOnce(
       async () =>
         ({

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import app from '../../entries/node'
+import app from '@server/entries/node'
 import '../services/chat-service'
-import { createTestClient } from '../../test-utils/test-client'
-import { createTestServer } from '../../test-utils/test-server'
+import { createTestClient } from '@server/test-utils/test-client'
+import { createTestServer } from '@server/test-utils/test-server'
 import { createWSClient } from '@shared/core/ws-client'
 import type { WSStatus } from '@shared/schemas'
 

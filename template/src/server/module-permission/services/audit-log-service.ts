@@ -1,8 +1,8 @@
-import type { NewPermissionAuditLog } from '../../db/schema/permission-audit-logs'
-import { getDb } from '../../db'
-import { permissionAuditLogs } from '../../db/schema'
+import type { NewPermissionAuditLog } from '@server/db/schema/permission-audit-logs'
+import { getDb } from '@server/db'
+import { permissionAuditLogs } from '@server/db/schema'
 import { eq, and, gte, lte, desc } from 'drizzle-orm'
-import { transformAuditLog } from '../../utils/date'
+import { transformAuditLog } from '@server/utils/date'
 import { type ResourceType, type ActionType } from '@shared/constants'
 
 export class AuditLogService {

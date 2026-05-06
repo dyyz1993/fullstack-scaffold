@@ -6,11 +6,11 @@ import type {
   ContentCategory,
   ContentStatus,
 } from '@shared/modules/content'
-import { getDb } from '../../db'
-import { contents, type ContentTable } from '../../db/schema'
-import { toISOString } from '../../utils/date'
+import { getDb } from '@server/db'
+import { contents, type ContentTable } from '@server/db/schema'
+import { toISOString } from '@server/utils/date'
 import { randomDate, randomElement } from '@server/utils/generate'
-import { parseModuleId } from '../../utils/id-helpers'
+import { parseModuleId } from '@server/utils/id-helpers'
 
 export async function seedContentsIfEmpty(): Promise<void> {
   const db = await getDb()

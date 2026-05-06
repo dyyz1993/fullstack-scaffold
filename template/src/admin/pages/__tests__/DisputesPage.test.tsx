@@ -61,7 +61,7 @@ const mockDisputes: Dispute[] = [
 const mockDisputesGet = vi.fn()
 const mockDisputeResolvePut = vi.fn()
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       disputes: {
@@ -76,7 +76,7 @@ vi.mock('../../services/apiClient', () => ({
   },
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => ({
     hasPermission: () => true,
     hasAnyPermission: () => true,

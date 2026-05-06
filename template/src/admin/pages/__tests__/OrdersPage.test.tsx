@@ -55,7 +55,7 @@ const mockOrdersGet = vi.fn()
 const mockOrderProcessPut = vi.fn()
 const mockOrderCancelPut = vi.fn()
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       orders: {
@@ -73,7 +73,7 @@ vi.mock('../../services/apiClient', () => ({
   },
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => ({
     hasPermission: () => true,
     hasAnyPermission: () => true,

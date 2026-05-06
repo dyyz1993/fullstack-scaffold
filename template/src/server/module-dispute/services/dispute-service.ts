@@ -7,11 +7,11 @@ import type {
   DisputeType,
   DisputeStatus,
 } from '@shared/modules/dispute'
-import { getDb } from '../../db'
-import { disputes, type DisputeTable } from '../../db/schema'
-import { toISOString } from '../../utils/date'
+import { getDb } from '@server/db'
+import { disputes, type DisputeTable } from '@server/db/schema'
+import { toISOString } from '@server/utils/date'
 import { generateDisputeNo, randomDate, randomElement } from '@server/utils/generate'
-import { parseModuleId } from '../../utils/id-helpers'
+import { parseModuleId } from '@server/utils/id-helpers'
 
 export async function seedDisputesIfEmpty(): Promise<void> {
   const db = await getDb()

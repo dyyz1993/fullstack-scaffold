@@ -1,11 +1,11 @@
 import { eq, and } from 'drizzle-orm'
-import type { Permission, NewPermission } from '../../db/schema/permissions'
+import type { Permission, NewPermission } from '@server/db/schema/permissions'
 import type { RoleInfo, PermissionInfo, MenuItem } from '@shared/modules/permission'
 import { Permission as PermissionEnum, Role } from '@shared/modules/permission'
-import { getDb } from '../../db'
-import { permissions, rolePermissions, roles } from '../../db/schema'
+import { getDb } from '@server/db'
+import { permissions, rolePermissions, roles } from '@server/db/schema'
 import { roleService } from './role-service'
-import { logger } from '../../utils/logger'
+import { logger } from '@server/utils/logger'
 import { MENU_CONFIG, PAGE_PERMISSIONS, type PagePermissionConfig } from './permission-service'
 
 const log = logger.api()

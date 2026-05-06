@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { authMiddleware } from '../auth'
 import { Role } from '@shared/modules/permission'
-import { AppError } from '../../utils/app-error'
+import { AppError } from '@server/utils/app-error'
 
 function createTestApp() {
   const app = new Hono()

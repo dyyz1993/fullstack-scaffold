@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import { App } from '../../App'
+import { App } from '@client/App'
 
-vi.mock('../../pages/TodoPage', () => ({
+vi.mock('@client/pages/TodoPage', () => ({
   TodoPage: () => <div data-testid="todo-page">Todo Page</div>,
 }))
 
-vi.mock('../../pages/NotificationPage', () => ({
+vi.mock('@client/pages/NotificationPage', () => ({
   NotificationPage: () => <div data-testid="notification-page">Notification Page</div>,
 }))
 
-vi.mock('../../pages/WebSocketPage', () => ({
+vi.mock('@client/pages/WebSocketPage', () => ({
   WebSocketPage: () => <div data-testid="websocket-page">WebSocket Page</div>,
 }))
 

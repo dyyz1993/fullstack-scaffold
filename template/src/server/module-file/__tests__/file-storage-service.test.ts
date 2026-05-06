@@ -17,7 +17,7 @@ import {
   getFileStorageConfig,
   getUploadConfig,
   validateFile,
-} from '../../utils/file-storage'
+} from '@server/utils/file-storage'
 import { unlink } from 'fs/promises'
 import { existsSync } from 'fs'
 

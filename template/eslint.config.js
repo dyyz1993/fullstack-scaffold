@@ -35,6 +35,7 @@ import { requireNullableForOptional } from './eslint-rules/require-nullable-for-
 import { moduleBoundary } from './eslint-rules/module-boundary.js'
 import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
+import { noDeepRelativeImports } from './eslint-rules/no-deep-relative-imports.js'
 
 const localRules = {
   rules: {
@@ -69,6 +70,7 @@ const localRules = {
     'module-boundary': moduleBoundary,
     'limit-type-complexity': limitTypeComplexity,
     'require-antd-generic-types': requireAntdGenericTypes,
+    'no-deep-relative-imports': noDeepRelativeImports,
   },
 }
 
@@ -99,6 +101,7 @@ export default tseslint.config(
       'no-console': ['error', { allow: ['warn', 'error'] }],
       'local-rules/no-ambiguous-file-paths': 'error',
       'local-rules/no-direct-ws-sse': 'error',
+      'local-rules/no-deep-relative-imports': ['error', { maxDepth: 2 }],
     },
   },
   {

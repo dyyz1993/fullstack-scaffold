@@ -24,7 +24,7 @@ const mockStore: MockTodoStore = {
   deleteTodo: vi.fn().mockResolvedValue(undefined),
 }
 
-vi.mock('../../stores/todoStore', () => ({
+vi.mock('@client/stores/todoStore', () => ({
   useTodoStore: vi.fn((selector?: (state: MockTodoStore) => unknown) => {
     if (selector) {
       return selector(mockStore)

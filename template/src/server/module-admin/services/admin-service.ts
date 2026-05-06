@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs'
-import { getDb, getRawClient } from '../../db'
-import { todos } from '../../db/schema'
+import { getDb, getRawClient } from '@server/db'
+import { todos } from '@server/db/schema'
 import { desc } from 'drizzle-orm'
-import { toISOString } from '../../utils/date'
-import { getMockUsers } from '../../utils/auth'
+import { toISOString } from '@server/utils/date'
+import { getMockUsers } from '@server/utils/auth'
 import { Role, getPermissionsByRole } from '@shared/modules/permission'
 import type {
   SystemStats,

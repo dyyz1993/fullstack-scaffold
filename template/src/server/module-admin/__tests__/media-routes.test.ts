@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { createTestClient } from '../../test-utils/test-client'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { createTestClient } from '@server/test-utils/test-client'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Media Routes', () => {
   const authHeaders = { Authorization: 'Bearer admin-token' }
@@ -20,9 +20,7 @@ describe('Media Routes', () => {
   describe('GET /api/admin/avatar/:id', () => {
     it('should require authentication', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.avatar[':id'].$get(
-        { param: { id: 'test-user' } }
-      )
+      const res = await client.api.admin.avatar[':id'].$get({ param: { id: 'test-user' } })
       expect(res.status).toBe(401)
     })
 
@@ -54,9 +52,7 @@ describe('Media Routes', () => {
   describe('GET /api/admin/icon/:name', () => {
     it('should require authentication', async () => {
       const client = createTestClient()
-      const res = await client.api.admin.icon[':name'].$get(
-        { param: { name: 'home' } }
-      )
+      const res = await client.api.admin.icon[':name'].$get({ param: { name: 'home' } })
       expect(res.status).toBe(401)
     })
 
@@ -118,7 +114,7 @@ describe('Media Routes', () => {
       )
 
       expect(res.status).toBe(404)
-      const data = await res.json() as Record<string, unknown>
+      const data = (await res.json()) as Record<string, unknown>
       expect(data.success).toBe(false)
       expect(data.error).toBe('Icon not found')
     })

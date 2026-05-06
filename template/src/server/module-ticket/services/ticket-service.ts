@@ -8,11 +8,11 @@ import type {
   TicketPriority,
   TicketCategory,
 } from '@shared/modules/ticket'
-import { getDb } from '../../db'
-import { tickets, ticketReplies, type TicketTable, type TicketReplyTable } from '../../db/schema'
-import { toISOString } from '../../utils/date'
+import { getDb } from '@server/db'
+import { tickets, ticketReplies, type TicketTable, type TicketReplyTable } from '@server/db/schema'
+import { toISOString } from '@server/utils/date'
 import { generateTicketNo, randomDate, randomElement } from '@server/utils/generate'
-import { parseModuleId } from '../../utils/id-helpers'
+import { parseModuleId } from '@server/utils/id-helpers'
 
 const AGENTS = ['客服小王', '客服小李', '客服小张']
 

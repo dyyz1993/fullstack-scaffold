@@ -1,9 +1,9 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as contentService from '../services/content-service'
-import { successResponse, errorResponse, success, created } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
 import { NotFoundError } from '@server/utils/app-error'
-import { authMiddleware } from '../../middleware/auth'
+import { authMiddleware } from '@server/middleware/auth'
 import { Permission } from '@shared/modules/permission'
 import { z } from '@hono/zod-openapi'
 import {

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import * as service from '../services/dispute-service'
 import type { CreateDisputeInput } from '@shared/modules/dispute'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Dispute Service', () => {
   const createdDisputeIds: string[] = []

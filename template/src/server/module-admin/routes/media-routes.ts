@@ -1,8 +1,8 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { authMiddleware, type AuthUser } from '../../middleware/auth'
+import { authMiddleware, type AuthUser } from '@server/middleware/auth'
 import * as adminService from '../services/admin-service'
-import { errorResponse } from '../../utils/route-helpers'
+import { errorResponse } from '@server/utils/route-helpers'
 
 const getAvatarRoute = createRoute({
   method: 'get',

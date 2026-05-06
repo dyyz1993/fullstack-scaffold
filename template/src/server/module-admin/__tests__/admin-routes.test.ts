@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { createTestClient } from '../../test-utils/test-client'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
-import { getRawClient } from '../../db'
+import { createTestClient } from '@server/test-utils/test-client'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
+import { getRawClient } from '@server/db'
 import { Role } from '@shared/modules/permission'
-import * as notificationService from '../../module-notifications/services/notification-service'
+import * as notificationService from '@server/module-notifications/services/notification-service'
 
 function authedClient(token = 'admin-token') {
   return createTestClient(undefined, {

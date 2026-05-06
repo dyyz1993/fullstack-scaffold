@@ -6,10 +6,10 @@ import type {
   TodoAttachment,
   TodoWithAttachments,
 } from '@shared/schemas'
-import { getDb } from '../../db'
-import { todos, todoAttachments, type TodoTable, type TodoAttachmentTable } from '../../db/schema'
-import { toISOString } from '../../utils/date'
-import { saveFile, deleteFile, validateFile, getUploadConfig } from '../../utils/file-storage'
+import { getDb } from '@server/db'
+import { todos, todoAttachments, type TodoTable, type TodoAttachmentTable } from '@server/db/schema'
+import { toISOString } from '@server/utils/date'
+import { saveFile, deleteFile, validateFile, getUploadConfig } from '@server/utils/file-storage'
 
 const TODO_NAMESPACE = 'todos'
 

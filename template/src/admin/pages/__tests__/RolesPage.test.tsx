@@ -38,7 +38,7 @@ const mockDeleteRole = vi.fn()
 const mockUpdateRolePermissions = vi.fn()
 const mockRefreshPermissions = vi.fn()
 
-vi.mock('../../hooks/useRoles', () => ({
+vi.mock('@admin/hooks/useRoles', () => ({
   useRoleStore: () => ({
     roles: mockRoles,
     loading: false,
@@ -50,7 +50,7 @@ vi.mock('../../hooks/useRoles', () => ({
   }),
 }))
 
-vi.mock('../../hooks/useConfig', () => ({
+vi.mock('@admin/hooks/useConfig', () => ({
   useConfig: () => ({
     permissions: [
       { permission: 'user:view', label: '查看用户', category: 'user' },
@@ -64,7 +64,7 @@ vi.mock('../../hooks/useConfig', () => ({
   }),
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => ({
     permissions: [],
     role: null,
@@ -76,7 +76,7 @@ vi.mock('../../hooks/usePermissions', () => ({
 }))
 
 const mockRoleGet = vi.fn()
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       roles: {

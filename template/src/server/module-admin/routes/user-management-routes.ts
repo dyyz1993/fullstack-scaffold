@@ -1,8 +1,8 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import { authMiddleware, type AuthUser } from '../../middleware/auth'
+import { authMiddleware, type AuthUser } from '@server/middleware/auth'
 import * as adminService from '../services/admin-service'
-import { successResponse, errorResponse, success } from '../../utils/route-helpers'
+import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { Permission } from '@shared/modules/permission'
 import {
   UserSchema,

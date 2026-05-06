@@ -1,6 +1,6 @@
 import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
-import type { AppBindings } from '../../types/bindings'
+import type { AppBindings } from '@server/types/bindings'
 import { getRuntimeAdapter } from '@server/core/runtime'
 import { ChatProtocolSchema, WebSocketStatusSchema } from '@shared/modules/chat'
 import { successResponse, success } from '@server/utils/route-helpers'

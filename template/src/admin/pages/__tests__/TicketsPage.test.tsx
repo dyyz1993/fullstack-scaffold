@@ -64,7 +64,7 @@ const mockTickets: Ticket[] = [
 const mockTicketsGet = vi.fn()
 const mockTicketClosePut = vi.fn()
 
-vi.mock('../../services/apiClient', () => ({
+vi.mock('@admin/services/apiClient', () => ({
   apiClient: {
     api: {
       tickets: {
@@ -79,7 +79,7 @@ vi.mock('../../services/apiClient', () => ({
   },
 }))
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock('@admin/hooks/usePermissions', () => ({
   usePermissions: () => ({
     hasPermission: () => true,
     hasAnyPermission: () => true,

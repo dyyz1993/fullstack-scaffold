@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { createTestClient } from '../../test-utils/test-client'
-import { setupTestDatabase, cleanupTestDatabase } from '../../db/test-setup'
+import { createTestClient } from '@server/test-utils/test-client'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 
 describe('Order Routes', () => {
   const authHeaders = { Authorization: 'Bearer admin-token' }

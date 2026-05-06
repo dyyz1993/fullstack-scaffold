@@ -1,10 +1,10 @@
 import { eq, desc, and, like, or } from 'drizzle-orm'
 import type { Order, CreateOrderInput, UpdateOrderInput, OrderStatus } from '@shared/modules/order'
-import { getDb } from '../../db'
-import { orders, type OrderTable } from '../../db/schema'
-import { toISOString } from '../../utils/date'
+import { getDb } from '@server/db'
+import { orders, type OrderTable } from '@server/db/schema'
+import { toISOString } from '@server/utils/date'
 import { generateOrderNo, randomDate, randomElement } from '@server/utils/generate'
-import { parseModuleId } from '../../utils/id-helpers'
+import { parseModuleId } from '@server/utils/id-helpers'
 
 export async function seedOrdersIfEmpty(): Promise<void> {
   const db = await getDb()

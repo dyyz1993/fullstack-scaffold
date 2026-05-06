@@ -34,7 +34,7 @@ const mockStore: MockNotificationStore = {
   disconnectSSE: vi.fn(),
 }
 
-vi.mock('../../stores/notificationStore', () => ({
+vi.mock('@client/stores/notificationStore', () => ({
   useNotificationStore: vi.fn((selector?: (state: MockNotificationStore) => unknown) => {
     if (selector) {
       return selector(mockStore)
