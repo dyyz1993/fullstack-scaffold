@@ -1,8 +1,8 @@
-# create-biomimic-app — Project Guide
+# create-fullstack-scaffold — Project Guide
 
 ## Project Overview
 
-CLI scaffolding tool (`npx create-biomimic-app`) that generates a full-stack React + Hono + TypeScript application.
+CLI scaffolding tool (`npx create-fullstack-scaffold`) that generates a full-stack React + Hono + TypeScript application.
 
 ## Architecture
 
@@ -50,3 +50,63 @@ See `.opencode/rules/rpc-type-guide.md` for the full guide covering HTTP RPC, SS
 - `.github/copilot-instructions.md` — GitHub Copilot rules
 - `template/.claude/rules/` — Rules for scaffolded projects (19 files)
 - `template/eslint-rules/` — Custom ESLint rules (30+ rules)
+
+## Module System
+
+### Architecture
+
+Each module under `template/src/server/module-*/` has a `module.ts` manifest declaring:
+
+- Dependencies on other modules
+- Route registrations (client, admin, standalone)
+- Shared schemas, DB schemas, client/admin pages
+- Middleware it provides
+- Whether it has SSE or WebSocket
+
+### Module Categories
+
+| Category      | Modules                          |
+| ------------- | -------------------------------- |
+| core          | todos                            |
+| communication | chat, notifications              |
+| business      | order, ticket, dispute, content  |
+| system        | permission, admin, captcha, file |
+
+### Dependency Graph
+
+```
+todos ──── (standalone)
+chat ──── (standalone)
+notifications ── (standalone)
+file ──── (standalone)
+captcha ── (standalone)
+permission ── (standalone, foundational)
+admin ──→ permission + notifications
+order ──→ permission
+ticket ──→ permission
+dispute ──→ permission
+content ──→ permission
+```
+
+### Validation
+
+```bash
+cd template && npm run validate:modules
+```
+
+### Template Presets
+
+Defined in `template/modules.config.ts`:
+
+- `fullstack-admin` — All modules (default)
+- `todo-app` — todos + chat + notifications
+- `minimal` — todos only
+
+### Adding a New Module
+
+1. Create `template/src/server/module-xxx/` with routes, services, tests
+2. Create shared schemas in `template/src/shared/modules/xxx/`
+3. Add `module.ts` manifest in the module directory
+4. Register routes in `route-registry.ts`
+5. Add DB schemas to `server/db/schema/`
+6. Run `npm run validate:modules` to verify

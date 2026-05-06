@@ -8,7 +8,7 @@ lib/dist
 lib/**.trae/
 .trae/documents/
 /template/.trae/documents/
-my-biomimic-app
+my-fullstack-app
 .wrangler/
 
 # Playwright
@@ -30,7 +30,7 @@ e2e-debug-app/
 my-app/
 testapp/
 test-*/
-my-biomimic-app/
+my-fullstack-app/
 
 # AI tool artifacts
 .agents/

@@ -1,6 +1,6 @@
 # GitHub Copilot Instructions
 
-## Project: create-biomimic-app
+## Project: create-fullstack-scaffold
 
 A CLI scaffolding tool that generates full-stack React + Hono + TypeScript applications.
 

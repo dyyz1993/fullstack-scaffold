@@ -1,15 +1,15 @@
-# create-biomimic-app
+# create-fullstack-scaffold
 
 [![CI](https://github.com/dyyz1993/fullstack-scaffold/actions/workflows/ci.yml/badge.svg)](https://github.com/dyyz1993/fullstack-scaffold/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/create-biomimic-app.svg)](https://www.npmjs.com/package/create-biomimic-app)
-[![license](https://img.shields.io/npm/l/create-biomimic-app.svg)](https://github.com/dyyz1993/fullstack-scaffold/blob/master/LICENSE)
+[![npm version](https://img.shields.io/npm/v/create-fullstack-scaffold.svg)](https://www.npmjs.com/package/create-fullstack-scaffold)
+[![license](https://img.shields.io/npm/l/create-fullstack-scaffold.svg)](https://github.com/dyyz1993/fullstack-scaffold/blob/master/LICENSE)
 
 A full-stack application scaffold CLI — React 18 + Hono + TypeScript + Drizzle ORM + Ant Design, with built-in WebSocket, SSE, admin panel, and Cloudflare Workers support.
 
 ## Quick Start
 
 ```bash
-npx create-biomimic-app my-app
+npx create-fullstack-scaffold my-app
 cd my-app
 npm install
 npm run dev
@@ -46,7 +46,7 @@ Open [http://localhost:3010](http://localhost:3010) — frontend and backend sha
 ## Project Structure
 
 ```
-create-biomimic-app/
+create-fullstack-scaffold/
 ├── src/                        # CLI source code
 │   ├── commands/               # CLI commands
 │   └── index.ts                # CLI entry point

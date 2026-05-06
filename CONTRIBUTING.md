@@ -1,12 +1,12 @@
-# Contributing to create-biomimic-app
+# Contributing to create-fullstack-scaffold
 
 Thank you for your interest in contributing! This guide will help you get started.
 
 ## Project Overview
 
-**create-biomimic-app** is a CLI scaffolding tool that generates full-stack React + Hono + TypeScript applications. The project has two main parts:
+**create-fullstack-scaffold** is a CLI scaffolding tool that generates full-stack React + Hono + TypeScript applications. The project has two main parts:
 
-- **Root (`/`)** — The CLI tool itself (`src/`) that users run via `npx create-biomimic-app`
+- **Root (`/`)** — The CLI tool itself (`src/`) that users run via `npx create-fullstack-scaffold`
 - **Template (`/template`)** — The full-stack app template that gets copied to the user's project
 
 The generated app uses a monorepo-style architecture with single-port development (frontend + backend on port 3010), Hono RPC for type-safe APIs, and a module-based backend.
@@ -23,7 +23,7 @@ The generated app uses a monorepo-style architecture with single-port developmen
 ```bash
 # Clone the repo
 git clone https://github.com/dyyz1993/fullstack-scaffold.git
-cd create-biomimic-app
+cd create-fullstack-scaffold
 
 # Install root dependencies
 npm install
@@ -41,7 +41,7 @@ cd template && npm run dev
 ## Project Structure
 
 ```
-create-biomimic-app/
+create-fullstack-scaffold/
 ├── src/                  # CLI source code
 │   └── index.ts          # CLI entry point
 ├── template/             # Generated app template
@@ -113,20 +113,21 @@ npm run test:template
 
 This project uses [Commitlint](https://commitlint.js.org/) with the Conventional Commits config. The following types are allowed:
 
-| Type       | Description                        |
-|------------|------------------------------------|
-| `feat`     | A new feature                      |
-| `fix`      | A bug fix                          |
-| `docs`     | Documentation changes              |
-| `style`    | Code style changes (formatting)    |
-| `refactor` | Code refactoring                   |
-| `test`     | Adding or updating tests           |
-| `chore`    | Build/tooling changes              |
-| `revert`   | Revert a previous commit           |
+| Type       | Description                     |
+| ---------- | ------------------------------- |
+| `feat`     | A new feature                   |
+| `fix`      | A bug fix                       |
+| `docs`     | Documentation changes           |
+| `style`    | Code style changes (formatting) |
+| `refactor` | Code refactoring                |
+| `test`     | Adding or updating tests        |
+| `chore`    | Build/tooling changes           |
+| `revert`   | Revert a previous commit        |
 
 **Format**: `type: subject` (subject max 80 chars, body max 200 chars per line)
 
 Examples:
+
 ```
 feat: add user authentication module
 fix: resolve WebSocket reconnection issue

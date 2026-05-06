@@ -7,6 +7,14 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
+    },
+  },
+  {
     ignores: [
       "template/**",
       "node_modules/**",
@@ -16,7 +24,7 @@ export default [
       "testapp/**",
       "my-app/**",
       "e2e-debug-app/**",
-      "my-biomimic-app/**",
+      "my-fullstack-app/**",
       "test-*/**",
     ],
   },

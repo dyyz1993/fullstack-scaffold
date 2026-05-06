@@ -161,15 +161,67 @@ Required variables (see `.env.example`):
 API_BASE_URL=http://localhost:3010
 ```
 
+### Module Manifest System
+
+Each module under `src/server/module-*/` has a `module.ts` manifest declaring:
+
+- Dependencies on other modules
+- Route registrations (client, admin, standalone)
+- Shared schemas, DB schemas, client/admin pages
+- Middleware it provides
+- Whether it has SSE or WebSocket
+
+#### Module Categories
+
+| Category      | Modules                          |
+| ------------- | -------------------------------- |
+| core          | todos                            |
+| communication | chat, notifications              |
+| business      | order, ticket, dispute, content  |
+| system        | permission, admin, captcha, file |
+
+#### Dependency Graph
+
+```
+todos ──── (standalone)
+chat ──── (standalone)
+notifications ── (standalone)
+file ──── (standalone)
+captcha ── (standalone)
+permission ── (standalone, foundational)
+admin ──→ permission + notifications
+order ──→ permission
+ticket ──→ permission
+dispute ──→ permission
+content ──→ permission
+```
+
+#### Validation
+
+```bash
+npm run validate:modules
+```
+
+#### Template Presets
+
+Defined in `modules.config.ts`:
+
+- `fullstack-admin` — All modules (default)
+- `todo-app` — todos + chat + notifications
+- `minimal` — todos only
+
 ### Module Creation
 
 To add a new feature module:
 
-1. Create `src/server/module-{feature}/`
-2. Add routes, services, tests
-3. Register in `src/server/app.ts`
-4. Add client store if needed
-5. Add integration tests
+1. Create `src/server/module-{feature}/` with routes, services, tests
+2. Create shared schemas in `src/shared/modules/{feature}/`
+3. Add `module.ts` manifest in the module directory
+4. Register routes in `route-registry.ts`
+5. Add DB schemas to `server/db/schema/`
+6. Add client store if needed
+7. Add integration tests
+8. Run `npm run validate:modules` to verify
 
 ### API Route Pattern
 

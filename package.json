@@ -1,5 +1,5 @@
 {
-  "name": "create-biomimic-app",
+  "name": "create-fullstack-scaffold",
   "description": "A full-stack application scaffold CLI — React + Hono + TypeScript + Drizzle + Ant Design",
   "keywords": [
     "cli",
@@ -21,7 +21,7 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "create-biomimic-app": "./dist/cli/index.js"
+    "create-fullstack-scaffold": "./dist/cli/index.js"
   },
   "scripts": {
     "dev": "vite",

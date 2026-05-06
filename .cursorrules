@@ -1,4 +1,4 @@
-# create-biomimic-app — Cursor Rules
+# create-fullstack-scaffold — Cursor Rules
 
 ## Project Overview
 CLI tool that scaffolds full-stack React + Hono + TypeScript apps. Root is the CLI, `template/` is the app template.
