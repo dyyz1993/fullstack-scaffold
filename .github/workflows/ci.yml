@@ -73,7 +73,7 @@ jobs:
       - name: Run template tests
         run: npm run test:template
       - name: Validate modules
-        run: npm run validate:modules
+        run: cd template && npm run validate:modules
       - name: Run template integration tests
         run: cd template && npm run test:integration
       - name: Upload coverage
