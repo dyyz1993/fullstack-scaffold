@@ -1,9 +1,11 @@
+// @vitest-environment node
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import app from '@server/entries/node'
 import '../services/chat-service'
 import { createTestClient } from '@server/test-utils/test-client'
 import { createTestServer } from '@server/test-utils/test-server'
 import { createWSClient } from '@shared/core/ws-client'
+import { getRuntimeAdapter } from '@server/core/runtime'
 import type { WSStatus } from '@shared/schemas'
 
 describe('Chat Routes with Type-Safe Test Client', () => {
@@ -11,6 +13,11 @@ describe('Chat Routes with Type-Safe Test Client', () => {
   let client: ReturnType<typeof createTestClient>
 
   beforeAll(async () => {
+    const adapter = getRuntimeAdapter()
+    if ('handleWS' in adapter && typeof adapter.handleWS === 'function') {
+      adapter.handleWS('/api/chat/ws')
+    }
+
     testServer = await createTestServer(app, ['/api/chat/ws'])
     client = createTestClient(`http://localhost:${testServer.port}`, {
       webSocket: (url: string | URL) => createWSClient(url) as unknown as WebSocket,
@@ -79,6 +86,7 @@ describe('Chat Routes with Type-Safe Test Client', () => {
         })
 
         const result = await wsClient.call('ping', {})
+
         expect(result.pong).toBe(true)
         expect(result.timestamp).toBeDefined()
         expect(typeof result.timestamp).toBe('number')
@@ -133,7 +141,6 @@ describe('Chat Routes with Type-Safe Test Client', () => {
       wsClient.close()
 
       await new Promise<void>(resolve => setTimeout(resolve, 100))
-      // 状态可能是 'closed'、'closing' 或 undefined
       const validStatuses = ['closed', 'closing', undefined]
       expect(validStatuses).toContain(wsClient.status)
     })
@@ -158,7 +165,6 @@ describe('Chat Routes with Type-Safe Test Client', () => {
         const result = await wsClient.call('invalidMethod' as 'echo', { message: 'test' })
         expect(result).toBeNull()
       } catch (error) {
-        // 预期会抛出错误
         expect(error).toBeDefined()
       } finally {
         wsClient.close()
