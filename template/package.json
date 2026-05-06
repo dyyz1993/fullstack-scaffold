@@ -45,6 +45,7 @@
     "validate:all": "node --import tsx/esm lint-scripts/validate-all.ts",
     "validate:watch": "node --import tsx/esm lint-scripts/watch-validator.ts",
     "validate:vite-routes": "node --import tsx/esm lint-scripts/validate-vite-routes.ts",
+    "validate:modules": "npx tsx src/server/core/module-loader.ts",
     "check:refs": "node --import tsx/esm lint-scripts/check-refs.ts",
     "create:module": "node --import tsx/esm scripts/create-template.ts",
     "postinstall": "patch-package",

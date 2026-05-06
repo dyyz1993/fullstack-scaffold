@@ -32,3 +32,6 @@ export {
 
 // SSE Client
 export { SSEClientImpl, createSSEClient, type SSEClient, type SSEProtocol } from './sse-client'
+
+// Module Manifest
+export type { ModuleManifest, ModuleRegistry, TemplatePreset } from './module-manifest'
