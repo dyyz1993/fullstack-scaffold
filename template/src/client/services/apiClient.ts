@@ -8,7 +8,7 @@
 import { hc } from 'hono/client'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
-import { ClientApiType } from '@server/app'
+import type { ClientApiType } from '@server/index'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
@@ -51,9 +51,9 @@ export const apiClient = hc<ClientApiType>(baseUrl, {
     if (token) {
       const wsUrl = new URL(url)
       wsUrl.searchParams.set('token', token)
-      return new WSClientImpl(wsUrl)
+      return new WSClientImpl(wsUrl) as unknown as WebSocket
     }
-    return new WSClientImpl(url)
+    return new WSClientImpl(url) as unknown as WebSocket
   },
   sse: url => {
     const token = getAuthToken()

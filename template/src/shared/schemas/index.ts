@@ -1,5 +1,6 @@
-// Re-export global types for convenience (these are declared in types/global.d.ts)
-export type { WSClient, WSProtocol, SSEProtocol, SSEClient, WSStatus }
+// Re-export interfaces from implementation files
+export type { WSClient, WSProtocol, WSStatus } from '../core/ws-client'
+export type { SSEClient, SSEProtocol } from '../core/sse-client'
 
 // Re-export core
 export {

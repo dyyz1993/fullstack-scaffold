@@ -8,8 +8,6 @@
  * @impact [必填] 影响范围
  */
 
-import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Env, Schema } from 'hono'
 import { getRuntimeAdapter } from './runtime'
 
 interface RouteContent {
@@ -40,9 +38,11 @@ interface OpenAPIDocument {
   paths?: Record<string, PathItemObject>
 }
 
-export function autoRegisterRealtime<E extends Env, S extends Schema, BasePath extends string>(
-  app: OpenAPIHono<E, S, BasePath>
-): void {
+interface RealtimeScannable {
+  getOpenAPIDocument(...args: unknown[]): unknown
+}
+
+export function autoRegisterRealtime(app: RealtimeScannable): void {
   let runtime
   try {
     runtime = getRuntimeAdapter()

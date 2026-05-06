@@ -17,7 +17,7 @@ export interface CliFetchExtendOptions {
 
 export function createRPCClient(baseUrl: string) {
   return hc<ClientApiType>(baseUrl, {
-    webSocket: url => new WSClientImpl(url),
+    webSocket: url => new WSClientImpl(url) as unknown as WebSocket,
     sse: url => new SSEClientImpl(url),
   })
 }

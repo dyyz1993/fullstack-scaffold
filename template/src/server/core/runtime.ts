@@ -1,5 +1,9 @@
 /**
  * @framework-baseline af295398dc31b57a
+ *
+ * @framework-modify
+ * @reason Add handleWebSocketRequest/handleSSERequest optional methods to RuntimeAdapter interface
+ * @impact Route handlers can use adapter.handleSSERequest?() instead of 'in' + cast pattern
  */
 
 export interface RuntimePlatform {
@@ -35,6 +39,9 @@ export interface RuntimeAdapter {
   registerEvent(type: string, handler: (payload: unknown, clientId: string) => void): void
 
   onUpgrade?(req: Request, socket: unknown, head: unknown): boolean
+
+  handleWebSocketRequest?(request: Request): Response | Promise<Response>
+  handleSSERequest?(): Response | Promise<Response>
 }
 
 declare global {

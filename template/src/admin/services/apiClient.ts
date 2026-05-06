@@ -52,7 +52,7 @@ function createCustomFetch() {
 
 export const apiClient = hc<AdminApiType>(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
-  webSocket: url => new WSClientImpl(url),
+  webSocket: url => new WSClientImpl(url) as unknown as WebSocket,
   sse: url => {
     const token = getAuthToken()
     const headers: Record<string, string> = {}

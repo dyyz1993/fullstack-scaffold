@@ -8,11 +8,11 @@
  * @impact SSE 客户端现在支持 Authorization header
  */
 
-interface SSEProtocol {
+export interface SSEProtocol {
   events: Record<string, unknown>
 }
 
-interface SSEClient<P extends SSEProtocol = SSEProtocol> {
+export interface SSEClient<P extends SSEProtocol = SSEProtocol> {
   readonly status: 'connecting' | 'open' | 'closed'
   on<K extends keyof P['events']>(type: K, handler: (payload: P['events'][K]) => void): () => void
   onStatusChange(handler: (status: 'connecting' | 'open' | 'closed') => void): () => void
@@ -181,5 +181,5 @@ export function createSSEClient<P extends SSEProtocol>(
   url: string | URL,
   headers: Record<string, string> = {}
 ): SSEClient<P> {
-  return new SSEClientImpl<P>(url, headers) as unknown as SSEClient<P>
+  return new SSEClientImpl<P>(url, headers)
 }

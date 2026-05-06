@@ -8,14 +8,14 @@
  * @impact 所有使用 WSClientImpl 的地方不再需要 WebSocket 类型断言
  */
 
-type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
+export type WSStatus = 'connecting' | 'open' | 'closed' | 'reconnecting'
 
-interface WSProtocol {
+export interface WSProtocol {
   rpc: Record<string, { in: unknown; out: unknown }>
   events: Record<string, unknown>
 }
 
-interface WSClient<T extends WSProtocol = WSProtocol> {
+export interface WSClient<T extends WSProtocol = WSProtocol> {
   readonly status: WSStatus
   getSocket(): WebSocket | null
   call<K extends keyof T['rpc']>(
@@ -79,14 +79,17 @@ class StubWebSocket {
   static readonly CLOSED = 3
 }
 
-type WSBaseClass = typeof WebSocket extends undefined ? typeof StubWebSocket : typeof WebSocket
+type WSBase = WebSocket | StubWebSocket
 
-const WSBase: WSBaseClass = (
-  _hasWebSocket ? (globalThis.WebSocket as typeof WebSocket) : StubWebSocket
-) as WSBaseClass
+function createWSBase(url: string): WSBase {
+  if (WebSocketClass) {
+    return new WebSocketClass(url)
+  }
+  return new StubWebSocket()
+}
 
-export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase implements WSClient<P> {
-  private socket: WebSocket | null = null
+export class WSClientImpl<P extends WSProtocol = WSProtocol> implements WSClient<P> {
+  private ws: WSBase
   private handlers = new Map<string, ((payload: unknown) => void)[]>()
   private pendingRequests = new Map<string, PendingRequest>()
   private statusHandlers: ((status: WSStatus) => void)[] = []
@@ -98,27 +101,16 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase impl
   }
 
   getSocket(): WebSocket | null {
-    return this.socket
+    return (this.ws instanceof StubWebSocket ? null : this.ws) as WebSocket | null
   }
 
-  constructor(url: string | URL, protocols?: string | string[]) {
-    super(url.toString(), protocols as string[])
-    if (WebSocketClass) {
-      this.socket = new WebSocketClass(url.toString(), protocols)
-      this.attachSocket()
-    }
-  }
-
-  override send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
-    this.socket?.send(data as never)
-  }
-
-  override close() {
-    this.socket?.close()
+  constructor(url: string | URL) {
+    this.ws = createWSBase(url.toString())
+    this.attachSocket()
   }
 
   private attachSocket() {
-    const ws = this.socket!
+    const ws = this.ws
     if (ws.readyState === WS_OPEN) {
       this._status = 'open'
     } else if (ws.readyState === WS_CONNECTING) {
@@ -148,7 +140,7 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase impl
     this.updateStatus('open')
     while (this.messageBuffer.length > 0) {
       const msg = this.messageBuffer.shift()
-      if (msg) this.send(msg)
+      if (msg) this.ws.send(msg)
     }
   }
 
@@ -225,10 +217,14 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase impl
     }
   }
 
+  close(): void {
+    this.ws.close()
+  }
+
   private sendRaw(data: unknown) {
     const msg = JSON.stringify(data)
-    if (this.socket && this.socket.readyState === WS_OPEN) {
-      this.socket.send(msg as never)
+    if (this.ws.readyState === WS_OPEN) {
+      this.ws.send(msg)
     } else {
       this.messageBuffer.push(msg)
     }
@@ -236,5 +232,5 @@ export class WSClientImpl<P extends WSProtocol = WSProtocol> extends WSBase impl
 }
 
 export function createWSClient<P extends WSProtocol>(url: string | URL): WSClient<P> {
-  return new WSClientImpl<P>(url) as unknown as WSClient<P>
+  return new WSClientImpl<P>(url)
 }

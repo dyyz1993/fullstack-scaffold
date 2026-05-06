@@ -22,7 +22,13 @@ export {
 export type { RpcMethod, EventName, RpcInput, RpcOutput, EventPayload } from './protocol-types'
 
 // WS Client
-export { WSClientImpl, createWSClient } from './ws-client'
+export {
+  WSClientImpl,
+  createWSClient,
+  type WSClient,
+  type WSProtocol,
+  type WSStatus,
+} from './ws-client'
 
 // SSE Client
-export { SSEClientImpl, createSSEClient } from './sse-client'
+export { SSEClientImpl, createSSEClient, type SSEClient, type SSEProtocol } from './sse-client'

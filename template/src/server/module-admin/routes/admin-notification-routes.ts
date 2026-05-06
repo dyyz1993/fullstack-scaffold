@@ -189,10 +189,8 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
 
     const { getRuntimeAdapter } = await import('@server/core/runtime')
     const adapter = getRuntimeAdapter()
-    if ('handleSSERequest' in adapter && typeof adapter.handleSSERequest === 'function') {
-      const response = await (
-        adapter as { handleSSERequest: () => Response | Promise<Response> }
-      ).handleSSERequest()
+    if (adapter.handleSSERequest) {
+      const response = await adapter.handleSSERequest()
       return response
     }
     return c.json({ success: false as const, error: 'SSE not supported' }, 500)

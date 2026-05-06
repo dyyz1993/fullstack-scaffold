@@ -37,13 +37,8 @@ export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
   })
   .openapi(wsRoute, async _c => {
     const adapter = getRuntimeAdapter()
-    if (
-      'handleWebSocketRequest' in adapter &&
-      typeof adapter.handleWebSocketRequest === 'function'
-    ) {
-      return (
-        adapter as { handleWebSocketRequest: () => Response | Promise<Response> }
-      ).handleWebSocketRequest()
+    if (adapter.handleWebSocketRequest) {
+      return adapter.handleWebSocketRequest(_c.req.raw)
     }
     return new Response('WebSocket not supported', { status: 500 })
   })

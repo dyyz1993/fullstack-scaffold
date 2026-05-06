@@ -61,11 +61,11 @@ export class NodeRuntimeAdapter implements RuntimeAdapter {
   }
 
   getWSConnections(): Map<string, WSConnection> {
-    return this._connections as unknown as Map<string, WSConnection>
+    return this._connections as Map<string, WSConnection>
   }
 
   getSSEConnections(): Map<string, SSEConnection> {
-    return this.core.sseClients as unknown as Map<string, SSEConnection>
+    return this.core.sseClients
   }
 
   broadcast(event: string, data: unknown, exclude: string[] = []): void {

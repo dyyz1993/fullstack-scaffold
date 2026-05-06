@@ -53,11 +53,11 @@ export class CloudflareRuntimeAdapter implements RuntimeAdapter {
   }
 
   getWSConnections(): Map<string, WSConnection> {
-    return this.core.wsClients as unknown as Map<string, WSConnection>
+    return this.core.wsClients
   }
 
   getSSEConnections(): Map<string, SSEConnection> {
-    return this.core.sseClients as unknown as Map<string, SSEConnection>
+    return this.core.sseClients
   }
 
   broadcast(event: string, data: unknown, exclude: string[] = []): void {
