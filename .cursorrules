@@ -1,0 +1,55 @@
+# create-biomimic-app — Cursor Rules
+
+## Project Overview
+CLI tool that scaffolds full-stack React + Hono + TypeScript apps. Root is the CLI, `template/` is the app template.
+
+## Key Conventions
+- **Path aliases**: Use @server, @shared, @client, @admin, @cli — max 2 levels of `../`
+- **No `any` types** in production code — use `unknown` and narrow
+- **TypeScript strict mode** enabled everywhere
+- **Hono RPC**: Use `createRoute()` + `openapi()` for type-safe API routes
+- **Testing**: Vitest for unit, Playwright for E2E
+
+## Architecture
+- `src/` — CLI source code
+- `template/src/server/` — Hono backend with 15+ modules
+- `template/src/client/` — React frontend
+- `template/src/admin/` — Admin panel (React + Ant Design)
+- `template/src/shared/` — Shared types, schemas, hooks
+
+## Rules
+1. Never use `--no-verify` for git operations
+2. All user inputs must be validated (Zod schemas)
+3. Public functions must have explicit return types
+4. Files over 100 lines should be considered for splitting
+5. Errors must be handled — no empty catch blocks
+6. Commit messages follow conventional commits
+
+## Type System
+- Server routes use `@hono/zod-openapi` for schema-driven type inference
+- Client uses `hc<Type>()` from `hono/client` for typed RPC
+- SSE/WebSocket use protocol schemas for typed events
+- See `.opencode/rules/rpc-type-guide.md` for full guide
+
+## Route Definition Pattern
+```typescript
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
+import { successResponse } from '@server/utils/route-helpers'
+
+const listRoute = createRoute({
+  method: 'get',
+  path: '/items',
+  responses: { 200: successResponse(z.array(ItemSchema), 'List items') },
+})
+
+export const apiRoutes = new OpenAPIHono()
+  .openapi(listRoute, async c => { /* handler */ })
+```
+
+## Forbidden Patterns
+- `new WebSocket()` — use `apiClient.api.xxx.ws.$ws()`
+- `new EventSource()` — use `apiClient.api.xxx.stream.$sse()`
+- `fetch('/api/...')` — use typed `apiClient` methods
+- `.use()` in route files — breaks OpenAPIHono type inference
+- `z.boolean()` for success field — use `z.literal(true)`
+- Inline schemas in routes — define in `shared/modules/`
