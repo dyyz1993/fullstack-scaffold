@@ -1,8 +1,14 @@
 #!/usr/bin/env -S tsx
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import chalk from "chalk";
 import { createProject, ScaffoldError } from "./commands/create.js";
+import { loadPresets } from "./generators/template-generator.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const packageJson = await import("../package.json", {
   assert: { type: "json" },
@@ -11,22 +17,27 @@ const packageJson = await import("../package.json", {
 const program = new Command();
 
 program
-  .name("create-biomimic-app")
-  .description("Create a new BioMimic app with Todo List example")
+  .name("create-fullstack-scaffold")
+  .description("Create a new full-stack scaffold app with Todo List example")
   .version(packageJson.default.version)
   .argument("[project-name]", "Name of your project")
   .option("-c, --current-dir", "Create project in current directory")
+  .option(
+    "-p, --preset <preset>",
+    "Template preset to use (fullstack-admin, todo-app, minimal)",
+    "fullstack-admin",
+  )
   .action(
     async (
-      projectName = "my-biomimic-app",
-      options: { currentDir: boolean },
+      projectName = "my-fullstack-app",
+      options: { currentDir?: boolean; preset?: string },
     ) => {
       console.log("");
       console.log(
         chalk.cyan.bold("  ╔══════════════════════════════════════════╗"),
       );
       console.log(
-        chalk.cyan.bold("  ║   Create BioMimic App                    ║"),
+        chalk.cyan.bold("  ║   Create Fullstack Scaffold App          ║"),
       );
       console.log(
         chalk.cyan.bold("  ║   React + Vite + Zustand + Tailwind      ║"),
@@ -37,7 +48,11 @@ program
       console.log("");
 
       try {
-        await createProject(projectName, options?.currentDir);
+        await createProject({
+          projectName,
+          currentDir: options.currentDir ?? false,
+          preset: options.preset,
+        });
       } catch (error) {
         if (error instanceof ScaffoldError) {
           console.error(chalk.red(`  ✖ ${error.message}`));
@@ -47,5 +62,20 @@ program
       }
     },
   );
+
+program
+  .command("presets")
+  .description("List available template presets")
+  .action(() => {
+    const templateDir = path.join(__dirname, "../template");
+    const presets = loadPresets(templateDir);
+    console.log(chalk.cyan("\nAvailable presets:\n"));
+    for (const preset of presets) {
+      console.log(`  ${chalk.green(preset.id.padEnd(20))} ${preset.name}`);
+      console.log(`  ${" ".repeat(20)} ${preset.description}`);
+      console.log(`  ${" ".repeat(20)} Modules: ${preset.modules.join(", ")}`);
+      console.log();
+    }
+  });
 
 program.parse();

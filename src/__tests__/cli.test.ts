@@ -7,7 +7,7 @@ const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
 const CLI_PATH = path.join(PROJECT_ROOT, "src/index.ts");
 const TSX_BIN = path.join(PROJECT_ROOT, "node_modules/.bin/tsx");
 
-function tmpDir(prefix = "biomimic-test-"): string {
+function tmpDir(prefix = "fullstack-scaffold-test-"): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
@@ -47,7 +47,7 @@ describe("CLI", () => {
   test("shows help text with --help", () => {
     const result = runCli(["--help"]);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("create-biomimic-app");
+    expect(result.stdout).toContain("create-fullstack-scaffold");
     expect(result.stdout).toContain("project-name");
     expect(result.stdout).toContain("--current-dir");
   });
@@ -136,14 +136,14 @@ describe("CLI", () => {
     }
   });
 
-  test("default project name is my-biomimic-app when no name provided", () => {
-    const defaultDir = path.join(tempDir, "my-biomimic-app");
+  test("default project name is my-fullstack-app when no name provided", () => {
+    const defaultDir = path.join(tempDir, "my-fullstack-app");
     const result = runCli([], tempDir);
     expect(result.status).toBe(0);
     expect(fs.existsSync(defaultDir)).toBe(true);
     const pkgJson = JSON.parse(
       fs.readFileSync(path.join(defaultDir, "package.json"), "utf-8"),
     );
-    expect(pkgJson.name).toBe("my-biomimic-app");
+    expect(pkgJson.name).toBe("my-fullstack-app");
   });
 });

@@ -72,6 +72,8 @@ jobs:
         run: npm run validate:template
       - name: Run template tests
         run: npm run test:template
+      - name: Validate modules
+        run: npm run validate:modules
       - name: Run template integration tests
         run: cd template && npm run test:integration
       - name: Upload coverage
@@ -186,13 +188,28 @@ jobs:
       - name: Audit template dependencies
         run: cd template && npm ci && npm audit --audit-level=high --production
 
+  template-modules:
+    name: Template Module Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install template dependencies
+        run: cd template && npm ci
+      - name: Validate module manifests
+        run: cd template && npx tsx src/server/core/module-loader.ts
+
   feishu-notify:
     name: Feishu Notification
     if: always() && github.actor != 'dependabot[bot]'
-    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit]
+    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules]
     uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
     with:
-      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}"}'
+      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}"}'
       sha: ${{ github.sha }}
       ref: ${{ github.ref_name }}
       actor: ${{ github.actor }}

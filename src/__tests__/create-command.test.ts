@@ -7,7 +7,7 @@ const PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
 const CLI_PATH = path.join(PROJECT_ROOT, "src/index.ts");
 const TSX_BIN = path.join(PROJECT_ROOT, "node_modules/.bin/tsx");
 
-function tmpDir(prefix = "biomimic-create-"): string {
+function tmpDir(prefix = "fullstack-scaffold-create-"): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 

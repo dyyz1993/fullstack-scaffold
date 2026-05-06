@@ -50,7 +50,7 @@ describe("CLI Scaffold", () => {
     const result = runCli(["--help"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("create-biomimic-app");
+    expect(result.stdout).toContain("create-fullstack-scaffold");
     expect(result.stdout).toContain("project-name");
     expect(result.stdout).toContain("--current-dir");
   });
@@ -172,9 +172,9 @@ describe("CLI Scaffold", () => {
     expect(result.stderr).toContain("Invalid project name");
   });
 
-  test("default project name is my-biomimic-app", () => {
+  test("default project name is my-fullstack-app", () => {
     const parentDir = createTempDir();
-    const defaultDir = path.join(parentDir, "my-biomimic-app");
+    const defaultDir = path.join(parentDir, "my-fullstack-app");
 
     runCli([], parentDir);
 
@@ -182,6 +182,6 @@ describe("CLI Scaffold", () => {
     const pkgJson = JSON.parse(
       fs.readFileSync(path.join(defaultDir, "package.json"), "utf-8"),
     );
-    expect(pkgJson.name).toBe("my-biomimic-app");
+    expect(pkgJson.name).toBe("my-fullstack-app");
   });
 });

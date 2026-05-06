@@ -3,6 +3,31 @@ import { fileURLToPath } from "node:url";
 import fs from "fs-extra";
 import chalk from "chalk";
 import ora from "ora";
+import {
+  loadManifests,
+  loadPresets,
+  resolvePreset,
+  type ResolvedPreset,
+} from "../generators/template-generator";
+import {
+  getExcludePatterns,
+  getGeneratedFiles,
+} from "../generators/file-filter";
+import { generateRouteRegistry } from "../generators/route-registry";
+import { generateClientApp } from "../generators/client-app";
+import { generateClientNavigation } from "../generators/client-navigation";
+import { generateAdminApp } from "../generators/admin-app";
+import { generateDbSchemaBarrel } from "../generators/db-schema-barrel";
+import { generateDbInit } from "../generators/db-init";
+import { generateServerApp } from "../generators/server-app";
+import { generateSharedModulesIndex } from "../generators/shared-modules-index";
+import { generateSharedSchemasIndex } from "../generators/shared-schemas-index";
+import { generateMiddlewareIndex } from "../generators/middleware-index";
+import { generateAuthMiddleware } from "../generators/auth-middleware";
+import { generateAuthUtils } from "../generators/auth-utils";
+import { generateClientComponentsIndex } from "../generators/client-components-index";
+import { generateCliModulesIndex } from "../generators/cli-modules-index";
+import { filterPackageJson } from "../generators/package-json";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,12 +82,7 @@ function parseGitignore(content: string): string[] {
   return [...includePatterns, ...negatePatterns.map((p) => `!${p}`)];
 }
 
-/**
- * Generate a database name from project name
- * e.g., "my-project" -> "my-project-db"
- */
 function generateDbName(projectName: string): string {
-  // Remove special characters and convert to lowercase
   const sanitized = projectName
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, "-")
@@ -71,9 +91,6 @@ function generateDbName(projectName: string): string {
   return `${sanitized}-db`;
 }
 
-/**
- * Update wrangler.toml with new project name and database name
- */
 async function updateWranglerToml(
   targetDir: string,
   projectName: string,
@@ -86,19 +103,16 @@ async function updateWranglerToml(
   let content = await fs.readFile(wranglerPath, "utf-8");
   const dbName = generateDbName(projectName);
 
-  // Replace worker name
   content = content.replace(
     new RegExp(`^name = "${TEMPLATE_PROJECT_NAME}"`, "m"),
     `name = "${projectName}"`,
   );
 
-  // Replace database name
   content = content.replace(
     new RegExp(`database_name = "${TEMPLATE_DB_NAME}"`, "g"),
     `database_name = "${dbName}"`,
   );
 
-  // Clear the database_id to force user to create a new one
   content = content.replace(
     /database_id = "[^"]+"/,
     `database_id = ""  # TODO: Run 'wrangler d1 create ${dbName}' and paste the ID here`,
@@ -107,22 +121,22 @@ async function updateWranglerToml(
   await fs.writeFile(wranglerPath, content);
 }
 
-/**
- * Update package.json with new project name
- */
 async function updatePackageJson(
   targetDir: string,
   projectName: string,
+  resolved: ResolvedPreset,
 ): Promise<void> {
   const pkgJsonPath = path.join(targetDir, "package.json");
   if (!(await fs.pathExists(pkgJsonPath))) {
     return;
   }
 
-  const pkgJson = await fs.readJson(pkgJsonPath);
+  let pkgJson = await fs.readJson(pkgJsonPath);
+
+  pkgJson = filterPackageJson(pkgJson, resolved);
+
   pkgJson.name = projectName;
 
-  // Remove bin field if it exists (CLI binary should not be published with new projects)
   if (pkgJson.bin) {
     delete pkgJson.bin;
   }
@@ -130,9 +144,6 @@ async function updatePackageJson(
   await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
 }
 
-/**
- * Update package-lock.json with new project name
- */
 async function updatePackageLockJson(
   targetDir: string,
   projectName: string,
@@ -144,12 +155,10 @@ async function updatePackageLockJson(
 
   const lockFile = await fs.readJson(lockFilePath);
 
-  // Update root name
   if (lockFile.name === TEMPLATE_PROJECT_NAME) {
     lockFile.name = projectName;
   }
 
-  // Update packages[""].name if it exists
   if (lockFile.packages?.[""]?.name === TEMPLATE_PROJECT_NAME) {
     lockFile.packages[""].name = projectName;
   }
@@ -157,9 +166,6 @@ async function updatePackageLockJson(
   await fs.writeJson(lockFilePath, lockFile, { spaces: 2 });
 }
 
-/**
- * Update README.md with new project name
- */
 async function updateReadme(
   targetDir: string,
   projectName: string,
@@ -176,18 +182,45 @@ async function updateReadme(
   await fs.writeFile(readmePath, content);
 }
 
+export interface CreateOptions {
+  projectName: string;
+  currentDir: boolean;
+  preset?: string;
+}
+
+export async function createProject(options: CreateOptions): Promise<void>;
 export async function createProject(
   projectName: string,
+  useCurrentDir?: boolean,
+  preset?: string,
+): Promise<void>;
+export async function createProject(
+  projectNameOrOptions: string | CreateOptions,
   useCurrentDir: boolean = false,
+  preset?: string,
 ): Promise<void> {
-  if (!useCurrentDir) {
+  let projectName: string;
+  let currentDir: boolean;
+  let presetId: string | undefined;
+
+  if (typeof projectNameOrOptions === "string") {
+    projectName = projectNameOrOptions;
+    currentDir = useCurrentDir;
+    presetId = preset;
+  } else {
+    projectName = projectNameOrOptions.projectName;
+    currentDir = projectNameOrOptions.currentDir;
+    presetId = projectNameOrOptions.preset;
+  }
+
+  if (!currentDir) {
     validateProjectName(projectName);
   }
 
   const templateDir = path.join(__dirname, "../../template");
   let targetDir: string;
 
-  if (useCurrentDir) {
+  if (currentDir) {
     targetDir = process.cwd();
     projectName = path.basename(targetDir);
   } else {
@@ -198,13 +231,32 @@ export async function createProject(
   }
 
   try {
-    if (!useCurrentDir) {
-      const spinner = ora("Creating project directory...").start();
+    if (!currentDir) {
+      const dirSpinner = ora("Creating project directory...").start();
       await fs.ensureDir(targetDir);
-      spinner.succeed(chalk.green("Project directory created"));
+      dirSpinner.succeed(chalk.green("Project directory created"));
     }
 
-    const spinner = ora("Copying template files...").start();
+    const manifestSpinner = ora("Loading module manifests...").start();
+    const allManifests = loadManifests(templateDir);
+    const presets = loadPresets(templateDir);
+
+    const selectedPresetId = presetId || "fullstack-admin";
+    const selectedPreset = presets.find((p) => p.id === selectedPresetId);
+    if (!selectedPreset) {
+      throw new ScaffoldError(
+        `Unknown preset: ${selectedPresetId}. Available: ${presets.map((p) => p.id).join(", ")}`,
+      );
+    }
+
+    const resolved = resolvePreset(selectedPreset, allManifests);
+    manifestSpinner.succeed(
+      chalk.green(
+        `Using preset: ${selectedPreset.name} (${resolved.modules.size} modules)`,
+      ),
+    );
+
+    const copySpinner = ora("Copying template files...").start();
     const gitignorePath = path.join(templateDir, ".gitignore");
     let ignorePatterns: string[] = [];
     if (await fs.pathExists(gitignorePath)) {
@@ -212,46 +264,162 @@ export async function createProject(
       ignorePatterns = parseGitignore(gitignoreContent);
     }
     ignorePatterns.push("node_modules", ".wrangler");
+
+    const excludePatterns = getExcludePatterns(resolved);
+
     await fs.copy(templateDir, targetDir, {
       filter: (src: string) => {
         const relative = path.relative(templateDir, src);
         if (relative === "") return true;
+
         const negated = ignorePatterns.filter((p) => p.startsWith("!"));
-        const excluded = ignorePatterns.filter(
+        const gitIgnored = ignorePatterns.filter(
           (p) => !p.startsWith("!") && relative.startsWith(p),
         );
-        if (excluded.length > 0) {
+        if (gitIgnored.length > 0) {
           const allowed = negated.some((p) => relative === p.slice(1));
-          if (allowed) return true;
-          return false;
+          if (!allowed) return false;
         }
+
+        const normalizedRelative = relative.replace(/\\/g, "/");
+        for (const pattern of excludePatterns) {
+          const normalizedPattern = pattern.replace(/\\/g, "/");
+          if (
+            normalizedRelative === normalizedPattern ||
+            normalizedRelative.startsWith(normalizedPattern + "/")
+          ) {
+            return false;
+          }
+        }
+
         return true;
       },
       dereference: false,
     });
-    spinner.succeed(chalk.green("Template files copied"));
+    copySpinner.succeed(chalk.green("Template files copied"));
 
-    spinner.start("Configuring package.json...");
-    await updatePackageJson(targetDir, projectName);
-    spinner.succeed(chalk.green("package.json configured"));
+    const genSpinner = ora("Generating module-specific files...").start();
 
-    spinner.start("Configuring package-lock.json...");
+    const routeRegistryContent = generateRouteRegistry(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/server/route-registry.ts"),
+      routeRegistryContent,
+    );
+
+    const dbSchemaContent = generateDbSchemaBarrel(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/server/db/schema/index.ts"),
+      dbSchemaContent,
+    );
+
+    const clientAppContent = generateClientApp(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/client/App.tsx"),
+      clientAppContent,
+    );
+
+    const clientNavContent = generateClientNavigation(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/client/components/Navigation.tsx"),
+      clientNavContent,
+    );
+
+    const adminAppContent = generateAdminApp(resolved);
+    if (adminAppContent) {
+      await fs.writeFile(
+        path.join(targetDir, "src/admin/App.tsx"),
+        adminAppContent,
+      );
+    }
+
+    const serverAppContent = generateServerApp(resolved, templateDir);
+    await fs.writeFile(
+      path.join(targetDir, "src/server/app.ts"),
+      serverAppContent,
+    );
+
+    const generatedFiles = getGeneratedFiles(resolved);
+    if (generatedFiles.includes("src/server/db/init.ts")) {
+      const dbInitContent = generateDbInit(resolved, templateDir);
+      await fs.writeFile(
+        path.join(targetDir, "src/server/db/init.ts"),
+        dbInitContent,
+      );
+    }
+
+    const sharedModulesContent = generateSharedModulesIndex(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/shared/modules/index.ts"),
+      sharedModulesContent,
+    );
+
+    const sharedSchemasContent = generateSharedSchemasIndex(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/shared/schemas/index.ts"),
+      sharedSchemasContent,
+    );
+
+    const middlewareIndexContent = generateMiddlewareIndex(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/server/middleware/index.ts"),
+      middlewareIndexContent,
+    );
+
+    if (generatedFiles.includes("src/server/middleware/auth.ts")) {
+      const authMiddlewareContent = generateAuthMiddleware(resolved);
+      await fs.writeFile(
+        path.join(targetDir, "src/server/middleware/auth.ts"),
+        authMiddlewareContent,
+      );
+    }
+
+    if (generatedFiles.includes("src/server/utils/auth.ts")) {
+      const authUtilsContent = generateAuthUtils(resolved);
+      await fs.writeFile(
+        path.join(targetDir, "src/server/utils/auth.ts"),
+        authUtilsContent,
+      );
+    }
+
+    const clientComponentsContent = generateClientComponentsIndex(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/client/components/index.ts"),
+      clientComponentsContent,
+    );
+
+    const cliModulesContent = generateCliModulesIndex(resolved);
+    await fs.writeFile(
+      path.join(targetDir, "src/cli/modules/index.ts"),
+      cliModulesContent,
+    );
+
+    genSpinner.succeed(chalk.green("Module-specific files generated"));
+
+    const pkgSpinner = ora("Configuring package.json...").start();
+    await updatePackageJson(targetDir, projectName, resolved);
+    pkgSpinner.succeed(chalk.green("package.json configured"));
+
+    const lockSpinner = ora("Configuring package-lock.json...").start();
     await updatePackageLockJson(targetDir, projectName);
-    spinner.succeed(chalk.green("package-lock.json configured"));
+    lockSpinner.succeed(chalk.green("package-lock.json configured"));
 
-    spinner.start("Configuring wrangler.toml...");
+    const wranglerSpinner = ora("Configuring wrangler.toml...").start();
     await updateWranglerToml(targetDir, projectName);
-    spinner.succeed(chalk.green("wrangler.toml configured"));
+    wranglerSpinner.succeed(chalk.green("wrangler.toml configured"));
 
-    spinner.start("Configuring README.md...");
+    const readmeSpinner = ora("Configuring README.md...").start();
     await updateReadme(targetDir, projectName);
-    spinner.succeed(chalk.green("README.md configured"));
+    readmeSpinner.succeed(chalk.green("README.md configured"));
 
     console.log("");
     console.log(chalk.green("  ✓ Project created successfully!"));
+    console.log(chalk.gray(`   Preset: ${selectedPreset.name}`));
+    console.log(
+      chalk.gray(`   Modules: ${[...resolved.modules.keys()].join(", ")}`),
+    );
     console.log("");
     console.log(chalk.cyan("  Next steps:"));
-    if (!useCurrentDir) {
+    if (!currentDir) {
       console.log(chalk.white(`    cd ${projectName}`));
     }
     console.log(chalk.white("    npm install"));
