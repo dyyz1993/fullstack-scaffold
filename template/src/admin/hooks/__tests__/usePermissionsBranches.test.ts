@@ -4,7 +4,10 @@ import {
 } from '../usePermissions'
 import { Permission, Role } from '@shared/modules/permission'
 
-const mockAdminState = {
+const mockAdminState: {
+  user: { id: string; role: Role } | null
+  isAuthenticated: boolean
+} = {
   user: { id: 'test-user-1', role: Role.CUSTOMER_SERVICE },
   isAuthenticated: true,
 }
@@ -118,11 +121,11 @@ describe('usePermissionStore - branch coverage', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.permissions.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: 'Failed' }),
+    } as any)
     vi.mocked(apiClient.api.permissions.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [] }),
-    })
+      json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
+    } as any)
 
     await usePermissionStore.getState().fetchStaticData()
 
@@ -133,11 +136,11 @@ describe('usePermissionStore - branch coverage', () => {
   it('should handle permissions fetch failure in fetchStaticData', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.permissions.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [{ role: Role.USER, label: 'User', permissions: [] }] }),
-    })
+      json: async () => ({ success: true, data: [{ role: Role.USER, label: 'User', permissions: [] }], timestamp: new Date().toISOString() }),
+    } as any)
     vi.mocked(apiClient.api.permissions.$get).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: 'Failed' }),
+    } as any)
 
     await usePermissionStore.getState().fetchStaticData()
 
@@ -162,14 +165,16 @@ describe('usePermissionStore - branch coverage', () => {
       json: async () => ({
         success: true,
         data: [{ role: Role.SUPER_ADMIN, label: '超级管理员', permissions: [] }],
+        timestamp: new Date().toISOString(),
       }),
-    })
+    } as any)
     vi.mocked(apiClient.api.permissions.$get).mockResolvedValueOnce({
       json: async () => ({
         success: true,
         data: [{ permission: Permission.USER_VIEW, label: '查看用户', category: 'user' }],
+        timestamp: new Date().toISOString(),
       }),
-    })
+    } as any)
 
     await usePermissionStore.getState().fetchStaticData()
 

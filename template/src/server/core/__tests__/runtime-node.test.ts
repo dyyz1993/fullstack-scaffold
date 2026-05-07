@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { NodeRuntimeAdapter, getNodeRuntimeAdapter } from '../runtime-node'
+import { NodeRuntimeAdapter } from '../runtime-node'
 import type { WebSocket } from 'ws'
 
 function createMockWebSocket(): WebSocket {
@@ -59,7 +59,7 @@ describe('NodeRuntimeAdapter', () => {
       const ws = createMockWebSocket()
       adapter.handleConnection(ws)
 
-      const response = adapter.handleSSERequest()
+      adapter.handleSSERequest()
 
       adapter.broadcast('notification', { msg: 'hello' })
 
@@ -68,9 +68,9 @@ describe('NodeRuntimeAdapter', () => {
 
     it('should broadcast with exclusion', () => {
       const ws = createMockWebSocket()
-      const conn = adapter.handleConnection(ws)
+      const _conn = adapter.handleConnection(ws)
 
-      adapter.broadcast('notification', { msg: 'hello' }, [conn.id])
+      adapter.broadcast('notification', { msg: 'hello' }, [_conn.id])
 
       const wsSendCalls = (ws.send as ReturnType<typeof vi.fn>).mock.calls.filter(
         (call: unknown[]) => {
@@ -89,11 +89,11 @@ describe('NodeRuntimeAdapter', () => {
   describe('registerRPC', () => {
     it('should register RPC handler and process messages', () => {
       const ws = createMockWebSocket()
-      const conn = adapter.handleConnection(ws)
+      adapter.handleConnection(ws)
 
       adapter.registerRPC('echo', (params) => ({ echo: params }))
 
-      ws._trigger('message', Buffer.from(JSON.stringify({
+      ;(ws as any)._trigger('message', Buffer.from(JSON.stringify({
         method: 'echo',
         id: '1',
         params: { text: 'hi' },
@@ -122,7 +122,7 @@ describe('NodeRuntimeAdapter', () => {
       const ws = createMockWebSocket()
       adapter.handleConnection(ws)
 
-      ws._trigger('message', Buffer.from(JSON.stringify({
+      ;(ws as any)._trigger('message', Buffer.from(JSON.stringify({
         type: 'chat',
         payload: { text: 'hello' },
       })))
@@ -152,7 +152,7 @@ describe('NodeRuntimeAdapter', () => {
 
       adapter.registerRPC('ping', () => ({ pong: true }))
 
-      ws._trigger('message', Buffer.from(JSON.stringify({
+      ;(ws as any)._trigger('message', Buffer.from(JSON.stringify({
         method: 'ping',
         id: '10',
         params: {},
@@ -176,7 +176,7 @@ describe('NodeRuntimeAdapter', () => {
 
       const sendCallsBefore = (ws.send as ReturnType<typeof vi.fn>).mock.calls.length
 
-      ws._trigger('message', Buffer.from('not json'))
+      ;(ws as any)._trigger('message', Buffer.from('not json'))
 
       const sendCallsAfter = (ws.send as ReturnType<typeof vi.fn>).mock.calls.length
       expect(sendCallsAfter).toBe(sendCallsBefore)
@@ -188,7 +188,7 @@ describe('NodeRuntimeAdapter', () => {
 
       expect(adapter.connections.has(conn.id)).toBe(true)
 
-      ws._trigger('close', null)
+      ;(ws as any)._trigger('close', null)
 
       expect(adapter.connections.has(conn.id)).toBe(false)
       expect(adapter.size).toBe(0)

@@ -1,21 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { PermissionTree } from '../PermissionTree'
+import { Permission } from '@shared/modules/permission'
 import type { PermissionInfo, PermissionCategory } from '@shared/modules/permission'
 
 const mockPermissions: PermissionInfo[] = [
-  { permission: 'user:view', label: '查看用户', category: 'user', description: '查看用户' },
-  { permission: 'user:create', label: '创建用户', category: 'user', description: '创建用户' },
-  { permission: 'user:edit', label: '编辑用户', category: 'user', description: '编辑用户' },
-  { permission: 'content:view', label: '查看内容', category: 'content', description: '查看内容' },
-  { permission: 'content:create', label: '创建内容', category: 'content', description: '创建内容' },
-  { permission: 'order:view', label: '查看订单', category: 'order', description: '查看订单' },
+  { permission: Permission.USER_VIEW, label: '查看用户', category: 'user' },
+  { permission: Permission.USER_CREATE, label: '创建用户', category: 'user' },
+  { permission: Permission.USER_EDIT, label: '编辑用户', category: 'user' },
+  { permission: Permission.CONTENT_VIEW, label: '查看内容', category: 'content' },
+  { permission: Permission.CONTENT_CREATE, label: '创建内容', category: 'content' },
+  { permission: Permission.ORDER_VIEW, label: '查看订单', category: 'order' },
 ]
 
 const mockCategories: Record<string, PermissionCategory> = {
-  user: { label: '用户管理', order: 1 },
-  content: { label: '内容管理', order: 2 },
-  order: { label: '订单管理', order: 3 },
+  user: { label: '用户管理', permissions: [Permission.USER_VIEW, Permission.USER_CREATE, Permission.USER_EDIT] },
+  content: { label: '内容管理', permissions: [Permission.CONTENT_VIEW, Permission.CONTENT_CREATE] },
+  order: { label: '订单管理', permissions: [Permission.ORDER_VIEW] },
 }
 
 const defaultProps = {

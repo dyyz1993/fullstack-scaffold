@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { generateCaptcha, verifyCaptcha, cleanupExpiredCaptchas } from '../captcha'
 
 function extractCodeFromSvg(image: string): string {

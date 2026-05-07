@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { PermissionConfigEditor } from '../PermissionConfigEditor'
+import { Permission } from '@shared/modules/permission'
 import type { PermissionInfo } from '@shared/modules/permission'
 
 vi.mock('antd', async () => {
-  const React = await import('react')
   const OriginAntd = await import('antd')
   return {
     ...OriginAntd,
@@ -18,11 +18,11 @@ vi.mock('antd', async () => {
 })
 
 const mockPermissions: PermissionInfo[] = [
-  { permission: 'user:view', label: '查看用户', category: 'user', description: '查看用户列表' },
-  { permission: 'user:create', label: '创建用户', category: 'user', description: '创建新用户' },
-  { permission: 'content:view', label: '查看内容', category: 'content', description: '查看内容列表' },
-  { permission: 'content:edit', label: '编辑内容', category: 'content', description: '编辑内容' },
-  { permission: 'order:view', label: '查看订单', category: 'order', description: '查看订单列表' },
+  { permission: Permission.USER_VIEW, label: '查看用户', category: 'user' },
+  { permission: Permission.USER_CREATE, label: '创建用户', category: 'user' },
+  { permission: Permission.CONTENT_VIEW, label: '查看内容', category: 'content' },
+  { permission: Permission.CONTENT_EDIT, label: '编辑内容', category: 'content' },
+  { permission: Permission.ORDER_VIEW, label: '查看订单', category: 'order' },
 ]
 
 const defaultProps = {

@@ -197,7 +197,7 @@ describe('permissionMiddleware', () => {
 
       const res = await app.request('/api/admin/users')
       expect(res.status).toBe(403)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(false)
       expect(body.error).toContain('Forbidden')
     })

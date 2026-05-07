@@ -8,19 +8,16 @@ import {
 } from '../captcha'
 
 describe('captchaMiddleware', () => {
-  let originalEnv: string | undefined
-
   beforeEach(() => {
-    originalEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'development'
+    vi.stubEnv('NODE_ENV', 'development')
   })
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv
+    vi.unstubAllEnvs()
   })
 
   it('should skip in test environment', async () => {
-    process.env.NODE_ENV = 'test'
+    vi.stubEnv('NODE_ENV', 'test')
     const app = new Hono()
     const handler = vi.fn().mockResolvedValue(new Response('ok'))
     app.use('*', captchaMiddleware())
@@ -105,7 +102,7 @@ describe('captchaMiddleware', () => {
       headers: { 'User-Agent': ua, Cookie: `session_id=${sessionId}` },
     })
     expect(res.status).toBe(429)
-    const body = await res.json()
+    const body: any = await res.json()
     expect(body.needCaptcha).toBe(true)
     expect(body.success).toBe(false)
   })
@@ -119,7 +116,7 @@ describe('captchaMiddleware', () => {
       headers: { 'User-Agent': 'short' },
     })
     expect(res.status).toBe(403)
-    const body = await res.json()
+    const body: any = await res.json()
     expect(body.needCaptcha).toBe(true)
   })
 
@@ -217,7 +214,7 @@ describe('verifyCaptchaMiddleware', () => {
 
     const res = await app.request('/api/verify', { method: 'POST' })
     expect(res.status).toBe(400)
-    const body = await res.json()
+    const body: any = await res.json()
     expect(body.error).toBe('Session not found')
   })
 

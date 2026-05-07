@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createRealtimeCore, createWSMessageHandler } from '../realtime-core'
-import type { RealtimeCore, RPCHandler } from '../realtime-core'
+import type { RealtimeCore } from '../realtime-core'
 import type { WSConnection, SSEConnection } from '../runtime'
 
 function createMockWS(id: string): WSConnection {
@@ -81,7 +81,7 @@ describe('createRealtimeCore', () => {
       core.sseClients.set('sse1', sse1)
       core.sseClients.set('sse2', sse2)
 
-      core.broadcast({ msg: 'test' }, ['sse1'])
+      core.broadcast({ msg: 'test' }, ['sse1'], 'notification')
 
       expect(sse1.send).not.toHaveBeenCalled()
       expect(sse2.send).toHaveBeenCalled()
@@ -91,7 +91,7 @@ describe('createRealtimeCore', () => {
       const sse = createMockSSE('sse1')
       core.sseClients.set('sse1', sse)
 
-      core.broadcast({ msg: 'test' })
+      core.broadcast({ msg: 'test' }, [], 'notification')
 
       expect(sse.send).toHaveBeenCalledWith(
         'event: notification\ndata: {"msg":"test"}\n\n'
@@ -105,7 +105,7 @@ describe('createRealtimeCore', () => {
       })
       core.wsClients.set('ws1', ws)
 
-      core.broadcast({ msg: 'test' })
+      core.broadcast({ msg: 'test' }, [], 'notification')
 
       expect(core.wsClients.has('ws1')).toBe(false)
     })
@@ -117,7 +117,7 @@ describe('createRealtimeCore', () => {
       })
       core.sseClients.set('sse1', sse)
 
-      core.broadcast({ msg: 'test' })
+      core.broadcast({ msg: 'test' }, [], 'notification')
 
       expect(core.sseClients.has('sse1')).toBe(false)
     })

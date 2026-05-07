@@ -34,8 +34,8 @@ describe('useAuditLogStore', () => {
     ]
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api['audit-logs'].$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: mockLogs }),
-    })
+      json: async () => ({ success: true, data: mockLogs, timestamp: new Date().toISOString() }),
+    } as any)
 
     await useAuditLogStore.getState().fetchLogs()
 
@@ -48,8 +48,8 @@ describe('useAuditLogStore', () => {
   it('should handle fetch with params', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api['audit-logs'].$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [] }),
-    })
+      json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
+    } as any)
 
     await useAuditLogStore.getState().fetchLogs({
       userId: 'user1',
@@ -65,8 +65,8 @@ describe('useAuditLogStore', () => {
   it('should handle failed response', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api['audit-logs'].$get).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: 'Failed' }),
+    } as any)
 
     await useAuditLogStore.getState().fetchLogs()
 
@@ -89,8 +89,8 @@ describe('useAuditLogStore', () => {
   it('should handle fetch with partial params', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api['audit-logs'].$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [] }),
-    })
+      json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
+    } as any)
 
     await useAuditLogStore.getState().fetchLogs({ userId: 'user1' })
 

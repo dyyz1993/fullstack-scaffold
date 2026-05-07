@@ -38,12 +38,12 @@ describe('useRoleStore', () => {
 
   it('should fetch roles successfully', async () => {
     const mockRoles = [
-      { id: '1', name: 'admin', permissions: [], createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+      { id: '1', name: 'admin', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
     ]
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: mockRoles }),
-    })
+      json: async () => ({ success: true, data: mockRoles, timestamp: new Date().toISOString() }),
+    } as any)
 
     await useRoleStore.getState().fetchRoles()
 
@@ -54,8 +54,8 @@ describe('useRoleStore', () => {
   it('should handle fetch roles failure', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: 'Failed' }),
+    } as any)
 
     await useRoleStore.getState().fetchRoles()
 
@@ -75,13 +75,13 @@ describe('useRoleStore', () => {
   it('should create role successfully', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$post).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: { id: '2' } }),
-    })
+      json: async () => ({ success: true, data: { id: '2' }, timestamp: new Date().toISOString() }),
+    } as any)
     vi.mocked(apiClient.api.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [] }),
-    })
+      json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
+    } as any)
 
-    const result = await useRoleStore.getState().createRole({ name: 'editor', permissions: [] })
+    const result = await useRoleStore.getState().createRole({ code: 'editor', name: 'editor', label: 'Editor' })
 
     expect(result).toBe(true)
   })
@@ -90,9 +90,9 @@ describe('useRoleStore', () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$post).mockResolvedValueOnce({
       json: async () => ({ success: false, error: 'Name exists' }),
-    })
+    } as any)
 
-    const result = await useRoleStore.getState().createRole({ name: 'dup', permissions: [] })
+    const result = await useRoleStore.getState().createRole({ code: 'dup', name: 'dup', label: 'Dup' })
 
     expect(result).toBe(false)
     expect(useRoleStore.getState().error).toBe('Name exists')
@@ -101,10 +101,10 @@ describe('useRoleStore', () => {
   it('should handle create role error without message', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$post).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: '' }),
+    } as any)
 
-    const result = await useRoleStore.getState().createRole({ name: 'dup', permissions: [] })
+    const result = await useRoleStore.getState().createRole({ code: 'dup', name: 'dup', label: 'Dup' })
 
     expect(result).toBe(false)
     expect(useRoleStore.getState().error).toBe('Failed to create role')
@@ -114,7 +114,7 @@ describe('useRoleStore', () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$post).mockRejectedValueOnce(new Error('Network error'))
 
-    const result = await useRoleStore.getState().createRole({ name: 'x', permissions: [] })
+    const result = await useRoleStore.getState().createRole({ code: 'x', name: 'x', label: 'X' })
 
     expect(result).toBe(false)
     expect(useRoleStore.getState().error).toBe('Network error')
@@ -123,11 +123,11 @@ describe('useRoleStore', () => {
   it('should update role successfully', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].$put).mockResolvedValueOnce({
-      json: async () => ({ success: true }),
-    })
+      json: async () => ({ success: true, data: {}, timestamp: new Date().toISOString() }),
+    } as any)
     vi.mocked(apiClient.api.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [] }),
-    })
+      json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
+    } as any)
 
     const result = await useRoleStore.getState().updateRole('1', { name: 'updated' })
 
@@ -138,7 +138,7 @@ describe('useRoleStore', () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].$put).mockResolvedValueOnce({
       json: async () => ({ success: false, error: 'Not found' }),
-    })
+    } as any)
 
     const result = await useRoleStore.getState().updateRole('999', { name: 'x' })
 
@@ -149,8 +149,8 @@ describe('useRoleStore', () => {
   it('should handle update role error without message', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].$put).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: '' }),
+    } as any)
 
     const result = await useRoleStore.getState().updateRole('1', { name: 'x' })
 
@@ -171,11 +171,11 @@ describe('useRoleStore', () => {
   it('should delete role successfully', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].$delete).mockResolvedValueOnce({
-      json: async () => ({ success: true }),
-    })
+      json: async () => ({ success: true, data: {}, timestamp: new Date().toISOString() }),
+    } as any)
     vi.mocked(apiClient.api.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [] }),
-    })
+      json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
+    } as any)
 
     const result = await useRoleStore.getState().deleteRole('1')
 
@@ -186,7 +186,7 @@ describe('useRoleStore', () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].$delete).mockResolvedValueOnce({
       json: async () => ({ success: false, error: 'Cannot delete' }),
-    })
+    } as any)
 
     const result = await useRoleStore.getState().deleteRole('1')
 
@@ -197,8 +197,8 @@ describe('useRoleStore', () => {
   it('should handle delete role error without message', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].$delete).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: '' }),
+    } as any)
 
     const result = await useRoleStore.getState().deleteRole('1')
 
@@ -209,8 +209,8 @@ describe('useRoleStore', () => {
   it('should update role permissions successfully', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].permissions.$put).mockResolvedValueOnce({
-      json: async () => ({ success: true }),
-    })
+      json: async () => ({ success: true, data: {}, timestamp: new Date().toISOString() }),
+    } as any)
 
     const result = await useRoleStore.getState().updateRolePermissions('1', ['user:view'])
 
@@ -222,7 +222,7 @@ describe('useRoleStore', () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].permissions.$put).mockResolvedValueOnce({
       json: async () => ({ success: false, error: 'Invalid permissions' }),
-    })
+    } as any)
 
     const result = await useRoleStore.getState().updateRolePermissions('1', ['invalid'])
 
@@ -233,8 +233,8 @@ describe('useRoleStore', () => {
   it('should handle update role permissions error without message', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles[':id'].permissions.$put).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: '' }),
+    } as any)
 
     const result = await useRoleStore.getState().updateRolePermissions('1', [])
 

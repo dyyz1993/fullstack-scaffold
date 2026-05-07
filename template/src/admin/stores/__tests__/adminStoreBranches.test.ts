@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Role, Permission } from '@shared/modules/permission'
+import { Role } from '@shared/modules/permission'
 import type { AuthUserResponse, SystemStats, LoginResponse } from '@shared/modules/admin'
 
 interface AdminState {
@@ -117,8 +117,8 @@ describe('useAdminStore - branch coverage', () => {
   it('should handle fetchStats with unsuccessful response', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.admin.stats.$get).mockResolvedValueOnce({
-      json: async () => ({ success: false }),
-    })
+      json: async () => ({ success: false, error: 'Failed' }),
+    } as any)
 
     await useAdminStore.getState().fetchStats()
 

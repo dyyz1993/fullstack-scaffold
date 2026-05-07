@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { ZodError, ZodIssue } from 'zod'
+import { ZodError } from 'zod'
 import { AppError, ErrorCode } from '@server/utils/app-error'
 
 vi.mock('@server/utils/logger', () => {
@@ -82,7 +82,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(404)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(false)
       expect(body.error).toBe('Resource not found')
       expect(body.status).toBe(404)
@@ -101,7 +101,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(400)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.details).toEqual([{ field: 'email', message: 'Invalid email' }])
     })
 
@@ -123,7 +123,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(403)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(false)
       expect(body.error).toBe('Forbidden')
     })
@@ -139,12 +139,12 @@ describe('errorHandlerMiddleware', () => {
           received: 'number',
           path: ['email'],
           message: 'Expected string, received number',
-        }])
+        }] as any)
       })
 
       const res = await app.request('/test')
       expect(res.status).toBe(400)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(false)
       expect(body.error).toBe('Validation failed')
       expect(body.details).toHaveLength(1)
@@ -164,11 +164,11 @@ describe('errorHandlerMiddleware', () => {
           received: 'undefined',
           path: ['user', 'address', 'city'],
           message: 'City is required',
-        }])
+        }] as any)
       })
 
       const res = await app.request('/test')
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.details[0].field).toBe('user.address.city')
     })
 
@@ -178,11 +178,11 @@ describe('errorHandlerMiddleware', () => {
         throw new ZodError([
           { code: 'invalid_type', expected: 'string', received: 'number', path: ['email'], message: 'bad email' },
           { code: 'too_small', minimum: 1, type: 'string', inclusive: true, path: ['name'], message: 'required' },
-        ])
+        ] as any)
       })
 
       const res = await app.request('/test')
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.details).toHaveLength(2)
     })
   })
@@ -196,7 +196,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(403)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(false)
       expect(body.error).toBe('Access denied')
       expect(body.status).toBe(403)
@@ -210,7 +210,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(500)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.error).toBe('Internal server error')
     })
   })
@@ -224,7 +224,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(500)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(false)
       expect(body.error).toBe('Something went wrong')
     })
@@ -237,7 +237,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(500)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.error).toBe('Internal server error')
     })
 
@@ -248,7 +248,7 @@ describe('errorHandlerMiddleware', () => {
       })
 
       const res = await app.request('/test')
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.stack).toBeDefined()
       expect(typeof body.stack).toBe('string')
     })
@@ -260,7 +260,7 @@ describe('errorHandlerMiddleware', () => {
       })
 
       const res = await app.request('/test')
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.stack).toBeUndefined()
     })
 
@@ -271,7 +271,7 @@ describe('errorHandlerMiddleware', () => {
       })
 
       const res = await app.request('/test')
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.stack).toBeUndefined()
     })
   })
@@ -283,7 +283,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(200)
-      const body = await res.json()
+      const body: any = await res.json()
       expect(body.success).toBe(true)
       expect(body.data).toBe('hello')
     })

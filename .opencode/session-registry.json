@@ -5,5 +5,26 @@
     "parentID": "opencode",
     "status": "running",
     "createdAt": 1778150278972
+  },
+  "fix-admin-tests": {
+    "id": "ses_1fdc06499ffeNI2ENobC2bFB7H",
+    "name": "fix-admin-tests",
+    "parentID": "fix-admin",
+    "status": "running",
+    "createdAt": 1778154184211
+  },
+  "fix-server-tests": {
+    "id": "ses_1fdc00227ffeUUUNxW3CQ3pdQ5",
+    "name": "fix-server-tests",
+    "parentID": "fix-server",
+    "status": "running",
+    "createdAt": 1778154208809
+  },
+  "fix-shared-client-tests": {
+    "id": "ses_1fdbfd2d5ffe1k57W149q1Vfob",
+    "name": "fix-shared-client-tests",
+    "parentID": "fix-shared-client",
+    "status": "running",
+    "createdAt": 1778154220860
   }
 }

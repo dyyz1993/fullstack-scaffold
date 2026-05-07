@@ -104,11 +104,10 @@ describe('logger (cloudflare/console)', () => {
     vi.doMock('../config', () => ({ getAppConfig: vi.fn() }))
     const { createModuleLoggerSync } = await import('../logger')
     const log = createModuleLoggerSync('cf-prod', 'error')
-    const origEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     log.info({ key: 'val' }, 'info msg')
     expect(consoleLogSpy).not.toHaveBeenCalled()
-    process.env.NODE_ENV = origEnv
+    vi.unstubAllEnvs()
     vi.doUnmock('../env')
     vi.doUnmock('../config')
   })

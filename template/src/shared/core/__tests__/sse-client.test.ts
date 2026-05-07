@@ -42,7 +42,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       expect(client.status).toBe('connecting')
       vi.useRealTimers()
@@ -52,7 +52,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
 
       const statusHandler = vi.fn()
@@ -72,7 +72,7 @@ describe('SSEClientImpl', () => {
       globalThis.fetch = vi.fn(async () => {
         callCount++
         return { ok: false, status: 500, statusText: 'Internal Server Error' }
-      })
+      }) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
 
       const errorHandler = vi.fn()
@@ -98,7 +98,7 @@ describe('SSEClientImpl', () => {
           return { ok: true, status: 200, statusText: 'OK', body: null, headers: new Headers() }
         }
         return { ok: false, status: 500, statusText: 'Error' }
-      })
+      }) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
 
       const errorHandler = vi.fn()
@@ -119,7 +119,7 @@ describe('SSEClientImpl', () => {
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
       const mockFetch = mockFetchResponse(stream)
-      globalThis.fetch = mockFetch
+      globalThis.fetch = mockFetch as any
 
       new SSEClientImpl<TestSSEProtocol>('http://localhost/sse', {
         Authorization: 'Bearer token123',
@@ -145,7 +145,7 @@ describe('SSEClientImpl', () => {
       const stream = createStreamFromChunks([
         'event: notification\ndata: {"title":"hello","body":"world"}\n\n',
       ])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -162,7 +162,7 @@ describe('SSEClientImpl', () => {
       const stream = createStreamFromChunks([
         'event: ping\ndata: not-json\n\n',
       ])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -179,7 +179,7 @@ describe('SSEClientImpl', () => {
       const stream = createStreamFromChunks([
         'event: notification\ndata: {"title":"first"}\n\nevent: notification\ndata: {"title":"second"}\n\n',
       ])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -202,7 +202,7 @@ describe('SSEClientImpl', () => {
           controller.close()
         },
       })
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -219,7 +219,7 @@ describe('SSEClientImpl', () => {
       const stream = createStreamFromChunks([
         'event: notification\ndata: {"title":"hello","body":"world"}\n\n',
       ])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -235,7 +235,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks(['data: {"title":"default"}\n\n'])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -252,7 +252,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -265,7 +265,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
@@ -287,7 +287,7 @@ describe('SSEClientImpl', () => {
       globalThis.fetch = vi.fn(async () => {
         callCount++
         return { ok: false, status: 500, statusText: 'Error' }
-      })
+      }) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const handler = vi.fn()
       const unsub = client.onError(handler)
@@ -307,7 +307,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const statusHandler = vi.fn()
@@ -324,7 +324,7 @@ describe('SSEClientImpl', () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
       const stream = createStreamFromChunks([])
-      globalThis.fetch = mockFetchResponse(stream)
+      globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       client.abort()
@@ -343,7 +343,7 @@ describe('SSEClientImpl', () => {
       globalThis.fetch = vi.fn(async () => {
         fetchCallCount++
         return { ok: false, status: 500, statusText: 'Error' }
-      })
+      }) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
       const errorHandler = vi.fn()
@@ -365,7 +365,7 @@ describe('createSSEClient', () => {
     vi.useFakeTimers()
     const { createSSEClient } = await import('../sse-client')
     const stream = createStreamFromChunks([])
-    globalThis.fetch = mockFetchResponse(stream)
+    globalThis.fetch = mockFetchResponse(stream) as any
     const client = createSSEClient<TestSSEProtocol>('http://localhost/sse')
     expect(client).toBeDefined()
     expect(client.status).toBe('connecting')

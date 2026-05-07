@@ -58,6 +58,7 @@ const createMockAttachment = (overrides: Partial<TodoAttachment> = {}): TodoAtta
   originalName: 'test.pdf',
   size: 1024,
   mimeType: 'application/pdf',
+  path: '/uploads/test.pdf',
   createdAt: new Date().toISOString(),
   ...overrides,
 })
