@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 2de3561467d67691
+ */
+
+/**
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -7,6 +11,7 @@ import type { TypedRuntime } from '../typed-runtime'
 interface TestProtocol {
   rpc: {
     echo: { in: { message: string }; out: { message: string; timestamp: number } }
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     ping: { in: {}; out: { pong: boolean } }
   }
   events: {
@@ -15,13 +20,15 @@ interface TestProtocol {
   }
 }
 
+type MockWSListener = (data: unknown) => void
+
 function createTriggerableWS() {
-  const listeners: Record<string, Function[]> = {}
+  const listeners: Record<string, MockWSListener[]> = {}
   return {
     readyState: 1 as number,
     send: vi.fn(),
     close: vi.fn(),
-    on: vi.fn((event: string, handler: Function) => {
+    on: vi.fn((event: string, handler: MockWSListener) => {
       if (!listeners[event]) listeners[event] = []
       listeners[event].push(handler)
     }),
@@ -33,6 +40,7 @@ function createTriggerableWS() {
 
 describe('createTypedRuntime', () => {
   let typed: TypedRuntime<TestProtocol>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let getAdapter: () => any
 
   beforeEach(async () => {
@@ -69,17 +77,26 @@ describe('createTypedRuntime', () => {
     const ws = createTriggerableWS()
     getAdapter().handleConnection(ws)
 
-    ws._trigger('message', Buffer.from(JSON.stringify({
-      method: 'echo',
-      id: '1',
-      params: { message: 'hello' },
-    })))
+    ws._trigger(
+      'message',
+      Buffer.from(
+        JSON.stringify({
+          method: 'echo',
+          id: '1',
+          params: { message: 'hello' },
+        })
+      )
+    )
 
     expect(handler).toHaveBeenCalledWith({ message: 'hello' }, expect.any(String))
 
     const calls = ws.send.mock.calls
     const rpcResponse = calls.find((call: unknown[]) => {
-      try { return JSON.parse(call[0] as string).id === '1' } catch { return false }
+      try {
+        return JSON.parse(call[0] as string).id === '1'
+      } catch {
+        return false
+      }
     })
     expect(rpcResponse).toBeDefined()
     expect(JSON.parse((rpcResponse as unknown[])[0] as string).result).toEqual({
@@ -95,10 +112,15 @@ describe('createTypedRuntime', () => {
     const ws = createTriggerableWS()
     getAdapter().handleConnection(ws)
 
-    ws._trigger('message', Buffer.from(JSON.stringify({
-      type: 'notification',
-      payload: { text: 'hello' },
-    })))
+    ws._trigger(
+      'message',
+      Buffer.from(
+        JSON.stringify({
+          type: 'notification',
+          payload: { text: 'hello' },
+        })
+      )
+    )
 
     expect(handler).toHaveBeenCalledWith({ text: 'hello' }, expect.any(String))
   })

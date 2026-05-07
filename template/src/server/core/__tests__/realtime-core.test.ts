@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 904ea6ba8e1cf955
+ */
+
+/**
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -55,12 +59,8 @@ describe('createRealtimeCore', () => {
 
       core.broadcast({ message: 'hello' }, [], 'notification')
 
-      expect(sse1.send).toHaveBeenCalledWith(
-        'event: notification\ndata: {"message":"hello"}\n\n'
-      )
-      expect(sse2.send).toHaveBeenCalledWith(
-        'event: notification\ndata: {"message":"hello"}\n\n'
-      )
+      expect(sse1.send).toHaveBeenCalledWith('event: notification\ndata: {"message":"hello"}\n\n')
+      expect(sse2.send).toHaveBeenCalledWith('event: notification\ndata: {"message":"hello"}\n\n')
     })
 
     it('should exclude specified client IDs', () => {
@@ -93,9 +93,7 @@ describe('createRealtimeCore', () => {
 
       core.broadcast({ msg: 'test' }, [], 'notification')
 
-      expect(sse.send).toHaveBeenCalledWith(
-        'event: notification\ndata: {"msg":"test"}\n\n'
-      )
+      expect(sse.send).toHaveBeenCalledWith('event: notification\ndata: {"msg":"test"}\n\n')
     })
 
     it('should remove WS clients that throw on send', () => {
@@ -202,11 +200,7 @@ describe('createRealtimeCore', () => {
 
       core.handleWSMessage('ws1', { type: 'broadcast', payload: { msg: 'hello' } })
 
-      expect(handler).toHaveBeenCalledWith(
-        { msg: 'hello' },
-        'ws1',
-        expect.any(Function)
-      )
+      expect(handler).toHaveBeenCalledWith({ msg: 'hello' }, 'ws1', expect.any(Function))
     })
 
     it('should ignore event messages without registered handler', () => {
@@ -281,11 +275,7 @@ describe('createRealtimeCore', () => {
 
       core.handleWSMessage('ws1', { type: 'chat', payload: {} })
 
-      expect(handler).toHaveBeenCalledWith(
-        {},
-        'ws1',
-        expect.any(Function)
-      )
+      expect(handler).toHaveBeenCalledWith({}, 'ws1', expect.any(Function))
 
       const broadcastFn = handler.mock.calls[0][2]
       expect(typeof broadcastFn).toBe('function')

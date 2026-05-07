@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 628e9cec4a73cd12
+ */
+
+/**
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -112,7 +116,9 @@ describe('autoRegisterRealtime', () => {
 
   it('should handle getRuntimeAdapter throwing', async () => {
     vi.doMock('../runtime', () => ({
-      getRuntimeAdapter: () => { throw new Error('Not initialized') },
+      getRuntimeAdapter: () => {
+        throw new Error('Not initialized')
+      },
     }))
     const { autoRegisterRealtime: scanner } = await import('../realtime-scanner')
     const app = makeApp({
@@ -147,6 +153,7 @@ describe('autoRegisterRealtime', () => {
         info: { title: 'API', version: '1.0.0' },
       }),
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     scanner(app as any)
     expect(mockHandleWS).not.toHaveBeenCalled()
   })
@@ -164,6 +171,7 @@ describe('autoRegisterRealtime', () => {
 
   it('should skip null method entries', async () => {
     const { autoRegisterRealtime: scanner } = await import('../realtime-scanner')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     scanner(makeApp({ '/api/chat/ws': null, '/api/todos': undefined }) as any)
     expect(mockHandleWS).not.toHaveBeenCalled()
   })
@@ -175,6 +183,7 @@ describe('autoRegisterRealtime', () => {
         post: { responses: { '200': { content: { websocket: { schema: {} } } } } },
       },
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     scanner(app as any)
     expect(mockHandleWS).not.toHaveBeenCalled()
   })

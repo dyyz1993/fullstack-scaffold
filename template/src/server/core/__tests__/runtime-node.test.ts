@@ -1,17 +1,23 @@
 /**
+ * @framework-baseline 9f8e084af0f308a3
+ */
+
+/**
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NodeRuntimeAdapter } from '../runtime-node'
 import type { WebSocket } from 'ws'
 
+type MockListener = (data: unknown) => void
+
 function createMockWebSocket(): WebSocket {
-  const listeners: Record<string, Function[]> = {}
+  const listeners: Record<string, MockListener[]> = {}
   return {
     readyState: 1,
     send: vi.fn(),
     close: vi.fn(),
-    on: vi.fn((event: string, handler: Function) => {
+    on: vi.fn((event: string, handler: MockListener) => {
       if (!listeners[event]) listeners[event] = []
       listeners[event].push(handler)
     }),
@@ -20,7 +26,10 @@ function createMockWebSocket(): WebSocket {
       const handlers = listeners[event] || []
       handlers.forEach(h => h(data))
     },
-  } as unknown as WebSocket & { _listeners: Record<string, Function[]>; _trigger: (event: string, data: unknown) => void }
+  } as unknown as WebSocket & {
+    _listeners: Record<string, MockListener[]>
+    _trigger: (event: string, data: unknown) => void
+  }
 }
 
 describe('NodeRuntimeAdapter', () => {
@@ -91,13 +100,19 @@ describe('NodeRuntimeAdapter', () => {
       const ws = createMockWebSocket()
       adapter.handleConnection(ws)
 
-      adapter.registerRPC('echo', (params) => ({ echo: params }))
+      adapter.registerRPC('echo', params => ({ echo: params }))
 
-      ;(ws as any)._trigger('message', Buffer.from(JSON.stringify({
-        method: 'echo',
-        id: '1',
-        params: { text: 'hi' },
-      })))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(ws as any)._trigger(
+        'message',
+        Buffer.from(
+          JSON.stringify({
+            method: 'echo',
+            id: '1',
+            params: { text: 'hi' },
+          })
+        )
+      )
 
       const calls = (ws.send as ReturnType<typeof vi.fn>).mock.calls
       const rpcResponse = calls.find((call: unknown[]) => {
@@ -122,10 +137,16 @@ describe('NodeRuntimeAdapter', () => {
       const ws = createMockWebSocket()
       adapter.handleConnection(ws)
 
-      ;(ws as any)._trigger('message', Buffer.from(JSON.stringify({
-        type: 'chat',
-        payload: { text: 'hello' },
-      })))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(ws as any)._trigger(
+        'message',
+        Buffer.from(
+          JSON.stringify({
+            type: 'chat',
+            payload: { text: 'hello' },
+          })
+        )
+      )
 
       expect(handler).toHaveBeenCalled()
     })
@@ -141,9 +162,7 @@ describe('NodeRuntimeAdapter', () => {
       expect(adapter.connections.has(conn.id)).toBe(true)
       expect(adapter.size).toBe(1)
 
-      expect(ws.send).toHaveBeenCalledWith(
-        expect.stringContaining('connected')
-      )
+      expect(ws.send).toHaveBeenCalledWith(expect.stringContaining('connected'))
     })
 
     it('should parse incoming messages and dispatch to core', () => {
@@ -152,11 +171,17 @@ describe('NodeRuntimeAdapter', () => {
 
       adapter.registerRPC('ping', () => ({ pong: true }))
 
-      ;(ws as any)._trigger('message', Buffer.from(JSON.stringify({
-        method: 'ping',
-        id: '10',
-        params: {},
-      })))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(ws as any)._trigger(
+        'message',
+        Buffer.from(
+          JSON.stringify({
+            method: 'ping',
+            id: '10',
+            params: {},
+          })
+        )
+      )
 
       const calls = (ws.send as ReturnType<typeof vi.fn>).mock.calls
       const rpcResponse = calls.find((call: unknown[]) => {
@@ -176,6 +201,7 @@ describe('NodeRuntimeAdapter', () => {
 
       const sendCallsBefore = (ws.send as ReturnType<typeof vi.fn>).mock.calls.length
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(ws as any)._trigger('message', Buffer.from('not json'))
 
       const sendCallsAfter = (ws.send as ReturnType<typeof vi.fn>).mock.calls.length
@@ -188,6 +214,7 @@ describe('NodeRuntimeAdapter', () => {
 
       expect(adapter.connections.has(conn.id)).toBe(true)
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(ws as any)._trigger('close', null)
 
       expect(adapter.connections.has(conn.id)).toBe(false)
@@ -267,6 +294,7 @@ describe('NodeRuntimeAdapter', () => {
   describe('NodeWSConnection', () => {
     it('should not send when readyState is not OPEN', () => {
       const ws = createMockWebSocket()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(ws as any).readyState = 0
 
       const conn = adapter.handleConnection(ws)

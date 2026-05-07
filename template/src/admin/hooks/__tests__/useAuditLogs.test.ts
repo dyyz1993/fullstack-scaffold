@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useAuditLogStore } from '../useAuditLogs'
 
@@ -30,7 +31,14 @@ describe('useAuditLogStore', () => {
 
   it('should fetch logs successfully', async () => {
     const mockLogs = [
-      { id: '1', action: 'create', resourceType: 'user', userId: 'u1', timestamp: '2024-01-01', details: {} },
+      {
+        id: '1',
+        action: 'create',
+        resourceType: 'user',
+        userId: 'u1',
+        timestamp: '2024-01-01',
+        details: {},
+      },
     ]
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api['audit-logs'].$get).mockResolvedValueOnce({

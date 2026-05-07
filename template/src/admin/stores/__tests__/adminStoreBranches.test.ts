@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Role } from '@shared/modules/permission'
 import type { AuthUserResponse, SystemStats, LoginResponse } from '@shared/modules/admin'
@@ -44,7 +45,14 @@ vi.mock('@admin/services/apiClient', () => ({
             json: async () => ({
               success: true,
               data: {
-                user: { id: '1', username: 'admin', email: 'a@t.com', role: Role.SUPER_ADMIN, avatar: null, permissions: [] },
+                user: {
+                  id: '1',
+                  username: 'admin',
+                  email: 'a@t.com',
+                  role: Role.SUPER_ADMIN,
+                  avatar: null,
+                  permissions: [],
+                },
                 token: 'token',
               },
             }),
@@ -54,7 +62,12 @@ vi.mock('@admin/services/apiClient', () => ({
           $get: vi.fn(async () => ({
             json: async () => ({
               success: true,
-              data: { totalTodos: 1, pendingTodos: 0, completedTodos: 1, lastUpdated: '2024-01-01' },
+              data: {
+                totalTodos: 1,
+                pendingTodos: 0,
+                completedTodos: 1,
+                lastUpdated: '2024-01-01',
+              },
             }),
           })),
         },

@@ -1,3 +1,8 @@
+/**
+ * @framework-baseline 31d3c72c514b151d
+ */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 type TestSSEProtocol = {
@@ -17,7 +22,12 @@ afterEach(() => {
   globalThis.fetch = originalFetch
 })
 
-function mockFetchResponse(body: ReadableStream | null, ok = true, status = 200, statusText = 'OK') {
+function mockFetchResponse(
+  body: ReadableStream | null,
+  ok = true,
+  status = 200,
+  statusText = 'OK'
+) {
   return vi.fn(async () => ({
     ok,
     status,
@@ -68,9 +78,7 @@ describe('SSEClientImpl', () => {
     it('should call error handlers on HTTP error', async () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
-      let callCount = 0
       globalThis.fetch = vi.fn(async () => {
-        callCount++
         return { ok: false, status: 500, statusText: 'Internal Server Error' }
       }) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
@@ -91,10 +99,10 @@ describe('SSEClientImpl', () => {
     it('should call error handlers when no response body', async () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
-      let callCount = 0
+      let _callCount = 0
       globalThis.fetch = vi.fn(async () => {
-        callCount++
-        if (callCount <= 1) {
+        _callCount++
+        if (_callCount <= 1) {
           return { ok: true, status: 200, statusText: 'OK', body: null, headers: new Headers() }
         }
         return { ok: false, status: 500, statusText: 'Error' }
@@ -159,9 +167,7 @@ describe('SSEClientImpl', () => {
     it('should call handler with plain data if JSON parse fails', async () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
-      const stream = createStreamFromChunks([
-        'event: ping\ndata: not-json\n\n',
-      ])
+      const stream = createStreamFromChunks(['event: ping\ndata: not-json\n\n'])
       globalThis.fetch = mockFetchResponse(stream) as any
 
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
@@ -283,9 +289,7 @@ describe('SSEClientImpl', () => {
     it('should return unsubscribe function', async () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
-      let callCount = 0
       globalThis.fetch = vi.fn(async () => {
-        callCount++
         return { ok: false, status: 500, statusText: 'Error' }
       }) as any
       const client = new SSEClientImpl<TestSSEProtocol>('http://localhost/sse')
@@ -339,9 +343,7 @@ describe('SSEClientImpl', () => {
     it('should attempt reconnect on error up to max attempts', async () => {
       vi.useFakeTimers()
       const { SSEClientImpl } = await import('../sse-client')
-      let fetchCallCount = 0
       globalThis.fetch = vi.fn(async () => {
-        fetchCallCount++
         return { ok: false, status: 500, statusText: 'Error' }
       }) as any
 

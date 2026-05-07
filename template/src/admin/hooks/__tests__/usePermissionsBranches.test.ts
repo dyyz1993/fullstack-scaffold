@@ -1,7 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  usePermissionStore,
-} from '../usePermissions'
+import { usePermissionStore } from '../usePermissions'
 import { Permission, Role } from '@shared/modules/permission'
 
 const mockAdminState: {
@@ -13,9 +12,12 @@ const mockAdminState: {
 }
 
 vi.mock('@admin/stores/adminStore', () => ({
-  useAdminStore: Object.assign(vi.fn(() => mockAdminState), {
-    getState: () => mockAdminState,
-  }),
+  useAdminStore: Object.assign(
+    vi.fn(() => mockAdminState),
+    {
+      getState: () => mockAdminState,
+    }
+  ),
 }))
 
 vi.mock('@admin/services/apiClient', () => ({
@@ -136,7 +138,11 @@ describe('usePermissionStore - branch coverage', () => {
   it('should handle permissions fetch failure in fetchStaticData', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.permissions.roles.$get).mockResolvedValueOnce({
-      json: async () => ({ success: true, data: [{ role: Role.USER, label: 'User', permissions: [] }], timestamp: new Date().toISOString() }),
+      json: async () => ({
+        success: true,
+        data: [{ role: Role.USER, label: 'User', permissions: [] }],
+        timestamp: new Date().toISOString(),
+      }),
     } as any)
     vi.mocked(apiClient.api.permissions.$get).mockResolvedValueOnce({
       json: async () => ({ success: false, error: 'Failed' }),
@@ -144,14 +150,18 @@ describe('usePermissionStore - branch coverage', () => {
 
     await usePermissionStore.getState().fetchStaticData()
 
-    expect(usePermissionStore.getState().roles).toEqual([{ role: Role.USER, label: 'User', permissions: [] }])
+    expect(usePermissionStore.getState().roles).toEqual([
+      { role: Role.USER, label: 'User', permissions: [] },
+    ])
     expect(usePermissionStore.getState().allPermissions).toEqual([])
   })
 
   it('should handle network error in fetchStaticData', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { apiClient } = await import('@admin/services/apiClient')
-    vi.mocked(apiClient.api.permissions.roles.$get).mockRejectedValueOnce(new Error('Network error'))
+    vi.mocked(apiClient.api.permissions.roles.$get).mockRejectedValueOnce(
+      new Error('Network error')
+    )
 
     await usePermissionStore.getState().fetchStaticData()
 

@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 6115ae817b702e1a
+ */
+
+/**
  * @vitest-environment node
  *
  * Tests for runtime.ts module state management.

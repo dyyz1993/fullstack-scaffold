@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline e5b8bf14244c53b9
+ */
+
+/**
  * 自定义 ESLint 规则：禁止有歧义的文件路径命名
  *
  * 禁止以下模式：
@@ -34,7 +38,10 @@ export const noAmbiguousFilePaths = {
     if (pathParts.length < 2) return {}
 
     const fileName = pathParts[pathParts.length - 1]
-    const fileNameWithoutExt = fileName.replace(/\.ts$/, '').replace(/\.tsx$/, '').replace(/\.js$/, '')
+    const fileNameWithoutExt = fileName
+      .replace(/\.ts$/, '')
+      .replace(/\.tsx$/, '')
+      .replace(/\.js$/, '')
 
     const parentDir = pathParts[pathParts.length - 2]
 

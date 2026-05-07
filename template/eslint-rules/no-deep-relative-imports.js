@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline 4edb81c96763694f
+ */
+
+/**
  * @fileoverview Disallow relative imports with 3+ levels of `../`
  * @description Enforces use of path aliases (@server, @shared, @client, @admin)
  *              instead of deep relative imports.

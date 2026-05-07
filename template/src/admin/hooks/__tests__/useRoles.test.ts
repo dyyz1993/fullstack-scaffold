@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useRoleStore } from '../useRoles'
 
@@ -37,9 +38,7 @@ describe('useRoleStore', () => {
   })
 
   it('should fetch roles successfully', async () => {
-    const mockRoles = [
-      { id: '1', name: 'admin', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-    ]
+    const mockRoles = [{ id: '1', name: 'admin', createdAt: '2024-01-01', updatedAt: '2024-01-01' }]
     const { apiClient } = await import('@admin/services/apiClient')
     vi.mocked(apiClient.api.roles.$get).mockResolvedValueOnce({
       json: async () => ({ success: true, data: mockRoles, timestamp: new Date().toISOString() }),
@@ -81,7 +80,9 @@ describe('useRoleStore', () => {
       json: async () => ({ success: true, data: [], timestamp: new Date().toISOString() }),
     } as any)
 
-    const result = await useRoleStore.getState().createRole({ code: 'editor', name: 'editor', label: 'Editor' })
+    const result = await useRoleStore
+      .getState()
+      .createRole({ code: 'editor', name: 'editor', label: 'Editor' })
 
     expect(result).toBe(true)
   })
@@ -92,7 +93,9 @@ describe('useRoleStore', () => {
       json: async () => ({ success: false, error: 'Name exists' }),
     } as any)
 
-    const result = await useRoleStore.getState().createRole({ code: 'dup', name: 'dup', label: 'Dup' })
+    const result = await useRoleStore
+      .getState()
+      .createRole({ code: 'dup', name: 'dup', label: 'Dup' })
 
     expect(result).toBe(false)
     expect(useRoleStore.getState().error).toBe('Name exists')
@@ -104,7 +107,9 @@ describe('useRoleStore', () => {
       json: async () => ({ success: false, error: '' }),
     } as any)
 
-    const result = await useRoleStore.getState().createRole({ code: 'dup', name: 'dup', label: 'Dup' })
+    const result = await useRoleStore
+      .getState()
+      .createRole({ code: 'dup', name: 'dup', label: 'Dup' })
 
     expect(result).toBe(false)
     expect(useRoleStore.getState().error).toBe('Failed to create role')
@@ -244,7 +249,9 @@ describe('useRoleStore', () => {
 
   it('should handle update role permissions network error', async () => {
     const { apiClient } = await import('@admin/services/apiClient')
-    vi.mocked(apiClient.api.roles[':id'].permissions.$put).mockRejectedValueOnce(new Error('Timeout'))
+    vi.mocked(apiClient.api.roles[':id'].permissions.$put).mockRejectedValueOnce(
+      new Error('Timeout')
+    )
 
     const result = await useRoleStore.getState().updateRolePermissions('1', ['user:view'])
 
