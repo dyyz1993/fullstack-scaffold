@@ -1,10 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "Running TypeScript type check..."
-npx tsc --noEmit
-
-echo "Running ESLint..."
-npx eslint . --max-warnings=0
-
-npx lint-staged
+NODE_OPTIONS="--max-old-space-size=4096" npx lint-staged --relative

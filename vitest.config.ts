@@ -15,6 +15,12 @@ export default defineConfig({
     ],
     testTimeout: 60000,
     hookTimeout: 60000,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/__tests__/**', 'node_modules/**'],
+    },
   },
   resolve: {
     alias: {

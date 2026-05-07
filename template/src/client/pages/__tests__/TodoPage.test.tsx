@@ -2,26 +2,34 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { TodoPage } from '../TodoPage'
-import type { Todo } from '@shared/schemas'
+import type { Todo, TodoAttachment } from '@shared/schemas'
 
 interface MockTodoStore {
   todos: Todo[]
   loading: boolean
   error: string | null
+  attachments: Map<number, TodoAttachment[]>
   fetchTodos: ReturnType<typeof vi.fn>
   createTodo: ReturnType<typeof vi.fn>
   updateTodo: ReturnType<typeof vi.fn>
   deleteTodo: ReturnType<typeof vi.fn>
+  uploadAttachment: ReturnType<typeof vi.fn>
+  fetchAttachments: ReturnType<typeof vi.fn>
+  deleteAttachment: ReturnType<typeof vi.fn>
 }
 
 const mockStore: MockTodoStore = {
   todos: [],
   loading: false,
   error: null,
+  attachments: new Map(),
   fetchTodos: vi.fn().mockResolvedValue(undefined),
   createTodo: vi.fn().mockResolvedValue(undefined),
   updateTodo: vi.fn().mockResolvedValue(undefined),
   deleteTodo: vi.fn().mockResolvedValue(undefined),
+  uploadAttachment: vi.fn().mockResolvedValue(null),
+  fetchAttachments: vi.fn().mockResolvedValue(undefined),
+  deleteAttachment: vi.fn().mockResolvedValue(undefined),
 }
 
 vi.mock('@client/stores/todoStore', () => ({
@@ -43,12 +51,24 @@ const createMockTodo = (overrides: Partial<Todo> = {}): Todo => ({
   ...overrides,
 })
 
+const createMockAttachment = (overrides: Partial<TodoAttachment> = {}): TodoAttachment => ({
+  id: 1,
+  todoId: 1,
+  fileName: 'test.pdf',
+  originalName: 'test.pdf',
+  size: 1024,
+  mimeType: 'application/pdf',
+  createdAt: new Date().toISOString(),
+  ...overrides,
+})
+
 describe('TodoPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockStore.todos = []
     mockStore.loading = false
     mockStore.error = null
+    mockStore.attachments = new Map()
   })
 
   describe('Initial Render', () => {
@@ -85,26 +105,33 @@ describe('TodoPage', () => {
 
     it('should enable submit button when title has value', () => {
       render(<TodoPage />)
-      const titleInput = screen.getByTestId('todo-title-input')
-      fireEvent.change(titleInput, { target: { value: 'New Todo' } })
-      const submitButton = screen.getByTestId('add-todo-button')
-      expect(submitButton).not.toBeDisabled()
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'New Todo' } })
+      expect(screen.getByTestId('add-todo-button')).not.toBeDisabled()
     })
 
     it('should create todo on form submit', async () => {
       render(<TodoPage />)
-      const titleInput = screen.getByTestId('todo-title-input')
-      const descriptionInput = screen.getByTestId('todo-description-input')
-      const submitButton = screen.getByTestId('add-todo-button')
-
-      fireEvent.change(titleInput, { target: { value: 'New Todo' } })
-      fireEvent.change(descriptionInput, { target: { value: 'New Description' } })
-      fireEvent.click(submitButton)
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'New Todo' } })
+      fireEvent.change(screen.getByTestId('todo-description-input'), { target: { value: 'New Desc' } })
+      fireEvent.click(screen.getByTestId('add-todo-button'))
 
       await waitFor(() => {
         expect(mockStore.createTodo).toHaveBeenCalledWith({
           title: 'New Todo',
-          description: 'New Description',
+          description: 'New Desc',
+        })
+      })
+    })
+
+    it('should create todo without description when empty', async () => {
+      render(<TodoPage />)
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'Just Title' } })
+      fireEvent.click(screen.getByTestId('add-todo-button'))
+
+      await waitFor(() => {
+        expect(mockStore.createTodo).toHaveBeenCalledWith({
+          title: 'Just Title',
+          description: undefined,
         })
       })
     })
@@ -112,26 +139,45 @@ describe('TodoPage', () => {
     it('should clear form after successful submit', async () => {
       render(<TodoPage />)
       const titleInput = screen.getByTestId('todo-title-input') as HTMLInputElement
-      const descriptionInput = screen.getByTestId('todo-description-input') as HTMLTextAreaElement
-      const submitButton = screen.getByTestId('add-todo-button')
+      const descInput = screen.getByTestId('todo-description-input') as HTMLTextAreaElement
 
       fireEvent.change(titleInput, { target: { value: 'New Todo' } })
-      fireEvent.change(descriptionInput, { target: { value: 'New Description' } })
-      fireEvent.click(submitButton)
+      fireEvent.change(descInput, { target: { value: 'New Desc' } })
+      fireEvent.click(screen.getByTestId('add-todo-button'))
 
       await waitFor(() => {
         expect(titleInput.value).toBe('')
-        expect(descriptionInput.value).toBe('')
+        expect(descInput.value).toBe('')
       })
+    })
+
+    it('should not submit when title is whitespace only', () => {
+      render(<TodoPage />)
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: '   ' } })
+      expect(screen.getByTestId('add-todo-button')).toBeDisabled()
+    })
+
+    it('should disable submit when loading', () => {
+      mockStore.loading = true
+      render(<TodoPage />)
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'Test' } })
+      expect(screen.getByTestId('add-todo-button')).toBeDisabled()
     })
   })
 
   describe('Todo List Display', () => {
-    it('should show loading indicator when loading', () => {
+    it('should show loading indicator when loading with empty list', () => {
       mockStore.loading = true
       mockStore.todos = []
       render(<TodoPage />)
       expect(screen.getByTestId('loading-indicator')).toBeInTheDocument()
+    })
+
+    it('should not show loading indicator when loading but has todos', () => {
+      mockStore.loading = true
+      mockStore.todos = [createMockTodo()]
+      render(<TodoPage />)
+      expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument()
     })
 
     it('should show error message when error exists', () => {
@@ -151,20 +197,38 @@ describe('TodoPage', () => {
       expect(screen.getByText('2')).toBeInTheDocument()
     })
 
-    it('should display todo items', () => {
-      mockStore.todos = [
-        createMockTodo({ id: 1, title: 'Test Todo 1' }),
-        createMockTodo({ id: 2, title: 'Test Todo 2' }),
-      ]
+    it('should display todo items with title and description', () => {
+      mockStore.todos = [createMockTodo({ id: 1, title: 'My Todo', description: 'My Desc' })]
       render(<TodoPage />)
-      expect(screen.getByText('Test Todo 1')).toBeInTheDocument()
-      expect(screen.getByText('Test Todo 2')).toBeInTheDocument()
+      expect(screen.getByText('My Todo')).toBeInTheDocument()
+      expect(screen.getByText('My Desc')).toBeInTheDocument()
     })
 
-    it('should display todo description when available', () => {
-      mockStore.todos = [createMockTodo({ description: 'Test description' })]
+    it('should not display description when absent', () => {
+      mockStore.todos = [createMockTodo({ description: undefined as unknown as string })]
       render(<TodoPage />)
-      expect(screen.getByText('Test description')).toBeInTheDocument()
+      expect(screen.queryByTestId('todo-item-description')).not.toBeInTheDocument()
+    })
+
+    it('should show line-through for completed todos', () => {
+      mockStore.todos = [createMockTodo({ status: 'completed', title: 'Done Todo' })]
+      render(<TodoPage />)
+      const title = screen.getByTestId('todo-item-title')
+      expect(title.className).toContain('line-through')
+    })
+
+    it('should display todo status select', () => {
+      mockStore.todos = [createMockTodo()]
+      render(<TodoPage />)
+      expect(screen.getByTestId('todo-status')).toBeInTheDocument()
+      expect(screen.getByTestId('todo-status')).toHaveValue('pending')
+    })
+
+    it('should display formatted creation date', () => {
+      const date = new Date('2024-01-15T10:30:00.000Z')
+      mockStore.todos = [createMockTodo({ createdAt: date.toISOString() })]
+      render(<TodoPage />)
+      expect(screen.getByText(date.toLocaleString())).toBeInTheDocument()
     })
   })
 
@@ -177,7 +241,7 @@ describe('TodoPage', () => {
       ]
     })
 
-    it('should render filter buttons', () => {
+    it('should render all filter buttons', () => {
       render(<TodoPage />)
       expect(screen.getByTestId('filter-all')).toBeInTheDocument()
       expect(screen.getByTestId('filter-pending')).toBeInTheDocument()
@@ -216,26 +280,144 @@ describe('TodoPage', () => {
       expect(screen.getByText('In Progress Todo')).toBeInTheDocument()
       expect(screen.getByText('Completed Todo')).toBeInTheDocument()
     })
+
+    it('should show empty state for filtered results', () => {
+      mockStore.todos = [createMockTodo({ status: 'pending' })]
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('filter-completed'))
+      expect(screen.getByText(/No todos yet/)).toBeInTheDocument()
+    })
   })
 
   describe('Todo Actions', () => {
     it('should call updateTodo when status is changed', async () => {
       mockStore.todos = [createMockTodo({ id: 1, status: 'pending' })]
       render(<TodoPage />)
-      const statusSelect = screen.getByTestId('todo-status')
-      fireEvent.change(statusSelect, { target: { value: 'completed' } })
+      fireEvent.change(screen.getByTestId('todo-status'), { target: { value: 'completed' } })
       await waitFor(() => {
         expect(mockStore.updateTodo).toHaveBeenCalledWith(1, { status: 'completed' })
       })
     })
 
     it('should call deleteTodo when delete button is clicked', async () => {
+      mockStore.todos = [createMockTodo({ id: 5 })]
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('delete-button'))
+      await waitFor(() => {
+        expect(mockStore.deleteTodo).toHaveBeenCalledWith(5)
+      })
+    })
+  })
+
+  describe('Attachments', () => {
+    it('should toggle attachments section', async () => {
       mockStore.todos = [createMockTodo({ id: 1 })]
       render(<TodoPage />)
-      const deleteButton = screen.getByTestId('delete-button')
-      fireEvent.click(deleteButton)
+
+      expect(screen.queryByTestId('attachments-section')).not.toBeInTheDocument()
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
       await waitFor(() => {
-        expect(mockStore.deleteTodo).toHaveBeenCalledWith(1)
+        expect(screen.getByTestId('attachments-section')).toBeInTheDocument()
+      })
+    })
+
+    it('should fetch attachments on first expand', async () => {
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(mockStore.fetchAttachments).toHaveBeenCalledWith(1)
+      })
+    })
+
+    it('should not fetch attachments on subsequent toggles', async () => {
+      const attachments = new Map([[1, [createMockAttachment()]]])
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      mockStore.attachments = attachments
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      expect(mockStore.fetchAttachments).not.toHaveBeenCalled()
+    })
+
+    it('should collapse attachments on second toggle click', async () => {
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByTestId('attachments-section')).toBeInTheDocument()
+      })
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      expect(screen.queryByTestId('attachments-section')).not.toBeInTheDocument()
+    })
+
+    it('should display attachments when available', async () => {
+      const att = createMockAttachment({ originalName: 'doc.pdf', size: 2048 })
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      mockStore.attachments = new Map([[1, [att]]])
+      render(<TodoPage />)
+
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByText('doc.pdf')).toBeInTheDocument()
+        expect(screen.getByText(/\(2\.0 KB\)/)).toBeInTheDocument()
+      })
+    })
+
+    it('should show no attachments text when empty', async () => {
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByText('No attachments yet')).toBeInTheDocument()
+      })
+    })
+
+    it('should call deleteAttachment when delete attachment button is clicked', async () => {
+      const att = createMockAttachment({ id: 10, todoId: 1 })
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      mockStore.attachments = new Map([[1, [att]]])
+      render(<TodoPage />)
+
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByTestId('delete-attachment-button')).toBeInTheDocument()
+      })
+      fireEvent.click(screen.getByTestId('delete-attachment-button'))
+      await waitFor(() => {
+        expect(mockStore.deleteAttachment).toHaveBeenCalledWith(1, 10)
+      })
+    })
+
+    it('should render upload button', async () => {
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      render(<TodoPage />)
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByTestId('upload-button')).toBeInTheDocument()
+      })
+    })
+
+    it('should format file sizes correctly', async () => {
+      const att = createMockAttachment({ originalName: 'big.pdf', size: 1048576 })
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      mockStore.attachments = new Map([[1, [att]]])
+      render(<TodoPage />)
+
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByText(/\(1\.0 MB\)/)).toBeInTheDocument()
+      })
+    })
+
+    it('should format bytes correctly', async () => {
+      const att = createMockAttachment({ originalName: 'small.txt', size: 500 })
+      mockStore.todos = [createMockTodo({ id: 1 })]
+      mockStore.attachments = new Map([[1, [att]]])
+      render(<TodoPage />)
+
+      fireEvent.click(screen.getByTestId('toggle-attachments-button'))
+      await waitFor(() => {
+        expect(screen.getByText(/\(500 B\)/)).toBeInTheDocument()
       })
     })
   })
