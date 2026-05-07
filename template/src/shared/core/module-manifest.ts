@@ -51,6 +51,8 @@ export interface ModuleManifest {
   sharedSchemas?: {
     /** Directory path under shared/modules/ */
     path: string
+    /** Additional shared module paths owned by this module (e.g., 'role', 'audit' for permission) */
+    additionalPaths?: string[]
   }
 
   /** Client-facing pages (React) */

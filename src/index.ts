@@ -1,81 +1,88 @@
 #!/usr/bin/env -S tsx
 
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { Command } from "commander";
-import chalk from "chalk";
-import { createProject, ScaffoldError } from "./commands/create.js";
-import { loadPresets } from "./generators/template-generator.js";
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { Command } from 'commander'
+import chalk from 'chalk'
+import { select } from '@inquirer/prompts'
+import { createProject, ScaffoldError } from './commands/create.js'
+import { loadPresets } from './generators/template-generator.js'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-const packageJson = await import("../package.json", {
-  assert: { type: "json" },
-});
+const packageJson = await import('../package.json', {
+  assert: { type: 'json' },
+})
 
-const program = new Command();
+const program = new Command()
 
 program
-  .name("create-fullstack-scaffold")
-  .description("Create a new full-stack scaffold app with Todo List example")
+  .name('create-fullstack-scaffold')
+  .description('Create a new full-stack scaffold app with Todo List example')
   .version(packageJson.default.version)
-  .argument("[project-name]", "Name of your project")
-  .option("-c, --current-dir", "Create project in current directory")
-  .option(
-    "-p, --preset <preset>",
-    "Template preset to use (fullstack-admin, todo-app, minimal)",
-    "fullstack-admin",
-  )
+  .argument('[project-name]', 'Name of your project')
+  .option('-c, --current-dir', 'Create project in current directory')
+  .option('-p, --preset <preset>', 'Template preset to use (fullstack-admin, todo-app, minimal)')
   .action(
     async (
-      projectName = "my-fullstack-app",
-      options: { currentDir?: boolean; preset?: string },
+      projectName = 'my-fullstack-app',
+      options: { currentDir?: boolean; preset?: string }
     ) => {
-      console.log("");
-      console.log(
-        chalk.cyan.bold("  ╔══════════════════════════════════════════╗"),
-      );
-      console.log(
-        chalk.cyan.bold("  ║   Create Fullstack Scaffold App          ║"),
-      );
-      console.log(
-        chalk.cyan.bold("  ║   React + Hono + Vite + Zustand + TS     ║"),
-      );
-      console.log(
-        chalk.cyan.bold("  ╚══════════════════════════════════════════╝"),
-      );
-      console.log("");
+      console.log('')
+      console.log(chalk.cyan.bold('  ╔══════════════════════════════════════════╗'))
+      console.log(chalk.cyan.bold('  ║   Create Fullstack Scaffold App          ║'))
+      console.log(chalk.cyan.bold('  ║   React + Hono + Vite + Zustand + TS     ║'))
+      console.log(chalk.cyan.bold('  ╚══════════════════════════════════════════╝'))
+      console.log('')
+
+      let preset = options.preset
+
+      if (!preset && process.stdin.isTTY) {
+        const templateDir = path.join(__dirname, '../template')
+        const presets = await loadPresets(templateDir)
+        preset = await select({
+          message: 'Choose a template preset:',
+          choices: presets.map(p => ({
+            value: p.id,
+            name: `${p.name} — ${p.description}`,
+          })),
+        })
+      }
+
+      if (!preset) {
+        preset = 'fullstack-admin'
+      }
 
       try {
         await createProject({
           projectName,
           currentDir: options.currentDir ?? false,
-          preset: options.preset,
-        });
+          preset,
+        })
       } catch (error) {
         if (error instanceof ScaffoldError) {
-          console.error(chalk.red(`  ✖ ${error.message}`));
-          process.exit(1);
+          console.error(chalk.red(`  ✖ ${error.message}`))
+          process.exit(1)
         }
-        throw error;
+        throw error
       }
-    },
-  );
+    }
+  )
 
 program
-  .command("presets")
-  .description("List available template presets")
-  .action(() => {
-    const templateDir = path.join(__dirname, "../template");
-    const presets = loadPresets(templateDir);
-    console.log(chalk.cyan("\nAvailable presets:\n"));
+  .command('presets')
+  .description('List available template presets')
+  .action(async () => {
+    const templateDir = path.join(__dirname, '../template')
+    const presets = await loadPresets(templateDir)
+    console.log(chalk.cyan('\nAvailable presets:\n'))
     for (const preset of presets) {
-      console.log(`  ${chalk.green(preset.id.padEnd(20))} ${preset.name}`);
-      console.log(`  ${" ".repeat(20)} ${preset.description}`);
-      console.log(`  ${" ".repeat(20)} Modules: ${preset.modules.join(", ")}`);
-      console.log();
+      console.log(`  ${chalk.green(preset.id.padEnd(20))} ${preset.name}`)
+      console.log(`  ${' '.repeat(20)} ${preset.description}`)
+      console.log(`  ${' '.repeat(20)} Modules: ${preset.modules.join(', ')}`)
+      console.log()
     }
-  });
+  })
 
-program.parse();
+program.parse()

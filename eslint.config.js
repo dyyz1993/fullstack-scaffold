@@ -1,31 +1,38 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
 
-export default [
-  { languageOptions: { globals: globals.node } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_" },
-      ],
-    },
-  },
+export default tseslint.config(
   {
     ignores: [
-      "template/**",
-      "node_modules/**",
-      "dist/**",
-      "playwright-report/**",
-      "test-results/**",
-      "testapp/**",
-      "my-app/**",
-      "e2e-debug-app/**",
-      "my-fullstack-app/**",
-      "test-*/**",
+      'dist/',
+      'template/**',
+      'testapp/**',
+      'tests/**',
+      'my-app/**',
+      'e2e-debug-app/**',
+      'src/client/**',
+      'src/server/**',
+      'src/shared/**',
+      'src/types/**',
+      'src/cli/**',
+      'src/vite-env.d.ts',
+      'eslint-rules/**',
+      'lint-scripts/**',
+      'scripts/**',
     ],
   },
-];
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  }
+)

@@ -6,10 +6,7 @@ echo "🔍 Pre-push verification..."
 echo "  → TypeScript type check..."
 npm run typecheck
 
-echo "  → Root unit tests..."
+echo "  → Unit tests..."
 npx vitest run
-
-echo "  → Template unit tests..."
-cd template && npx vitest run
 
 echo "✅ All pre-push checks passed."

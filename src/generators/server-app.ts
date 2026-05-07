@@ -1,55 +1,143 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import type { ResolvedPreset } from "./template-generator";
+import type { ResolvedPreset } from './template-generator'
 
-export function generateServerApp(
-  resolved: ResolvedPreset,
-  templateDir: string,
-): string {
-  const originalPath = join(templateDir, "src", "server", "app.ts");
-  let content = readFileSync(originalPath, "utf-8");
+export function generateServerApp(resolved: ResolvedPreset): string {
+  const useRealtime = resolved.hasSSE || resolved.hasWebSocket
+  const useAuditLog = resolved.hasPermission
+  const useCaptcha = resolved.hasCaptcha
+  const useFileRoutes = resolved.modules.has('file')
 
-  if (!resolved.hasCaptcha) {
-    content = content.replace(
-      /import \{ captchaMiddleware \} from '\.\/middleware\/captcha'\n/g,
-      "",
-    );
-    content = content.replace(
-      /\n\s*\.use\(\s*\n\s*'\/api\/admin\/\*',\s*\n\s*captchaMiddleware\(\{[^}]*\}\)\s*\n\s*\)/,
-      "",
-    );
+  const imports: string[] = [
+    `import { OpenAPIHono } from '@hono/zod-openapi'`,
+    ``,
+    `import { HTTPException } from 'hono/http-exception'`,
+    `import type { ContentfulStatusCode } from 'hono/utils/http-status'`,
+    `import { ZodError } from 'zod'`,
+    `import type { AppBindings, CreateAppOptions } from './types/bindings'`,
+    `import { AppError } from './utils/app-error'`,
+    `import { autoRegisterRealtime } from './core/realtime-scanner'`,
+    `import { corsMiddleware, loggerMiddleware, errorHandlerMiddleware } from './middleware'`,
+  ]
+
+  if (useRealtime) {
+    imports.push(`import { realtimeEnvMiddleware } from './middleware/realtime-env'`)
+  }
+  if (useAuditLog) {
+    imports.push(`import { auditLogMiddleware } from './middleware/audit-log'`)
+  }
+  if (useCaptcha) {
+    imports.push(`import { captchaMiddleware } from './middleware/captcha'`)
   }
 
-  if (!resolved.hasPermission) {
-    content = content.replace(
-      /import \{ auditLogMiddleware \} from '\.\/middleware\/audit-log'\n/g,
-      "",
-    );
-    content = content.replace(
-      /\n\s*\.use\('\/api\/\*',\s*auditLogMiddleware\(\)\)/,
-      "",
-    );
+  imports.push(
+    `import { createModuleLoggerSync } from './utils/logger'`,
+    `import { adminApiRoutes, clientApiRoutes } from './route-registry'`
+  )
+
+  if (useFileRoutes) {
+    imports.push(`import { fileRoutes } from './module-file/routes/file-routes'`)
   }
 
-  if (!resolved.hasSSE && !resolved.hasWebSocket) {
-    content = content.replace(
-      /import \{ realtimeEnvMiddleware \} from '\.\/middleware\/realtime-env'\n/g,
-      "",
-    );
-    content = content.replace(
-      /\n\s*\.use\('\*',\s*realtimeEnvMiddleware\(\)\)/,
-      "",
-    );
+  const middlewareChain: string[] = [
+    `.use('*', errorHandlerMiddleware())`,
+    `.use('*', loggerMiddleware())`,
+    `.use('*', corsMiddleware())`,
+  ]
+
+  if (useRealtime) {
+    middlewareChain.push(`.use('*', realtimeEnvMiddleware())`)
+  }
+  if (useAuditLog) {
+    middlewareChain.push(`.use('/api/*', auditLogMiddleware())`)
+  }
+  if (useCaptcha) {
+    middlewareChain.push(
+      `.use(\n      '/api/admin/*',\n      captchaMiddleware({\n        maxRequests: 20,\n        windowMs: 60000,\n      })\n    )`
+    )
   }
 
-  if (!resolved.modules.has("file")) {
-    content = content.replace(
-      /import \{ fileRoutes \} from '\.\/module-file\/routes\/file-routes'\n/g,
-      "",
-    );
-    content = content.replace(/\n\s*\.route\('\/files',\s*fileRoutes\)/, "");
+  const routes: string[] = [`.route('/', clientApiRoutes)`, `.route('/', adminApiRoutes)`]
+
+  if (useFileRoutes) {
+    routes.push(`.route('/files', fileRoutes)`)
   }
 
-  content = content.replace(/\n{3,}/g, "\n\n");
-  return content;
+  const indent = '    '
+  const chain = [...middlewareChain, ...routes].join(`\n${indent}`)
+
+  return `${imports.join('\n')}
+
+export { type AppBindings, type CreateAppOptions } from './types/bindings'
+
+export function createApp<T extends AppBindings = AppBindings>(_options: CreateAppOptions = {}) {
+  const app = new OpenAPIHono<{ Bindings: T }>()
+    ${chain}
+    .get('/health', async c => {
+      try {
+        const { getDb } = await import('./db')
+        await getDb()
+        return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'connected' })
+      } catch {
+        return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
+      }
+    })
+    .post('/api/__test__/cleanup', async c => {
+      try {
+        const { cleanupTestDatabase } = await import('./db/test-setup')
+        await cleanupTestDatabase()
+        return c.json({ success: true as const, message: 'Database cleaned up' })
+      } catch (error) {
+        console.error('Error during database cleanup:', error)
+        return c.json({ success: false as const, message: 'Failed to cleanup database' }, 500)
+      }
+    })
+
+  autoRegisterRealtime(app as unknown as Parameters<typeof autoRegisterRealtime>[0])
+
+  app.onError((err, c) => {
+    const log = createModuleLoggerSync('api')
+    c.res.headers.set('Content-Type', 'application/json')
+
+    if (AppError.isAppError(err)) {
+      return c.json(
+        {
+          success: false as const,
+          error: err.message,
+          status: err.statusCode,
+          details: err.details,
+        },
+        err.statusCode as ContentfulStatusCode
+      )
+    }
+
+    if (err instanceof HTTPException) {
+      return c.json(
+        { success: false as const, error: err.message, status: err.status },
+        err.status as ContentfulStatusCode
+      )
+    }
+
+    if (err instanceof ZodError) {
+      const details = err.issues.map(issue => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }))
+      return c.json(
+        { success: false as const, error: 'Validation failed', status: 400, details },
+        400
+      )
+    }
+
+    log.error({ err, path: c.req.path }, 'Unhandled error')
+    return c.json(
+      { success: false as const, error: err.message || 'Internal server error', status: 500 },
+      500
+    )
+  })
+
+  return app
+}
+export type AdminApiType = typeof adminApiRoutes
+export type ClientApiType = typeof clientApiRoutes
+export type AppType = ReturnType<typeof createApp>
+`
 }

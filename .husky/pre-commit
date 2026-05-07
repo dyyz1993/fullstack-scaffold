@@ -1,5 +1,10 @@
-echo "Running TypeScript type check for root project..."
-npm run typecheck
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-echo "Running lint-staged..."
+echo "Running TypeScript type check..."
+npx tsc --noEmit
+
+echo "Running ESLint..."
+npx eslint . --max-warnings=0
+
 npx lint-staged

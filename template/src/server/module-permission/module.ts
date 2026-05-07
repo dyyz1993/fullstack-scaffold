@@ -25,6 +25,7 @@ const permissionManifest: ModuleManifest = {
 
   sharedSchemas: {
     path: 'permission',
+    additionalPaths: ['role', 'audit'],
   },
 
   adminPages: [
