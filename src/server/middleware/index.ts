@@ -6,3 +6,10 @@ export {
   type ErrorHandlerOptions,
 } from './error-handler'
 export { rateLimitMiddleware, type RateLimitOptions } from './rate-limit'
+export {
+  captchaMiddleware,
+  verifyCaptchaMiddleware,
+  markCaptchaVerifiedMiddleware,
+  clearCaptchaSessionMiddleware,
+} from './captcha'
+export { permissionMiddleware } from './permission'
