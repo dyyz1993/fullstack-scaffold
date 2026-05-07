@@ -5,7 +5,14 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['src/__tests__/**/*.test.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', 'template/**'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'template/**',
+      'src/client/**',
+      'src/server/**',
+      'src/shared/**',
+    ],
     testTimeout: 60000,
     hookTimeout: 60000,
   },
