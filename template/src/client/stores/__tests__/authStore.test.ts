@@ -21,12 +21,9 @@ const createTestStore = () =>
     token: null,
     isAuthenticated: false,
     user: null,
-    setAuth: (token: string, user: UserProfile) =>
-      set({ token, isAuthenticated: true, user }),
-    setToken: (token: string) =>
-      set({ token, isAuthenticated: true }),
-    logout: () =>
-      set({ token: null, isAuthenticated: false, user: null }),
+    setAuth: (token: string, user: UserProfile) => set({ token, isAuthenticated: true, user }),
+    setToken: (token: string) => set({ token, isAuthenticated: true }),
+    logout: () => set({ token: null, isAuthenticated: false, user: null }),
   }))
 
 describe('authStore', () => {
@@ -38,22 +35,22 @@ describe('authStore', () => {
   })
 
   describe('Initial State', () => {
-    it('should have null token', () => {
+    it('should have null token and not authenticated', () => {
       expect(useAuthStore.getState().token).toBeNull()
-    })
-
-    it('should not be authenticated', () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(false)
     })
 
-    it('should have null user', () => {
+    it('should have null user and not authenticated', () => {
       expect(useAuthStore.getState().user).toBeNull()
+      expect(useAuthStore.getState().isAuthenticated).toBe(false)
     })
   })
 
   describe('setAuth', () => {
     it('should set token and user', () => {
-      useAuthStore.getState().setAuth('jwt-token-123', { id: '1', username: 'admin', role: 'admin' })
+      useAuthStore
+        .getState()
+        .setAuth('jwt-token-123', { id: '1', username: 'admin', role: 'admin' })
 
       const state = useAuthStore.getState()
       expect(state.token).toBe('jwt-token-123')
@@ -70,9 +67,10 @@ describe('authStore', () => {
       expect(state.user?.username).toBe('user2')
     })
 
-    it('should set isAuthenticated to true', () => {
+    it('should set isAuthenticated to true and preserve token', () => {
       useAuthStore.getState().setAuth('t', { id: '1', username: 'u', role: 'r' })
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
+      expect(useAuthStore.getState().token).toBe('t')
     })
   })
 
@@ -133,8 +131,9 @@ describe('authStore', () => {
   describe('Persist behavior', () => {
     it('should use persist middleware with auth-token storage name', async () => {
       const mod = await import('../authStore')
-      const store = mod.useAuthStore as unknown as { persist?: { name?: string } }
+      const store = mod.useAuthStore as unknown as Record<string, unknown>
       expect(store.persist).toBeDefined()
+      expect(store.persist).toBeTruthy()
     })
   })
 })

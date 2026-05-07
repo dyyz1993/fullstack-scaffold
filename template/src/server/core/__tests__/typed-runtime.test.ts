@@ -1,5 +1,8 @@
 /**
- * @framework-baseline 2de3561467d67691
+ * @framework-modify
+ * @reason Added error scenario tests to satisfy 2-assertion test quality rule
+ * @impact Added test cases only, no production code changes
+ * @framework-baseline 991b28d7df0b36dc
  */
 
 /**
@@ -135,5 +138,41 @@ describe('createTypedRuntime', () => {
     const spy = vi.spyOn(getAdapter(), 'broadcast')
     typed.broadcast('broadcast', { msg: 'hi' }, ['client1'])
     expect(spy).toHaveBeenCalledWith('broadcast', { msg: 'hi' }, ['client1'])
+  })
+
+  it('should handle missing RPC handler gracefully', async () => {
+    const ws = createTriggerableWS()
+    getAdapter().handleConnection(ws)
+
+    ws._trigger(
+      'message',
+      Buffer.from(
+        JSON.stringify({
+          method: 'nonexistent',
+          id: '99',
+          params: {},
+        })
+      )
+    )
+
+    const calls = ws.send.mock.calls
+    const rpcResponse = calls.find((call: unknown[]) => {
+      try {
+        return JSON.parse(call[0] as string).id === '99'
+      } catch {
+        return false
+      }
+    })
+    expect(rpcResponse).toBeDefined()
+    const parsed = JSON.parse((rpcResponse as unknown[])[0] as string)
+    expect(parsed.error).toBeDefined()
+  })
+
+  it('should return undefined for unregistered event', async () => {
+    const result = typed.broadcast(
+      'nonexistent' as keyof TestProtocol['events'],
+      { text: 'test' } as TestProtocol['events']['notification']
+    )
+    expect(result).toBeUndefined()
   })
 })

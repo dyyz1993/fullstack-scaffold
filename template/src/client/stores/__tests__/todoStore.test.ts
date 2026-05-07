@@ -103,12 +103,14 @@ describe('Todo Store', () => {
     it('should set error message', () => {
       useTodoStore.getState().setError('Test error')
       expect(useTodoStore.getState().error).toBe('Test error')
+      expect(useTodoStore.getState().loading).toBe(false)
     })
 
     it('should clear error message', () => {
       useTodoStore.getState().setError('Test error')
       useTodoStore.getState().setError(null)
       expect(useTodoStore.getState().error).toBeNull()
+      expect(useTodoStore.getState().loading).toBe(false)
     })
   })
 
@@ -141,6 +143,7 @@ describe('Todo Store', () => {
       await useTodoStore.getState().fetchTodos()
 
       expect(useTodoStore.getState().todos).toEqual([])
+      expect(useTodoStore.getState().error).toBeNull()
     })
 
     it('should handle failed response', async () => {
@@ -174,7 +177,11 @@ describe('Todo Store', () => {
 
     it('should set loading to true during fetch', async () => {
       let resolvePromise!: (value: unknown) => void
-      mockTodosGet.mockReturnValueOnce(new Promise(r => { resolvePromise = r }))
+      mockTodosGet.mockReturnValueOnce(
+        new Promise(r => {
+          resolvePromise = r
+        })
+      )
 
       const fetchPromise = useTodoStore.getState().fetchTodos()
       expect(useTodoStore.getState().loading).toBe(true)
@@ -227,11 +234,16 @@ describe('Todo Store', () => {
       await useTodoStore.getState().createTodo({ title: 'Test' })
 
       expect(useTodoStore.getState().error).toBe('Network failed')
+      expect(useTodoStore.getState().todos).toHaveLength(0)
     })
 
     it('should set loading state during creation', async () => {
       let resolvePromise!: (value: unknown) => void
-      mockTodosPost.mockReturnValueOnce(new Promise(r => { resolvePromise = r }))
+      mockTodosPost.mockReturnValueOnce(
+        new Promise(r => {
+          resolvePromise = r
+        })
+      )
 
       const promise = useTodoStore.getState().createTodo({ title: 'Test' })
       expect(useTodoStore.getState().loading).toBe(true)
@@ -283,6 +295,7 @@ describe('Todo Store', () => {
       await useTodoStore.getState().updateTodo(1, { status: 'completed' })
 
       expect(useTodoStore.getState().error).toBe('Server unreachable')
+      expect(useTodoStore.getState().loading).toBe(false)
     })
 
     it('should pass id as string param', async () => {
@@ -331,6 +344,7 @@ describe('Todo Store', () => {
       await useTodoStore.getState().deleteTodo(1)
 
       expect(useTodoStore.getState().error).toBe('Connection lost')
+      expect(useTodoStore.getState().loading).toBe(false)
     })
 
     it('should pass id as string param for delete', async () => {
@@ -481,6 +495,7 @@ describe('Todo Store', () => {
       await useTodoStore.getState().deleteAttachment(1, 1)
 
       expect(useTodoStore.getState().error).toBe('Network error')
+      expect(useTodoStore.getState().loading).toBe(false)
     })
 
     it('should handle missing attachments map entry', async () => {

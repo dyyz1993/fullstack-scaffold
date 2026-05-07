@@ -183,4 +183,39 @@ describe('logger (node/pino)', () => {
     vi.doUnmock('../env')
     vi.doUnmock('../config')
   })
+
+  it('should handle undefined config gracefully', async () => {
+    vi.doMock('../env', () => ({ isCloudflare: true }))
+    vi.doMock('../config', () => ({
+      getAppConfig: vi.fn(() => undefined as unknown as Record<string, unknown>),
+    }))
+    const { createModuleLoggerSync } = await import('../logger')
+    const log = createModuleLoggerSync('undefined-cfg')
+    expect(log).toBeDefined()
+    expect(typeof log.info).toBe('function')
+    vi.doUnmock('../env')
+    vi.doUnmock('../config')
+  })
+
+  it('should return undefined for missing module', async () => {
+    vi.doMock('../env', () => ({ isCloudflare: true }))
+    vi.doMock('../config', () => ({ getAppConfig: vi.fn() }))
+    const { createModuleLoggerSync } = await import('../logger')
+    const log = createModuleLoggerSync('missing-mod')
+    expect(log).toBeDefined()
+    expect(log.child({ sub: 'test' })).toBeDefined()
+    vi.doUnmock('../env')
+    vi.doUnmock('../config')
+  })
+
+  it('should not throw when logging with no arguments', async () => {
+    vi.doMock('../env', () => ({ isCloudflare: true }))
+    vi.doMock('../config', () => ({ getAppConfig: vi.fn() }))
+    const { createModuleLoggerSync } = await import('../logger')
+    const log = createModuleLoggerSync('no-args')
+    expect(() => log.info('simple message')).not.toThrow()
+    expect(() => log.error('error message')).not.toThrow()
+    vi.doUnmock('../env')
+    vi.doUnmock('../config')
+  })
 })

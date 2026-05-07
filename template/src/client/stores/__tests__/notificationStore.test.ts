@@ -114,6 +114,7 @@ describe('notificationStore', () => {
       await useNotificationStore.getState().fetchNotifications()
 
       expect(useNotificationStore.getState().error).toBe('Network error')
+      expect(useNotificationStore.getState().loading).toBe(false)
     })
 
     it('should handle non-Error thrown value', async () => {
@@ -123,11 +124,16 @@ describe('notificationStore', () => {
       await useNotificationStore.getState().fetchNotifications()
 
       expect(useNotificationStore.getState().error).toBe('Unknown error')
+      expect(useNotificationStore.getState().loading).toBe(false)
     })
 
     it('should set loading state during fetch', async () => {
       let resolvePromise!: (value: unknown) => void
-      mockNotificationsGet.mockReturnValueOnce(new Promise(r => { resolvePromise = r }))
+      mockNotificationsGet.mockReturnValueOnce(
+        new Promise(r => {
+          resolvePromise = r
+        })
+      )
 
       const promise = useNotificationStore.getState().fetchNotifications()
       expect(useNotificationStore.getState().loading).toBe(true)
@@ -144,7 +150,9 @@ describe('notificationStore', () => {
       const newNotif = createMockNotification({ id: 'notif-2', title: 'New' })
       mockJson.mockResolvedValue({ success: true, data: newNotif })
 
-      await useNotificationStore.getState().createNotification({ type: 'info', title: 'New', message: 'Msg' })
+      await useNotificationStore
+        .getState()
+        .createNotification({ type: 'info', title: 'New', message: 'Msg' })
 
       const state = useNotificationStore.getState()
       expect(state.notifications).toHaveLength(1)
@@ -160,7 +168,9 @@ describe('notificationStore', () => {
       const newNotif = createMockNotification({ id: 'new' })
       mockJson.mockResolvedValue({ success: true, data: newNotif })
 
-      await useNotificationStore.getState().createNotification({ type: 'info', title: 'N', message: 'M' })
+      await useNotificationStore
+        .getState()
+        .createNotification({ type: 'info', title: 'N', message: 'M' })
 
       expect(useNotificationStore.getState().notifications[0].id).toBe('new')
       expect(useNotificationStore.getState().unreadCount).toBe(2)
@@ -169,7 +179,9 @@ describe('notificationStore', () => {
     it('should handle failed creation', async () => {
       mockJson.mockResolvedValue({ success: false, error: 'Invalid input' })
 
-      await useNotificationStore.getState().createNotification({ type: 'info', title: '', message: '' })
+      await useNotificationStore
+        .getState()
+        .createNotification({ type: 'info', title: '', message: '' })
 
       expect(useNotificationStore.getState().error).toBe('Invalid input')
       expect(useNotificationStore.getState().notifications).toHaveLength(0)
@@ -179,15 +191,21 @@ describe('notificationStore', () => {
       mockNotificationsPost.mockRejectedValueOnce(new Error('Server down'))
       mockJson.mockResolvedValue({})
 
-      await useNotificationStore.getState().createNotification({ type: 'info', title: 'T', message: 'M' })
+      await useNotificationStore
+        .getState()
+        .createNotification({ type: 'info', title: 'T', message: 'M' })
 
       expect(useNotificationStore.getState().error).toBe('Server down')
+      expect(useNotificationStore.getState().notifications).toHaveLength(0)
     })
   })
 
   describe('markAsRead', () => {
     it('should mark notification as read and decrement unread count', async () => {
-      useNotificationStore.setState({ notifications: [createMockNotification({ id: 'n1', read: false })], unreadCount: 1 })
+      useNotificationStore.setState({
+        notifications: [createMockNotification({ id: 'n1', read: false })],
+        unreadCount: 1,
+      })
       mockJson.mockResolvedValue({ success: true })
 
       await useNotificationStore.getState().markAsRead('n1')
@@ -198,7 +216,10 @@ describe('notificationStore', () => {
     })
 
     it('should not go below 0 unread count', async () => {
-      useNotificationStore.setState({ unreadCount: 0, notifications: [createMockNotification({ id: 'n1' })] })
+      useNotificationStore.setState({
+        unreadCount: 0,
+        notifications: [createMockNotification({ id: 'n1' })],
+      })
       mockJson.mockResolvedValue({ success: true })
 
       await useNotificationStore.getState().markAsRead('n1')
@@ -251,7 +272,10 @@ describe('notificationStore', () => {
   describe('deleteNotification', () => {
     it('should delete unread notification and decrement count', async () => {
       useNotificationStore.setState({
-        notifications: [createMockNotification({ id: 'n1', read: false }), createMockNotification({ id: 'n2' })],
+        notifications: [
+          createMockNotification({ id: 'n1', read: false }),
+          createMockNotification({ id: 'n2' }),
+        ],
         unreadCount: 2,
       })
       mockJson.mockResolvedValue({ success: true })
@@ -295,6 +319,7 @@ describe('notificationStore', () => {
       await useNotificationStore.getState().fetchUnreadCount()
 
       expect(useNotificationStore.getState().unreadCount).toBe(5)
+      expect(mockNotificationUnreadCount).toHaveBeenCalled()
     })
 
     it('should handle fetch error gracefully', async () => {
@@ -312,13 +337,20 @@ describe('notificationStore', () => {
   describe('SSE Integration', () => {
     let statusHandlers: Array<(s: string) => void>
     let eventHandlers: Record<string, Array<(p: unknown) => void>>
-    let mockSSEClient: { onStatusChange: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn>; onError: ReturnType<typeof vi.fn>; abort: ReturnType<typeof vi.fn> }
+    let mockSSEClient: {
+      onStatusChange: ReturnType<typeof vi.fn>
+      on: ReturnType<typeof vi.fn>
+      onError: ReturnType<typeof vi.fn>
+      abort: ReturnType<typeof vi.fn>
+    }
 
     beforeEach(() => {
       statusHandlers = []
       eventHandlers = {}
       mockSSEClient = {
-        onStatusChange: vi.fn((h: (s: string) => void) => { statusHandlers.push(h) }),
+        onStatusChange: vi.fn((h: (s: string) => void) => {
+          statusHandlers.push(h)
+        }),
         on: vi.fn((event: string, h: (p: unknown) => void) => {
           if (!eventHandlers[event]) eventHandlers[event] = []
           eventHandlers[event].push(h)
@@ -385,7 +417,9 @@ describe('notificationStore', () => {
 
     it('should handle SSE connection error', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      mockSSEConnect.mockImplementation(() => { throw new Error('SSE failed') })
+      mockSSEConnect.mockImplementation(() => {
+        throw new Error('SSE failed')
+      })
 
       await useNotificationStore.getState().connectSSE()
 
@@ -413,6 +447,7 @@ describe('notificationStore', () => {
     it('should handle disconnect when no client', () => {
       useNotificationStore.getState().disconnectSSE()
       expect(useNotificationStore.getState().sseConnected).toBe(false)
+      expect(useNotificationStore.getState().notifications).toEqual([])
     })
   })
 })

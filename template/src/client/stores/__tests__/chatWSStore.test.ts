@@ -53,13 +53,9 @@ describe('chatWSStore', () => {
   })
 
   describe('Initial State', () => {
-    it('should have closed status initially', () => {
+    it('should have closed status and empty messages initially', () => {
       const { result } = renderHook(() => useChatWsStore())
       expect(result.current.status).toBe('closed')
-    })
-
-    it('should have empty messages initially', () => {
-      const { result } = renderHook(() => useChatWsStore())
       expect(result.current.messages).toEqual([])
     })
   })
@@ -67,7 +63,9 @@ describe('chatWSStore', () => {
   describe('connect', () => {
     it('should create WS client and register handlers', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
 
       expect(mockWSClient.onStatusChange).toHaveBeenCalled()
       expect(mockWSClient.on).toHaveBeenCalledWith('notification', expect.any(Function))
@@ -77,18 +75,26 @@ describe('chatWSStore', () => {
 
     it('should update status when status changes', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
 
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
       expect(result.current.status).toBe('open')
 
-      act(() => { mockWSClient._fireStatus('closed') })
+      act(() => {
+        mockWSClient._fireStatus('closed')
+      })
       expect(result.current.status).toBe('closed')
     })
 
     it('should add notification message when event fires', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
 
       act(() => {
         mockWSClient._fireEvent('notification', { title: 'test', timestamp: 1000 })
@@ -101,7 +107,9 @@ describe('chatWSStore', () => {
 
     it('should add broadcast message when event fires', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
 
       act(() => {
         mockWSClient._fireEvent('broadcast', { message: 'hello', timestamp: 2000 })
@@ -113,7 +121,9 @@ describe('chatWSStore', () => {
 
     it('should add connected message when event fires', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
 
       act(() => {
         mockWSClient._fireEvent('connected', { timestamp: 3000 })
@@ -125,9 +135,13 @@ describe('chatWSStore', () => {
 
     it('should not create duplicate client on multiple connects', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
       const callCount = mockWSClient.onStatusChange.mock.calls.length
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
       expect(mockWSClient.onStatusChange.mock.calls.length).toBe(callCount)
     })
   })
@@ -135,8 +149,12 @@ describe('chatWSStore', () => {
   describe('disconnect', () => {
     it('should close the WS client', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { result.current.disconnect() })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        result.current.disconnect()
+      })
 
       expect(mockWSClient.close).toHaveBeenCalled()
       expect(result.current.status).toBe('closed')
@@ -144,9 +162,15 @@ describe('chatWSStore', () => {
 
     it('should allow reconnect after disconnect', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { result.current.disconnect() })
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        result.current.disconnect()
+      })
+      act(() => {
+        result.current.connect()
+      })
 
       expect(mockWSClient.onStatusChange).toHaveBeenCalled()
     })
@@ -166,8 +190,12 @@ describe('chatWSStore', () => {
       mockWSClient.call.mockResolvedValue({ message: 'hello', timestamp: 5000 })
 
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
 
       await act(async () => {
         await result.current.echo({ message: 'hello' })
@@ -184,8 +212,12 @@ describe('chatWSStore', () => {
       mockWSClient.call.mockRejectedValue(new Error('Echo failed'))
 
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
 
       await act(async () => {
         await result.current.echo({ message: 'test' })
@@ -201,7 +233,9 @@ describe('chatWSStore', () => {
   describe('ping', () => {
     it('should not ping when disconnected', async () => {
       const { result } = renderHook(() => useChatWsStore())
-      await act(async () => { await result.current.ping() })
+      await act(async () => {
+        await result.current.ping()
+      })
       expect(mockWSClient.call).not.toHaveBeenCalled()
     })
 
@@ -209,10 +243,16 @@ describe('chatWSStore', () => {
       mockWSClient.call.mockResolvedValue({ pong: true, timestamp: 6000 })
 
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
 
-      await act(async () => { await result.current.ping() })
+      await act(async () => {
+        await result.current.ping()
+      })
 
       expect(mockWSClient.call).toHaveBeenCalledWith('ping', {})
       expect(result.current.messages).toHaveLength(1)
@@ -224,10 +264,16 @@ describe('chatWSStore', () => {
       mockWSClient.call.mockRejectedValue(new Error('Ping failed'))
 
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
 
-      await act(async () => { await result.current.ping() })
+      await act(async () => {
+        await result.current.ping()
+      })
 
       expect(consoleSpy).toHaveBeenCalledWith('Ping failed:', expect.any(Error))
       consoleSpy.mockRestore()
@@ -237,14 +283,20 @@ describe('chatWSStore', () => {
   describe('broadcast', () => {
     it('should not broadcast when disconnected', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.broadcast({ message: 'test', timestamp: 100 }) })
+      act(() => {
+        result.current.broadcast({ message: 'test', timestamp: 100 })
+      })
       expect(mockWSClient.emit).not.toHaveBeenCalled()
     })
 
     it('should emit broadcast event when connected', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
 
       act(() => {
         result.current.broadcast({ message: 'hello', timestamp: 1000 })
@@ -268,8 +320,12 @@ describe('chatWSStore', () => {
 
     it('should emit notification event when connected', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
-      act(() => { mockWSClient._fireStatus('open') })
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
 
       act(() => {
         result.current.notification({ title: 'Test', body: 'Body', timestamp: 1234 })
@@ -286,14 +342,75 @@ describe('chatWSStore', () => {
   describe('clearMessages', () => {
     it('should clear all messages', () => {
       const { result } = renderHook(() => useChatWsStore())
-      act(() => { result.current.connect() })
+      act(() => {
+        result.current.connect()
+      })
       act(() => {
         mockWSClient._fireEvent('notification', { title: 'test', timestamp: 1 })
       })
       expect(result.current.messages.length).toBeGreaterThan(0)
 
-      act(() => { result.current.clearMessages() })
+      act(() => {
+        result.current.clearMessages()
+      })
       expect(result.current.messages).toEqual([])
+    })
+  })
+
+  describe('Error Scenarios', () => {
+    it('should handle failed echo gracefully without crashing', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mockWSClient.call.mockRejectedValue(new Error('RPC failed'))
+
+      const { result } = renderHook(() => useChatWsStore())
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
+
+      await act(async () => {
+        await result.current.echo({ message: 'test' })
+      })
+
+      expect(consoleSpy).toHaveBeenCalledWith('Echo failed:', expect.any(Error))
+      expect(result.current.messages).toHaveLength(1)
+      expect(result.current.messages[0].type).toBe('echo_request')
+      consoleSpy.mockRestore()
+    })
+
+    it('should handle failed ping gracefully without crashing', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      mockWSClient.call.mockRejectedValue(new Error('Ping timeout'))
+
+      const { result } = renderHook(() => useChatWsStore())
+      act(() => {
+        result.current.connect()
+      })
+      act(() => {
+        mockWSClient._fireStatus('open')
+      })
+
+      await act(async () => {
+        await result.current.ping()
+      })
+
+      expect(consoleSpy).toHaveBeenCalledWith('Ping failed:', expect.any(Error))
+      expect(result.current.messages).toHaveLength(0)
+      consoleSpy.mockRestore()
+    })
+
+    it('should have closed status before connect', () => {
+      const { result } = renderHook(() => useChatWsStore())
+      expect(result.current.status).toBe('closed')
+      expect(mockWSClient.call).not.toHaveBeenCalled()
+    })
+
+    it('should not throw when disconnecting without connection', () => {
+      const { result } = renderHook(() => useChatWsStore())
+      expect(() => result.current.disconnect()).not.toThrow()
+      expect(result.current.status).toBe('closed')
     })
   })
 })
