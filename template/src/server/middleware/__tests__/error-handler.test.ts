@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { ZodError } from 'zod'
+import { ZodError, type ZodIssue } from 'zod'
 import { AppError, ErrorCode } from '@server/utils/app-error'
 
 vi.mock('@server/utils/logger', () => {
@@ -172,7 +172,7 @@ describe('errorHandlerMiddleware', () => {
             received: 'number',
             path: ['email'],
             message: 'Expected string, received number',
-          },
+          } as unknown as ZodIssue,
         ])
       })
 
@@ -203,7 +203,7 @@ describe('errorHandlerMiddleware', () => {
             received: 'undefined',
             path: ['user', 'address', 'city'],
             message: 'City is required',
-          },
+          } as unknown as ZodIssue,
         ])
       })
 
@@ -222,7 +222,7 @@ describe('errorHandlerMiddleware', () => {
             received: 'number',
             path: ['email'],
             message: 'bad email',
-          },
+          } as unknown as ZodIssue,
           {
             code: 'too_small',
             minimum: 1,
@@ -230,7 +230,7 @@ describe('errorHandlerMiddleware', () => {
             inclusive: true,
             path: ['name'],
             message: 'required',
-          },
+          } as unknown as ZodIssue,
         ])
       })
 
