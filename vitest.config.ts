@@ -13,7 +13,7 @@ export default defineConfig({
       '**/__tests__/**/*.test.tsx',
       '**/integration/**/*.test.ts',
     ],
-    exclude: ['**/node_modules/**', '**/dist/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'template/**', 'testapp/**', 'e2e-debug-app/**', 'my-app/**', 'test-scaffold-debug/**'],
     testTimeout: 60000,
     hookTimeout: 60000,
     env: {

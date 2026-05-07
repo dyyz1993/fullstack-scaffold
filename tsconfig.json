@@ -5,7 +5,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "types": ["@cloudflare/workers-types", "bun-types"],
+    "types": ["vitest/globals", "@cloudflare/workers-types", "bun-types"],
 
     /* Path aliases require 'moduleResolution: "node" */
     "moduleResolution": "bundler",

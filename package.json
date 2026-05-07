@@ -39,6 +39,7 @@
     "test:full": "npm run test:all && npm run test:integration && npm run test:e2e",
     "coverage": "vitest --coverage",
     "lint": "eslint .",
+    "lint:template": "cd template && npx eslint src/ --max-warnings=0",
     "format": "prettier --write .",
     "validate:all": "node --import tsx/esm lint-scripts/validate-all.ts",
     "validate:watch": "node --import tsx/esm lint-scripts/watch-validator.ts",
