@@ -66,7 +66,7 @@ describe('captchaMiddleware', () => {
     const app = new Hono()
     let callCount = 0
     app.use('*', captchaMiddleware({ maxRequests: 10, windowMs: 60000 }))
-    app.get('/api/data', (c) => {
+    app.get('/api/data', c => {
       callCount++
       return c.json({ ok: true })
     })
@@ -83,7 +83,7 @@ describe('captchaMiddleware', () => {
   it('should block requests exceeding rate limit', async () => {
     const app = new Hono()
     app.use('*', captchaMiddleware({ maxRequests: 3, windowMs: 60000 }))
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const ua = 'Mozilla/5.0 Test Browser For Rate Limit Testing'
     let sessionId = ''
@@ -102,7 +102,7 @@ describe('captchaMiddleware', () => {
       headers: { 'User-Agent': ua, Cookie: `session_id=${sessionId}` },
     })
     expect(res.status).toBe(429)
-    const body: any = await res.json()
+    const body = (await res.json()) as { needCaptcha: boolean; success: boolean }
     expect(body.needCaptcha).toBe(true)
     expect(body.success).toBe(false)
   })
@@ -110,20 +110,20 @@ describe('captchaMiddleware', () => {
   it('should block suspicious requests with short User-Agent', async () => {
     const app = new Hono()
     app.use('*', captchaMiddleware())
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
       headers: { 'User-Agent': 'short' },
     })
     expect(res.status).toBe(403)
-    const body: any = await res.json()
+    const body = (await res.json()) as { needCaptcha: boolean }
     expect(body.needCaptcha).toBe(true)
   })
 
   it('should block requests with bot in User-Agent', async () => {
     const app = new Hono()
     app.use('*', captchaMiddleware())
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
       headers: { 'User-Agent': 'Some bot crawler tool for testing' },
@@ -134,7 +134,7 @@ describe('captchaMiddleware', () => {
   it('should block requests with crawler in User-Agent', async () => {
     const app = new Hono()
     app.use('*', captchaMiddleware())
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
       headers: { 'User-Agent': 'Google crawler bot for web scraping tests here' },
@@ -145,7 +145,7 @@ describe('captchaMiddleware', () => {
   it('should block requests with empty User-Agent', async () => {
     const app = new Hono()
     app.use('*', captchaMiddleware())
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data')
     expect(res.status).toBe(403)
@@ -155,7 +155,7 @@ describe('captchaMiddleware', () => {
     vi.useFakeTimers()
     const app = new Hono()
     app.use('*', captchaMiddleware({ maxRequests: 2, windowMs: 1000 }))
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const ua = 'Mozilla/5.0 Window Reset Test Browser'
     let sessionId = ''
@@ -192,7 +192,7 @@ describe('captchaMiddleware', () => {
 
     const app = new Hono()
     app.use('*', captchaMiddleware({ maxRequests: 1, windowMs: 60000 }))
-    app.get('/api/data', (c) => c.json({ ok: true }))
+    app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
       headers: {
@@ -210,11 +210,11 @@ describe('verifyCaptchaMiddleware', () => {
   it('should return 400 if no session cookie', async () => {
     const app = new Hono()
     app.use('*', verifyCaptchaMiddleware())
-    app.post('/api/verify', (c) => c.json({ ok: true }))
+    app.post('/api/verify', c => c.json({ ok: true }))
 
     const res = await app.request('/api/verify', { method: 'POST' })
     expect(res.status).toBe(400)
-    const body: any = await res.json()
+    const body = (await res.json()) as { error: string }
     expect(body.error).toBe('Session not found')
   })
 
@@ -224,7 +224,7 @@ describe('verifyCaptchaMiddleware', () => {
 
     const app = new Hono()
     app.use('*', verifyCaptchaMiddleware())
-    app.post('/api/verify', (c) => c.json({ ok: true }))
+    app.post('/api/verify', c => c.json({ ok: true }))
 
     const res = await app.request('/api/verify', {
       method: 'POST',

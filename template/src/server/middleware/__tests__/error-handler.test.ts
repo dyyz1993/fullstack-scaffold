@@ -6,10 +6,25 @@ import { AppError, ErrorCode } from '@server/utils/app-error'
 
 vi.mock('@server/utils/logger', () => {
   const noop = () => {}
-  const mockLogger = { info: noop, warn: noop, error: noop, debug: noop, trace: noop, fatal: noop, child: () => mockLogger }
+  const mockLogger = {
+    info: noop,
+    warn: noop,
+    error: noop,
+    debug: noop,
+    trace: noop,
+    fatal: noop,
+    child: () => mockLogger,
+  }
   return {
     createModuleLoggerSync: () => mockLogger,
-    logger: { api: () => mockLogger, app: () => mockLogger, db: () => mockLogger, ws: () => mockLogger, bootstrap: () => mockLogger, module: () => mockLogger },
+    logger: {
+      api: () => mockLogger,
+      app: () => mockLogger,
+      db: () => mockLogger,
+      ws: () => mockLogger,
+      bootstrap: () => mockLogger,
+      module: () => mockLogger,
+    },
   }
 })
 
@@ -18,19 +33,25 @@ import { errorHandlerMiddleware } from '../error-handler'
 function createTestApp(options?: { includeStackTrace?: boolean; logErrors?: boolean }) {
   const app = new Hono()
 
-  app.use('*', errorHandlerMiddleware({
-    includeStackTrace: options?.includeStackTrace,
-    logErrors: options?.logErrors,
-  }))
+  app.use(
+    '*',
+    errorHandlerMiddleware({
+      includeStackTrace: options?.includeStackTrace,
+      logErrors: options?.logErrors,
+    })
+  )
 
   app.onError((err, c) => {
     if (AppError.isAppError(err)) {
-      return c.json({
-        success: false as const,
-        error: err.message,
-        status: err.statusCode,
-        details: err.details,
-      }, err.statusCode as 400)
+      return c.json(
+        {
+          success: false as const,
+          error: err.message,
+          status: err.statusCode,
+          details: err.details,
+        },
+        err.statusCode as 400
+      )
     }
 
     if (err instanceof ZodError) {
@@ -39,12 +60,15 @@ function createTestApp(options?: { includeStackTrace?: boolean; logErrors?: bool
         message: issue.message,
         code: issue.code,
       }))
-      return c.json({
-        success: false as const,
-        error: 'Validation failed',
-        status: 400,
-        details,
-      }, 400)
+      return c.json(
+        {
+          success: false as const,
+          error: 'Validation failed',
+          status: 400,
+          details,
+        },
+        400
+      )
     }
 
     if (err instanceof HTTPException) {
@@ -77,12 +101,16 @@ describe('errorHandlerMiddleware', () => {
     it('should handle AppError with correct status and message', async () => {
       const app = createTestApp()
       app.get('/test', () => {
-        throw new AppError({ code: ErrorCode.NOT_FOUND, message: 'Resource not found', statusCode: 404 })
+        throw new AppError({
+          code: ErrorCode.NOT_FOUND,
+          message: 'Resource not found',
+          statusCode: 404,
+        })
       })
 
       const res = await app.request('/test')
       expect(res.status).toBe(404)
-      const body: any = await res.json()
+      const body = (await res.json()) as { success: boolean; error: string; status: number }
       expect(body.success).toBe(false)
       expect(body.error).toBe('Resource not found')
       expect(body.status).toBe(404)
@@ -101,14 +129,18 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(400)
-      const body: any = await res.json()
+      const body = (await res.json()) as { details: Array<{ field: string; message: string }> }
       expect(body.details).toEqual([{ field: 'email', message: 'Invalid email' }])
     })
 
     it('should set Content-Type to application/json', async () => {
       const app = createTestApp()
       app.get('/test', () => {
-        throw new AppError({ code: ErrorCode.UNAUTHORIZED, message: 'Unauthorized', statusCode: 401 })
+        throw new AppError({
+          code: ErrorCode.UNAUTHORIZED,
+          message: 'Unauthorized',
+          statusCode: 401,
+        })
       })
 
       const res = await app.request('/test')
@@ -123,7 +155,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(403)
-      const body: any = await res.json()
+      const body = (await res.json()) as { success: boolean; error: string }
       expect(body.success).toBe(false)
       expect(body.error).toBe('Forbidden')
     })
@@ -133,18 +165,24 @@ describe('errorHandlerMiddleware', () => {
     it('should handle ZodError with formatted validation errors', async () => {
       const app = createTestApp()
       app.get('/test', () => {
-        throw new ZodError([{
-          code: 'invalid_type',
-          expected: 'string',
-          received: 'number',
-          path: ['email'],
-          message: 'Expected string, received number',
-        }] as any)
+        throw new ZodError([
+          {
+            code: 'invalid_type',
+            expected: 'string',
+            received: 'number',
+            path: ['email'],
+            message: 'Expected string, received number',
+          },
+        ])
       })
 
       const res = await app.request('/test')
       expect(res.status).toBe(400)
-      const body: any = await res.json()
+      const body = (await res.json()) as {
+        success: boolean
+        error: string
+        details: Array<{ field: string; message: string; code: string }>
+      }
       expect(body.success).toBe(false)
       expect(body.error).toBe('Validation failed')
       expect(body.details).toHaveLength(1)
@@ -158,17 +196,19 @@ describe('errorHandlerMiddleware', () => {
     it('should handle ZodError with nested path', async () => {
       const app = createTestApp()
       app.get('/test', () => {
-        throw new ZodError([{
-          code: 'invalid_type',
-          expected: 'string',
-          received: 'undefined',
-          path: ['user', 'address', 'city'],
-          message: 'City is required',
-        }] as any)
+        throw new ZodError([
+          {
+            code: 'invalid_type',
+            expected: 'string',
+            received: 'undefined',
+            path: ['user', 'address', 'city'],
+            message: 'City is required',
+          },
+        ])
       })
 
       const res = await app.request('/test')
-      const body: any = await res.json()
+      const body = (await res.json()) as { details: Array<{ field: string }> }
       expect(body.details[0].field).toBe('user.address.city')
     })
 
@@ -176,13 +216,26 @@ describe('errorHandlerMiddleware', () => {
       const app = createTestApp()
       app.get('/test', () => {
         throw new ZodError([
-          { code: 'invalid_type', expected: 'string', received: 'number', path: ['email'], message: 'bad email' },
-          { code: 'too_small', minimum: 1, type: 'string', inclusive: true, path: ['name'], message: 'required' },
-        ] as any)
+          {
+            code: 'invalid_type',
+            expected: 'string',
+            received: 'number',
+            path: ['email'],
+            message: 'bad email',
+          },
+          {
+            code: 'too_small',
+            minimum: 1,
+            type: 'string',
+            inclusive: true,
+            path: ['name'],
+            message: 'required',
+          },
+        ])
       })
 
       const res = await app.request('/test')
-      const body: any = await res.json()
+      const body = (await res.json()) as { details: unknown[] }
       expect(body.details).toHaveLength(2)
     })
   })
@@ -196,7 +249,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(403)
-      const body: any = await res.json()
+      const body = (await res.json()) as { success: boolean; error: string; status: number }
       expect(body.success).toBe(false)
       expect(body.error).toBe('Access denied')
       expect(body.status).toBe(403)
@@ -210,7 +263,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(500)
-      const body: any = await res.json()
+      const body = (await res.json()) as { error: string }
       expect(body.error).toBe('Internal server error')
     })
   })
@@ -224,7 +277,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(500)
-      const body: any = await res.json()
+      const body = (await res.json()) as { success: boolean; error: string }
       expect(body.success).toBe(false)
       expect(body.error).toBe('Something went wrong')
     })
@@ -237,7 +290,7 @@ describe('errorHandlerMiddleware', () => {
 
       const res = await app.request('/test')
       expect(res.status).toBe(500)
-      const body: any = await res.json()
+      const body = (await res.json()) as { error: string }
       expect(body.error).toBe('Internal server error')
     })
 
@@ -248,7 +301,7 @@ describe('errorHandlerMiddleware', () => {
       })
 
       const res = await app.request('/test')
-      const body: any = await res.json()
+      const body = (await res.json()) as { stack: string }
       expect(body.stack).toBeDefined()
       expect(typeof body.stack).toBe('string')
     })
@@ -260,7 +313,7 @@ describe('errorHandlerMiddleware', () => {
       })
 
       const res = await app.request('/test')
-      const body: any = await res.json()
+      const body = (await res.json()) as { stack?: string }
       expect(body.stack).toBeUndefined()
     })
 
@@ -271,7 +324,7 @@ describe('errorHandlerMiddleware', () => {
       })
 
       const res = await app.request('/test')
-      const body: any = await res.json()
+      const body = (await res.json()) as { stack?: string }
       expect(body.stack).toBeUndefined()
     })
   })
@@ -279,11 +332,11 @@ describe('errorHandlerMiddleware', () => {
   describe('normal flow', () => {
     it('should pass through when no error', async () => {
       const app = createTestApp()
-      app.get('/test', (c) => c.json({ success: true, data: 'hello' }))
+      app.get('/test', c => c.json({ success: true, data: 'hello' }))
 
       const res = await app.request('/test')
       expect(res.status).toBe(200)
-      const body: any = await res.json()
+      const body = (await res.json()) as { success: boolean; data: string }
       expect(body.success).toBe(true)
       expect(body.data).toBe('hello')
     })
@@ -293,7 +346,7 @@ describe('errorHandlerMiddleware', () => {
     it('should handle no-log-errors option', async () => {
       const app = new Hono()
       app.use('*', errorHandlerMiddleware({ logErrors: false }))
-      app.get('/test', (c) => c.json({ ok: true }))
+      app.get('/test', c => c.json({ ok: true }))
 
       const res = await app.request('/test')
       expect(res.status).toBe(200)
@@ -302,7 +355,7 @@ describe('errorHandlerMiddleware', () => {
     it('should handle includeStackTrace with non-Error', async () => {
       const app = new Hono()
       app.use('*', errorHandlerMiddleware({ includeStackTrace: true, logErrors: false }))
-      app.get('/test', (c) => c.json({ ok: true }))
+      app.get('/test', c => c.json({ ok: true }))
 
       const res = await app.request('/test')
       expect(res.status).toBe(200)

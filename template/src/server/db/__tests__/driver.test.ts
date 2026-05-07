@@ -147,16 +147,16 @@ describe('db/driver (d1)', () => {
   it('should create d1 db when driver is d1', async () => {
     process.env.DB_DRIVER = 'd1'
     const mockD1 = { prepare: vi.fn() }
-    ;(globalThis as any).DB = mockD1
+    ;(globalThis as Record<string, unknown>).DB = mockD1
     const { getDb } = await import('../driver')
     const db = await getDb()
     expect(db).toBeDefined()
-    delete (globalThis as any).DB
+    delete (globalThis as Record<string, unknown>).DB
   })
 
   it('should throw if d1 database binding missing', async () => {
     process.env.DB_DRIVER = 'd1'
-    delete (globalThis as any).DB
+    delete (globalThis as Record<string, unknown>).DB
     const { getDb } = await import('../driver')
     await expect(getDb()).rejects.toThrow('D1 database binding')
   })
@@ -164,11 +164,11 @@ describe('db/driver (d1)', () => {
   it('should return d1 database from getRawClient', async () => {
     process.env.DB_DRIVER = 'd1'
     const mockD1 = { prepare: vi.fn() }
-    ;(globalThis as any).DB = mockD1
+    ;(globalThis as Record<string, unknown>).DB = mockD1
     const { getRawClient } = await import('../driver')
     const client = await getRawClient()
     expect(client).toBe(mockD1)
-    delete (globalThis as any).DB
+    delete (globalThis as Record<string, unknown>).DB
   })
 
   it('should return null from getRawClient for unknown driver', async () => {

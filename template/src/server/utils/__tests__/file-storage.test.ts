@@ -127,13 +127,19 @@ describe('file-storage', () => {
 
     it('should reject disallowed mime types', () => {
       const config = getUploadConfig('test')
-      const result = validateFile({ name: 'a.exe', type: 'application/x-executable', size: 100 }, config)
+      const result = validateFile(
+        { name: 'a.exe', type: 'application/x-executable', size: 100 },
+        config
+      )
       expect(result.valid).toBe(false)
       expect(result.error).toContain('not allowed')
     })
 
     it('should reject disallowed extensions', () => {
-      const config = getUploadConfig('test', { allowedMimeTypes: ['image/png'], allowedExtensions: ['.png'] })
+      const config = getUploadConfig('test', {
+        allowedMimeTypes: ['image/png'],
+        allowedExtensions: ['.png'],
+      })
       const result = validateFile({ name: 'a.exe', type: 'image/png', size: 100 }, config)
       expect(result.valid).toBe(false)
       expect(result.error).toContain('extension')
@@ -259,21 +265,21 @@ describe('file-storage', () => {
     })
 
     it('should delete expired temp files', async () => {
-      mockReaddir.mockResolvedValueOnce(['old.txt'] as any)
+      mockReaddir.mockResolvedValueOnce(['old.txt'] as unknown as string[])
       mockStat.mockResolvedValueOnce({ mtimeMs: Date.now() - 999999999 })
       const result = await cleanupTempFiles()
       expect(result.deleted).toBe(1)
     })
 
     it('should skip non-expired temp files', async () => {
-      mockReaddir.mockResolvedValueOnce(['new.txt'] as any)
+      mockReaddir.mockResolvedValueOnce(['new.txt'] as unknown as string[])
       mockStat.mockResolvedValueOnce({ mtimeMs: Date.now() })
       const result = await cleanupTempFiles()
       expect(result.deleted).toBe(0)
     })
 
     it('should count errors on stat failure', async () => {
-      mockReaddir.mockResolvedValueOnce(['bad.txt'] as any)
+      mockReaddir.mockResolvedValueOnce(['bad.txt'] as unknown as string[])
       mockStat.mockRejectedValueOnce(new Error('permission denied'))
       const result = await cleanupTempFiles()
       expect(result.errors).toBe(1)
@@ -455,12 +461,12 @@ describe('file-storage', () => {
     })
 
     it('should prefix dangerous chars', () => {
-      expect(sanitizeCsvField('=SUM(A1)')).toBe("\"'=SUM(A1)\"")
-      expect(sanitizeCsvField('+cmd')).toBe("\"'+cmd\"")
-      expect(sanitizeCsvField('-cmd')).toBe("\"'-cmd\"")
-      expect(sanitizeCsvField('@cmd')).toBe("\"'@cmd\"")
-      expect(sanitizeCsvField('\tcmd')).toBe("\"'\tcmd\"")
-      expect(sanitizeCsvField('\rcmd')).toBe("\"'\rcmd\"")
+      expect(sanitizeCsvField('=SUM(A1)')).toBe('"\'=SUM(A1)"')
+      expect(sanitizeCsvField('+cmd')).toBe('"\'+cmd"')
+      expect(sanitizeCsvField('-cmd')).toBe('"\'-cmd"')
+      expect(sanitizeCsvField('@cmd')).toBe('"\'@cmd"')
+      expect(sanitizeCsvField('\tcmd')).toBe('"\'\tcmd"')
+      expect(sanitizeCsvField('\rcmd')).toBe('"\'\rcmd"')
     })
   })
 })
