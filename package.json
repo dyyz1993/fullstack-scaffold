@@ -18,6 +18,7 @@
     "dev:cf": "wrangler dev",
     "deploy:cf": "npm run build:cloudflare && wrangler deploy",
     "typecheck": "tsc --noEmit && eslint . --max-warnings=0",
+    "typecheck:template": "cd template && npx tsc --noEmit",
     "test": "vitest",
     "test:smart": "node --import tsx/esm lint-scripts/smart-test.ts",
     "test:smart:staged": "node --import tsx/esm lint-scripts/smart-test.ts --staged",

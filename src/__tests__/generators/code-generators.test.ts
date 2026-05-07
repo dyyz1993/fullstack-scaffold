@@ -169,9 +169,9 @@ describe('code generators', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain('<Rocket size={24} />')
+      expect(content).toContain('<Rocket className="w-6 h-6 text-blue-500" />')
       expect(content).toContain('Biomimic App')
-      expect(content).toContain('<Github size={18} />')
+      expect(content).toContain('<Github className="w-5 h-5" />')
     })
   })
 
