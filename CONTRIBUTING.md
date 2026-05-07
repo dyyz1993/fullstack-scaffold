@@ -57,26 +57,92 @@ create-fullstack-scaffold/
 
 ## How to Add a New Module to the Template
 
-Modules follow a consistent pattern in `template/src/server/`:
+Modules follow a consistent pattern in `template/src/server/`. Each module has a `module.ts` manifest that declares its routes, dependencies, pages, DB schemas, and middleware.
+
+### Step-by-step
 
 1. **Create the module directory**: `template/src/server/module-{feature}/`
-2. **Add routes**: `module-{feature}/routes/` — Define Hono RPC endpoints
+2. **Add routes**: `module-{feature}/routes/` — Define Hono RPC endpoints with `createRoute()` + `.openapi()`
 3. **Add services**: `module-{feature}/services/` — Business logic
 4. **Add shared schemas**: `template/src/shared/modules/{feature}/` — Zod schemas and types
-5. **Register the module**: Add routes to `template/src/server/app.ts`
-6. **Add client store** (optional): `template/src/client/stores/` — Zustand store
-7. **Add tests**: Unit tests in `module-{feature}/__tests__/`
+5. **Create the module manifest**: `module-{feature}/module.ts` — Export a default `ModuleManifest` object declaring:
+   - `name`, `category` (`core` | `communication` | `business` | `system`)
+   - `dependsOn` — other modules this module requires
+   - `routes.client` / `routes.admin` / `routes.standalone`
+   - `clientPages[]` / `adminPages[]`
+   - `dbSchemas.files[]`, `providesMiddleware[]`
+   - `hasSSE` / `hasWebSocket` for real-time capabilities
+6. **Add DB schemas** (if needed): `template/src/server/db/schema/`
+7. **Register routes**: Add to `template/src/server/route-registry.ts`
+8. **Update generators** (if the module should be filterable by presets):
+   - `src/generators/file-filter.ts` — include/exclude patterns
+   - `src/generators/shared-modules-index.ts` — shared module index generation
+   - `src/generators/shared-schemas-index.ts` — shared schema index generation
+9. **Update `template/modules.config.ts`**: Add the module to any presets that should include it, listed in dependency-safe order
+10. **Validate**: Run `cd template && npm run validate:modules` to verify the manifest
+11. **Add client store** (optional): `template/src/client/stores/` — Zustand store
+12. **Add tests**: Unit tests in `module-{feature}/__tests__/`
 
 Example module structure:
 
 ```
 module-todos/
+├── module.ts              # Module manifest
 ├── routes/
 │   └── todo-routes.ts
 ├── services/
 │   └── todo-service.ts
 └── __tests__/
     └── todo-service.test.ts
+```
+
+### Module Manifest Example
+
+```typescript
+// template/src/server/module-todos/module.ts
+import type { ModuleManifest } from "../module-types";
+
+const manifest: ModuleManifest = {
+  name: "todos",
+  category: "core",
+  dependsOn: [],
+  routes: {
+    client: "routes/todo-routes",
+  },
+  clientPages: ["TodoList"],
+  dbSchemas: { files: ["todos"] },
+  providesMiddleware: [],
+  hasSSE: false,
+  hasWebSocket: false,
+};
+
+export default manifest;
+```
+
+### Available Presets
+
+Defined in `template/modules.config.ts`:
+
+| Preset            | Modules                      |
+| ----------------- | ---------------------------- |
+| `fullstack-admin` | All 11 modules (default)     |
+| `todo-app`        | todos + chat + notifications |
+| `minimal`         | todos only                   |
+
+### Dependency Graph
+
+```
+todos ──── (standalone)
+chat ──── (standalone)
+notifications ──── (standalone)
+file ──── (standalone)
+captcha ──── (standalone)
+permission ──── (standalone, foundational)
+admin ──→ permission + notifications
+order ──→ permission
+ticket ──→ permission
+dispute ──→ permission
+content ──→ permission
 ```
 
 ## Testing Guidelines

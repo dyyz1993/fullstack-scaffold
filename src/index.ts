@@ -40,7 +40,7 @@ program
         chalk.cyan.bold("  ║   Create Fullstack Scaffold App          ║"),
       );
       console.log(
-        chalk.cyan.bold("  ║   React + Vite + Zustand + Tailwind      ║"),
+        chalk.cyan.bold("  ║   React + Hono + Vite + Zustand + TS     ║"),
       );
       console.log(
         chalk.cyan.bold("  ╚══════════════════════════════════════════╝"),

@@ -28,6 +28,7 @@ import { generateAuthUtils } from "../generators/auth-utils";
 import { generateClientComponentsIndex } from "../generators/client-components-index";
 import { generateCliModulesIndex } from "../generators/cli-modules-index";
 import { filterPackageJson } from "../generators/package-json";
+import { generateViteConfig } from "../generators/vite-config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -392,6 +393,14 @@ export async function createProject(
       path.join(targetDir, "src/cli/modules/index.ts"),
       cliModulesContent,
     );
+
+    if (generatedFiles.includes("vite.config.ts")) {
+      const viteConfigContent = generateViteConfig(resolved, templateDir);
+      await fs.writeFile(
+        path.join(targetDir, "vite.config.ts"),
+        viteConfigContent,
+      );
+    }
 
     genSpinner.succeed(chalk.green("Module-specific files generated"));
 

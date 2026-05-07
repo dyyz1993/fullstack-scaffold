@@ -190,6 +190,10 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
 
   files.push("src/server/app.ts");
 
+  if (!resolved.hasAdmin) {
+    files.push("vite.config.ts");
+  }
+
   const seedModules = ["order", "ticket", "dispute", "content"];
   if (
     seedModules.some((m) => !resolved.modules.has(m)) ||

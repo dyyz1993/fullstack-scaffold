@@ -17,6 +17,24 @@ npm run dev
 
 Open [http://localhost:3010](http://localhost:3010) — frontend and backend share a single port.
 
+## Presets
+
+Choose a template preset to match your project's scope:
+
+| Preset                      | Modules                      | Best For                                             |
+| --------------------------- | ---------------------------- | ---------------------------------------------------- |
+| `fullstack-admin` (default) | All 11 modules               | Complete app with admin panel, RBAC, orders, tickets |
+| `todo-app`                  | todos + chat + notifications | Learning, simple CRUD + real-time features           |
+| `minimal`                   | todos only                   | Bare minimum, add modules as needed                  |
+
+```bash
+# Use a specific preset
+npx create-fullstack-scaffold my-app --preset todo-app
+
+# See all available presets
+npx create-fullstack-scaffold presets
+```
+
 ## Features
 
 - **Full-Stack TypeScript** — Shared types, schemas, and RPC between frontend and backend
