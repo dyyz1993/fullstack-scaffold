@@ -1,6 +1,3 @@
-/**
- * Generates client/components/Navigation.tsx content based on resolved preset
- */
 import type { ResolvedPreset } from "./template-generator";
 import { getClientPages } from "./template-generator";
 
@@ -13,7 +10,6 @@ const ICON_MAP: Record<string, string> = {
 export function generateClientNavigation(resolved: ResolvedPreset): string {
   const pages = getClientPages(resolved);
 
-  // Collect unique icons needed
   const iconsNeeded = new Set<string>();
   iconsNeeded.add("Rocket");
   iconsNeeded.add("Github");
@@ -22,17 +18,14 @@ export function generateClientNavigation(resolved: ResolvedPreset): string {
     if (icon) iconsNeeded.add(icon);
   }
 
-  // Build route keys and route objects
   const routeKeys: string[] = [];
   const routeEntries: string[] = [];
 
   for (const page of pages) {
-    // Convert route path to key: /todos → todos, /websocket → websocket
     const key = page.route.replace(/^\//, "").replace(/\//g, "-");
     routeKeys.push(`'${key}'`);
     const icon = ICON_MAP[page.name] || "Circle";
 
-    // Generate label from key
     const label =
       key === "todos"
         ? "Todo List"
@@ -49,7 +42,6 @@ export function generateClientNavigation(resolved: ResolvedPreset): string {
 
   const iconsStr = [...iconsNeeded].join(", ");
 
-  // Determine if AuthButton should be shown (only if admin module is included)
   const authButtonImport = resolved.hasAdmin
     ? `\nimport { AuthButton } from './AuthButton'`
     : "";
@@ -62,42 +54,57 @@ import { ${iconsStr} } from 'lucide-react'${authButtonImport}
 
 type RouteKey = ${routeKeys.join(" | ")}
 
-const routes: Record<RouteKey, { label: string; icon: typeof CheckCircle; path: string }> = {
+const routes: Record<
+  RouteKey,
+  { label: string; icon: React.FC<{ className?: string }>; path: string }
+> = {
 ${routeEntries.join("\n")}
 }
 
-export function Navigation() {
+export const Navigation: React.FC = () => {
   return (
-    <nav className="nav-container">
-      <div className="nav-brand">
-        <Rocket size={24} />
-        <span>Biomimic App</span>
-      </div>
-      <div className="nav-links">
-        {(Object.keys(routes) as RouteKey[]).map((key) => {
-          const route = routes[key]
-          const Icon = route.icon
-          return (
-            <NavLink
-              key={key}
-              to={route.path}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              <Icon size={18} />
-              <span>{route.label}</span>
-            </NavLink>
-          )
-        })}
-      </div>
-      <div className="nav-actions">${authButtonElement}
-        <a
-          href="https://github.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="nav-link"
-        >
-          <Github size={18} />
-        </a>
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50" data-testid="app-nav">
+      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <h1
+            className="text-xl font-bold text-gray-900 flex items-center gap-2"
+            data-testid="app-title"
+          >
+            <Rocket className="w-6 h-6 text-blue-500" />
+            Biomimic App
+          </h1>
+          <div className="flex items-center gap-1">
+            {(Object.keys(routes) as RouteKey[]).map(route => {
+              const Icon = routes[route].icon
+              return (
+                <NavLink
+                  key={route}
+                  to={routes[route].path}
+                  data-testid={\`nav-\${route}-button\`}
+                  className={({ isActive }) =>
+                    \`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors \${
+                      isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'
+                    }\`
+                  }
+                >
+                  <Icon className="w-4 h-4" />
+                  {routes[route].label}
+                </NavLink>
+              )
+            })}
+          </div>
+        </div>
+        <div className="flex items-center gap-4">${authButtonElement}
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="github-link"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <Github className="w-5 h-5" />
+          </a>
+        </div>
       </div>
     </nav>
   )
