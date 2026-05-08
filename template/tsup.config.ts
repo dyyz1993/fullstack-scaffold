@@ -88,9 +88,6 @@ if (existsSync(cliEntryPath)) {
     minify: false,
     treeshake: true,
     dts: true,
-    banner: {
-      js: '#!/usr/bin/env node',
-    },
     external: ['hono', 'hono/client', 'commander', 'chalk', 'eslint'],
   })
 }
