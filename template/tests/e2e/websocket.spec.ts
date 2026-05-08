@@ -9,16 +9,25 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
-test.skip(
-  !!process.env.CI,
-  'WebSocket tests require real server - unreliable in CI with Vite dev server'
-)
-
 function getBaseUrl(): string {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010'
 }
 
 const persistenceTestInProgress = false
+
+async function waitForServerReady(baseUrl: string, timeout = 30000): Promise<void> {
+  const startTime = Date.now()
+  while (Date.now() - startTime < timeout) {
+    try {
+      const response = await fetch(`${baseUrl}/health`)
+      if (response.ok) return
+    } catch {
+      // Server not ready yet
+    }
+    await new Promise(resolve => setTimeout(resolve, 500))
+  }
+  throw new Error(`Server not ready after ${timeout}ms`)
+}
 
 async function connectWithRetry(page: Page, maxRetries = 3) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -48,6 +57,8 @@ async function connectWithRetry(page: Page, maxRetries = 3) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await waitForServerReady(getBaseUrl())
+
   if (!persistenceTestInProgress) {
     try {
       const response = await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)

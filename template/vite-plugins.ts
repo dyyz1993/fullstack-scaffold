@@ -3,15 +3,14 @@ import type { IncomingMessage } from 'http'
 import type { Duplex } from 'stream'
 import http from 'http'
 
-let entryLoaded = false
+let entryReady = false
 
-async function waitForEntry(port: number, maxRetries = 30): Promise<void> {
+async function waitForEntry(port: number, maxRetries = 60): Promise<void> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       await new Promise<void>((resolve, reject) => {
         const req = http.get(`http://localhost:${port}/health`, res => {
           if (res.statusCode === 200) {
-            entryLoaded = true
             resolve()
           } else {
             reject(new Error(`Health check failed with status ${res.statusCode}`))
@@ -20,9 +19,10 @@ async function waitForEntry(port: number, maxRetries = 30): Promise<void> {
         req.on('error', reject)
         req.end()
       })
+      entryReady = true
       return
     } catch {
-      await new Promise(resolve => setTimeout(resolve, 200))
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
   }
   console.error('[WebSocket Plugin] Failed to load entry file after retries')
@@ -42,76 +42,42 @@ export function websocketPlugin(): Plugin {
       server.httpServer?.on(
         'upgrade',
         async (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-          if (req.url) {
-            let waitRetries = 0
-            while (!entryLoaded && waitRetries < 50) {
-              await new Promise(resolve => setTimeout(resolve, 100))
-              waitRetries++
+          if (!req.url) return
+
+          if (!entryReady) {
+            const address = server.httpServer?.address()
+            if (address && typeof address === 'object') {
+              await waitForEntry(address.port)
             }
+          }
 
-            if (!entryLoaded) {
-              try {
-                const runtimeModule = await server.ssrLoadModule('/src/server/core/runtime.ts')
-                const runtimeNodeModule = await server.ssrLoadModule(
-                  '/src/server/core/runtime-node.ts'
-                )
-                const { getRuntimeAdapter, setRuntimeAdapter } = runtimeModule
-                const { getNodeRuntimeAdapter } = runtimeNodeModule
-                try {
-                  getRuntimeAdapter()
-                } catch {
-                  setRuntimeAdapter(getNodeRuntimeAdapter())
-                }
-                entryLoaded = true
-              } catch {
-                return
-              }
-            }
+          try {
+            await server.ssrLoadModule('/src/server/index.ts')
+          } catch {
+            return
+          }
 
-            const runtimeModule = await server.ssrLoadModule('/src/server/core/runtime.ts')
-            const runtimeNodeModule = await server.ssrLoadModule('/src/server/core/runtime-node.ts')
+          const runtimeModule = await server.ssrLoadModule('/src/server/core/runtime.ts')
+          const { getRuntimeAdapter } = runtimeModule
 
-            const { getRuntimeAdapter, setRuntimeAdapter } = runtimeModule
-            const { getNodeRuntimeAdapter } = runtimeNodeModule
+          let runtime: InstanceType<
+            typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter
+          > | null = null
+          try {
+            runtime = getRuntimeAdapter() as InstanceType<
+              typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter
+            >
+          } catch {
+            return
+          }
 
-            let runtime:
-              | InstanceType<typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter>
-              | undefined
-            try {
-              runtime = getRuntimeAdapter() as InstanceType<
-                typeof import('./src/server/core/runtime-node').NodeRuntimeAdapter
-              >
-            } catch {
-              runtime = getNodeRuntimeAdapter()
-              setRuntimeAdapter(runtime)
-
-              const address = server.httpServer?.address()
-              if (address && typeof address === 'object') {
-                const port = address.port
-                await new Promise<void>((resolve, reject) => {
-                  const req = http.get(`http://localhost:${port}/health`, res => {
-                    if (res.statusCode === 200) {
-                      resolve()
-                    } else {
-                      reject(new Error(`Health check failed with status ${res.statusCode}`))
-                    }
-                  })
-                  req.on('error', reject)
-                  req.end()
-                })
-              }
-            }
-
-            const urlObj = new URL(req.url!, 'http://localhost')
-            if (runtime && runtime.hasWSPath(urlObj.pathname)) {
-              const { WebSocketServer } = await import('ws')
-              const wssInstance = new WebSocketServer({ noServer: true })
-              wssInstance.handleUpgrade(req, socket, head, ws => {
-                if (runtime) {
-                  runtime.handleConnection(ws)
-                }
-              })
-            }
+          const urlObj = new URL(req.url, 'http://localhost')
+          if (runtime && runtime.hasWSPath(urlObj.pathname)) {
+            const { WebSocketServer } = await import('ws')
+            const wssInstance = new WebSocketServer({ noServer: true })
+            wssInstance.handleUpgrade(req, socket, head, ws => {
+              runtime!.handleConnection(ws)
+            })
           }
         }
       )
