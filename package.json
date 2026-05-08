@@ -12,6 +12,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dyyz1993/fullstack-scaffold"
+  },
   "scripts": {
     "dev": "vite",
     "build": "npm run build:client && npm run build:server",
