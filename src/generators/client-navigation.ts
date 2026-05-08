@@ -1,68 +1,64 @@
-import type { ResolvedPreset } from "./template-generator";
-import { getClientPages } from "./template-generator";
+import type { ResolvedPreset } from './template-generator'
+import { getClientPages } from './template-generator'
 
-const DEFAULT_ICON = "Circle";
+const DEFAULT_ICON = 'Circle'
 
 const ICON_MAP: Record<string, string> = {
-  TodoPage: "CheckCircle",
-  NotificationPage: "Bell",
-  WebSocketPage: "Plug",
-  ContentListPage: "FileText",
-};
+  TodoPage: 'CheckCircle',
+  NotificationPage: 'Bell',
+  WebSocketPage: 'Plug',
+  ContentListPage: 'FileText',
+}
 
 export function generateClientNavigation(resolved: ResolvedPreset): string {
-  const pages = getClientPages(resolved).filter(p => !p.route.includes(":"));
+  const pages = getClientPages(resolved).filter(p => !p.route.includes(':'))
 
-  const iconsNeeded = new Set<string>();
-  iconsNeeded.add("Rocket");
-  iconsNeeded.add("Github");
+  const iconsNeeded = new Set<string>()
+  iconsNeeded.add('Rocket')
+  iconsNeeded.add('Github')
   for (const page of pages) {
-    const icon = ICON_MAP[page.name] || DEFAULT_ICON;
-    iconsNeeded.add(icon);
+    const icon = ICON_MAP[page.name] || DEFAULT_ICON
+    iconsNeeded.add(icon)
   }
 
-  const routeKeys: string[] = [];
-  const routeEntries: string[] = [];
+  const routeKeys: string[] = []
+  const routeEntries: string[] = []
 
   for (const page of pages) {
-    const key = page.route.replace(/^\//, "").replace(/\//g, "-");
-    routeKeys.push(`'${key}'`);
-    const icon = ICON_MAP[page.name] || DEFAULT_ICON;
+    const key = page.route.replace(/^\//, '').replace(/\//g, '-')
+    routeKeys.push(`'${key}'`)
+    const icon = ICON_MAP[page.name] || DEFAULT_ICON
 
     const label =
-      key === "todos"
-        ? "Todo List"
-        : key === "notifications"
-          ? "Notifications"
-          : key === "websocket"
-            ? "WebSocket"
-            : key.charAt(0).toUpperCase() + key.slice(1);
+      key === 'todos'
+        ? 'Todo List'
+        : key === 'notifications'
+          ? 'Notifications'
+          : key === 'websocket'
+            ? 'WebSocket'
+            : key.charAt(0).toUpperCase() + key.slice(1)
 
     const safeKey = /^[a-zA-Z0-9_]+$/.test(key) ? key : `'${key}'`
-    routeEntries.push(
-      `  ${safeKey}: { label: '${label}', icon: ${icon}, path: '${page.route}' },`,
-    );
+    routeEntries.push(`  ${safeKey}: { label: '${label}', icon: ${icon}, path: '${page.route}' },`)
   }
 
-  const iconsStr = [...iconsNeeded].join(", ");
+  const iconsStr = [...iconsNeeded].join(', ')
 
-  const authButtonImport = resolved.hasAdmin
+  const authButtonImport = resolved.modules.has('admin')
     ? `\nimport { AuthButton } from './AuthButton'`
-    : "";
-  const authButtonElement = resolved.hasAdmin
-    ? `\n          <AuthButton />`
-    : "";
+    : ''
+  const authButtonElement = resolved.modules.has('admin') ? `\n          <AuthButton />` : ''
 
   return `import { NavLink } from 'react-router-dom'
 import { ${iconsStr} } from 'lucide-react'${authButtonImport}
 
-type RouteKey = ${routeKeys.join(" | ")}
+type RouteKey = ${routeKeys.join(' | ')}
 
 const routes: Record<
   RouteKey,
   { label: string; icon: React.FC<{ className?: string }>; path: string }
 > = {
-${routeEntries.join("\n")}
+${routeEntries.join('\n')}
 }
 
 export const Navigation: React.FC = () => {
@@ -113,5 +109,5 @@ export const Navigation: React.FC = () => {
     </nav>
   )
 }
-`;
+`
 }

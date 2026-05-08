@@ -68,7 +68,7 @@ export function getExcludePatterns(
     }
   }
 
-  if (!resolved.hasAdmin) {
+  if (!resolved.modules.has('admin')) {
     excludes.push('src/client/components/AuthButton.tsx')
     excludes.push('src/admin')
     excludes.push('admin.html')
@@ -76,6 +76,8 @@ export function getExcludePatterns(
     excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
     // CLI depends on admin API - exclude when admin is not present
     excludes.push('src/cli')
+    // auth.ts imports from @shared/modules/admin - generate a version without admin deps
+    excludes.push('src/server/utils/auth.ts')
   }
 
   if (!resolved.hasPermission) {
@@ -84,6 +86,8 @@ export function getExcludePatterns(
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
     excludes.push('src/server/utils/__tests__/auth.test.ts')
+  } else if (!resolved.modules.has('admin')) {
+    excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
   }
 
   if (!resolved.modules.has('captcha')) {
@@ -105,7 +109,7 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     'src/client/components/index.ts',
   ]
 
-  if (resolved.hasAdmin) {
+  if (resolved.modules.has('admin')) {
     files.push('src/admin/App.tsx')
     files.push('src/cli/modules/index.ts')
   }
@@ -115,9 +119,13 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     files.push('src/server/utils/auth.ts')
   }
 
+  if (!resolved.modules.has('admin') && resolved.hasPermission) {
+    files.push('src/server/utils/auth.ts')
+  }
+
   files.push('src/server/app.ts')
 
-  if (!resolved.hasAdmin) {
+  if (!resolved.modules.has('admin')) {
     files.push('vite.config.ts')
   }
 

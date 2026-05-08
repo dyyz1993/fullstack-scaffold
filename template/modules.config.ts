@@ -36,6 +36,23 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
     modules: ['todos', 'chat', 'notifications'],
   },
   {
+    id: 'ecommerce',
+    name: 'E-Commerce',
+    description:
+      'E-commerce application with order management, ticketing, dispute handling, and content management',
+    modules: [
+      'todos',
+      'chat',
+      'notifications',
+      'file',
+      'permission',
+      'order',
+      'ticket',
+      'dispute',
+      'content',
+    ],
+  },
+  {
     id: 'minimal',
     name: 'Minimal',
     description: 'Bare minimum: todos only. Add modules as you need them.',

@@ -369,9 +369,12 @@ export async function createProject(
       clientNavContent
     )
 
-    const adminAppContent = generateAdminApp(resolved)
-    if (adminAppContent) {
-      await fs.writeFile(path.join(targetDir, 'src/admin/App.tsx'), adminAppContent)
+    if (resolved.modules.has('admin')) {
+      const adminAppContent = generateAdminApp(resolved)
+      if (adminAppContent) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin'))
+        await fs.writeFile(path.join(targetDir, 'src/admin/App.tsx'), adminAppContent)
+      }
     }
 
     const serverAppContent = generateServerApp(resolved)
@@ -414,7 +417,7 @@ export async function createProject(
       clientComponentsContent
     )
 
-    if (resolved.hasAdmin) {
+    if (resolved.modules.has('admin')) {
       const cliModulesContent = generateCliModulesIndex(resolved)
       await fs.writeFile(path.join(targetDir, 'src/cli/modules/index.ts'), cliModulesContent)
     }

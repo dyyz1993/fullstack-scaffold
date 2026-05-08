@@ -209,7 +209,7 @@ jobs:
     needs: [cli-checks, cli-tests]
     strategy:
       matrix:
-        preset: [minimal, todo-app, fullstack-admin]
+        preset: [minimal, todo-app, ecommerce, fullstack-admin]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
