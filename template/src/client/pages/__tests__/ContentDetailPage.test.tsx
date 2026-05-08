@@ -82,9 +82,9 @@ describe('ContentDetailPage', () => {
       })
       renderWithRouter('content-1')
       await waitFor(() => {
-        expect(screen.getByText('article')).toBeInTheDocument()
+        const articleElements = screen.getAllByText('article')
+        expect(articleElements.length).toBeGreaterThanOrEqual(2)
         expect(screen.getByText('test')).toBeInTheDocument()
-        expect(screen.getByText('article')).toBeInTheDocument()
       })
     })
 

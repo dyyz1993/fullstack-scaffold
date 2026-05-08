@@ -36,6 +36,7 @@ export function getExcludePatterns(
     if (manifest.clientPages) {
       for (const page of manifest.clientPages) {
         excludes.push(`src/client/pages/${page.name}.tsx`)
+        excludes.push(`src/client/pages/__tests__/${page.name}.test.tsx`)
       }
     }
 
@@ -49,6 +50,7 @@ export function getExcludePatterns(
     if (manifest.adminPages) {
       for (const page of manifest.adminPages) {
         excludes.push(`src/admin/pages/${page.name}.tsx`)
+        excludes.push(`src/admin/pages/__tests__/${page.name}.test.tsx`)
       }
     }
 
@@ -61,10 +63,6 @@ export function getExcludePatterns(
 
     if (name === 'notifications') {
       excludes.push('src/cli/modules/notification')
-      excludes.push('src/client/pages/__tests__/NotificationPage.test.tsx')
-    }
-    if (name === 'chat') {
-      excludes.push('src/client/pages/__tests__/WebSocketPage.test.tsx')
     }
   }
 
