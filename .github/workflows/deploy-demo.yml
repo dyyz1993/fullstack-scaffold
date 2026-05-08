@@ -24,7 +24,10 @@ jobs:
         run: npm run build:cli
       - name: Scaffold demo app
         working-directory: /tmp
-        run: node /home/runner/work/fullstack-scaffold/fullstack-scaffold/dist/cli/index.js demo-app --preset fullstack-admin
+        run: node ${{ github.workspace }}/dist/cli/index.js demo-app --preset fullstack-admin
+      - name: Configure D1 database ID
+        working-directory: /tmp/demo-app
+        run: sed -i 's/database_id = "".*$/database_id = "48684115-a14b-4a35-9f2b-03cf8fa66eb6"/' wrangler.toml
       - name: Install demo dependencies
         working-directory: /tmp/demo-app
         run: npm ci
