@@ -300,11 +300,8 @@ test.describe('Todo App', () => {
       // Click delete button
       await page.click('[data-testid="todo-item"] [data-testid="delete-button"]')
 
-      // Wait for network to be idle
-      await page.waitForLoadState('networkidle')
-
-      // Verify todo is deleted
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(0)
+      // Wait for the delete to complete - wait for todo to be removed
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(0, { timeout: 10000 })
 
       // Verify empty state is shown
       await expect(page.locator('[data-testid="empty-state"]')).toBeVisible()
