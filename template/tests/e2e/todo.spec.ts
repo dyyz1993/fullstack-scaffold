@@ -13,34 +13,28 @@ function getBaseUrl(): string {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010'
 }
 
-/**
- * Cleanup after each test
- * IMPORTANT: Close all browser resources to prevent memory leaks
- */
-// Track if we're in a test that needs persistence
-const persistenceTestInProgress = false
-
 test.beforeEach(async ({ page }) => {
-  // Only cleanup database if we're not in a persistence test
-  if (!persistenceTestInProgress) {
-    try {
-      const response = await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
-      if (!response.ok) {
-        console.warn('Failed to cleanup database:', await response.text())
-      }
-    } catch (error) {
-      console.warn('Error during database cleanup:', error)
+  // 1. Cleanup database
+  try {
+    const response = await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
+    if (!response.ok) {
+      console.warn('Failed to cleanup database:', await response.text())
     }
+  } catch (error) {
+    console.warn('Error during database cleanup:', error)
   }
 
-  // Clear storage safely
+  // 2. Navigate to app first to establish correct origin for localStorage
+  await page.goto(getBaseUrl())
+  await page.waitForLoadState('load')
+
+  // 3. Clear storage (now on correct origin)
   try {
     await page.evaluate(() => {
       try {
         localStorage.clear()
         sessionStorage.clear()
       } catch (e) {
-        // Ignore security errors for localStorage access
         console.warn('Could not clear storage:', e)
       }
     })
@@ -48,7 +42,7 @@ test.beforeEach(async ({ page }) => {
     console.warn('Error clearing storage:', error)
   }
 
-  // Set auth token for dev token authentication
+  // 4. Set auth token (now on correct origin, persists across reloads)
   await page.evaluate(() => {
     localStorage.setItem('auth-token', JSON.stringify('user-token'))
   })
