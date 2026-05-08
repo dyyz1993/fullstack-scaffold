@@ -74,6 +74,8 @@ export function getExcludePatterns(
     excludes.push('admin.html')
     excludes.push('auth-inject.html')
     excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
+    // CLI depends on admin API - exclude when admin is not present
+    excludes.push('src/cli')
   }
 
   if (!resolved.hasPermission) {
@@ -101,11 +103,11 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     'src/shared/schemas/index.ts',
     'src/server/middleware/index.ts',
     'src/client/components/index.ts',
-    'src/cli/modules/index.ts',
   ]
 
   if (resolved.hasAdmin) {
     files.push('src/admin/App.tsx')
+    files.push('src/cli/modules/index.ts')
   }
 
   if (!resolved.hasPermission) {

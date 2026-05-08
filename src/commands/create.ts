@@ -352,8 +352,10 @@ export async function createProject(
       clientComponentsContent
     )
 
-    const cliModulesContent = generateCliModulesIndex(resolved)
-    await fs.writeFile(path.join(targetDir, 'src/cli/modules/index.ts'), cliModulesContent)
+    if (resolved.hasAdmin) {
+      const cliModulesContent = generateCliModulesIndex(resolved)
+      await fs.writeFile(path.join(targetDir, 'src/cli/modules/index.ts'), cliModulesContent)
+    }
 
     if (generatedFiles.includes('vite.config.ts')) {
       const viteConfigContent = generateViteConfig(resolved, templateDir)
