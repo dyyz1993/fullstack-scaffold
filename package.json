@@ -1,8 +1,17 @@
 {
-  "name": "create-biomimic-app",
-  "private": true,
+  "name": "create-fullstack-scaffold",
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "create-fullstack-scaffold": "dist/cli/index.js"
+  },
+  "files": [
+    "dist/cli",
+    "template"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "npm run build:client && npm run build:server",

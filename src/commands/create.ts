@@ -175,6 +175,7 @@ export interface CreateOptions {
   currentDir: boolean
   preset?: string
   outputDir?: string
+  dryRun?: boolean
 }
 
 export async function createProject(options: CreateOptions): Promise<void>
@@ -192,16 +193,19 @@ export async function createProject(
   let currentDir: boolean
   let presetId: string | undefined
   let outputDir: string | undefined
+  let dryRun: boolean
 
   if (typeof projectNameOrOptions === 'string') {
     projectName = projectNameOrOptions
     currentDir = useCurrentDir
     presetId = preset
+    dryRun = false
   } else {
     projectName = projectNameOrOptions.projectName
     currentDir = projectNameOrOptions.currentDir
     presetId = projectNameOrOptions.preset
     outputDir = projectNameOrOptions.outputDir
+    dryRun = projectNameOrOptions.dryRun ?? false
   }
 
   if (!currentDir) {
@@ -227,12 +231,6 @@ export async function createProject(
   }
 
   try {
-    if (!currentDir) {
-      const dirSpinner = ora('Creating project directory...').start()
-      await fs.ensureDir(targetDir)
-      dirSpinner.succeed(chalk.green('Project directory created'))
-    }
-
     const manifestSpinner = ora('Loading module manifests...').start()
     const allManifests = await loadManifests(templateDir)
     const presets = await loadPresets(templateDir)
@@ -249,6 +247,70 @@ export async function createProject(
     manifestSpinner.succeed(
       chalk.green(`Using preset: ${selectedPreset.name} (${resolved.modules.size} modules)`)
     )
+
+    if (dryRun) {
+      const resolvedModuleNames = [...resolved.modules.keys()]
+      const generatedFiles = getGeneratedFiles(resolved)
+
+      console.log('')
+      console.log(chalk.blue('📋 Dry Run - Files that would be generated:\n'))
+      for (const file of generatedFiles) {
+        console.log(`  ${chalk.green('✓')} ${file}`)
+      }
+
+      const gitignorePath = path.join(templateDir, '.gitignore')
+      let ignorePatterns: string[] = []
+      if (await fs.pathExists(gitignorePath)) {
+        const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8')
+        ignorePatterns = parseGitignore(gitignoreContent)
+      }
+      ignorePatterns.push('node_modules', '.wrangler')
+      const excludePatterns = getExcludePatterns(resolved, allManifests)
+
+      let templateFileCount = 0
+      const templateFiles = await fs.readdir(templateDir, { recursive: true })
+      for (const file of templateFiles) {
+        const relative = String(file)
+        if (!relative) continue
+        const negated = ignorePatterns.filter((p: string) => p.startsWith('!'))
+        const gitIgnored = ignorePatterns.filter(
+          (p: string) => !p.startsWith('!') && relative.startsWith(p)
+        )
+        if (gitIgnored.length > 0) {
+          const allowed = negated.some((p: string) => relative === p.slice(1))
+          if (!allowed) continue
+        }
+        const normalizedRelative = relative.replace(/\\/g, '/')
+        let excluded = false
+        for (const pattern of excludePatterns) {
+          const normalizedPattern = pattern.replace(/\\/g, '/')
+          if (
+            normalizedRelative === normalizedPattern ||
+            normalizedRelative.startsWith(normalizedPattern + '/')
+          ) {
+            excluded = true
+            break
+          }
+        }
+        if (!excluded) templateFileCount++
+      }
+
+      console.log('')
+      console.log(chalk.blue('📁 Template files that would be copied:\n'))
+      console.log(`  ${chalk.green('✓')} ${templateFileCount} template files`)
+      console.log('')
+      console.log(chalk.yellow(`  Total generated files: ${generatedFiles.length}`))
+      console.log(chalk.yellow(`  Preset: ${selectedPreset.name}`))
+      console.log(chalk.yellow(`  Modules: ${resolvedModuleNames.join(', ')}`))
+      console.log('')
+      return
+    }
+
+    if (!currentDir) {
+      const dirSpinner = ora('Creating project directory...').start()
+      await fs.ensureDir(targetDir)
+      dirSpinner.succeed(chalk.green('Project directory created'))
+    }
 
     const copySpinner = ora('Copying template files...').start()
     const gitignorePath = path.join(templateDir, '.gitignore')
