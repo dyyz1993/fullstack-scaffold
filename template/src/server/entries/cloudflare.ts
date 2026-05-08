@@ -56,6 +56,8 @@ const wrappedApp = app
 
 export default {
   fetch: async (request: Request, env: CloudflareBindings, ctx: ExecutionContext) => {
+    ;(globalThis as unknown as { DB: D1Database }).DB = env.DB
+
     const url = new URL(request.url)
 
     if (url.pathname.startsWith('/api/') || url.pathname === '/health') {
