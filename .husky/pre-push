@@ -6,7 +6,7 @@ echo "🔍 Pre-push verification..."
 echo "  → TypeScript type check..."
 npm run typecheck
 
-echo "  → Unit tests..."
-npx vitest run
+echo "  → Smart tests for changed files..."
+npm run test:smart:staged
 
 echo "✅ All pre-push checks passed."
