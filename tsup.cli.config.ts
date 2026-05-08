@@ -14,5 +14,16 @@ export default defineConfig({
   banner: {
     js: '#!/usr/bin/env node',
   },
-  external: ['hono', 'hono/client', 'commander', 'chalk', 'eslint'],
+  external: [
+    'hono',
+    'hono/client',
+    'commander',
+    'chalk',
+    'eslint',
+    'fs-extra',
+    'ora',
+    'tsx',
+    'tsx/esm/api',
+  ],
+  noExternal: [],
 })
