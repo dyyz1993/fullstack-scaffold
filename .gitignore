@@ -69,3 +69,4 @@ my-test-app/
 .pi/
 uploads/**/
 !settings.json.trae
+.codenomad/
