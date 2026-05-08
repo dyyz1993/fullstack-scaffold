@@ -41,11 +41,17 @@ const wrappedApp = app
   .onError((err, c) => {
     console.error('Server error:', err)
     c.res.headers.set('Content-Type', 'application/json')
-    const statusCode =
-      err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+    let statusCode = 500
+    if ('statusCode' in err && typeof (err as { statusCode: unknown }).statusCode === 'number') {
+      statusCode = (err as { statusCode: number }).statusCode
+    } else if ('status' in err && typeof (err as { status: unknown }).status === 'number') {
+      statusCode = (err as { status: number }).status
+    }
     const message = err.message || 'Internal server error'
-    const responseStatus = statusCode || 500
-    return c.json({ success: false as const, error: message, status: responseStatus }, responseStatus as 500)
+    return c.json(
+      { success: false as const, error: message, status: statusCode },
+      statusCode as 500
+    )
   })
 
 export default {

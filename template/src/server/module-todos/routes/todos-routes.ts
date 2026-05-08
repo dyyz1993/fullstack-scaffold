@@ -23,8 +23,6 @@ const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
   responses: {
     200: successResponse(TodoListSchema, 'List all todos'),
     500: errorResponse('Internal server error'),
@@ -35,8 +33,6 @@ const getRoute = createRoute({
   method: 'get',
   path: '/todos/{id}',
   tags: ['todos'],
-  security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
   request: {
     params: z.object({ id: z.coerce.number().int().positive() }),
   },
