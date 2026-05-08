@@ -1,12 +1,14 @@
 import { defineConfig } from 'tsup'
+import { existsSync } from 'fs'
+import { join } from 'path'
 
-export default defineConfig([
+const serverBuildConfigs = [
   {
     entry: ['src/server/entries/node.ts'],
     outDir: 'dist/server',
-    format: 'esm',
-    platform: 'node',
-    target: 'node18',
+    format: 'esm' as const,
+    platform: 'node' as const,
+    target: 'node18' as const,
     clean: false,
     sourcemap: false,
     minify: true,
@@ -29,9 +31,9 @@ export default defineConfig([
   {
     entry: ['src/server/entries/cloudflare.ts'],
     outDir: 'dist/cloudflare',
-    format: 'esm',
-    platform: 'neutral',
-    target: 'es2022',
+    format: 'esm' as const,
+    platform: 'neutral' as const,
+    target: 'es2022' as const,
     clean: true,
     sourcemap: false,
     minify: true,
@@ -70,12 +72,17 @@ export default defineConfig([
       'process.env.NODE_ENV': '"production"',
     },
   },
-  {
+]
+
+// Only build CLI if CLI module is included in preset
+const cliEntryPath = join(process.cwd(), 'src/cli/index.ts')
+if (existsSync(cliEntryPath)) {
+  serverBuildConfigs.push({
     entry: ['src/cli/index.ts'],
     outDir: 'dist/cli',
-    format: 'esm',
-    platform: 'node',
-    target: 'node18',
+    format: 'esm' as const,
+    platform: 'node' as const,
+    target: 'node18' as const,
     clean: false,
     sourcemap: true,
     minify: false,
@@ -85,5 +92,7 @@ export default defineConfig([
       js: '#!/usr/bin/env node',
     },
     external: ['hono', 'hono/client', 'commander', 'chalk', 'eslint'],
-  },
-])
+  })
+}
+
+export default defineConfig(serverBuildConfigs)
