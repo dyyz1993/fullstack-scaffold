@@ -1,35 +1,23 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
-    "types": ["vitest/globals", "@cloudflare/workers-types", "bun-types"],
-
-    /* Path aliases require 'moduleResolution: "node" */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    /* Path Aliases */
-    "baseUrl": ".",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "types": ["vitest/globals", "node"],
     "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@client/*": ["src/client/*"],
-      "@server/*": ["src/server/*"],
-      "@admin/*": ["src/admin/*"],
       "@cli/*": ["src/cli/*"]
-    }
+    },
+    "baseUrl": "."
   },
-  "include": ["src", "e2e", "*.config.ts", "*.ts"]
+  "include": ["src/index.ts", "src/commands/**/*.ts", "src/generators/**/*.ts", "src/cli/**/*.ts", "src/__tests__/**/*.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist", "template"]
 }

@@ -2,6 +2,9 @@ import { Command } from 'commander'
 import { getClient } from '@cli/utils/api'
 import { getLogger } from '@cli/utils/logger'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiClient = any
+
 export function registerNotificationCommands(program: Command) {
   const notification = program
     .command('notification')
@@ -14,7 +17,7 @@ export function registerNotificationCommands(program: Command) {
     .option('--limit <number>', 'Limit number of results', '20')
     .action(async (options: { unreadOnly?: boolean; limit?: string }) => {
       const logger = getLogger()
-      const client = getClient()
+      const client = getClient() as ApiClient
       const unreadOnly = Boolean(options.unreadOnly)
       const limit = parseInt(options.limit || '20')
 
@@ -33,7 +36,7 @@ export function registerNotificationCommands(program: Command) {
     .option('--type <type>', 'Notification type (info|warning|success|error)', 'info')
     .action(async (options: { title: string; message: string; type: string }) => {
       const logger = getLogger()
-      const client = getClient()
+      const client = getClient() as ApiClient
 
       const res = await client.api.notifications.$post({
         json: {
@@ -52,7 +55,7 @@ export function registerNotificationCommands(program: Command) {
     .description('Get unread notification count')
     .action(async () => {
       const logger = getLogger()
-      const client = getClient()
+      const client = getClient() as ApiClient
       const res = await client.api.notifications['unread-count'].$get()
       const data = await res.json()
       logger.info(JSON.stringify(data, null, 2))
@@ -64,7 +67,7 @@ export function registerNotificationCommands(program: Command) {
     .argument('<id>', 'Notification ID')
     .action(async (id: string) => {
       const logger = getLogger()
-      const client = getClient()
+      const client = getClient() as ApiClient
       const res = await client.api.notifications[':id'].read.$patch({ param: { id } })
       const data = await res.json()
       logger.success('Notification marked as read')
@@ -77,7 +80,7 @@ export function registerNotificationCommands(program: Command) {
     .argument('<id>', 'Notification ID')
     .action(async (id: string) => {
       const logger = getLogger()
-      const client = getClient()
+      const client = getClient() as ApiClient
       const res = await client.api.notifications[':id'].$delete({ param: { id } })
       const data = await res.json()
       logger.success('Notification deleted')
