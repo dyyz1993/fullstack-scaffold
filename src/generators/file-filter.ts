@@ -42,6 +42,7 @@ export function getExcludePatterns(
     if (manifest.clientStores) {
       for (const store of manifest.clientStores) {
         excludes.push(`src/client/stores/${store}.ts`)
+        excludes.push(`src/client/stores/__tests__/${store}.test.ts`)
       }
     }
 
@@ -54,6 +55,7 @@ export function getExcludePatterns(
     if (manifest.providesMiddleware) {
       for (const mw of manifest.providesMiddleware) {
         excludes.push(`src/server/middleware/${mw.name}.ts`)
+        excludes.push(`src/server/middleware/__tests__/${mw.name}.test.ts`)
       }
     }
 
@@ -79,6 +81,11 @@ export function getExcludePatterns(
     excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
+    excludes.push('src/server/utils/__tests__/auth.test.ts')
+  }
+
+  if (!resolved.modules.has('captcha')) {
+    excludes.push('src/server/utils/__tests__/captcha.test.ts')
   }
 
   return excludes
