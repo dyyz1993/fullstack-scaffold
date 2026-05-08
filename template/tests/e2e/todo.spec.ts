@@ -47,6 +47,11 @@ test.beforeEach(async ({ page }) => {
   } catch (error) {
     console.warn('Error clearing storage:', error)
   }
+
+  // Set auth token for dev token authentication
+  await page.evaluate(() => {
+    localStorage.setItem('auth-token', JSON.stringify('user-token'))
+  })
 })
 
 test.afterEach(async ({ page, context }) => {

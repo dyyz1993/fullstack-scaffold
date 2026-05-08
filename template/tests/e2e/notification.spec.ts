@@ -281,10 +281,21 @@ test.describe('Notification App', () => {
         timeout: 5000,
       })
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForTimeout(1000)
+
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll('[data-testid="notification-item-unread"]').length +
+            document.querySelectorAll('[data-testid="notification-item-read"]').length >=
+          2,
+        { timeout: 5000 }
+      )
 
       await page.click('[data-testid="mark-all-read-button"]')
-      await page.waitForTimeout(1000)
+
+      await page.waitForFunction(
+        () => document.querySelectorAll('[data-testid="notification-item-unread"]').length === 0,
+        { timeout: 5000 }
+      )
 
       const readNotifications = await page.locator('[data-testid="notification-item-read"]').count()
       const totalNotifications = await page
@@ -313,7 +324,15 @@ test.describe('Notification App', () => {
         .count()
 
       await page.click('[data-testid="delete-notification-button"]')
-      await page.waitForTimeout(1000)
+
+      await page.waitForFunction(
+        (before: number) =>
+          document.querySelectorAll('[data-testid="notification-item-read"]').length +
+            document.querySelectorAll('[data-testid="notification-item-unread"]').length <
+          before,
+        countBefore,
+        { timeout: 5000 }
+      )
 
       const countAfter = await page
         .locator('[data-testid="notification-item-read"], [data-testid="notification-item-unread"]')
@@ -372,7 +391,14 @@ test.describe('Notification App', () => {
         timeout: 5000,
       })
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForTimeout(2000)
+
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll('[data-testid="notification-item-unread"]').length +
+            document.querySelectorAll('[data-testid="notification-item-read"]').length >=
+          2,
+        { timeout: 5000 }
+      )
 
       const unreadLocator = page.locator('[data-testid="unread-count"]')
       await expect(unreadLocator).not.toHaveText('0', { timeout: 10000 })
