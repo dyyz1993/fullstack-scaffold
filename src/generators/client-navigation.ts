@@ -1,21 +1,24 @@
 import type { ResolvedPreset } from "./template-generator";
 import { getClientPages } from "./template-generator";
 
+const DEFAULT_ICON = "Circle";
+
 const ICON_MAP: Record<string, string> = {
   TodoPage: "CheckCircle",
   NotificationPage: "Bell",
   WebSocketPage: "Plug",
+  ContentListPage: "FileText",
 };
 
 export function generateClientNavigation(resolved: ResolvedPreset): string {
-  const pages = getClientPages(resolved);
+  const pages = getClientPages(resolved).filter(p => !p.route.includes(":"));
 
   const iconsNeeded = new Set<string>();
   iconsNeeded.add("Rocket");
   iconsNeeded.add("Github");
   for (const page of pages) {
-    const icon = ICON_MAP[page.name];
-    if (icon) iconsNeeded.add(icon);
+    const icon = ICON_MAP[page.name] || DEFAULT_ICON;
+    iconsNeeded.add(icon);
   }
 
   const routeKeys: string[] = [];
@@ -24,7 +27,7 @@ export function generateClientNavigation(resolved: ResolvedPreset): string {
   for (const page of pages) {
     const key = page.route.replace(/^\//, "").replace(/\//g, "-");
     routeKeys.push(`'${key}'`);
-    const icon = ICON_MAP[page.name] || "Circle";
+    const icon = ICON_MAP[page.name] || DEFAULT_ICON;
 
     const label =
       key === "todos"
