@@ -24,10 +24,11 @@ program
   .argument('[project-name]', 'Name of your project')
   .option('-c, --current-dir', 'Create project in current directory')
   .option('-p, --preset <preset>', 'Template preset to use (fullstack-admin, todo-app, minimal)')
+  .option('-o, --output-dir <path>', 'Output directory (defaults to project name)')
   .action(
     async (
       projectName = 'my-fullstack-app',
-      options: { currentDir?: boolean; preset?: string }
+      options: { currentDir?: boolean; preset?: string; outputDir?: string }
     ) => {
       console.log('')
       console.log(chalk.cyan.bold('  ╔══════════════════════════════════════════╗'))
@@ -59,6 +60,7 @@ program
           projectName,
           currentDir: options.currentDir ?? false,
           preset,
+          outputDir: options.outputDir,
         })
       } catch (error) {
         if (error instanceof ScaffoldError) {

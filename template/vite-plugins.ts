@@ -5,6 +5,29 @@ import http from 'http'
 
 let entryLoaded = false
 
+async function waitForEntry(port: number, maxRetries = 30): Promise<void> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const req = http.get(`http://localhost:${port}/health`, res => {
+          if (res.statusCode === 200) {
+            entryLoaded = true
+            resolve()
+          } else {
+            reject(new Error(`Health check failed with status ${res.statusCode}`))
+          }
+        })
+        req.on('error', reject)
+        req.end()
+      })
+      return
+    } catch {
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+  }
+  console.error('[WebSocket Plugin] Failed to load entry file after retries')
+}
+
 export function websocketPlugin(): Plugin {
   return {
     name: 'websocket-upgrade',
@@ -12,23 +35,7 @@ export function websocketPlugin(): Plugin {
       server.httpServer?.once('listening', async () => {
         const address = server.httpServer?.address()
         if (address && typeof address === 'object') {
-          const port = address.port
-          try {
-            await new Promise<void>((resolve, reject) => {
-              const req = http.get(`http://localhost:${port}/health`, res => {
-                if (res.statusCode === 200) {
-                  entryLoaded = true
-                  resolve()
-                } else {
-                  reject(new Error(`Health check failed with status ${res.statusCode}`))
-                }
-              })
-              req.on('error', reject)
-              req.end()
-            })
-          } catch (error) {
-            console.error('[WebSocket Plugin] Failed to load entry file:', error)
-          }
+          await waitForEntry(address.port)
         }
       })
 
@@ -37,13 +44,28 @@ export function websocketPlugin(): Plugin {
         async (req: IncomingMessage, socket: Duplex, head: Buffer) => {
           if (req.url) {
             let waitRetries = 0
-            while (!entryLoaded && waitRetries < 30) {
+            while (!entryLoaded && waitRetries < 50) {
               await new Promise(resolve => setTimeout(resolve, 100))
               waitRetries++
             }
 
             if (!entryLoaded) {
-              return
+              try {
+                const runtimeModule = await server.ssrLoadModule('/src/server/core/runtime.ts')
+                const runtimeNodeModule = await server.ssrLoadModule(
+                  '/src/server/core/runtime-node.ts'
+                )
+                const { getRuntimeAdapter, setRuntimeAdapter } = runtimeModule
+                const { getNodeRuntimeAdapter } = runtimeNodeModule
+                try {
+                  getRuntimeAdapter()
+                } catch {
+                  setRuntimeAdapter(getNodeRuntimeAdapter())
+                }
+                entryLoaded = true
+              } catch {
+                return
+              }
             }
 
             const runtimeModule = await server.ssrLoadModule('/src/server/core/runtime.ts')

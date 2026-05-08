@@ -27,7 +27,8 @@ function findTestFiles(): string[] {
       for (const item of items) {
         const fullPath = join(dir, item)
 
-        if (item === 'node_modules' || item === 'dist' || item === '.git') continue
+        if (item === 'node_modules' || item === 'dist' || item === '.git' || item === 'template')
+          continue
 
         try {
           const stat = statSync(fullPath)

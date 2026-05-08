@@ -174,6 +174,7 @@ export interface CreateOptions {
   projectName: string
   currentDir: boolean
   preset?: string
+  outputDir?: string
 }
 
 export async function createProject(options: CreateOptions): Promise<void>
@@ -190,6 +191,7 @@ export async function createProject(
   let projectName: string
   let currentDir: boolean
   let presetId: string | undefined
+  let outputDir: string | undefined
 
   if (typeof projectNameOrOptions === 'string') {
     projectName = projectNameOrOptions
@@ -199,6 +201,7 @@ export async function createProject(
     projectName = projectNameOrOptions.projectName
     currentDir = projectNameOrOptions.currentDir
     presetId = projectNameOrOptions.preset
+    outputDir = projectNameOrOptions.outputDir
   }
 
   if (!currentDir) {
@@ -211,6 +214,11 @@ export async function createProject(
   if (currentDir) {
     targetDir = process.cwd()
     projectName = path.basename(targetDir)
+  } else if (outputDir) {
+    targetDir = path.resolve(outputDir)
+    if (await fs.pathExists(targetDir)) {
+      throw new ScaffoldError(`Directory ${outputDir} already exists`)
+    }
   } else {
     targetDir = path.resolve(process.cwd(), projectName)
     if (await fs.pathExists(targetDir)) {
@@ -376,7 +384,7 @@ export async function createProject(
     console.log(chalk.gray(`   Modules: ${[...resolved.modules.keys()].join(', ')}`))
     console.log('')
     console.log(chalk.cyan('  Next steps:'))
-    if (!currentDir) {
+    if (!currentDir && !outputDir) {
       console.log(chalk.white(`    cd ${projectName}`))
     }
     console.log(chalk.white('    npm install'))
