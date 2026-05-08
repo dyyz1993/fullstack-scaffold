@@ -2,6 +2,8 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
+import prerender from '@prerenderer/rollup-plugin'
+import puppeteerRenderer from '@prerenderer/renderer-puppeteer'
 
 export default defineConfig({
   server: {
@@ -29,6 +31,17 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         admin: path.resolve(__dirname, 'admin.html'),
+      },
+      output: {
+        plugins: [
+          prerender({
+            routes: ['/', '/todos', '/notifications', '/websocket'],
+            renderer: new puppeteerRenderer({
+              renderAfterDocumentEvent: 'prerender-ready',
+              renderAfterTime: 5000,
+            }),
+          }),
+        ],
       },
     },
   },

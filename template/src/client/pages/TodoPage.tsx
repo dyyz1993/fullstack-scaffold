@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { Helmet } from 'react-helmet-async'
 import {
   Plus,
   Trash2,
@@ -107,6 +108,12 @@ export const TodoPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6" data-testid="todo-page">
+      <Helmet>
+        <title>Todo List - Biomimic App</title>
+        <meta name="description" content="Manage your todo items with full CRUD operations" />
+        <meta property="og:title" content="Todo List - Biomimic App" />
+        <meta property="og:description" content="Manage your todo items with full CRUD operations" />
+      </Helmet>
       <div className="mb-8">
         <h1
           className="text-3xl font-bold text-gray-900 flex items-center gap-2"

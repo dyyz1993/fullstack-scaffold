@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { Helmet } from 'react-helmet-async'
 import {
   Bell,
   Wifi,
@@ -82,6 +83,12 @@ export const NotificationPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6" data-testid="notification-container">
+      <Helmet>
+        <title>Notifications - Biomimic App</title>
+        <meta name="description" content="Real-time notifications powered by Server-Sent Events" />
+        <meta property="og:title" content="Notifications - Biomimic App" />
+        <meta property="og:description" content="Real-time notifications powered by Server-Sent Events" />
+      </Helmet>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
           <Bell className="w-8 h-8 text-purple-500" />

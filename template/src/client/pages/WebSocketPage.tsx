@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 import {
   Plug,
   Wifi,
@@ -85,6 +86,12 @@ export const WebSocketPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6" data-testid="websocket-container">
+      <Helmet>
+        <title>WebSocket Demo - Biomimic App</title>
+        <meta name="description" content="Real-time WebSocket communication demo with type-safe RPC" />
+        <meta property="og:title" content="WebSocket Demo - Biomimic App" />
+        <meta property="og:description" content="Real-time WebSocket communication demo with type-safe RPC" />
+      </Helmet>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
           <Plug className="w-8 h-8 text-indigo-500" />
