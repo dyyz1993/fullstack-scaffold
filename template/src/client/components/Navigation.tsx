@@ -1,14 +1,15 @@
 import { NavLink } from 'react-router-dom'
-import { CheckCircle, Bell, Plug, Rocket, Github } from 'lucide-react'
+import { CheckCircle, Bell, Plug, Rocket, Github, FileText } from 'lucide-react'
 import { AuthButton } from './AuthButton'
 
-type RouteKey = 'todos' | 'notifications' | 'websocket'
+type RouteKey = 'todos' | 'notifications' | 'websocket' | 'content'
 
 const routes: Record<
   RouteKey,
   { label: string; icon: React.FC<{ className?: string }>; path: string }
 > = {
   todos: { label: 'Todo List', icon: CheckCircle, path: '/todos' },
+  content: { label: 'Content', icon: FileText, path: '/content' },
   notifications: { label: 'Notifications', icon: Bell, path: '/notifications' },
   websocket: { label: 'WebSocket', icon: Plug, path: '/websocket' },
 }

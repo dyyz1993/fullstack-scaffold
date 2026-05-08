@@ -7,6 +7,10 @@ const contentManifest: ModuleManifest = {
   dependsOn: ['permission'],
 
   routes: {
+    client: {
+      importPath: './routes/public-content-routes',
+      exportName: 'publicContentRoutes',
+    },
     admin: [
       {
         importPath: './routes/content-routes',
@@ -18,6 +22,11 @@ const contentManifest: ModuleManifest = {
   sharedSchemas: {
     path: 'content',
   },
+
+  clientPages: [
+    { name: 'ContentListPage', route: '/content' },
+    { name: 'ContentDetailPage', route: '/content/:id' },
+  ],
 
   adminPages: [{ name: 'ContentPage', route: '/content', requiredPermission: 'CONTENT_VIEW' }],
 

@@ -23,6 +23,8 @@ const publicRoutes: RouteConfig[] = [
   { path: '/api/permissions/permission-labels', method: 'GET', isPublic: true, permissions: [] },
   { path: '/api/permissions/menu-config', method: 'GET', isPublic: true, permissions: [] },
   { path: '/api/permissions/page-permissions', method: 'GET', isPublic: true, permissions: [] },
+  { path: '/api/public/contents', method: 'GET', isPublic: true, permissions: [] },
+  { path: '/api/public/contents/:id', method: 'GET', isPublic: true, permissions: [] },
 ]
 
 const permissionRoutes: RouteConfig[] = [

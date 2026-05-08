@@ -3,9 +3,14 @@
  * Configures jsdom environment and global mocks
  */
 
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 import '@testing-library/jest-dom'
 import { EventSource } from 'eventsource'
+
+vi.mock('react-helmet-async', () => ({
+  Helmet: ({ children }: { children: React.ReactNode }) => children,
+  HelmetProvider: ({ children }: { children: React.ReactNode }) => children,
+}))
 
 afterEach(() => {})
 

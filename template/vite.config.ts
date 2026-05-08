@@ -35,7 +35,7 @@ export default defineConfig({
       output: {
         plugins: [
           prerender({
-            routes: ['/', '/todos', '/notifications', '/websocket'],
+            routes: ['/', '/todos', '/notifications', '/websocket', '/content'],
             renderer: new puppeteerRenderer({
               renderAfterDocumentEvent: 'prerender-ready',
               renderAfterTime: 5000,

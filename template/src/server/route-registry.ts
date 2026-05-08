@@ -12,6 +12,7 @@ import { orderRoutes } from './module-order/routes/order-routes'
 import { ticketRoutes } from './module-ticket/routes/ticket-routes'
 import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
+import { publicContentRoutes } from './module-content/routes/public-content-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
 
 const apiRateLimit = rateLimitMiddleware({
@@ -26,6 +27,7 @@ export const clientApiRoutes = new OpenAPIHono()
   .route('/api', chatRoutes)
   .route('/api', notificationRoutes)
   .route('/api', apiRoutes)
+  .route('/api', publicContentRoutes)
 
 // 管理后台路由 - 普通用户使用的 API + 管理功能
 export const adminApiRoutes = new OpenAPIHono()
