@@ -1,0 +1,36 @@
+name: Deploy Demo
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'template/**'
+      - 'src/**'
+      - 'package.json'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Demo to Cloudflare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - name: Scaffold demo app
+        run: |
+          node dist/cli/index.js demo-app --preset fullstack-admin --output-dir /tmp
+      - name: Install demo dependencies
+        working-directory: /tmp/demo-app
+        run: npm ci
+      - name: Build for Cloudflare
+        working-directory: /tmp/demo-app
+        run: npm run build:cloudflare
+      - name: Deploy to Cloudflare Workers
+        working-directory: /tmp/demo-app
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
