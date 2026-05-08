@@ -17,7 +17,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "tsup",
-    "build:cli": "tsup --config tsup.config.ts",
+    "build:cli": "tsup --config tsup.cli.config.ts",
     "build:cloudflare": "npm run build:client && tsup --config tsup.config.ts",
     "build:all": "npm run build:client && npm run build:server && npm run build:cli",
     "cli": "node dist/cli/index.js",
