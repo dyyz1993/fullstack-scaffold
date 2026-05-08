@@ -1,9 +1,48 @@
 import path from 'path'
+import { existsSync } from 'fs'
 import { defineConfig } from 'vite'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
 import prerender from '@prerenderer/rollup-plugin'
 import puppeteerRenderer from '@prerenderer/renderer-puppeteer'
+
+async function getPrerenderRoutes(): Promise<string[]> {
+  const staticRoutes = ['/', '/todos', '/notifications', '/websocket', '/content']
+
+  try {
+    const { createClient } = await import('@libsql/client')
+    const dbCandidates = [
+      path.resolve(process.cwd(), 'data/production.db'),
+      path.resolve(process.cwd(), 'data/app.db'),
+      path.resolve(process.cwd(), 'data/development.db'),
+    ]
+
+    for (const dbPath of dbCandidates) {
+      if (!existsSync(dbPath)) continue
+
+      const client = createClient({ url: `file:${dbPath}` })
+      try {
+        const rs = await client.execute(
+          "SELECT id FROM contents WHERE status = 'published' ORDER BY created_at DESC"
+        )
+        client.close()
+
+        if (rs.rows.length > 0) {
+          const contentRoutes = rs.rows.map(row => `/content/content-${row.id}`)
+          return [...staticRoutes, ...contentRoutes]
+        }
+      } catch {
+        client.close()
+      }
+    }
+  } catch {
+    // fallback
+  }
+
+  return staticRoutes
+}
+
+const routes = await getPrerenderRoutes()
 
 export default defineConfig({
   server: {
@@ -35,7 +74,7 @@ export default defineConfig({
       output: {
         plugins: [
           prerender({
-            routes: ['/todos', '/notifications', '/websocket', '/content'],
+            routes,
             renderer: new puppeteerRenderer({
               renderAfterDocumentEvent: 'prerender-ready',
               renderAfterTime: 5000,
