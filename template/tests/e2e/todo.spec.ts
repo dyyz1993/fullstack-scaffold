@@ -528,21 +528,20 @@ test.describe('Todo App', () => {
       // Verify todo was created
       await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
 
-      // Create a new browser context to simulate a fresh session
       const newContext = await browser.newContext()
       const newPage = await newContext.newPage()
 
       try {
-        // Navigate to homepage in the new context
         await newPage.goto(getBaseUrl())
-
-        // Wait for page to load
         await newPage.waitForLoadState('load')
 
-        // Wait for network to be idle
-        await newPage.waitForLoadState('networkidle')
+        await newPage.evaluate(() => {
+          localStorage.setItem('auth-token', JSON.stringify('user-token'))
+        })
 
-        // Wait for app to render
+        await newPage.reload()
+        await newPage.waitForLoadState('load')
+        await newPage.waitForLoadState('networkidle')
         await newPage.waitForSelector('[data-testid="todo-item"]', { timeout: 15000 })
 
         // Verify todo still exists

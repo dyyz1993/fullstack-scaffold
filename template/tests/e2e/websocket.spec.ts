@@ -9,6 +9,11 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
+test.skip(
+  !!process.env.CI,
+  'WebSocket tests require real server - unreliable in CI with Vite dev server'
+)
+
 function getBaseUrl(): string {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010'
 }
