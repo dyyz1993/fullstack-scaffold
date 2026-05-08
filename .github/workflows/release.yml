@@ -34,7 +34,7 @@ jobs:
           fi
           echo "Version check passed: $PKG_VERSION"
       - name: Build
-        run: npm run build
+        run: npm run build:server
       - name: Dry run publish
         run: npm publish --dry-run --access public
         env:
