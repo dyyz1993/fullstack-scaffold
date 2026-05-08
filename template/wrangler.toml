@@ -9,7 +9,7 @@ ENVIRONMENT = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "biomimic-todo-db"
-database_id = "YOUR_DATABASE_ID_HERE"
+database_id = "48684115-a14b-4a35-9f2b-03cf8fa66eb6"
 
 [[durable_objects.bindings]]
 name = "REALTIME_DO"
