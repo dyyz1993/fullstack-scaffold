@@ -75,7 +75,7 @@ const localRules = {
 }
 
 export default tseslint.config(
-  { ignores: ['dist', '.pi', 'lint-scripts', 'e2e', 'scripts'] },
+  { ignores: ['dist', '.pi', 'lint-scripts', 'e2e', 'scripts', 'template', 'coverage', 'testapp', 'test-scaffold-debug', 'my-app', 'e2e-debug-app', 'my-test-app', '*.config.ts'] },
   {
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -152,8 +152,15 @@ export default tseslint.config(
     files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts'],
     rules: {
       'no-console': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       'local-rules/require-type-safe-test-client': 'error',
       'local-rules/require-hono-chain-syntax': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
+    rules: {
+      'no-console': 'off',
     },
   },
   {

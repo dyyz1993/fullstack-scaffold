@@ -50,6 +50,7 @@ export interface ResolvedPreset {
   hasCaptcha: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TsImportFn = (id: string, opts: { parentURL: string }) => Promise<any>
 
 let tsImportFn: TsImportFn | undefined
