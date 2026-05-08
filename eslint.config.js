@@ -75,7 +75,24 @@ const localRules = {
 }
 
 export default tseslint.config(
-  { ignores: ['dist', '.pi', 'lint-scripts', 'e2e', 'scripts', 'template', 'coverage', 'testapp', 'test-scaffold-debug', 'my-app', 'e2e-debug-app', 'my-test-app', '*.config.ts'] },
+  {
+    ignores: [
+      'dist',
+      '.pi',
+      'lint-scripts',
+      'e2e',
+      'scripts',
+      'template',
+      'coverage',
+      'testapp',
+      'test-scaffold-debug',
+      'my-app',
+      'e2e-debug-app',
+      'my-test-app',
+      'demo-app',
+      '*.config.ts',
+    ],
+  },
   {
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

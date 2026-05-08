@@ -4,14 +4,18 @@ type RateLimitEntry = { count: number; resetAt: number }
 
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
-setInterval(() => {
+let lastCleanup = Date.now()
+
+function cleanupExpired() {
   const now = Date.now()
+  if (now - lastCleanup < 60_000) return
+  lastCleanup = now
   for (const [key, entry] of rateLimitStore) {
     if (entry.resetAt <= now) {
       rateLimitStore.delete(key)
     }
   }
-}, 60_000)
+}
 
 export type RateLimitOptions = {
   windowMs?: number
@@ -29,6 +33,7 @@ export function rateLimitMiddleware(options: RateLimitOptions = {}) {
       return next()
     }
 
+    cleanupExpired()
     const ip =
       c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
       c.req.header('x-real-ip') ||
