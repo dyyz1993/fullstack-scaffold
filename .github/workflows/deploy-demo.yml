@@ -23,7 +23,8 @@ jobs:
       - name: Build CLI
         run: npm run build:cli
       - name: Scaffold demo app
-        run: node dist/cli/index.js demo-app --preset fullstack-admin --output-dir /tmp
+        working-directory: /tmp
+        run: node /home/runner/work/fullstack-scaffold/fullstack-scaffold/dist/cli/index.js demo-app --preset fullstack-admin
       - name: Install demo dependencies
         working-directory: /tmp/demo-app
         run: npm ci
