@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import type { Content, ContentCategory } from '@shared/modules/content'
+import { apiClient } from '@client/services/apiClient'
 
 const CATEGORIES: { value: ContentCategory | ''; label: string }[] = [
   { value: '', label: '全部' },
@@ -19,39 +20,34 @@ export const ContentListPage: React.FC = () => {
   const [category, setCategory] = useState<ContentCategory | ''>('')
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    fetchContents()
-  }, [category])
-
-  const fetchContents = async () => {
+  const fetchContents = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams()
-      if (category) params.set('category', category)
-      if (search) params.set('search', search)
-      params.set('limit', '20')
-
-      const res = await fetch(`/api/public/contents?${params}`)
-      const result = (await res.json()) as {
-        success: boolean
-        data?: { items?: Content[] } | Content[]
-        error?: string
-      }
+      const res = await apiClient.api.public.contents.$get({
+        query: {
+          ...(category ? { category } : {}),
+          ...(search ? { search } : {}),
+          limit: 20,
+        },
+      })
+      const result = await res.json()
       if (result.success) {
         const data = result.data
-        setContents(
-          Array.isArray(data) ? data : data?.items ?? [],
-        )
+        setContents(Array.isArray(data) ? data : [])
       } else {
-        setError(result.error || 'Failed to fetch contents')
+        setError('Failed to fetch contents')
       }
     } catch {
       setError('Network error')
     } finally {
       setLoading(false)
     }
-  }
+  }, [category, search])
+
+  useEffect(() => {
+    fetchContents()
+  }, [fetchContents])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

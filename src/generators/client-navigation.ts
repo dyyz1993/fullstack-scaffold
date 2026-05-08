@@ -35,8 +35,9 @@ export function generateClientNavigation(resolved: ResolvedPreset): string {
             ? "WebSocket"
             : key.charAt(0).toUpperCase() + key.slice(1);
 
+    const safeKey = /^[a-zA-Z0-9_]+$/.test(key) ? key : `'${key}'`
     routeEntries.push(
-      `  ${key}: { label: '${label}', icon: ${icon}, path: '${page.route}' },`,
+      `  ${safeKey}: { label: '${label}', icon: ${icon}, path: '${page.route}' },`,
     );
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import type { Content } from '@shared/modules/content'
+import { apiClient } from '@client/services/apiClient'
 
 export const ContentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -17,7 +18,9 @@ export const ContentDetailPage: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/public/contents/${contentId}`)
+      const res = await apiClient.api.public.contents[':id'].$get({
+        param: { id: contentId },
+      })
       if (!res.ok) {
         if (res.status === 404) {
           setError('内容不存在')
@@ -26,15 +29,11 @@ export const ContentDetailPage: React.FC = () => {
         }
         return
       }
-      const result = (await res.json()) as {
-        success: boolean
-        data?: Content
-        error?: string
-      }
+      const result = await res.json()
       if (result.success) {
         setContent(result.data ?? null)
       } else {
-        setError(result.error || 'Failed to fetch content')
+        setError('Failed to fetch content')
       }
     } catch {
       setError('Network error')
