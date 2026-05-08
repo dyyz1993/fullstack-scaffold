@@ -17,19 +17,28 @@ const persistenceTestInProgress = false
 
 async function connectWithRetry(page: Page, maxRetries = 3) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    await page.click('[data-testid="connect-ws-button"]')
+    const connectBtn = page.locator('[data-testid="connect-ws-button"]')
+    if (await connectBtn.isEnabled({ timeout: 2000 }).catch(() => false)) {
+      await connectBtn.click()
+    }
+
     try {
       await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
       return
     } catch {
       const disconnectBtn = page.locator('[data-testid="disconnect-ws-button"]')
-      if (await disconnectBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (
+        (await disconnectBtn.isVisible({ timeout: 1000 }).catch(() => false)) &&
+        (await disconnectBtn.isEnabled({ timeout: 500 }).catch(() => false))
+      ) {
         await disconnectBtn.click()
+        await page.waitForTimeout(1000)
+      } else {
         await page.waitForTimeout(1000)
       }
     }
   }
-  await page.click('[data-testid="connect-ws-button"]')
+  await page.locator('[data-testid="connect-ws-button"]').click()
   await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 15000 })
 }
 
