@@ -27,6 +27,10 @@ export interface CloudflareBindings extends AppBindings {
 const runtimeAdapter = getCloudflareRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
+runtimeAdapter.handleWS('/api/chat/ws')
+runtimeAdapter.handleSSE('/api/notifications/stream')
+runtimeAdapter.handleSSE('/api/admin/notifications/stream')
+
 const app = createApp<CloudflareBindings>()
 
 const isrCache = createISRCache()

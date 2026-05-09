@@ -50,6 +50,10 @@ setISRCache(isrCache)
 const runtimeAdapter = getNodeRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
+runtimeAdapter.handleWS('/api/chat/ws')
+runtimeAdapter.handleSSE('/api/notifications/stream')
+runtimeAdapter.handleSSE('/api/admin/notifications/stream')
+
 // 先创建基础应用
 const baseApp = createApp()
 
