@@ -40,7 +40,8 @@ if (secretKey === defaultSecretKey && process.env.NODE_ENV === 'production') {
 }
 
 const isDevTokensEnabled = (): boolean => {
-  return process.env.ENABLE_DEV_TOKENS === 'true' && process.env.NODE_ENV !== 'production'
+  if (process.env.NODE_ENV === 'production') return false
+  return process.env.ENABLE_DEV_TOKENS !== 'false'
 }
 
 if (isDevTokensEnabled()) {
