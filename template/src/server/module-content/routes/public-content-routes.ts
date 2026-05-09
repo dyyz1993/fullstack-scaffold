@@ -3,7 +3,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import * as contentService from '../services/content-service'
 import { successResponse, errorResponse } from '@server/utils/route-helpers'
 import { NotFoundError } from '@server/utils/app-error'
-import { success, list } from '@server/utils/response'
+import { success } from '@server/utils/response'
 import { z } from '@hono/zod-openapi'
 import { ContentSchema, ContentCategorySchema } from '@shared/modules/content'
 
@@ -46,7 +46,7 @@ export const publicContentRoutes = new OpenAPIHono()
       search,
     })
     const items = result.slice(offset, offset + limit)
-    return c.json(list(items, result.length), 200)
+    return c.json(success(items), 200)
   })
   .openapi(getPublicRoute, async c => {
     const { id } = c.req.valid('param')
