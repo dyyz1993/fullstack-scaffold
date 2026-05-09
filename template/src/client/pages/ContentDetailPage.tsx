@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import type { Content } from '@shared/modules/content'
@@ -10,11 +10,7 @@ export const ContentDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (id) fetchContent(id)
-  }, [id])
-
-  const fetchContent = async (contentId: string) => {
+  const fetchContent = useCallback(async (contentId: string) => {
     setLoading(true)
     setError(null)
     try {
@@ -40,7 +36,11 @@ export const ContentDetailPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (id) fetchContent(id)
+  }, [id, fetchContent])
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return ''
@@ -63,9 +63,7 @@ export const ContentDetailPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            {error || '内容不存在'}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{error || '内容不存在'}</h1>
           <Link to="/content" className="text-blue-600 hover:underline">
             ← 返回内容列表
           </Link>
@@ -107,10 +105,7 @@ export const ContentDetailPage: React.FC = () => {
                 {content.category}
               </span>
               {content.tags?.map(tag => (
-                <span
-                  key={tag}
-                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
-                >
+                <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                   {tag}
                 </span>
               ))}

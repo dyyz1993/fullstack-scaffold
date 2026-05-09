@@ -137,12 +137,13 @@ export const UsersPage: React.FC = () => {
   }
 
   const getStatusTag = (status: string) => {
-    const statusConfig = {
+    const statusConfig: Record<string, { color: string; text: string }> = {
       active: { color: 'green', text: '正常' },
       inactive: { color: 'orange', text: '未激活' },
       locked: { color: 'red', text: '已锁定' },
     }
-    const config = statusConfig[status as keyof typeof statusConfig]
+    const config = statusConfig[status]
+    if (!config) return <Tag>{status}</Tag>
     return <Tag color={config.color}>{config.text}</Tag>
   }
 

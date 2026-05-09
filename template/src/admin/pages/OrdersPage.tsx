@@ -41,6 +41,8 @@ export const OrdersPage: React.FC = () => {
       const result = await response.json()
       if (result.success) {
         setOrders(result.data)
+      } else {
+        message.error(result.error || 'Failed to load orders')
       }
     } catch {
       message.error('获取订单列表失败')

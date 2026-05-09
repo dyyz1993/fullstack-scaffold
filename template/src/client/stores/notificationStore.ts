@@ -91,6 +91,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       }
     } catch (error) {
       console.error('Failed to mark as read:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
@@ -106,6 +107,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       }
     } catch (error) {
       console.error('Failed to mark all as read:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
@@ -127,6 +129,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       }
     } catch (error) {
       console.error('Failed to delete:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 
@@ -139,6 +142,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
       }
     } catch (error) {
       console.error('Failed to fetch unread count:', error)
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
     }
   },
 

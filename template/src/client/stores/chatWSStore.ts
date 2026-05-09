@@ -11,6 +11,7 @@ interface WSMessage {
 interface WSState {
   status: WSStatus
   messages: WSMessage[]
+  error: string | null
 
   connect: () => void
   disconnect: () => void
@@ -19,6 +20,7 @@ interface WSState {
   broadcast: (params: { message: string; timestamp: number }) => void
   notification: (params: { title: string; body: string; timestamp: number }) => void
   clearMessages: () => void
+  clearError: () => void
 }
 
 let wsClient: WSClient<ChatProtocol> | null = null
@@ -26,6 +28,7 @@ let wsClient: WSClient<ChatProtocol> | null = null
 export const useChatWsStore = create<WSState>((set, get) => ({
   status: 'closed',
   messages: [],
+  error: null,
 
   connect: () => {
     if (wsClient) return
@@ -87,6 +90,7 @@ export const useChatWsStore = create<WSState>((set, get) => ({
       }))
     } catch (error) {
       console.error('Echo failed:', error)
+      set({ error: error instanceof Error ? error.message : 'Echo failed' })
     }
   },
 
@@ -103,6 +107,7 @@ export const useChatWsStore = create<WSState>((set, get) => ({
       }))
     } catch (error) {
       console.error('Ping failed:', error)
+      set({ error: error instanceof Error ? error.message : 'Ping failed' })
     }
   },
 
@@ -118,5 +123,9 @@ export const useChatWsStore = create<WSState>((set, get) => ({
 
   clearMessages: () => {
     set({ messages: [] })
+  },
+
+  clearError: () => {
+    set({ error: null })
   },
 }))

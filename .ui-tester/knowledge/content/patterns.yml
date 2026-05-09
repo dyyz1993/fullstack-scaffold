@@ -63,10 +63,10 @@ navigate_back_to_list:
   expected_result: "URL changes to /content, list page shown"
 
 tips:
-  - "CRITICAL BUG: API returns {items: [...], count: N} but code checks Array.isArray(data) - always shows empty state"
+  - "BUG FIXED (r2): API returns {items: [...], count: N} - ContentListPage.tsx now correctly handles this format"
   - "API endpoint: GET /api/public/contents (no auth required)"
-  - "Data rendering bug means list-based tests will show 0 items despite API returning 7"
-  - "Detail page works correctly when navigating directly via URL"
-  - "Category filter buttons toggle correctly (UI state works even though data doesn't render)"
-  - "Search input and button work correctly (form submission works)"
-  - "Navigation between list and detail pages works correctly"
+  - "7 content items returned by API, all correctly rendered in list view"
+  - "Detail page works correctly - shows title, content body, metadata (author, date, views, likes)"
+  - "Category filter buttons work correctly - filters content by type (article=2, announcement=2, etc.)"
+  - "Search input and button work correctly - returns matching results"
+  - "Navigation between list and detail pages works correctly via React Router"

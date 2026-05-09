@@ -10,12 +10,14 @@ interface AdminState {
   isAuthenticated: boolean
   stats: SystemStats | null
   loading: boolean
+  error: string | null
 
   login: (username: string, password: string) => Promise<LoginResponse>
   logout: () => void
   fetchStats: () => Promise<void>
   setUser: (user: AuthUserResponse) => void
   setToken: (token: string) => void
+  clearError: () => void
 }
 
 export const useAdminStore = create<AdminState>()(
@@ -26,6 +28,7 @@ export const useAdminStore = create<AdminState>()(
       isAuthenticated: false,
       stats: null,
       loading: false,
+      error: null,
 
       login: async (username: string, password: string) => {
         set({ loading: true })
@@ -70,11 +73,13 @@ export const useAdminStore = create<AdminState>()(
           }
         } catch (error) {
           console.error('Failed to fetch stats:', error)
+          set({ error: error instanceof Error ? error.message : 'Failed to fetch stats' })
         }
       },
 
       setUser: (user: AuthUserResponse) => set({ user }),
       setToken: (token: string) => set({ token }),
+      clearError: () => set({ error: null }),
     }),
     {
       name: 'admin-storage',

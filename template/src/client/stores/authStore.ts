@@ -31,6 +31,8 @@ export const useAuthStore = create<AuthState>()(
           user,
         }),
 
+      // Note: setToken does NOT set user. Caller must also call setAuth or setUser
+      // to complete the authentication state.
       setToken: (token: string) =>
         set({
           token,

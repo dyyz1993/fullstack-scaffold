@@ -33,13 +33,7 @@ export const ContentListPage: React.FC = () => {
       })
       const result = await res.json()
       if (result.success) {
-        const data = result.data
-        const items = Array.isArray(data)
-          ? data
-          : Array.isArray((data as { items?: unknown[] })?.items)
-            ? (data as { items: Content[] }).items
-            : []
-        setContents(items)
+        setContents(result.data)
       } else {
         setError('Failed to fetch contents')
       }

@@ -2,6 +2,7 @@ import { Modal, Input, Button, message } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import { useCaptchaStore } from '../stores/captchaStore'
+import { apiClient } from '../services/apiClient'
 import type { CaptchaResponse } from '@shared/modules/captcha'
 
 export const CaptchaModal: React.FC = () => {
@@ -14,8 +15,8 @@ export const CaptchaModal: React.FC = () => {
   const fetchCaptcha = async () => {
     setRefreshing(true)
     try {
-      const response = await window.fetch('/api/captcha')
-      const result = (await response.json()) as { success: boolean; data?: CaptchaResponse }
+      const response = await apiClient.api.captcha.$get()
+      const result = await response.json()
 
       if (result.success && result.data) {
         setCaptchaData(result.data)
@@ -53,16 +54,13 @@ export const CaptchaModal: React.FC = () => {
 
     setLoading(true)
     try {
-      const response = await window.fetch('/api/verify-captcha', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await apiClient.api['verify-captcha'].$post({
+        json: {
           id: captchaData.id,
           code,
-        }),
+        },
       })
-
-      const result = (await response.json()) as { success: boolean; error?: string }
+      const result = await response.json()
 
       if (result.success) {
         message.success('验证成功')

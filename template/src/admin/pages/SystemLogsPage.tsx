@@ -29,6 +29,15 @@ export const SystemLogsPage: React.FC = () => {
     resourceType: '',
   })
 
+  const safeFormatJson = (val: string | null | undefined): string => {
+    if (!val) return '-'
+    try {
+      return JSON.stringify(JSON.parse(val), null, 2)
+    } catch {
+      return val
+    }
+  }
+
   useEffect(() => {
     fetchLogs()
   }, [fetchLogs])
@@ -199,14 +208,14 @@ export const SystemLogsPage: React.FC = () => {
             {selectedLog.oldValue && (
               <Descriptions.Item label="旧值">
                 <pre style={{ margin: 0, maxHeight: '200px', overflow: 'auto' }}>
-                  {JSON.stringify(JSON.parse(selectedLog.oldValue), null, 2)}
+                  {safeFormatJson(selectedLog.oldValue)}
                 </pre>
               </Descriptions.Item>
             )}
             {selectedLog.newValue && (
               <Descriptions.Item label="新值">
                 <pre style={{ margin: 0, maxHeight: '200px', overflow: 'auto' }}>
-                  {JSON.stringify(JSON.parse(selectedLog.newValue), null, 2)}
+                  {safeFormatJson(selectedLog.newValue)}
                 </pre>
               </Descriptions.Item>
             )}

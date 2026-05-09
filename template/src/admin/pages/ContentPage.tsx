@@ -44,6 +44,8 @@ export const ContentPage: React.FC = () => {
       const result = await response.json()
       if (result.success) {
         setContents(result.data)
+      } else {
+        message.error('Failed to load content')
       }
     } catch {
       message.error('获取内容列表失败')

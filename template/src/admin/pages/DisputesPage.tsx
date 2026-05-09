@@ -45,6 +45,8 @@ export const DisputesPage: React.FC = () => {
       const result = await response.json()
       if (result.success) {
         setDisputes(result.data)
+      } else {
+        message.error(result.error || 'Failed to load disputes')
       }
     } catch {
       message.error('获取争议列表失败')

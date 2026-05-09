@@ -53,6 +53,8 @@ export const TicketsPage: React.FC = () => {
       const result = await response.json()
       if (result.success) {
         setTickets(result.data)
+      } else {
+        message.error(result.error || 'Failed to load tickets')
       }
     } catch {
       message.error('获取工单列表失败')

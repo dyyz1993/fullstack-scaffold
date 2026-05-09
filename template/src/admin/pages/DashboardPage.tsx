@@ -18,6 +18,8 @@ export const DashboardPage: React.FC = () => {
         const result = await response.json()
         if (result.success) {
           setStats(result.data)
+        } else {
+          message.error(result.error || 'Failed to load stats')
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error)

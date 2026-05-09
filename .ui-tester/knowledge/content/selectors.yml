@@ -1,8 +1,8 @@
 # Module: content
 # Site: http://localhost:5175/content
-# Version: 1
+# Version: 2
 # Last updated: 2026-05-09
-# Updated in round: r1
+# Updated in round: r2
 
 content_list_page:
   url: "http://localhost:5175/content"
