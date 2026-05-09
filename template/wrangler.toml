@@ -5,6 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
+ENABLE_DEV_TOKENS = "true"
 
 [[d1_databases]]
 binding = "DB"

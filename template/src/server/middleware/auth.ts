@@ -40,8 +40,14 @@ if (secretKey === defaultSecretKey && process.env.NODE_ENV === 'production') {
 }
 
 const isDevTokensEnabled = (): boolean => {
+  // 显式启用 dev tokens（优先级最高，即使 production 也能用）
+  if (process.env.ENABLE_DEV_TOKENS === 'true') return true
+  // 显式禁用
+  if (process.env.ENABLE_DEV_TOKENS === 'false') return false
+  // production 默认禁用
   if (process.env.NODE_ENV === 'production') return false
-  return process.env.ENABLE_DEV_TOKENS !== 'false'
+  // 开发环境默认启用
+  return true
 }
 
 if (isDevTokensEnabled()) {
