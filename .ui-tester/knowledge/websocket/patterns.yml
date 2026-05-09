@@ -1,0 +1,62 @@
+# Module: websocket
+# Proven interaction patterns
+
+connect_flow:
+  description: "Connect WebSocket to chat server"
+  steps:
+    - action: click
+      selector: "[data-testid='connect-ws-button']"
+      description: "Click Connect button"
+  wait_after: 3000
+  expected_result: "Status changes from Closed to Open, input becomes enabled"
+  known_issue: "Vite dev server does NOT support WebSocket upgrade. Connection fails silently, status stays Closed. Works only with Node server (node.ts entry)"
+
+disconnect_flow:
+  description: "Disconnect WebSocket"
+  steps:
+    - action: click
+      selector: "[data-testid='disconnect-ws-button']"
+      description: "Click Disconnect button"
+  wait_after: 1000
+  expected_result: "Status changes back to Closed, input becomes disabled"
+  prerequisite: "WebSocket must be connected first"
+
+send_echo:
+  description: "Send Echo RPC message"
+  steps:
+    - action: select
+      selector: "[data-testid='ws-message-type-select']"
+      value: "echo"
+      description: "Select Echo (RPC) from dropdown"
+    - action: fill
+      selector: "[data-testid='ws-message-input']"
+      description: "Type message in input"
+    - action: click
+      selector: "[data-testid='send-message-button']"
+      description: "Click Send button"
+  wait_after: 2000
+  expected_result: "Echo response appears in messages list with same message text"
+  prerequisite: "WebSocket must be connected"
+
+send_ping:
+  description: "Send Ping RPC"
+  steps:
+    - action: select
+      selector: "[data-testid='ws-message-type-select']"
+      value: "ping"
+      description: "Select Ping (RPC) from dropdown"
+    - action: click
+      selector: "[data-testid='send-message-button']"
+      description: "Click Send button"
+  wait_after: 2000
+  expected_result: "Pong response appears containing pong: true"
+  prerequisite: "WebSocket must be connected"
+
+tips:
+  - "Vite dev server (@hono/vite-dev-server) does NOT support WebSocket upgrade - returns HTTP 500"
+  - "WebSocket only works with Node server entry (node.ts) which has server.on('upgrade') handler"
+  - "WS endpoint: /api/chat/ws - returns 'WebSocket not supported' in dev mode"
+  - "chatWSStore checks status === 'open' before sending RPC, so echo/ping silently skip when disconnected"
+  - "Connect button remains enabled after failed connection, allowing retry"
+  - "Status indicators use data-testid pattern: ws-status-closed, ws-status-open, ws-status-connecting"
+  - "All interactive elements have stable data-testid selectors"

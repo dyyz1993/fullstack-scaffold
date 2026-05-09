@@ -1,0 +1,53 @@
+# Module: todos
+# Reusable operation sequences
+
+create_todo:
+  description: "Create a new todo with title and optional description"
+  steps:
+    - action: fill
+      selector: "[data-testid='todo-title-input']"
+      description: "Fill todo title (required)"
+    - action: fill
+      selector: "[data-testid='todo-description-input']"
+      description: "Fill todo description (optional)"
+    - action: click
+      selector: "[data-testid='add-todo-button']"
+      description: "Click Add Todo button"
+  wait_after_submit: 2000
+  expected_result: "New todo appears in list, inputs cleared"
+
+delete_todo:
+  description: "Delete a specific todo by title"
+  steps:
+    - action: eval
+      selector: "javascript"
+      description: "Find todo by title and click its delete button: document.querySelectorAll('[data-testid=\"todo-item\"]').forEach(i => { if (i.querySelector('[data-testid=\"todo-item-title\"]').textContent === 'TARGET_TITLE') i.querySelector('[data-testid=\"delete-button\"]').click() })"
+  wait_after_submit: 2000
+  expected_result: "Todo removed from list"
+
+change_status:
+  description: "Change a todo's status via dropdown"
+  steps:
+    - action: eval
+      selector: "javascript"
+      description: "Find todo by title, set status select value, dispatch change event"
+  wait_after_submit: 2000
+  expected_result: "Todo status updated"
+
+filter_todos:
+  description: "Filter todos by status"
+  steps:
+    - action: click
+      selector: "[data-testid='filter-all']"  # or filter-pending, filter-in-progress, filter-completed
+      description: "Click the desired filter button"
+  wait_after_submit: 500
+  expected_result: "Only matching todos shown"
+
+tips:
+  - "Auth required: Server needs ENABLE_DEV_TOKENS=true in .env.local for dev tokens to work"
+  - "Login button click triggers auto-login with 'user-token' dev token - page reloads"
+  - "Add Todo button is disabled when title input is empty"
+  - "After creating a todo, both inputs are cleared automatically"
+  - "Delete button uses SVG icon (trash), no text - use data-testid='delete-button'"
+  - "Multiple todo items share the same data-testid selectors - use parent [data-testid='todo-item'] to scope"
+  - "Status change requires dispatching 'change' event after setting value on select"

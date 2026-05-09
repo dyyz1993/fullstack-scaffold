@@ -1,8 +1,8 @@
 # Module: isr
-# Site: https://demo-app.dyyz1993.workers.dev
-# Version: 1
+# Site: https://demo-app.dyyz1993.workers.dev (Cloudflare), http://localhost:5175 (local dev)
+# Version: 2
 # Last updated: 2026-05-09
-# Updated in round: r1
+# Updated in round: r2
 
 isr_routes:
   root:
@@ -75,8 +75,44 @@ non_isr_routes:
       url: "/vite.svg"
       content_type: "text/html"  # NOTE: Returns text/html, not image/svg+xml
 
+local_dev_behavior:
+  server: "Vite dev server (port 5175)"
+  ssr_enabled: false
+  notes:
+    - "Local dev server returns SPA shell HTML only - no SSR pre-rendering"
+    - "All pages get the same generic <title>Biomimic App</title>"
+    - "All pages get the same generic meta tags"
+    - "React Helmet overrides only work client-side (after hydration)"
+    - "cf-cache-status headers not present (Cloudflare-specific)"
+    - "API routes (/api/*) return JSON correctly - not intercepted"
+  meta_tags_local_dev:
+    title: "Biomimic App"  # generic, same for all pages
+    og_title: "Biomimic App"
+    description: "Biomimic App - A full-stack application template"
+    og_description: "A full-stack application template with React and Hono"
+  meta_tags_cloudflare:
+    title: "<page-specific> - Biomimic App"
+    og_title: "<page-specific> - Biomimic App"
+    description: "<page-specific description>"
+    data_rh: true  # react-helmet adds data-rh="true"
+
+hydration:
+  todo_page:
+    client_title: "Todo List - Biomimic App"  # Set by React Helmet after hydration
+    interactive_elements:
+      - data-testid="todo-title-input"
+      - data-testid="todo-description-input"
+      - data-testid="add-todo-button"
+      - data-testid="filter-all"
+      - data-testid="filter-pending"
+      - data-testid="filter-in-progress"
+      - data-testid="filter-completed"
+      - data-testid="todo-status"
+    auth_required: true  # "Authentication token is required" for create operations
+    type_vs_fill: "Use 'type' command, not 'fill' - React controlled components lose 'fill' value"
+
 cache_headers:
-  cf_cache_status: present on all pages
-  cache_control: "public, max-age=0, must-revalidate"
+  cf_cache_status: present on Cloudflare only
+  cache_control: "public, max-age=0, must-revalidate"  # Cloudflare only
   x_isr_status: NOT PRESENT
   x_isr_headers: NOT PRESENT

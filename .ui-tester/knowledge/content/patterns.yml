@@ -1,0 +1,72 @@
+# Module: content
+# Reusable operation sequences
+
+navigate_to_content_list:
+  description: "Navigate to content list page"
+  steps:
+    - action: open
+      url: "http://localhost:5175/content"
+  wait_after: 2000
+  expected_result: "Content list page loads with category filters and search"
+
+filter_by_category:
+  description: "Filter content by category"
+  steps:
+    - action: snapshot
+      description: "Get fresh refs"
+    - action: click
+      selector: "button" (match by text, e.g. "文章")
+      description: "Click category filter button"
+  wait_after: 1500
+  expected_result: "Active button highlights, content filters"
+  notes:
+    - "Category values: article, announcement, tutorial, news, policy"
+    - "API endpoint: GET /api/public/contents?category={value}"
+
+search_content:
+  description: "Search content by keyword"
+  steps:
+    - action: snapshot
+      description: "Get fresh refs"
+    - action: fill
+      selector: "input[placeholder='搜索内容...']"
+      description: "Fill search input"
+    - action: click
+      selector: "button" (text: "搜索")
+      description: "Click search button"
+  wait_after: 1500
+  expected_result: "Search results displayed"
+  notes:
+    - "Search via form submit (Enter key or button click)"
+    - "API endpoint: GET /api/public/contents?search={query}"
+
+navigate_to_detail:
+  description: "Navigate to content detail page"
+  steps:
+    - action: click
+      selector: "a[href^='/content/']"
+      description: "Click on content card"
+  wait_after: 2000
+  expected_result: "URL changes to /content/{id}, detail page shown"
+  notes:
+    - "Can also directly navigate to /content/{id}"
+
+navigate_back_to_list:
+  description: "Return to content list from detail"
+  steps:
+    - action: snapshot
+      description: "Get fresh refs"
+    - action: click
+      selector: "a" (text: "← 返回内容列表")
+      description: "Click back link"
+  wait_after: 1500
+  expected_result: "URL changes to /content, list page shown"
+
+tips:
+  - "CRITICAL BUG: API returns {items: [...], count: N} but code checks Array.isArray(data) - always shows empty state"
+  - "API endpoint: GET /api/public/contents (no auth required)"
+  - "Data rendering bug means list-based tests will show 0 items despite API returning 7"
+  - "Detail page works correctly when navigating directly via URL"
+  - "Category filter buttons toggle correctly (UI state works even though data doesn't render)"
+  - "Search input and button work correctly (form submission works)"
+  - "Navigation between list and detail pages works correctly"

@@ -1,0 +1,39 @@
+# Module: navigation
+# Reusable operation sequences
+
+navigate_to_page:
+  description: "Click a navigation link and verify page loads"
+  steps:
+    - action: snapshot
+      selector: "-s 'body'"
+      description: "Get fresh refs including nav links"
+    - action: click
+      selector: "[data-testid='nav-{page}-button']"
+      description: "Click the navigation link for target page"
+    - action: wait
+      value: 1000
+      description: "Wait for SPA routing to complete"
+    - action: eval
+      selector: "document.querySelector('[data-testid=\"{page-container}\"]')"
+      description: "Verify target page container exists and is visible"
+  expected_result: "URL changes to /{page}, container element visible"
+
+verify_homepage:
+  description: "Verify homepage loads correctly with all nav elements"
+  steps:
+    - action: eval
+      selector: "document.querySelector('[data-testid=\"app-nav\"]')"
+      description: "Check nav bar exists and visible"
+    - action: eval
+      selector: "document.querySelector('[data-testid=\"app-title\"]')"
+      description: "Check app title exists with text 'Biomimic App'"
+    - action: eval
+      selector: "document.querySelectorAll('[data-testid^=\"nav-\"]')"
+      description: "Check all 4 navigation links present"
+  expected_result: "Nav bar visible, title shows 'Biomimic App', 4 nav links present"
+
+tips:
+  - "Default route / redirects to /todos automatically (SPA routing)"
+  - "Navigation uses client-side routing, pages change without full reload"
+  - "Use snapshot -s 'body' to include nav elements (default main region omits them)"
+  - "All data-testid attributes are stable and reliable across sessions"

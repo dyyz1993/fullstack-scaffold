@@ -1,0 +1,35 @@
+# Module: navigation
+# Site: http://localhost:5175/
+# Version: 1
+# Last updated: 2026-05-09
+# Updated in round: r1
+
+navigation_bar:
+  container: "[data-testid='app-nav']"
+  title: "[data-testid='app-title']"
+  title_text: "Biomimic App"
+
+nav_links:
+  todos_link: "[data-testid='nav-todos-button']"
+  todos_text: "Todo List"
+  todos_href: "/todos"
+
+  content_link: "[data-testid='nav-content-button']"
+  content_text: "Content"
+  content_href: "/content"
+
+  notifications_link: "[data-testid='nav-notifications-button']"
+  notifications_text: "Notifications"
+  notifications_href: "/notifications"
+
+  websocket_link: "[data-testid='nav-websocket-button']"
+  websocket_text: "WebSocket"
+  websocket_href: "/websocket"
+
+page_containers:
+  todo_page: "[data-testid='todo-title-input']"
+  notification_page: "[data-testid='notification-container']"
+  websocket_page: "[data-testid='websocket-container']"
+
+login_button:
+  selector: "text=登录"

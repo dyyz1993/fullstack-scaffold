@@ -1,0 +1,32 @@
+# Module: notifications
+# Site: http://localhost:5175/notifications
+# Version: 1
+# Last updated: 2026-05-09
+# Updated in round: r1
+
+notifications_page:
+  url: "http://localhost:5175/notifications"
+  
+  # SSE controls
+  sse_status_disconnected: "[data-testid='sse-status-disconnected']"
+  sse_status_connected: "[data-testid='sse-status-connected']"
+  connect_sse_button: "[data-testid='connect-sse-button']"
+  disconnect_sse_button: "[data-testid='disconnect-sse-button']"
+  
+  # Unread count
+  unread_count: "[data-testid='unread-count']"
+  mark_all_read_button: "[data-testid='mark-all-read-button']"
+  
+  # Notification form
+  notification_type_select: "[data-testid='notification-type-select']"
+  notification_type_options:
+    info: "Info"
+    warning: "Warning"
+    success: "Success"
+    error: "Error"
+  notification_title_input: "[data-testid='notification-title-input']"
+  notification_message_input: "[data-testid='notification-message-input']"
+  create_notification_button: "[data-testid='create-notification-button']"
+  
+  # Notification items
+  mark_as_read_button: "[data-testid='mark-as-read-button']"

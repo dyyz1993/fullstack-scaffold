@@ -34,7 +34,12 @@ export const ContentListPage: React.FC = () => {
       const result = await res.json()
       if (result.success) {
         const data = result.data
-        setContents(Array.isArray(data) ? data : [])
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray((data as { items?: unknown[] })?.items)
+            ? (data as { items: Content[] }).items
+            : []
+        setContents(items)
       } else {
         setError('Failed to fetch contents')
       }
@@ -122,9 +127,7 @@ export const ContentListPage: React.FC = () => {
           </div>
         )}
 
-        {loading && (
-          <div className="text-center py-12 text-gray-500">加载中...</div>
-        )}
+        {loading && <div className="text-center py-12 text-gray-500">加载中...</div>}
 
         {!loading && !error && contents.length === 0 && (
           <div className="text-center py-12 text-gray-500">暂无内容</div>
@@ -146,12 +149,8 @@ export const ContentListPage: React.FC = () => {
                       </span>
                       <span className="text-sm text-gray-500">{content.author}</span>
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                      {content.title}
-                    </h2>
-                    <p className="text-gray-600 line-clamp-2">
-                      {content.content.slice(0, 150)}...
-                    </p>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">{content.title}</h2>
+                    <p className="text-gray-600 line-clamp-2">{content.content.slice(0, 150)}...</p>
                     <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
                       {content.publishedAt && <span>{formatDate(content.publishedAt)}</span>}
                       <span>👁 {content.viewCount}</span>

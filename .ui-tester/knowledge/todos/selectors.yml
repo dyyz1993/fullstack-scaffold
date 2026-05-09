@@ -1,0 +1,34 @@
+# Module: todos
+# Site: http://localhost:5175/todos
+# Version: 1
+# Last updated: 2026-05-09
+# Updated in round: r1
+
+todos_page:
+  url: "http://localhost:5175/todos"
+  title_input: "[data-testid='todo-title-input']"
+  description_input: "[data-testid='todo-description-input']"
+  add_button: "[data-testid='add-todo-button']"
+  filter_all: "[data-testid='filter-all']"
+  filter_pending: "[data-testid='filter-pending']"
+  filter_in_progress: "[data-testid='filter-in-progress']"
+  filter_completed: "[data-testid='filter-completed']"
+  todo_count: "[data-testid='todo-count']"
+  
+todo_item:
+  container: "[data-testid='todo-item']"
+  title: "[data-testid='todo-item-title']"
+  description: "[data-testid='todo-item-description']"
+  status_select: "[data-testid='todo-status']"
+  delete_button: "[data-testid='delete-button']"
+  toggle_attachments: "[data-testid='toggle-attachments-button']"
+
+navigation:
+  todos_link: "[data-testid='nav-todos-button']"
+  content_link: "[data-testid='nav-content-button']"
+  notifications_link: "[data-testid='nav-notifications-button']"
+  websocket_link: "[data-testid='nav-websocket-button']"
+
+auth:
+  login_button: "button"  # text "登录" when logged out
+  logout_button: "button"  # text "退出" when logged in
