@@ -63,10 +63,12 @@ navigate_back_to_list:
   expected_result: "URL changes to /content, list page shown"
 
 tips:
-  - "BUG FIXED (r2): API returns {items: [...], count: N} - ContentListPage.tsx now correctly handles this format"
+  - "API FORMAT FIX (r3): Public content API now returns success(Content[]) — result.data is a plain Content[] array"
   - "API endpoint: GET /api/public/contents (no auth required)"
   - "7 content items returned by API, all correctly rendered in list view"
   - "Detail page works correctly - shows title, content body, metadata (author, date, views, likes)"
   - "Category filter buttons work correctly - filters content by type (article=2, announcement=2, etc.)"
   - "Search input and button work correctly - returns matching results"
   - "Navigation between list and detail pages works correctly via React Router"
+  - "Search for 系统 returns 1 result: 系统升级公告 — verified working"
+  - "Category badges in breadcrumb area show as text (e.g. '内容中心/news'), not as styled badges"

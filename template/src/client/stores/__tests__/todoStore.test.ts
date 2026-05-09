@@ -127,23 +127,13 @@ describe('Todo Store', () => {
       expect(state.error).toBeNull()
     })
 
-    it('should fetch todos with { items } response format', async () => {
-      const todos = [createMockTodo({ id: 1 })]
-      mockJson.mockResolvedValue({ success: true, data: { items: todos } })
-
-      await useTodoStore.getState().fetchTodos()
-
-      expect(useTodoStore.getState().todos).toEqual(todos)
-      expect(useTodoStore.getState().loading).toBe(false)
-    })
-
-    it('should handle empty items in object response', async () => {
-      mockJson.mockResolvedValue({ success: true, data: {} })
+    it('should handle empty array response', async () => {
+      mockJson.mockResolvedValue({ success: true, data: [] })
 
       await useTodoStore.getState().fetchTodos()
 
       expect(useTodoStore.getState().todos).toEqual([])
-      expect(useTodoStore.getState().error).toBeNull()
+      expect(useTodoStore.getState().loading).toBe(false)
     })
 
     it('should handle failed response', async () => {
@@ -434,13 +424,13 @@ describe('Todo Store', () => {
       expect(useTodoStore.getState().attachments.get(1)).toEqual(attachments)
     })
 
-    it('should fetch attachments with items response format', async () => {
-      const attachments = [createMockAttachment()]
-      mockJson.mockResolvedValue({ success: true, data: { items: attachments } })
+    it('should store data directly even if not an array', async () => {
+      const obj = { items: [createMockAttachment()] }
+      mockJson.mockResolvedValue({ success: true, data: obj })
 
       await useTodoStore.getState().fetchAttachments(1)
 
-      expect(useTodoStore.getState().attachments.get(1)).toEqual(attachments)
+      expect(useTodoStore.getState().attachments.get(1)).toEqual(obj)
     })
 
     it('should handle fetch error gracefully', async () => {
