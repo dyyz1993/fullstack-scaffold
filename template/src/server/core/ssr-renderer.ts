@@ -80,7 +80,9 @@ const STATIC_ROUTES: RouteConfig[] = [
     loader: async params => {
       try {
         // Load content module dynamically (may not exist in all presets)
-        const contentModule = (await import('@server/module-content/services/content-service')) as {
+        // Use require() to avoid TypeScript checking module existence at compile time
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const contentModule = require('@server/module-content/services/content-service') as {
           getContentById: (
             id: string
           ) => Promise<{ id: number; title: string; content?: string } | null>
