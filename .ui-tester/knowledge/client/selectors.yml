@@ -1,0 +1,43 @@
+# client/selectors.yml
+# Module: client (UI pages)
+# Site: https://demo-app.dyyz1993.workers.dev
+# Version: 1
+# Last updated: 2026-05-09
+# Updated in round: r1
+
+todos_page:
+  url: "/todos"
+  title: "Todo List - Biomimic App"
+  title_input: "[data-testid='todo-title-input']"
+  description_input: "[data-testid='todo-description-input']"
+  add_button: "[data-testid='add-todo-button']"
+  auth_warning: "text=Authentication token is required"
+
+websocket_page:
+  url: "/websocket"
+  title: "WebSocket Demo - Biomimic App"
+  connect_button: "[data-testid='connect-ws-button']"
+  disconnect_button: "[data-testid='disconnect-ws-button']"
+  message_type_select: "[data-testid='ws-message-type-select']"
+  message_input: "[data-testid='ws-message-input']"
+  send_button: "[data-testid='send-message-button']"
+  clear_button: "[data-testid='clear-messages-button']"
+
+notifications_page:
+  url: "/notifications"
+  title: "Notifications - Biomimic App"
+  connect_sse_button: "[data-testid='connect-sse-button']"
+  disconnect_sse_button: "[data-testid='disconnect-sse-button']"
+  mark_all_read_button: "[data-testid='mark-all-read-button']"
+  type_select: "[data-testid='notification-type-select']"
+  title_input: "[data-testid='notification-title-input']"
+  message_input: "[data-testid='notification-message-input']"
+  create_button: "[data-testid='create-notification-button']"
+
+content_page:
+  url: "/content"
+  title: "内容 - Biomimic App"
+  filter_all_button: "[data-testid] button:has-text('全部')"
+  filter_article_button: "[data-testid] button:has-text('文章')"
+  search_input: "[data-testid='content-search-input']"
+  search_button: "button:has-text('搜索')"

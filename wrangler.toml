@@ -8,8 +8,8 @@ ENVIRONMENT = "production"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "create-biomimic-app-db"
-database_id = ""  # TODO: Run 'wrangler d1 create create-biomimic-app-db' and paste the ID here
+database_name = "demo-app-db"
+database_id = "c77a8486-8aa0-45c0-a19a-8a0da73408b9"
 
 [[durable_objects.bindings]]
 name = "REALTIME_DO"

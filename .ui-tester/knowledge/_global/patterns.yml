@@ -1,0 +1,22 @@
+# _global/patterns.yml
+# Universal patterns for demo-app.dyyz1993.workers.dev
+
+proxy_required:
+  description: "workers.dev domains are DNS-polluted, requires proxy at 127.0.0.1:7890"
+  curl_flag: "-x http://127.0.0.1:7890"
+  browser_flag: "--proxy http://127.0.0.1:7890"
+
+common_wait:
+  default_ms: 2000
+  slow_page_ms: 3000
+
+api_responses:
+  format: '{"success": true/false, "data": ..., "timestamp": "..."}'
+  auth_required: "POST /api/todos requires authentication token, returns 401"
+
+tips:
+  - "All API responses include timestamp field"
+  - "POST /api/todos requires auth, returns {success: false, error: 'Authentication token is required', status: 401}"
+  - "SPA routing: / redirects to /todos, all routes handled client-side"
+  - "Content page uses Chinese labels (内容中心, 暂无内容, etc.)"
+  - "Navigation uses client-side routing, pages change without full reload"

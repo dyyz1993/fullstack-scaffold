@@ -1,4 +1,4 @@
-name = "biomimic-todo-app"
+name = "demo-app"
 main = "dist/cloudflare/cloudflare.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
@@ -8,8 +8,8 @@ ENVIRONMENT = "production"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "biomimic-todo-db"
-database_id = "48684115-a14b-4a35-9f2b-03cf8fa66eb6"
+database_name = "demo-app-db"
+database_id = "c77a8486-8aa0-45c0-a19a-8a0da73408b9"
 
 [[durable_objects.bindings]]
 name = "REALTIME_DO"

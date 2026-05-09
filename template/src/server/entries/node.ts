@@ -16,6 +16,9 @@ import { getAppConfig } from '../config'
 import { logger } from '../utils/logger'
 import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
+import { createISRCache, isISRRoute } from '@server/core/isr-cache'
+import { renderPage } from '@server/core/ssr-renderer'
+import { setISRCache } from '@server/core/isr-invalidation'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 
@@ -40,6 +43,9 @@ const adminHtml = existsSync(adminHtmlPath)
   : '<html><body>admin.html not found</body></html>'
 
 const log = logger.api()
+
+const isrCache = createISRCache()
+setISRCache(isrCache)
 
 const runtimeAdapter = getNodeRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
@@ -104,12 +110,35 @@ app.get('/admin/*', c => {
   return c.html(adminHtml)
 })
 
-// 其他非 API 路由返回 index.html
-app.get('*', c => {
-  // 如果路径以 /api/ 或 /files/ 开头，让 Hono 继续处理（可能会返回 404）
+// 其他非 API 路由返回 index.html（ISR 路由尝试缓存）
+app.get('*', async c => {
   if (c.req.path.startsWith('/api/') || c.req.path.startsWith('/files/')) {
     return c.notFound()
   }
+
+  const pathname = c.req.path
+
+  if (hasDist && isISRRoute(pathname)) {
+    const result = await isrCache.lookup(pathname)
+
+    if (result.status === 'fresh' && result.html) {
+      return c.html(result.html)
+    }
+
+    if (result.status === 'stale' && result.html) {
+      renderPage(pathname)
+        .then(rendered => {
+          isrCache.store(pathname, rendered.html).catch(() => {})
+        })
+        .catch(() => {})
+      return c.html(result.html)
+    }
+
+    const rendered = await renderPage(pathname)
+    isrCache.store(pathname, rendered.html).catch(() => {})
+    return c.html(rendered.html)
+  }
+
   return c.html(indexHtml)
 })
 
@@ -118,10 +147,14 @@ app.get('*', c => {
 app.onError((err, c) => {
   log.error({ err, path: c.req.path }, 'server error')
   c.res.headers.set('Content-Type', 'application/json')
-  const statusCode = err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+  const statusCode =
+    err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
   const message = err.message || 'Internal server error'
   const responseStatus = statusCode || 500
-  return c.json({ success: false as const, error: message, status: responseStatus }, responseStatus as 500)
+  return c.json(
+    { success: false as const, error: message, status: responseStatus },
+    responseStatus as 500
+  )
 })
 
 export default app

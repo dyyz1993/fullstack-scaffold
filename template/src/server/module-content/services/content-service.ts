@@ -11,6 +11,8 @@ import { contents, type ContentTable } from '@server/db/schema'
 import { toISOString } from '@server/utils/date'
 import { randomDate, randomElement } from '@server/utils/generate'
 import { parseModuleId } from '@server/utils/id-helpers'
+// @framework-import ISR 缓存失效，内容变更时清除页面缓存
+import { purgeContentPages } from '@server/core/isr-invalidation'
 
 export async function seedContentsIfEmpty(): Promise<void> {
   const db = await getDb()
@@ -173,6 +175,7 @@ export async function updateContent(id: string, data: UpdateContentInput): Promi
   const result = await db.update(contents).set(updateData).where(eq(contents.id, numId)).returning()
 
   if (result.length === 0) return null
+  purgeContentPages().catch(() => {})
   return mapContentRow(result[0])
 }
 
@@ -183,6 +186,7 @@ export async function deleteContent(id: string): Promise<{ success: boolean; mes
 
   const result = await db.delete(contents).where(eq(contents.id, numId)).returning()
   if (result.length === 0) return { success: false, message: '内容不存在' }
+  purgeContentPages().catch(() => {})
   return { success: true, message: '内容已删除' }
 }
 
@@ -202,6 +206,7 @@ export async function publishContent(id: string): Promise<Content | null> {
     .where(eq(contents.id, numId))
     .returning()
 
+  purgeContentPages().catch(() => {})
   return mapContentRow(result[0])
 }
 
@@ -220,5 +225,6 @@ export async function archiveContent(id: string): Promise<Content | null> {
     .where(eq(contents.id, numId))
     .returning()
 
+  purgeContentPages().catch(() => {})
   return mapContentRow(result[0])
 }

@@ -1,8 +1,8 @@
 /**
  * @framework-baseline e350401421193896
  * @framework-modify
- * @reason 统一错误响应格式为 JSON，确保所有错误都返回结构化数据；移除冗余的 globalThis 设置
- * @impact 影响 Cloudflare Workers 环境的错误响应格式
+ * @reason 集成 ISR 缓存层，为页面路由提供增量静态再生能力
+ * @impact 影响 Cloudflare Workers 环境的页面响应流程，新增 ISR 缓存查找/存储/失效逻辑
  *
  * Note: In Cloudflare Workers, each request runs in its own isolate,
  * so globalThis is request-scoped and there's no race condition risk.
@@ -15,6 +15,9 @@ import { getDb } from '../db/driver-cloudflare'
 import { RealtimeDurableObject } from '@server/core'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getCloudflareRuntimeAdapter } from '@server/core/runtime-cloudflare'
+import { createISRCache, isISRRoute } from '@server/core/isr-cache'
+import { renderPage } from '@server/core/ssr-renderer'
+import { setISRCache } from '@server/core/isr-invalidation'
 
 export interface CloudflareBindings extends AppBindings {
   DB: D1Database
@@ -25,6 +28,9 @@ const runtimeAdapter = getCloudflareRuntimeAdapter()
 setRuntimeAdapter(runtimeAdapter)
 
 const app = createApp<CloudflareBindings>()
+
+const isrCache = createISRCache()
+setISRCache(isrCache)
 
 const wrappedApp = app
   .use('*', async (c, next) => {
@@ -59,9 +65,53 @@ export default {
     ;(globalThis as unknown as { DB: D1Database }).DB = env.DB
 
     const url = new URL(request.url)
+    const pathname = url.pathname
 
-    if (url.pathname.startsWith('/api/') || url.pathname === '/health') {
+    if (pathname.startsWith('/api/') || pathname === '/health') {
       return wrappedApp.fetch(request, env, ctx)
+    }
+
+    if (env.ASSETS) {
+      if (
+        pathname.startsWith('/assets/') ||
+        pathname.endsWith('.js') ||
+        pathname.endsWith('.css') ||
+        pathname.endsWith('.svg') ||
+        pathname.endsWith('.png') ||
+        pathname.endsWith('.ico') ||
+        pathname === '/vite.svg'
+      ) {
+        const assetResponse = await env.ASSETS.fetch(request)
+        if (assetResponse.status !== 404) {
+          return assetResponse
+        }
+      }
+    }
+
+    if (isISRRoute(pathname)) {
+      const result = await isrCache.lookup(pathname)
+
+      if (result.status === 'fresh' && result.html) {
+        return new Response(result.html, {
+          headers: { 'Content-Type': 'text/html;charset=UTF-8', 'X-ISR-Status': 'fresh' },
+        })
+      }
+
+      if (result.status === 'stale' && result.html) {
+        ctx.waitUntil(regeneratePage(pathname, env))
+        return new Response(result.html, {
+          headers: { 'Content-Type': 'text/html;charset=UTF-8', 'X-ISR-Status': 'stale' },
+        })
+      }
+
+      const rendered = await renderPage(pathname)
+
+      ctx.waitUntil(isrCache.store(pathname, rendered.html))
+
+      return new Response(rendered.html, {
+        status: rendered.status,
+        headers: { ...rendered.headers, 'X-ISR-Status': 'miss' },
+      })
     }
 
     if (env.ASSETS) {
@@ -75,5 +125,15 @@ export default {
   },
 }
 
+async function regeneratePage(pathname: string, _env: CloudflareBindings): Promise<void> {
+  try {
+    const rendered = await renderPage(pathname)
+    await isrCache.store(pathname, rendered.html)
+  } catch (error) {
+    console.error('ISR regeneration failed:', error)
+  }
+}
+
+export { isrCache }
 export { RealtimeDurableObject, getDb }
 export type AppType = typeof wrappedApp
