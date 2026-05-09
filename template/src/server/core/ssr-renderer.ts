@@ -79,8 +79,13 @@ const STATIC_ROUTES: RouteConfig[] = [
     },
     loader: async params => {
       try {
-        const { getContentById } = await import('@server/module-content/services/content-service')
-        const content = await getContentById(params.id)
+        // Load content module dynamically (may not exist in all presets)
+        const contentModule = (await import('@server/module-content/services/content-service')) as {
+          getContentById: (
+            id: string
+          ) => Promise<{ id: number; title: string; content?: string } | null>
+        }
+        const content = await contentModule.getContentById(params.id)
         if (content) {
           return {
             __meta: {

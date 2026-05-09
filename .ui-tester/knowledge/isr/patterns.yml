@@ -1,0 +1,48 @@
+# Module: isr
+# Proven interaction patterns for ISR verification
+
+isr_verification_flow:
+  description: "Verify ISR (Incremental Static Regeneration) is working"
+  steps:
+    - action: curl
+      method: GET
+      path: "/todos/"
+      follow_redirects: true
+      note: "Must use trailing slash, 307 redirect otherwise"
+    - action: check_headers
+      headers: ["cf-cache-status", "cache-control", "x-isr-status"]
+      expected: "cf-cache-status: HIT|MISS, cache-control: public max-age=0"
+    - action: check_body
+      assertions:
+        - "<title>Todo List - Biomimic App</title>"
+        - '<meta property="og:title" content="Todo List - Biomimic App" data-rh="true">'
+        - "data-testid=\"todo-page\""
+    - action: check_hydration
+      note: "React takes over in browser, todo input becomes interactive"
+  expected_result: "SSR HTML with per-page meta tags, Cloudflare edge cache, SPA hydration"
+
+meta_tag_verification:
+  description: "Each page has unique SSR meta tags"
+  pattern: "react-helmet (data-rh=true) overrides base meta tags"
+  pages:
+    todos:
+      title: "Todo List - Biomimic App"
+      og_description: "Manage your todo items with full CRUD operations"
+    content:
+      title: "内容 - Biomimic App"
+      og_description: "浏览最新的文章、公告、教程和新闻"
+    notifications:
+      title: "Notifications - Biomimic App"
+      og_description: "Real-time notifications powered by Server-Sent Events"
+
+tips:
+  - "No X-ISR-Status header found - ISR is implemented via Cloudflare edge cache, not custom headers"
+  - "No window.__SSR_DATA__ found - SSR is static HTML rendering, not data injection"
+  - "No <meta name=generator content=ISR> found - no ISR generator marker"
+  - "Root page (/) returns empty shell HTML with no SSR content in #root"
+  - "Sub-pages (/todos/, /content/, /notifications/) have full SSR pre-rendered HTML"
+  - "Without trailing slash, routes return 307 redirect to trailing-slash version"
+  - "cf-cache-status: MISS on first cold request, then HIT on subsequent requests"
+  - "React Helmet (data-rh=true) adds page-specific meta tags at SSR time"
+  - "SPA hydration confirmed: React takes over, API calls made, interactive elements work"
+  - "Static assets return text/html content-type (potential issue with /vite.svg)"
