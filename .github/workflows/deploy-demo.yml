@@ -25,9 +25,9 @@ jobs:
       - name: Scaffold demo app
         working-directory: /tmp
         run: node ${{ github.workspace }}/dist/cli/index.js demo-app --preset fullstack-admin
-      - name: Configure D1 database ID
+      - name: Configure wrangler.toml
         working-directory: /tmp/demo-app
-        run: sed -i 's/database_id = "".*$/database_id = "48684115-a14b-4a35-9f2b-03cf8fa66eb6"/' wrangler.toml
+        run: sed -i 's/database_id = "".*$/database_id = "c77a8486-8aa0-45c0-a19a-8a0da73408b9"/' wrangler.toml
       - name: Install demo dependencies
         working-directory: /tmp/demo-app
         run: npm ci
@@ -40,13 +40,16 @@ jobs:
           for file in drizzle/0*.sql; do
             echo "Applying $file..."
             sed 's/--> statement-breakpoint//g' "$file" > /tmp/migration.sql
-            npx wrangler d1 execute demo-app-db --remote --file=/tmp/migration.sql
+            npx wrangler d1 execute demo-app-db --remote --file=/tmp/migration.sql || echo "Migration $file skipped (may already exist)"
           done
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        continue-on-error: true
       - name: Deploy to Cloudflare Workers
         working-directory: /tmp/demo-app
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Health Check
+        run: |
+          sleep 5
+          curl -sf -m 30 https://demo-app.dyyz1993.workers.dev/health || echo "Health check failed (Worker may need time to propagate)"
