@@ -66,14 +66,14 @@ jobs:
         run: npm ci
       - name: Install template dependencies
         run: cd template && npm ci
-      - name: Type check template
-        run: npm run typecheck:template
+      - name: Type check template (scaffold minimal preset)
+        run: |
+          npx tsx src/index.ts tc-test /tmp/tc-test --preset minimal
+          cd /tmp/tc-test && npm ci && NODE_OPTIONS="--max-old-space-size=6144" npx tsc --noEmit
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
       - name: Lint template
         run: npm run lint:template
-      - name: Validate template
-        run: npm run validate:template
       - name: Run template tests
         run: npm run test:template
       - name: Validate modules

@@ -10,13 +10,14 @@ const tmpDir = path.join(os.tmpdir(), `e2e-scaffold-${randomUUID()}`)
 const projectName = 'e2e-test-app'
 const projectPath = path.join(tmpDir, projectName)
 
-function run(cmd: string, cwd: string, timeout = 120_000): string {
+function run(cmd: string, cwd: string, timeout = 120_000, env?: Record<string, string>): string {
   return execSync(cmd, {
     cwd,
     encoding: 'utf-8',
     timeout,
     stdio: 'pipe',
     maxBuffer: 50 * 1024 * 1024,
+    env: { ...process.env, ...env },
   })
 }
 
@@ -78,7 +79,7 @@ describe('E2E: Scaffold → Install → Verify', () => {
   })
 
   test('step 3: type-check passes', { timeout: 300_000 }, () => {
-    run('npx tsc --noEmit', projectPath, 300_000)
+    run('npx tsc --noEmit', projectPath, 300_000, { NODE_OPTIONS: '--max-old-space-size=6144' })
   })
 
   test('step 4: unit tests pass', { timeout: 300_000 }, () => {
@@ -103,7 +104,7 @@ describe('E2E: Scaffold → Install → Verify', () => {
   test('step 5: project builds successfully', { timeout: 120_000 }, () => {
     const pkgJson = JSON.parse(fs.readFileSync(path.join(projectPath, 'package.json'), 'utf-8'))
     if (pkgJson.scripts?.build) {
-      run('npm run build', projectPath, 120_000)
+      run('npm run build', projectPath, 120_000, { NODE_OPTIONS: '--max-old-space-size=6144' })
       expect(fs.existsSync(path.join(projectPath, 'dist'))).toBe(true)
     }
   })
