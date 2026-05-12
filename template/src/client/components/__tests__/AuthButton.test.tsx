@@ -1,119 +1,120 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { AuthButton } from '../AuthButton'
 
-const mockSetToken = vi.fn()
-const mockSetAuth = vi.fn()
 const mockLogout = vi.fn()
 
-// Mock zustand
+const unauthenticatedState = {
+  isAuthenticated: false,
+  token: null,
+  user: null,
+  loading: false,
+  error: null,
+  login: vi.fn(),
+  register: vi.fn(),
+  setToken: vi.fn(),
+  setAuth: vi.fn(),
+  logout: mockLogout,
+  clearError: vi.fn(),
+}
+
+const authenticatedState = {
+  isAuthenticated: true,
+  token: 'user-token',
+  user: { id: '1', username: 'testuser', role: 'user' },
+  loading: false,
+  error: null,
+  login: vi.fn(),
+  register: vi.fn(),
+  setToken: vi.fn(),
+  setAuth: vi.fn(),
+  logout: mockLogout,
+  clearError: vi.fn(),
+}
+
 vi.mock('@client/stores/authStore', () => ({
-  useAuthStore: vi.fn(selector => {
-    const state = {
-      isAuthenticated: false,
-      token: null,
-      user: null,
-      logout: mockLogout,
-      setToken: mockSetToken,
-      setAuth: mockSetAuth,
-    }
-    if (selector) {
-      return selector(state)
-    }
-    return state
-  }),
+  useAuthStore: vi.fn(),
 }))
 
 import { useAuthStore } from '@client/stores/authStore'
 
+const mockedUseAuthStore = vi.mocked(useAuthStore)
+
 describe('AuthButton', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock window.location.reload
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: { reload: vi.fn() },
-    })
   })
 
-  it('should show login button when not authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation(selector => {
+  it('should show sign in and sign up links when not authenticated', () => {
+    mockedUseAuthStore.mockImplementation(selector => {
       const state = {
-        isAuthenticated: false,
-        token: null,
-        user: null,
-        logout: mockLogout,
-        setToken: mockSetToken,
-        setAuth: mockSetAuth,
+        ...unauthenticatedState,
+        login: vi.fn(),
+        register: vi.fn(),
+        setToken: vi.fn(),
+        setAuth: vi.fn(),
+        clearError: vi.fn(),
       }
       return selector ? selector(state) : state
     })
 
-    render(<AuthButton />)
+    render(
+      <MemoryRouter>
+        <AuthButton />
+      </MemoryRouter>
+    )
 
-    expect(screen.getByText('登录')).toBeInTheDocument()
-    expect(screen.queryByText('退出')).not.toBeInTheDocument()
+    expect(screen.getByTestId('auth-login')).toBeInTheDocument()
+    expect(screen.getByTestId('auth-register')).toBeInTheDocument()
+    expect(screen.queryByTestId('auth-logout')).not.toBeInTheDocument()
   })
 
-  it('should show logout button when authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation(selector => {
+  it('should show username and sign out button when authenticated', () => {
+    mockedUseAuthStore.mockImplementation(selector => {
       const state = {
-        isAuthenticated: true,
-        token: 'user-token',
-        user: { id: '1', username: 'admin', role: 'admin' },
-        logout: mockLogout,
-        setToken: mockSetToken,
-        setAuth: mockSetAuth,
+        ...authenticatedState,
+        login: vi.fn(),
+        register: vi.fn(),
+        setToken: vi.fn(),
+        setAuth: vi.fn(),
+        clearError: vi.fn(),
       }
       return selector ? selector(state) : state
     })
 
-    render(<AuthButton />)
+    render(
+      <MemoryRouter>
+        <AuthButton />
+      </MemoryRouter>
+    )
 
-    expect(screen.getByText('已登录')).toBeInTheDocument()
-    expect(screen.getByText('退出')).toBeInTheDocument()
-    expect(screen.queryByText('登录')).not.toBeInTheDocument()
+    expect(screen.getByTestId('auth-username')).toHaveTextContent('testuser')
+    expect(screen.getByTestId('auth-logout')).toBeInTheDocument()
+    expect(screen.queryByTestId('auth-login')).not.toBeInTheDocument()
   })
 
-  it('should call setToken and reload on login', () => {
-    vi.mocked(useAuthStore).mockImplementation(selector => {
+  it('should call logout on sign out click', () => {
+    mockedUseAuthStore.mockImplementation(selector => {
       const state = {
-        isAuthenticated: false,
-        token: null,
-        user: null,
-        logout: mockLogout,
-        setToken: mockSetToken,
-        setAuth: mockSetAuth,
+        ...authenticatedState,
+        login: vi.fn(),
+        register: vi.fn(),
+        setToken: vi.fn(),
+        setAuth: vi.fn(),
+        clearError: vi.fn(),
       }
       return selector ? selector(state) : state
     })
 
-    render(<AuthButton />)
+    render(
+      <MemoryRouter>
+        <AuthButton />
+      </MemoryRouter>
+    )
 
-    fireEvent.click(screen.getByText('登录'))
-
-    expect(mockSetToken).toHaveBeenCalledWith('user-token')
-    expect(window.location.reload).toHaveBeenCalled()
-  })
-
-  it('should call logout and reload on logout', () => {
-    vi.mocked(useAuthStore).mockImplementation(selector => {
-      const state = {
-        isAuthenticated: true,
-        token: 'user-token',
-        user: { id: '1', username: 'admin', role: 'admin' },
-        logout: mockLogout,
-        setToken: mockSetToken,
-        setAuth: mockSetAuth,
-      }
-      return selector ? selector(state) : state
-    })
-
-    render(<AuthButton />)
-
-    fireEvent.click(screen.getByText('退出'))
+    fireEvent.click(screen.getByTestId('auth-logout'))
 
     expect(mockLogout).toHaveBeenCalled()
-    expect(window.location.reload).toHaveBeenCalled()
   })
 })

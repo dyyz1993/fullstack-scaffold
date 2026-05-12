@@ -1,41 +1,48 @@
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 
 export function AuthButton() {
-  const { isAuthenticated, logout, setToken } = useAuthStore()
-
-  const handleLogin = () => {
-    // For development, use a test token
-    // In production, this should call an actual login API
-    const testToken = 'user-token'
-    setToken(testToken)
-    window.location.reload()
-  }
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
+  const logout = useAuthStore(state => state.logout)
 
   const handleLogout = () => {
     logout()
-    window.location.reload()
   }
 
   if (isAuthenticated) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">已登录</span>
+        <span className="text-sm text-gray-600" data-testid="auth-username">
+          {user?.username}
+        </span>
         <button
           onClick={handleLogout}
+          data-testid="auth-logout"
           className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
         >
-          退出
+          Sign Out
         </button>
       </div>
     )
   }
 
   return (
-    <button
-      onClick={handleLogin}
-      className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-    >
-      登录
-    </button>
+    <div className="flex items-center gap-2">
+      <Link
+        to="/login"
+        data-testid="auth-login"
+        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Sign In
+      </Link>
+      <Link
+        to="/register"
+        data-testid="auth-register"
+        className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+      >
+        Sign Up
+      </Link>
+    </div>
   )
 }

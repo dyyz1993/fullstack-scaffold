@@ -8,15 +8,16 @@ const adminManifest: ModuleManifest = {
   dependsOn: ['permission', 'notifications'],
 
   routes: {
+    client: {
+      importPath: './routes/client-auth-routes',
+      exportName: 'clientAuthRoutes',
+    },
     admin: [
       {
         importPath: './routes/admin-routes',
         exportName: 'adminRoutes',
       },
     ],
-    // Note: admin-routes.ts is an aggregator that composes sub-routes:
-    // auth-routes (login/register/me), user-management-routes, admin-notification-routes,
-    // media-routes (avatar/svg), export-routes (CSV), system-routes (stats/health/activity)
   },
 
   sharedSchemas: {

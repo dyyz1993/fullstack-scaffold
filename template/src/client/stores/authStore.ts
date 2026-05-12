@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { apiClient } from '@client/services/apiClient'
 
 interface UserProfile {
   id: string
@@ -11,10 +12,15 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   user: UserProfile | null
+  loading: boolean
+  error: string | null
 
+  login: (username: string, password: string) => Promise<void>
+  register: (username: string, email: string, password: string) => Promise<void>
   setAuth: (token: string, user: UserProfile) => void
   setToken: (token: string) => void
   logout: () => void
+  clearError: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -23,6 +29,49 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       user: null,
+      loading: false,
+      error: null,
+
+      login: async (username: string, password: string) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await apiClient.api.auth.login.$post({
+            json: { username, password },
+          })
+          const result = await response.json()
+          if (result.success) {
+            const { token, user } = result.data
+            set({
+              token,
+              isAuthenticated: true,
+              user: { id: user.id, username: user.username, role: user.role },
+              loading: false,
+              error: null,
+            })
+          } else {
+            set({ loading: false, error: result.error })
+          }
+        } catch {
+          set({ loading: false, error: 'Login failed. Please try again.' })
+        }
+      },
+
+      register: async (username: string, email: string, password: string) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await apiClient.api.auth.register.$post({
+            json: { username, email, password },
+          })
+          const result = await response.json()
+          if (result.success) {
+            set({ loading: false, error: null })
+          } else {
+            set({ loading: false, error: result.error })
+          }
+        } catch {
+          set({ loading: false, error: 'Registration failed. Please try again.' })
+        }
+      },
 
       setAuth: (token: string, user: UserProfile) =>
         set({
@@ -31,8 +80,6 @@ export const useAuthStore = create<AuthState>()(
           user,
         }),
 
-      // Note: setToken does NOT set user. Caller must also call setAuth or setUser
-      // to complete the authentication state.
       setToken: (token: string) =>
         set({
           token,
@@ -44,7 +91,10 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false,
           user: null,
+          error: null,
         }),
+
+      clearError: () => set({ error: null }),
     }),
     {
       name: 'auth-token',

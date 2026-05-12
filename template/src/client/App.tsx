@@ -5,6 +5,8 @@ import { NotificationPage } from './pages/NotificationPage'
 import { WebSocketPage } from './pages/WebSocketPage'
 import { ContentListPage } from './pages/ContentListPage'
 import { ContentDetailPage } from './pages/ContentDetailPage'
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
 
 export const App: React.FC = () => {
   return (
@@ -12,6 +14,8 @@ export const App: React.FC = () => {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to="/todos" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/todos" element={<TodoPage />} />
           <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/websocket" element={<WebSocketPage />} />

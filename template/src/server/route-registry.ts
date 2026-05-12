@@ -7,6 +7,7 @@ import { auditLogRoutes } from './module-permission/routes/audit-log-routes'
 import { notificationRoutes } from './module-notifications/routes/notification-routes'
 import { chatRoutes } from './module-chat/routes/chat-routes'
 import { adminRoutes } from './module-admin/routes/admin-routes'
+import { clientAuthRoutes } from './module-admin/routes/client-auth-routes'
 import { captchaRoutes } from './module-captcha/routes/captcha-routes'
 import { orderRoutes } from './module-order/routes/order-routes'
 import { ticketRoutes } from './module-ticket/routes/ticket-routes'
@@ -21,9 +22,9 @@ const apiRateLimit = rateLimitMiddleware({
   message: 'Too many requests',
 })
 
-// 客户端路由 - 普通用户使用的 API
 export const clientApiRoutes = new OpenAPIHono()
   .use('*', apiRateLimit)
+  .route('/api', clientAuthRoutes)
   .route('/api', chatRoutes)
   .route('/api', notificationRoutes)
   .route('/api', apiRoutes)
