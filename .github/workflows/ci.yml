@@ -134,6 +134,7 @@ jobs:
           name: playwright-report-${{ strategy.job-index }}
           path: |
             template/playwright-report/
+            template/playwright-artifacts/
             template/test-results/
           retention-days: 14
 
@@ -171,6 +172,7 @@ jobs:
           name: playwright-report-cross-browser-${{ strategy.job-index }}
           path: |
             template/playwright-report/
+            template/playwright-artifacts/
             template/test-results/
           retention-days: 14
 

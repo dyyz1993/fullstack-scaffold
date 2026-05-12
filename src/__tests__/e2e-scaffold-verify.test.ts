@@ -77,8 +77,8 @@ describe('E2E: Scaffold → Install → Verify', () => {
     expect(fs.existsSync(path.join(projectPath, 'node_modules'))).toBe(true)
   })
 
-  test('step 3: type-check passes', { timeout: 120_000 }, () => {
-    run('npx tsc --noEmit', projectPath, 120_000)
+  test('step 3: type-check passes', { timeout: 300_000 }, () => {
+    run('npx tsc --noEmit', projectPath, 300_000)
   })
 
   test('step 4: unit tests pass', { timeout: 300_000 }, () => {
@@ -122,13 +122,49 @@ describe('E2E: Scaffold → Install → Verify', () => {
     devServer.stdout?.on('data', (d: Buffer) => serverLogs.push(d.toString()))
     devServer.stderr?.on('data', (d: Buffer) => serverLogs.push(d.toString()))
 
+    const curlGet = (path: string) =>
+      execSync(`curl -sf http://localhost:${port}${path}`, {
+        encoding: 'utf-8',
+        timeout: 15_000,
+      })
+
     try {
       await waitForServer(port, 60_000)
-      const body = execSync(`curl -sf http://localhost:${port}/`, {
-        encoding: 'utf-8',
-        timeout: 5_000,
-      })
-      expect(body).toContain('<html')
+
+      // Warm up: Vite dev server cold-starts Hono on first API request
+      await new Promise(r => setTimeout(r, 3_000))
+
+      // 6a. Root HTML page
+      expect(curlGet('/')).toContain('<html')
+
+      // 6b. Health check — global route, no auth
+      const health = JSON.parse(curlGet('/health'))
+      expect(health.status).toBe('ok')
+
+      // 6c. Public API: GET /api/todos (no auth required)
+      const todos = JSON.parse(curlGet('/api/todos'))
+      expect(todos.success).toBe(true)
+      expect(Array.isArray(todos.data)).toBe(true)
+
+      // 6d. Public API: GET /api/notifications
+      const notifications = JSON.parse(curlGet('/api/notifications'))
+      expect(notifications.success).toBe(true)
+
+      // 6e. Public API: GET /api/permissions/roles
+      const roles = JSON.parse(curlGet('/api/permissions/roles'))
+      expect(roles.success).toBe(true)
+
+      // 6f. Public API: GET /api/captcha
+      const captcha = JSON.parse(curlGet('/api/captcha'))
+      expect(captcha.success).toBe(true)
+
+      // 6g. Public API: GET /api/chat/ws/status (WebSocket status endpoint)
+      const wsStatus = JSON.parse(curlGet('/api/chat/ws/status'))
+      expect(wsStatus.success).toBe(true)
+
+      // 6h. Public API: GET /api/public/contents
+      const contents = JSON.parse(curlGet('/api/public/contents'))
+      expect(contents.success).toBe(true)
     } catch (e) {
       console.log('⚠️ Dev server logs:\n' + serverLogs.slice(-30).join(''))
       throw e

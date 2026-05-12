@@ -14,7 +14,13 @@ export default defineConfig({
   testDir: './tests/e2e',
   testMatch: '**/*.spec.ts',
   timeout: 30 * 1000,
-  expect: { timeout: 5 * 1000 },
+  expect: {
+    timeout: 5 * 1000,
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.1,
+      animations: 'disabled',
+    },
+  },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 3,

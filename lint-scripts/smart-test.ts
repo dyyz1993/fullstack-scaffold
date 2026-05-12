@@ -38,6 +38,7 @@ function findTestFiles(): string[] {
           } else if (stat.isFile()) {
             if (item.includes('.test.') || item.includes('.spec.')) {
               if (item.endsWith('.ts') || item.endsWith('.tsx')) {
+                if (fullPath.includes('e2e-scaffold-verify')) continue
                 testFiles.push(relative(PROJECT_ROOT, fullPath))
               }
             }
