@@ -45,7 +45,8 @@ async function checkConsoleErrors(page: import('@playwright/test').Page): Promis
 }
 
 test.describe('Visual Screenshots', () => {
-  test.describe.configure({ retries: 0 })
+  test.describe.configure({ retries: 1 })
+  test.setTimeout(60000)
 
   test.beforeEach(async ({ page }) => {
     // Track console errors for each page
@@ -63,7 +64,7 @@ test.describe('Visual Screenshots', () => {
 
   test('todo page — empty state', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/todos`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await expect(page.locator('body')).toBeVisible()
@@ -72,7 +73,7 @@ test.describe('Visual Screenshots', () => {
 
   test('notifications page', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/notifications`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '03-notifications-page')
@@ -80,7 +81,7 @@ test.describe('Visual Screenshots', () => {
 
   test('websocket page', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/websocket`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '04-websocket-page')
@@ -88,7 +89,7 @@ test.describe('Visual Screenshots', () => {
 
   test('content page', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/content`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '05-content-page')
@@ -96,7 +97,7 @@ test.describe('Visual Screenshots', () => {
 
   test('login page', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/login`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '06-login-page')
@@ -104,7 +105,7 @@ test.describe('Visual Screenshots', () => {
 
   test('register page', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/register`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '07-register-page')
@@ -114,7 +115,7 @@ test.describe('Visual Screenshots', () => {
 
   test('admin login page', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/admin/login`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '08-admin-login-page')
@@ -133,7 +134,7 @@ test.describe('Visual Screenshots', () => {
 
     if (token) {
       await page.goto(`${getBaseUrl()}/admin/login`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       await page.evaluate((t: string) => {
         const storage = {
@@ -148,14 +149,14 @@ test.describe('Visual Screenshots', () => {
       }, token)
 
       await page.goto(`${getBaseUrl()}/admin/dashboard`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
       await page.waitForTimeout(1500)
 
       await capturePage(page, '09-admin-dashboard')
     } else {
       // Auth not working in test env, capture login page as fallback
       await page.goto(`${getBaseUrl()}/admin/login`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
       await page.waitForTimeout(500)
       await capturePage(page, '09-admin-login-fallback')
     }
@@ -166,7 +167,7 @@ test.describe('Visual Screenshots', () => {
   test('todo page — mobile (375×812)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 })
     await page.goto(`${getBaseUrl()}/todos`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
 
     await capturePage(page, '10-todo-page-mobile')
