@@ -13,11 +13,12 @@ export function registerNotificationCommands(site: SiteInstance) {
         limit: z.coerce.number().default(20).describe('Limit results'),
       })
     ),
-    handler: async (params: { 'unread-only': boolean; limit: number }) => {
+    handler: async (params: unknown) => {
+      const p = params as { 'unread-only': boolean; limit: number }
       try {
         const client = getClient()
         const res = await client.api.notifications.$get({
-          query: { unreadOnly: String(params['unread-only']), limit: String(params.limit) },
+          query: { unreadOnly: String(p['unread-only']), limit: String(p.limit) },
         })
         const data = await res.json()
         return ok(data)
@@ -36,14 +37,15 @@ export function registerNotificationCommands(site: SiteInstance) {
         type: z.enum(['info', 'warning', 'success', 'error']).default('info').describe('Type'),
       })
     ),
-    handler: async (params: {
-      title: string
-      message: string
-      type: 'info' | 'warning' | 'success' | 'error'
-    }) => {
+    handler: async (params: unknown) => {
+      const p = params as {
+        title: string
+        message: string
+        type: 'info' | 'warning' | 'success' | 'error'
+      }
       try {
         const client = getClient()
-        const res = await client.api.notifications.$post({ json: params })
+        const res = await client.api.notifications.$post({ json: p })
         const data = await res.json()
         return ok(data, ['Notification created'])
       } catch (err) {
@@ -74,10 +76,11 @@ export function registerNotificationCommands(site: SiteInstance) {
         id: z.string().describe('Notification ID'),
       })
     ),
-    handler: async (params: { id: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
       try {
         const client = getClient()
-        const res = await client.api.notifications[':id'].read.$patch({ param: { id: params.id } })
+        const res = await client.api.notifications[':id'].read.$patch({ param: { id: p.id } })
         const data = await res.json()
         return ok(data, ['Marked as read'])
       } catch (err) {
@@ -93,10 +96,11 @@ export function registerNotificationCommands(site: SiteInstance) {
         id: z.string().describe('Notification ID'),
       })
     ),
-    handler: async (params: { id: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
       try {
         const client = getClient()
-        const res = await client.api.notifications[':id'].$delete({ param: { id: params.id } })
+        const res = await client.api.notifications[':id'].$delete({ param: { id: p.id } })
         const data = await res.json()
         return ok(data, ['Notification deleted'])
       } catch (err) {

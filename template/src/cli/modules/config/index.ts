@@ -47,11 +47,12 @@ export function registerConfigCommands(site: SiteInstance) {
         key: z.string().optional().describe('Get specific config key'),
       })
     ),
-    handler: async (params: { key?: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { key?: string }
       const cfg = loadConfig()
-      if (params.key) {
-        const value = cfg[params.key]
-        return ok({ [params.key]: value ?? 'not set' })
+      if (p.key) {
+        const value = cfg[p.key]
+        return ok({ [p.key]: value ?? 'not set' })
       }
       return ok(cfg)
     },
@@ -64,11 +65,12 @@ export function registerConfigCommands(site: SiteInstance) {
         url: z.string().optional().describe('Set server URL'),
       })
     ),
-    handler: async (params: { url?: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { url?: string }
       const cfg = loadConfig()
-      if (params.url) {
-        cfg.baseUrl = params.url
-        setBaseUrl(params.url)
+      if (p.url) {
+        cfg.baseUrl = p.url
+        setBaseUrl(p.url)
       }
       saveConfig(cfg)
       return ok(cfg, ['Configuration saved'])
@@ -82,13 +84,14 @@ export function registerConfigCommands(site: SiteInstance) {
         url: z.string().optional().describe('New server URL'),
       })
     ),
-    handler: async (params: { url?: string }) => {
-      if (params.url) {
+    handler: async (params: unknown) => {
+      const p = params as { url?: string }
+      if (p.url) {
         const cfg = loadConfig()
-        cfg.baseUrl = params.url
-        setBaseUrl(params.url)
+        cfg.baseUrl = p.url
+        setBaseUrl(p.url)
         saveConfig(cfg)
-        return ok({ url: params.url }, [`Server URL set to: ${params.url}`])
+        return ok({ url: p.url }, [`Server URL set to: ${p.url}`])
       }
       return ok({ url: getBaseUrl() })
     },

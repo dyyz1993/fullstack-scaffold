@@ -31,10 +31,11 @@ export function registerTodoCommands(site: SiteInstance) {
         id: z.string().describe('Todo ID'),
       })
     ),
-    handler: async (params: { id: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
       try {
         const client = getClient()
-        const res = await client.api.todos[':id'].$get({ param: { id: params.id } })
+        const res = await client.api.todos[':id'].$get({ param: { id: p.id } })
         const data = await res.json()
         return ok(data)
       } catch (err) {
@@ -51,10 +52,11 @@ export function registerTodoCommands(site: SiteInstance) {
         description: z.string().optional().describe('Todo description'),
       })
     ),
-    handler: async (params: { title: string; description?: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { title: string; description?: string }
       try {
         const client = getClient()
-        const res = await client.api.todos.$post({ json: params })
+        const res = await client.api.todos.$post({ json: p })
         const data = await res.json()
         return ok(data, ['Todo created'])
       } catch (err) {
@@ -73,14 +75,15 @@ export function registerTodoCommands(site: SiteInstance) {
         status: z.enum(['pending', 'in_progress', 'completed']).optional().describe('New status'),
       })
     ),
-    handler: async (params: {
-      id: string
-      title?: string
-      description?: string
-      status?: 'pending' | 'in_progress' | 'completed'
-    }) => {
+    handler: async (params: unknown) => {
+      const p = params as {
+        id: string
+        title?: string
+        description?: string
+        status?: 'pending' | 'in_progress' | 'completed'
+      }
       try {
-        const { id, ...body } = params
+        const { id, ...body } = p
         const client = getClient()
         const res = await client.api.todos[':id'].$put({
           param: { id },
@@ -101,10 +104,11 @@ export function registerTodoCommands(site: SiteInstance) {
         id: z.string().describe('Todo ID'),
       })
     ),
-    handler: async (params: { id: string }) => {
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
       try {
         const client = getClient()
-        const res = await client.api.todos[':id'].$delete({ param: { id: params.id } })
+        const res = await client.api.todos[':id'].$delete({ param: { id: p.id } })
         const data = await res.json()
         return ok(data, ['Todo deleted'])
       } catch (err) {
