@@ -44,6 +44,17 @@ if (typeof window !== 'undefined') {
   } as unknown as typeof IntersectionObserver
 }
 
+// Polyfill window.getComputedStyle for jsdom environments that don't implement it
+if (typeof window !== 'undefined' && !window.getComputedStyle) {
+  Object.defineProperty(window, 'getComputedStyle', {
+    value: () => ({
+      getPropertyValue: () => '',
+      length: 0,
+    }),
+    writable: true,
+  })
+}
+
 // Suppress JSDOM getComputedStyle warnings during tests
 const originalWarn = console.warn
 console.warn = (...args: unknown[]) => {
