@@ -21,12 +21,6 @@ const mockStore: MockAuthStore = {
 }
 
 vi.mock('@client/stores/authStore', () => ({
-  useAuthStore: vi.fn((selector?: (state: MockAuthStore) => unknown) => {
-    if (selector) {
-      return selector(mockStore)
-    }
-    return mockStore
-  }),
   useAuthStore: Object.assign(
     vi.fn((selector?: (state: MockAuthStore) => unknown) => {
       if (selector) {

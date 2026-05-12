@@ -25,6 +25,54 @@ permission:
 1. **模板层视角** — `template/` 下的代码是「全量模板」，所有模块共存
 2. **生成层视角** — `src/generators/` 负责根据 preset 做减法、生成聚合文件
 
+## 关联项目生态
+
+你不仅需要理解本项目的代码，还需要了解以下关联项目。它们是本模板的真实消费者和底层依赖。
+
+### 生成的项目（消费者）
+
+| 项目                     | 路径                                                           | 说明                                                                                                                 | Preset                         |
+| ------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| **xbrowser-marketplace** | `/Users/xuyingzhou/Project/study-node-ts/xbrowser-marketplace` | xbrowser 浏览器自动化框架的全栈插件市场。开发者可通过 Web UI、REST API 或 CLI 发布、发现、搜索和安装 xbrowser 插件。 | fullstack-admin（11 模块全量） |
+
+**关键意义**：
+
+- 这是模板的**真实产出物**，你的每次模板修改都可能影响它
+- 当评估变更影响时，可以参照它的实际使用方式
+- 新增模块或修改 Generator 后，可以用它做**回归验证**：`cd /Users/xuyingzhou/Project/study-node-ts/xbrowser-marketplace && npm run typecheck && npm run test`
+
+### 底层依赖（能力来源）
+
+| 项目      | 路径                                            | 说明                                                                                                                                    | 关系                         |
+| --------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **mpage** | `/Users/xuyingzhou/Project/study-node-ts/mpage` | 插件化 CLI 框架 + 浏览器自动化引擎（`@dyyz1993/xpage`）。包含 `@dyyz1993/xcli-core`（CLI 框架核心）和 `create-xcli`（CLI 脚手架工具）。 | CLI 底层架构的参考和借鉴来源 |
+
+**关键意义**：
+
+- mpage 的 `xcli-core` 提供了**插件系统、命令注册、会话管理、守护进程**等底层 CLI 能力
+- 当本项目的 CLI（`template/src/cli/`）需要扩展底层能力时，应优先参考 mpage 的实现
+- 遇到 CLI 架构瓶颈时，可以去 mpage 提 issue 或直接借鉴其设计模式
+- 可以 `read` mpage 的源码获取灵感：`/Users/xuyingzhou/Project/study-node-ts/mpage/packages/core/`
+
+### 生态关系图
+
+```
+                    mpage (@dyyz1993/xpage)
+                    [CLI 框架 + 浏览器自动化]
+                    │
+                    ├── @dyyz1993/xcli-core  ← CLI 底层能力（借鉴）
+                    │
+                    └── create-xcli          ← 同类脚手架（参考）
+
+    create-biomimic-app（本项目）
+    [全栈 Web 应用脚手架]
+          │
+          │  fullstack-admin preset 生成
+          ▼
+    xbrowser-marketplace
+    [xbrowser 插件市场]  ← 真实消费者 + 回归验证基准
+```
+
 ## 核心能力矩阵
 
 | 能力           | 描述                                        |
