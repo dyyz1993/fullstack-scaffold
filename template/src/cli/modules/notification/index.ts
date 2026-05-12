@@ -2,17 +2,14 @@ import type { SiteInstance } from '@dyyz1993/xcli-core'
 import { ok, fail } from '@dyyz1993/xcli-core'
 import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
-import { asXcliSchema } from '@cli/utils/xcli-bridge'
 
 export function registerNotificationCommands(site: SiteInstance) {
   site.command('list', {
     description: 'List all notifications',
-    parameters: asXcliSchema(
-      z.object({
-        'unread-only': z.boolean().default(false).describe('Show only unread'),
-        limit: z.coerce.number().default(20).describe('Limit results'),
-      })
-    ),
+    parameters: z.object({
+      'unread-only': z.boolean().default(false).describe('Show only unread'),
+      limit: z.coerce.number().default(20).describe('Limit results'),
+    }),
     handler: async (params: unknown) => {
       const p = params as { 'unread-only': boolean; limit: number }
       try {
@@ -30,13 +27,11 @@ export function registerNotificationCommands(site: SiteInstance) {
 
   site.command('create', {
     description: 'Create a new notification',
-    parameters: asXcliSchema(
-      z.object({
-        title: z.string().min(1).describe('Notification title'),
-        message: z.string().min(1).describe('Notification message'),
-        type: z.enum(['info', 'warning', 'success', 'error']).default('info').describe('Type'),
-      })
-    ),
+    parameters: z.object({
+      title: z.string().min(1).describe('Notification title'),
+      message: z.string().min(1).describe('Notification message'),
+      type: z.enum(['info', 'warning', 'success', 'error']).default('info').describe('Type'),
+    }),
     handler: async (params: unknown) => {
       const p = params as {
         title: string
@@ -56,7 +51,7 @@ export function registerNotificationCommands(site: SiteInstance) {
 
   site.command('unread-count', {
     description: 'Get unread notification count',
-    parameters: asXcliSchema(z.object({})),
+    parameters: z.object({}),
     handler: async () => {
       try {
         const client = getClient()
@@ -71,11 +66,9 @@ export function registerNotificationCommands(site: SiteInstance) {
 
   site.command('mark-read', {
     description: 'Mark a notification as read',
-    parameters: asXcliSchema(
-      z.object({
-        id: z.string().describe('Notification ID'),
-      })
-    ),
+    parameters: z.object({
+      id: z.string().describe('Notification ID'),
+    }),
     handler: async (params: unknown) => {
       const p = params as { id: string }
       try {
@@ -91,11 +84,9 @@ export function registerNotificationCommands(site: SiteInstance) {
 
   site.command('delete', {
     description: 'Delete a notification',
-    parameters: asXcliSchema(
-      z.object({
-        id: z.string().describe('Notification ID'),
-      })
-    ),
+    parameters: z.object({
+      id: z.string().describe('Notification ID'),
+    }),
     handler: async (params: unknown) => {
       const p = params as { id: string }
       try {

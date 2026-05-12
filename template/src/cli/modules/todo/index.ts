@@ -2,16 +2,13 @@ import type { SiteInstance } from '@dyyz1993/xcli-core'
 import { ok, fail } from '@dyyz1993/xcli-core'
 import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
-import { asXcliSchema } from '@cli/utils/xcli-bridge'
 
 export function registerTodoCommands(site: SiteInstance) {
   site.command('list', {
     description: 'List all todos',
-    parameters: asXcliSchema(
-      z.object({
-        limit: z.coerce.number().default(20).describe('Limit results'),
-      })
-    ),
+    parameters: z.object({
+      limit: z.coerce.number().default(20).describe('Limit results'),
+    }),
     handler: async () => {
       try {
         const client = getClient()
@@ -26,11 +23,9 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('get', {
     description: 'Get a todo by ID',
-    parameters: asXcliSchema(
-      z.object({
-        id: z.string().describe('Todo ID'),
-      })
-    ),
+    parameters: z.object({
+      id: z.string().describe('Todo ID'),
+    }),
     handler: async (params: unknown) => {
       const p = params as { id: string }
       try {
@@ -46,12 +41,10 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('create', {
     description: 'Create a new todo',
-    parameters: asXcliSchema(
-      z.object({
-        title: z.string().min(1).describe('Todo title'),
-        description: z.string().optional().describe('Todo description'),
-      })
-    ),
+    parameters: z.object({
+      title: z.string().min(1).describe('Todo title'),
+      description: z.string().optional().describe('Todo description'),
+    }),
     handler: async (params: unknown) => {
       const p = params as { title: string; description?: string }
       try {
@@ -67,14 +60,12 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('update', {
     description: 'Update a todo',
-    parameters: asXcliSchema(
-      z.object({
-        id: z.string().describe('Todo ID'),
-        title: z.string().optional().describe('New title'),
-        description: z.string().optional().describe('New description'),
-        status: z.enum(['pending', 'in_progress', 'completed']).optional().describe('New status'),
-      })
-    ),
+    parameters: z.object({
+      id: z.string().describe('Todo ID'),
+      title: z.string().optional().describe('New title'),
+      description: z.string().optional().describe('New description'),
+      status: z.enum(['pending', 'in_progress', 'completed']).optional().describe('New status'),
+    }),
     handler: async (params: unknown) => {
       const p = params as {
         id: string
@@ -99,11 +90,9 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('delete', {
     description: 'Delete a todo',
-    parameters: asXcliSchema(
-      z.object({
-        id: z.string().describe('Todo ID'),
-      })
-    ),
+    parameters: z.object({
+      id: z.string().describe('Todo ID'),
+    }),
     handler: async (params: unknown) => {
       const p = params as { id: string }
       try {
