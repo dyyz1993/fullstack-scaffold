@@ -90,7 +90,7 @@
     "@commitlint/config-conventional": "^20.4.3",
     "@eslint/js": "^9.39.4",
     "@hono/vite-dev-server": "^0.23.0",
-    "@playwright/test": "^1.50.0",
+    "@playwright/test": "^1.60.0",
     "@prerenderer/renderer-jsdom": "^1.1.9",
     "@prerenderer/renderer-puppeteer": "^1.2.4",
     "@prerenderer/rollup-plugin": "^0.3.12",
