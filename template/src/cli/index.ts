@@ -1,22 +1,20 @@
-import { program } from 'commander'
-import { registerModules } from './modules'
-import { setBaseUrl } from './utils/api'
-import { createLogger } from './utils/logger'
+import { Core, type CoreConfig } from '@dyyz1993/xcli-core'
+import { registerBuiltinCommands } from './modules'
 
-program
-  .name('biomimic')
-  .description('Biomimic CLI - RPC service & code generation tools')
-  .version('0.1.0')
-  .option('-v, --verbose', 'Enable verbose output')
-  .option('-u, --url <url>', 'Server URL', 'http://localhost:3010')
-  .hook('preAction', thisCommand => {
-    const options = thisCommand.opts()
-    createLogger({ verbose: options.verbose })
-    if (options.url) {
-      setBaseUrl(options.url)
-    }
-  })
+const coreConfig: CoreConfig = {
+  name: 'biomimic',
+  version: '0.1.0',
+  description: 'Biomimic CLI - RPC service & code generation tools',
+  configDirName: '.biomimic',
+  envPrefix: 'BIOMIMIC',
+  pluginDirs: [],
+}
 
-registerModules(program)
+const app = new Core(coreConfig)
 
-program.parse()
+// Register builtin commands (todo/notification/config modules)
+registerBuiltinCommands(app)
+
+// Execute CLI
+const exitCode = await app.run(process.argv.slice(2))
+process.exit(exitCode)

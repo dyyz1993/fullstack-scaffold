@@ -1,60 +1,115 @@
-import { Command } from 'commander'
-import { registerAutoCommand, type RouteConfig } from '@cli/utils/auto-command'
-import { z } from '@hono/zod-openapi'
+import type { SiteInstance } from '@dyyz1993/xcli-core'
+import { ok, fail } from '@dyyz1993/xcli-core'
+import { z } from 'zod'
+import { getClient } from '@cli/utils/api'
+import { asXcliSchema } from '@cli/utils/xcli-bridge'
 
-const TodoStatusSchema = z.enum(['pending', 'in_progress', 'completed'])
-
-const todoRoutes: RouteConfig[] = [
-  {
-    method: 'get',
-    path: '/todos',
-    command: 'list',
+export function registerTodoCommands(site: SiteInstance) {
+  site.command('list', {
     description: 'List all todos',
-  },
-  {
-    method: 'get',
-    path: '/todos/{id}',
-    command: 'get',
+    parameters: asXcliSchema(
+      z.object({
+        limit: z.coerce.number().default(20).describe('Limit results'),
+      })
+    ),
+    handler: async () => {
+      try {
+        const client = getClient()
+        const res = await client.api.todos.$get()
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to list todos')
+      }
+    },
+  })
+
+  site.command('get', {
     description: 'Get a todo by ID',
-    params: z.object({ id: z.string() }),
-  },
-  {
-    method: 'post',
-    path: '/todos',
-    command: 'create',
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Todo ID'),
+      })
+    ),
+    handler: async (params: { id: string }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.todos[':id'].$get({ param: { id: params.id } })
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to get todo')
+      }
+    },
+  })
+
+  site.command('create', {
     description: 'Create a new todo',
-    body: z.object({
-      title: z.string().min(1),
-      description: z.string().optional(),
-    }),
-  },
-  {
-    method: 'put',
-    path: '/todos/{id}',
-    command: 'update',
+    parameters: asXcliSchema(
+      z.object({
+        title: z.string().min(1).describe('Todo title'),
+        description: z.string().optional().describe('Todo description'),
+      })
+    ),
+    handler: async (params: { title: string; description?: string }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.todos.$post({ json: params })
+        const data = await res.json()
+        return ok(data, ['Todo created'])
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to create todo')
+      }
+    },
+  })
+
+  site.command('update', {
     description: 'Update a todo',
-    params: z.object({ id: z.string() }),
-    body: z.object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      status: TodoStatusSchema.optional(),
-    }),
-  },
-  {
-    method: 'delete',
-    path: '/todos/{id}',
-    command: 'delete',
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Todo ID'),
+        title: z.string().optional().describe('New title'),
+        description: z.string().optional().describe('New description'),
+        status: z.enum(['pending', 'in_progress', 'completed']).optional().describe('New status'),
+      })
+    ),
+    handler: async (params: {
+      id: string
+      title?: string
+      description?: string
+      status?: 'pending' | 'in_progress' | 'completed'
+    }) => {
+      try {
+        const { id, ...body } = params
+        const client = getClient()
+        const res = await client.api.todos[':id'].$put({
+          param: { id },
+          json: body,
+        })
+        const data = await res.json()
+        return ok(data, ['Todo updated'])
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to update todo')
+      }
+    },
+  })
+
+  site.command('delete', {
     description: 'Delete a todo',
-    params: z.object({ id: z.string() }),
-  },
-]
-
-export function registerTodoCommands(program: Command) {
-  const todo = program.command('todo').description('Todo management commands')
-
-  for (const route of todoRoutes) {
-    registerAutoCommand(todo, route)
-  }
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Todo ID'),
+      })
+    ),
+    handler: async (params: { id: string }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.todos[':id'].$delete({ param: { id: params.id } })
+        const data = await res.json()
+        return ok(data, ['Todo deleted'])
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to delete todo')
+      }
+    },
+  })
 }
-
-export { todoRoutes }

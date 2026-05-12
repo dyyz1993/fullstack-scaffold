@@ -1,38 +1,47 @@
-import type { ResolvedPreset } from "./template-generator";
+import type { ResolvedPreset } from './template-generator'
 
 export function generateCliModulesIndex(resolved: ResolvedPreset): string {
-  const modules: string[] = [];
-  const registrations: string[] = [];
+  const modules: string[] = []
+  const registrations: string[] = []
 
-  if (resolved.modules.has("todos")) {
-    modules.push("import { registerTodoCommands } from './todo'");
-    registrations.push("registerTodoCommands(program)");
+  if (resolved.modules.has('todos')) {
+    modules.push("import { registerTodoCommands } from './todo'")
+    registrations.push('registerTodoCommands(site)')
   }
 
-  if (resolved.modules.has("notifications")) {
-    modules.push(
-      "import { registerNotificationCommands } from './notification'",
-    );
-    registrations.push("registerNotificationCommands(program)");
+  if (resolved.modules.has('notifications')) {
+    modules.push("import { registerNotificationCommands } from './notification'")
+    registrations.push('registerNotificationCommands(site)')
   }
 
-  modules.push("import { registerConfigCommands } from './config'");
-  registrations.push("registerConfigCommands(program)");
+  modules.push("import { registerConfigCommands } from './config'")
+  registrations.push('registerConfigCommands(site)')
 
-  const imports = `import type { Command } from 'commander'\n${modules.join("\n")}`;
   const exports = modules
-    .map((m) => {
-      const match = m.match(/\{ (\w+) \}/);
-      return match ? match[1] : "";
+    .map(m => {
+      const match = m.match(/\{ (\w+) \}/)
+      return match ? match[1] : ''
     })
-    .filter(Boolean);
+    .filter(Boolean)
 
-  return `${imports}
+  return `import type { Core } from '@dyyz1993/xcli-core'
+${modules.join('\n')}
 
-export function registerModules(program: Command) {
-${registrations.map((r) => `  ${r}`).join("\n")}
+/**
+ * Register all builtin CLI commands to xcli-core.
+ * Each register function receives a SiteInstance for command registration.
+ */
+export function registerBuiltinCommands(app: Core) {
+  const api = app.loader.getAPI()
+
+  const site = api.createSite({
+    name: 'local-server',
+    url: 'http://localhost:3010',
+  })
+
+${registrations.map(r => `  ${r}`).join('\n')}
 }
 
-export { ${exports.join(", ")} }
-`;
+export { ${exports.join(', ')} }
+`
 }

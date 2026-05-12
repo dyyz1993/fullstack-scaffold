@@ -1,86 +1,107 @@
-import { Command } from 'commander'
+import type { SiteInstance } from '@dyyz1993/xcli-core'
+import { ok, fail } from '@dyyz1993/xcli-core'
+import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
-import { getLogger } from '@cli/utils/logger'
+import { asXcliSchema } from '@cli/utils/xcli-bridge'
 
-export function registerNotificationCommands(program: Command) {
-  const notification = program
-    .command('notification')
-    .description('Notification management commands')
-
-  notification
-    .command('list')
-    .description('List all notifications')
-    .option('--unread-only', 'Show only unread notifications')
-    .option('--limit <number>', 'Limit number of results', '20')
-    .action(async (options: { unreadOnly?: boolean; limit?: string }) => {
-      const logger = getLogger()
-      const client = getClient()
-      const unreadOnly = Boolean(options.unreadOnly)
-      const limit = parseInt(options.limit || '20')
-
-      const res = await client.api.notifications.$get({
-        query: { unreadOnly: String(unreadOnly), limit: String(limit) },
+export function registerNotificationCommands(site: SiteInstance) {
+  site.command('list', {
+    description: 'List all notifications',
+    parameters: asXcliSchema(
+      z.object({
+        'unread-only': z.boolean().default(false).describe('Show only unread'),
+        limit: z.coerce.number().default(20).describe('Limit results'),
       })
-      const data = await res.json()
-      logger.info(JSON.stringify(data, null, 2))
-    })
+    ),
+    handler: async (params: { 'unread-only': boolean; limit: number }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.notifications.$get({
+          query: { unreadOnly: String(params['unread-only']), limit: String(params.limit) },
+        })
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to list notifications')
+      }
+    },
+  })
 
-  notification
-    .command('create')
-    .description('Create a new notification')
-    .requiredOption('-t, --title <title>', 'Notification title')
-    .requiredOption('-m, --message <message>', 'Notification message')
-    .option('--type <type>', 'Notification type (info|warning|success|error)', 'info')
-    .action(async (options: { title: string; message: string; type: string }) => {
-      const logger = getLogger()
-      const client = getClient()
-
-      const res = await client.api.notifications.$post({
-        json: {
-          type: options.type as 'info' | 'warning' | 'success' | 'error',
-          title: options.title,
-          message: options.message,
-        },
+  site.command('create', {
+    description: 'Create a new notification',
+    parameters: asXcliSchema(
+      z.object({
+        title: z.string().min(1).describe('Notification title'),
+        message: z.string().min(1).describe('Notification message'),
+        type: z.enum(['info', 'warning', 'success', 'error']).default('info').describe('Type'),
       })
-      const data = await res.json()
-      logger.success('Notification created')
-      logger.info(JSON.stringify(data, null, 2))
-    })
+    ),
+    handler: async (params: {
+      title: string
+      message: string
+      type: 'info' | 'warning' | 'success' | 'error'
+    }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.notifications.$post({ json: params })
+        const data = await res.json()
+        return ok(data, ['Notification created'])
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to create notification')
+      }
+    },
+  })
 
-  notification
-    .command('unread-count')
-    .description('Get unread notification count')
-    .action(async () => {
-      const logger = getLogger()
-      const client = getClient()
-      const res = await client.api.notifications['unread-count'].$get()
-      const data = await res.json()
-      logger.info(JSON.stringify(data, null, 2))
-    })
+  site.command('unread-count', {
+    description: 'Get unread notification count',
+    parameters: asXcliSchema(z.object({})),
+    handler: async () => {
+      try {
+        const client = getClient()
+        const res = await client.api.notifications['unread-count'].$get()
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to get unread count')
+      }
+    },
+  })
 
-  notification
-    .command('mark-read')
-    .description('Mark a notification as read')
-    .argument('<id>', 'Notification ID')
-    .action(async (id: string) => {
-      const logger = getLogger()
-      const client = getClient()
-      const res = await client.api.notifications[':id'].read.$patch({ param: { id } })
-      const data = await res.json()
-      logger.success('Notification marked as read')
-      logger.info(JSON.stringify(data, null, 2))
-    })
+  site.command('mark-read', {
+    description: 'Mark a notification as read',
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Notification ID'),
+      })
+    ),
+    handler: async (params: { id: string }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.notifications[':id'].read.$patch({ param: { id: params.id } })
+        const data = await res.json()
+        return ok(data, ['Marked as read'])
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to mark as read')
+      }
+    },
+  })
 
-  notification
-    .command('delete')
-    .description('Delete a notification')
-    .argument('<id>', 'Notification ID')
-    .action(async (id: string) => {
-      const logger = getLogger()
-      const client = getClient()
-      const res = await client.api.notifications[':id'].$delete({ param: { id } })
-      const data = await res.json()
-      logger.success('Notification deleted')
-      logger.info(JSON.stringify(data, null, 2))
-    })
+  site.command('delete', {
+    description: 'Delete a notification',
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Notification ID'),
+      })
+    ),
+    handler: async (params: { id: string }) => {
+      try {
+        const client = getClient()
+        const res = await client.api.notifications[':id'].$delete({ param: { id: params.id } })
+        const data = await res.json()
+        return ok(data, ['Notification deleted'])
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to delete notification')
+      }
+    },
+  })
 }

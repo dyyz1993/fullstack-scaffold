@@ -1,9 +1,11 @@
-import { Command } from 'commander'
+import type { SiteInstance } from '@dyyz1993/xcli-core'
+import { ok, fail } from '@dyyz1993/xcli-core'
+import { z } from 'zod'
 import { getBaseUrl, setBaseUrl, getClient } from '@cli/utils/api'
-import { getLogger } from '@cli/utils/logger'
-import fs from 'fs'
-import path from 'path'
-import os from 'os'
+import { asXcliSchema } from '@cli/utils/xcli-bridge'
+import fs from 'node:fs'
+import path from 'node:path'
+import os from 'node:os'
 
 const CONFIG_DIR = path.join(os.homedir(), '.biomimic')
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json')
@@ -37,96 +39,95 @@ function saveConfig(config: Config) {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
 }
 
-export function registerConfigCommands(program: Command) {
-  const config = program.command('config').description('CLI configuration and service management')
-
-  config
-    .command('get')
-    .description('Show current configuration')
-    .option('-k, --key <key>', 'Get specific config key')
-    .action((options: { key?: string }) => {
-      const logger = getLogger()
+export function registerConfigCommands(site: SiteInstance) {
+  site.command('config-get', {
+    description: 'Show current configuration',
+    parameters: asXcliSchema(
+      z.object({
+        key: z.string().optional().describe('Get specific config key'),
+      })
+    ),
+    handler: async (params: { key?: string }) => {
       const cfg = loadConfig()
-
-      if (options.key) {
-        const value = cfg[options.key]
-        logger.info(`${options.key}: ${value ?? 'not set'}`)
-      } else {
-        logger.info(JSON.stringify(cfg, null, 2))
+      if (params.key) {
+        const value = cfg[params.key]
+        return ok({ [params.key]: value ?? 'not set' })
       }
-    })
+      return ok(cfg)
+    },
+  })
 
-  config
-    .command('set')
-    .description('Set configuration value')
-    .option('-u, --url <url>', 'Set server URL')
-    .action((options: { url?: string }) => {
-      const logger = getLogger()
+  site.command('config-set', {
+    description: 'Set configuration value',
+    parameters: asXcliSchema(
+      z.object({
+        url: z.string().optional().describe('Set server URL'),
+      })
+    ),
+    handler: async (params: { url?: string }) => {
       const cfg = loadConfig()
-
-      if (options.url) {
-        cfg.baseUrl = options.url
-        setBaseUrl(options.url)
-        logger.success(`Server URL set to: ${options.url}`)
+      if (params.url) {
+        cfg.baseUrl = params.url
+        setBaseUrl(params.url)
       }
-
       saveConfig(cfg)
-    })
+      return ok(cfg, ['Configuration saved'])
+    },
+  })
 
-  config
-    .command('url')
-    .description('Show or set server URL')
-    .argument('[url]', 'New server URL')
-    .action((url?: string) => {
-      const logger = getLogger()
-      if (url) {
+  site.command('config-url', {
+    description: 'Show or set server URL',
+    parameters: asXcliSchema(
+      z.object({
+        url: z.string().optional().describe('New server URL'),
+      })
+    ),
+    handler: async (params: { url?: string }) => {
+      if (params.url) {
         const cfg = loadConfig()
-        cfg.baseUrl = url
-        setBaseUrl(url)
+        cfg.baseUrl = params.url
+        setBaseUrl(params.url)
         saveConfig(cfg)
-        logger.success(`Server URL set to: ${url}`)
-      } else {
-        logger.info(`Current server URL: ${getBaseUrl()}`)
+        return ok({ url: params.url }, [`Server URL set to: ${params.url}`])
       }
-    })
+      return ok({ url: getBaseUrl() })
+    },
+  })
 
-  config
-    .command('status')
-    .description('Check server connection status')
-    .action(async () => {
-      const logger = getLogger()
-      const client = getClient()
-
+  site.command('config-status', {
+    description: 'Check server connection status',
+    parameters: asXcliSchema(z.object({})),
+    handler: async () => {
       try {
+        const client = getClient()
         type HealthClient = { health: { $get: () => Promise<Response> } }
         const res = await (client as unknown as HealthClient).health.$get()
         const data = await res.json()
-        logger.success('Server is reachable')
-        logger.info(JSON.stringify(data, null, 2))
+        return ok(data, ['Server is reachable'])
       } catch (error) {
-        logger.error(`Server not reachable: ${getBaseUrl()}`)
-        logger.error(String(error))
+        return fail(`Server not reachable: ${getBaseUrl()} - ${String(error)}`)
       }
-    })
+    },
+  })
 
-  config
-    .command('reset')
-    .description('Reset configuration to defaults')
-    .action(() => {
-      const logger = getLogger()
+  site.command('config-reset', {
+    description: 'Reset configuration to defaults',
+    parameters: asXcliSchema(z.object({})),
+    handler: async () => {
       const defaultConfig: Config = { baseUrl: 'http://localhost:3010' }
       saveConfig(defaultConfig)
       setBaseUrl(defaultConfig.baseUrl)
-      logger.success('Configuration reset to defaults')
-    })
+      return ok(defaultConfig, ['Configuration reset to defaults'])
+    },
+  })
 
-  config
-    .command('path')
-    .description('Show config file path')
-    .action(() => {
-      const logger = getLogger()
-      logger.info(`Config file: ${CONFIG_FILE}`)
-    })
+  site.command('config-path', {
+    description: 'Show config file path',
+    parameters: asXcliSchema(z.object({})),
+    handler: async () => {
+      return ok({ path: CONFIG_FILE })
+    },
+  })
 }
 
 export { loadConfig, saveConfig, CONFIG_FILE }

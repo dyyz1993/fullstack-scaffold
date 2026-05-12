@@ -72,8 +72,6 @@ export function getExcludePatterns(
     excludes.push('admin.html')
     excludes.push('auth-inject.html')
     excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
-    // CLI depends on admin API - exclude when admin is not present
-    excludes.push('src/cli')
     // auth.ts imports from @shared/modules/admin - generate a version without admin deps
     excludes.push('src/server/utils/auth.ts')
   }
@@ -109,8 +107,10 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
 
   if (resolved.modules.has('admin')) {
     files.push('src/admin/App.tsx')
-    files.push('src/cli/modules/index.ts')
   }
+
+  // CLI modules index is always generated (CLI is independent of admin)
+  files.push('src/cli/modules/index.ts')
 
   if (!resolved.hasPermission) {
     files.push('src/server/middleware/auth.ts')

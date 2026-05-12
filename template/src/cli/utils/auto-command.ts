@@ -1,4 +1,7 @@
-import { Command } from 'commander'
+// NOTE: This file is preserved for Phase 2 RPC auto-mapping migration.
+// The registerAutoCommand function will be rewritten to use xcli-core's site.command().
+// The utility functions (extractZodInfo, createCommandFromRoute, etc.) remain usable.
+
 import type { ZodType, ZodObject, ZodOptional } from 'zod'
 import { getClient } from './api'
 import { getLogger } from './logger'
@@ -201,29 +204,8 @@ export function createCommandFromRoute(config: RouteConfig): CliCommandConfig {
   }
 }
 
-export function registerAutoCommand(program: Command, config: RouteConfig) {
-  const cmd = createCommandFromRoute(config)
-
-  const command = program
-    .command(cmd.name)
-    .description(cmd.description)
-    .action(async (firstArg, opts) => {
-      const args = typeof firstArg === 'string' ? [firstArg] : []
-      const options = (typeof firstArg === 'object' ? firstArg : opts) || {}
-      await cmd.action(options, args)
-    })
-
-  cmd.options?.forEach(opt => {
-    if (opt.required) {
-      command.requiredOption(opt.flags, opt.description, opt.defaultValue)
-    } else {
-      command.option(opt.flags, opt.description, opt.defaultValue)
-    }
-  })
-
-  cmd.arguments?.forEach(arg => {
-    command.argument(arg.required ? `<${arg.name}>` : `[${arg.name}]`, arg.description)
-  })
-}
+// NOTE: registerAutoCommand was removed during xcli-core migration (Phase 1).
+// It will be replaced with a xcli-core version in Phase 2 (RPC auto-mapping).
 
 export { type RouteConfig, type CliCommandConfig }
+export { extractZodInfo, schemaToOptions, pathToApiCall }

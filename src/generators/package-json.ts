@@ -12,8 +12,8 @@ const MODULE_PACKAGES: Record<string, string[]> = {
 /** Packages needed by the admin panel UI */
 const ADMIN_PANEL_PACKAGES = ['antd']
 
-/** Packages needed by the CLI app */
-const CLI_PACKAGES = ['commander']
+/** Packages needed by the CLI app (xcli-core based) */
+const CLI_PACKAGES = ['commander'] // legacy, removed from template
 
 /** Packages that are never imported (unused) */
 const UNUSED_PACKAGES = ['lodash-es', 'chalk', 'mysql2']
@@ -47,11 +47,10 @@ export function filterPackageJson(
     }
   }
 
-  // Remove CLI packages if no admin (CLI depends on admin API)
-  if (!resolved.modules.has('admin')) {
-    for (const pkg of CLI_PACKAGES) {
-      packagesToRemove.add(pkg)
-    }
+  // Remove CLI legacy packages (commander was replaced by xcli-core)
+  // commander is no longer in template dependencies, but guard against it
+  for (const pkg of CLI_PACKAGES) {
+    packagesToRemove.add(pkg)
   }
 
   // Filter dependencies
