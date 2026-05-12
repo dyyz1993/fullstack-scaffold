@@ -2,13 +2,16 @@ import type { SiteInstance } from '@dyyz1993/xcli-core'
 import { ok, fail } from '@dyyz1993/xcli-core'
 import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
+import { asXcliSchema } from '@cli/utils/xcli-bridge'
 
 export function registerTodoCommands(site: SiteInstance) {
   site.command('list', {
     description: 'List all todos',
-    parameters: z.object({
-      limit: z.coerce.number().default(20).describe('Limit results'),
-    }),
+    parameters: asXcliSchema(
+      z.object({
+        limit: z.coerce.number().default(20).describe('Limit results'),
+      })
+    ),
     handler: async () => {
       try {
         const client = getClient()
@@ -23,13 +26,16 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('get', {
     description: 'Get a todo by ID',
-    parameters: z.object({
-      id: z.string().describe('Todo ID'),
-    }),
-    handler: async params => {
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Todo ID'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
       try {
         const client = getClient()
-        const res = await client.api.todos[':id'].$get({ param: { id: params.id } })
+        const res = await client.api.todos[':id'].$get({ param: { id: p.id } })
         const data = await res.json()
         return ok(data)
       } catch (err) {
@@ -40,14 +46,17 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('create', {
     description: 'Create a new todo',
-    parameters: z.object({
-      title: z.string().min(1).describe('Todo title'),
-      description: z.string().optional().describe('Todo description'),
-    }),
-    handler: async params => {
+    parameters: asXcliSchema(
+      z.object({
+        title: z.string().min(1).describe('Todo title'),
+        description: z.string().optional().describe('Todo description'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as { title: string; description?: string }
       try {
         const client = getClient()
-        const res = await client.api.todos.$post({ json: params })
+        const res = await client.api.todos.$post({ json: p })
         const data = await res.json()
         return ok(data, ['Todo created'])
       } catch (err) {
@@ -58,15 +67,23 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('update', {
     description: 'Update a todo',
-    parameters: z.object({
-      id: z.string().describe('Todo ID'),
-      title: z.string().optional().describe('New title'),
-      description: z.string().optional().describe('New description'),
-      status: z.enum(['pending', 'in_progress', 'completed']).optional().describe('New status'),
-    }),
-    handler: async params => {
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Todo ID'),
+        title: z.string().optional().describe('New title'),
+        description: z.string().optional().describe('New description'),
+        status: z.enum(['pending', 'in_progress', 'completed']).optional().describe('New status'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as {
+        id: string
+        title?: string
+        description?: string
+        status?: 'pending' | 'in_progress' | 'completed'
+      }
       try {
-        const { id, ...body } = params
+        const { id, ...body } = p
         const client = getClient()
         const res = await client.api.todos[':id'].$put({
           param: { id },
@@ -82,13 +99,16 @@ export function registerTodoCommands(site: SiteInstance) {
 
   site.command('delete', {
     description: 'Delete a todo',
-    parameters: z.object({
-      id: z.string().describe('Todo ID'),
-    }),
-    handler: async params => {
+    parameters: asXcliSchema(
+      z.object({
+        id: z.string().describe('Todo ID'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
       try {
         const client = getClient()
-        const res = await client.api.todos[':id'].$delete({ param: { id: params.id } })
+        const res = await client.api.todos[':id'].$delete({ param: { id: p.id } })
         const data = await res.json()
         return ok(data, ['Todo deleted'])
       } catch (err) {

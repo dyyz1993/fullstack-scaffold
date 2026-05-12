@@ -2,6 +2,7 @@ import type { SiteInstance } from '@dyyz1993/xcli-core'
 import { ok, fail } from '@dyyz1993/xcli-core'
 import { z } from 'zod'
 import { getBaseUrl, setBaseUrl, getClient } from '@cli/utils/api'
+import { asXcliSchema } from '@cli/utils/xcli-bridge'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
@@ -39,59 +40,66 @@ function saveConfig(config: Config) {
 }
 
 export function registerConfigCommands(site: SiteInstance) {
-  const config = site.group('config')
-
-  config.command('get', {
+  site.command('config-get', {
     description: 'Show current configuration',
-    parameters: z.object({
-      key: z.string().optional().describe('Get specific config key'),
-    }),
-    handler: async params => {
+    parameters: asXcliSchema(
+      z.object({
+        key: z.string().optional().describe('Get specific config key'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as { key?: string }
       const cfg = loadConfig()
-      if (params.key) {
-        const value = cfg[params.key]
-        return ok({ [params.key]: value ?? 'not set' })
+      if (p.key) {
+        const value = cfg[p.key]
+        return ok({ [p.key]: value ?? 'not set' })
       }
       return ok(cfg)
     },
   })
 
-  config.command('set', {
+  site.command('config-set', {
     description: 'Set configuration value',
-    parameters: z.object({
-      url: z.string().optional().describe('Set server URL'),
-    }),
-    handler: async params => {
+    parameters: asXcliSchema(
+      z.object({
+        url: z.string().optional().describe('Set server URL'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as { url?: string }
       const cfg = loadConfig()
-      if (params.url) {
-        cfg.baseUrl = params.url
-        setBaseUrl(params.url)
+      if (p.url) {
+        cfg.baseUrl = p.url
+        setBaseUrl(p.url)
       }
       saveConfig(cfg)
       return ok(cfg, ['Configuration saved'])
     },
   })
 
-  config.command('url', {
+  site.command('config-url', {
     description: 'Show or set server URL',
-    parameters: z.object({
-      url: z.string().optional().describe('New server URL'),
-    }),
-    handler: async params => {
-      if (params.url) {
+    parameters: asXcliSchema(
+      z.object({
+        url: z.string().optional().describe('New server URL'),
+      })
+    ),
+    handler: async (params: unknown) => {
+      const p = params as { url?: string }
+      if (p.url) {
         const cfg = loadConfig()
-        cfg.baseUrl = params.url
-        setBaseUrl(params.url)
+        cfg.baseUrl = p.url
+        setBaseUrl(p.url)
         saveConfig(cfg)
-        return ok({ url: params.url }, [`Server URL set to: ${params.url}`])
+        return ok({ url: p.url }, [`Server URL set to: ${p.url}`])
       }
       return ok({ url: getBaseUrl() })
     },
   })
 
-  config.command('status', {
+  site.command('config-status', {
     description: 'Check server connection status',
-    parameters: z.object({}),
+    parameters: asXcliSchema(z.object({})),
     handler: async () => {
       try {
         const client = getClient()
@@ -105,9 +113,9 @@ export function registerConfigCommands(site: SiteInstance) {
     },
   })
 
-  config.command('reset', {
+  site.command('config-reset', {
     description: 'Reset configuration to defaults',
-    parameters: z.object({}),
+    parameters: asXcliSchema(z.object({})),
     handler: async () => {
       const defaultConfig: Config = { baseUrl: 'http://localhost:3010' }
       saveConfig(defaultConfig)
@@ -116,9 +124,9 @@ export function registerConfigCommands(site: SiteInstance) {
     },
   })
 
-  config.command('path', {
+  site.command('config-path', {
     description: 'Show config file path',
-    parameters: z.object({}),
+    parameters: asXcliSchema(z.object({})),
     handler: async () => {
       return ok({ path: CONFIG_FILE })
     },

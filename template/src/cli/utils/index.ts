@@ -1,5 +1,6 @@
 export { createLogger, getLogger, Logger, type LogLevel, type LoggerOptions } from './logger'
 export { setBaseUrl, getBaseUrl, getClient } from './api'
+export { asXcliSchema } from './xcli-bridge'
 export {
   createCommandFromRoute,
   extractZodInfo,
