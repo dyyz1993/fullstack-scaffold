@@ -68,7 +68,7 @@ jobs:
         run: cd template && npm ci
       - name: Type check template (scaffold minimal preset)
         run: |
-          npx tsx src/index.ts tc-test /tmp/tc-test --preset minimal
+          npx tsx src/index.ts tc-test --preset minimal --output-dir /tmp/tc-test
           cd /tmp/tc-test && npm ci && NODE_OPTIONS="--max-old-space-size=6144" npx tsc --noEmit
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
