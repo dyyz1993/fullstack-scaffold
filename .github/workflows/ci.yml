@@ -47,7 +47,7 @@ jobs:
         run: npx vitest run src/__tests__/e2e-scaffold-verify.test.ts --testTimeout=300000
         timeout-minutes: 15
         env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
+          NODE_OPTIONS: "--max-old-space-size=6144"
 
   template-checks:
     name: Template Quality (${{ matrix.os }})
@@ -69,7 +69,7 @@ jobs:
       - name: Type check template
         run: npm run typecheck:template
         env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
+          NODE_OPTIONS: "--max-old-space-size=6144"
       - name: Lint template
         run: npm run lint:template
       - name: Validate template
@@ -232,7 +232,7 @@ jobs:
       - name: Type check scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npx tsc --noEmit
         env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
+          NODE_OPTIONS: "--max-old-space-size=6144"
       - name: Build scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npm run build
 
