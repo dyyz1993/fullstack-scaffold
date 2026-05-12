@@ -1,7 +1,6 @@
 ---
 description: 模板架构师 — 专注于 create-biomimic-app 项目的模块创建、模板开发、底层复用与维护成本优化
 mode: primary
-steps: 30
 temperature: 0.1
 permission:
   '*': allow
