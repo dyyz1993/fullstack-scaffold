@@ -132,14 +132,20 @@ app.get('*', async c => {
     if (result.status === 'stale' && result.html) {
       renderPage(pathname)
         .then(rendered => {
-          isrCache.store(pathname, rendered.html).catch(() => {})
+          isrCache.store(pathname, rendered.html).catch(e => {
+            console.warn('ISR cache store (background revalidation) failed:', e)
+          })
         })
-        .catch(() => {})
+        .catch(e => {
+          console.warn('ISR background render failed:', e)
+        })
       return c.html(result.html)
     }
 
     const rendered = await renderPage(pathname)
-    isrCache.store(pathname, rendered.html).catch(() => {})
+    isrCache.store(pathname, rendered.html).catch(e => {
+      console.warn('ISR cache store failed:', e)
+    })
     return c.html(rendered.html)
   }
 

@@ -16,5 +16,3 @@ const adminBase2 = adminBase1.route('/', adminNotificationRoutes).route('/', med
 const adminBase3 = adminBase2.route('/', exportRoutes).route('/', systemRoutes)
 
 export const adminRoutes = adminBase3
-
-export default adminRoutes

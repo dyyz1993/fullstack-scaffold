@@ -51,8 +51,7 @@ export function createTestClient(baseUrl?: string, options?: TestClientOptions) 
     })
   }
   return hc<AppType>('http://localhost', {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fetch: (input: any, init?: any) => {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       const request = new Request(input, init)
       Object.entries(defaultHeaders).forEach(([key, value]) => {
         if (!request.headers.has(key)) {

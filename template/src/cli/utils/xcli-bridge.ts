@@ -6,6 +6,10 @@
  * This helper bridges the type mismatch at the xcli-core boundary.
  */
 import type { ZodType } from 'zod'
+import type { SiteInstance } from '@dyyz1993/xcli-core'
+
+type XcliCommandConfig = Parameters<SiteInstance['command']>[1]
+type XcliSchema = NonNullable<XcliCommandConfig['parameters']>
 
 /**
  * Cast a zod v4 schema for xcli-core's site.command() parameters field.
@@ -13,7 +17,6 @@ import type { ZodType } from 'zod'
  * structurally different from zod v4's ZodType. However, the runtime
  * .parse() API is identical, so this cast is safe.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function asXcliSchema<T extends ZodType>(schema: T): any {
-  return schema
+export function asXcliSchema<T extends ZodType>(schema: T): XcliSchema {
+  return schema as unknown as XcliSchema
 }

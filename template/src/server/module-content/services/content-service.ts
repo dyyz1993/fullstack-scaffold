@@ -175,7 +175,9 @@ export async function updateContent(id: string, data: UpdateContentInput): Promi
   const result = await db.update(contents).set(updateData).where(eq(contents.id, numId)).returning()
 
   if (result.length === 0) return null
-  purgeContentPages().catch(() => {})
+  purgeContentPages().catch(e => {
+    console.warn('ISR content pages purge failed after update:', e)
+  })
   return mapContentRow(result[0])
 }
 
@@ -186,7 +188,9 @@ export async function deleteContent(id: string): Promise<{ success: boolean; mes
 
   const result = await db.delete(contents).where(eq(contents.id, numId)).returning()
   if (result.length === 0) return { success: false, message: '内容不存在' }
-  purgeContentPages().catch(() => {})
+  purgeContentPages().catch(e => {
+    console.warn('ISR content pages purge failed after delete:', e)
+  })
   return { success: true, message: '内容已删除' }
 }
 
@@ -206,7 +210,9 @@ export async function publishContent(id: string): Promise<Content | null> {
     .where(eq(contents.id, numId))
     .returning()
 
-  purgeContentPages().catch(() => {})
+  purgeContentPages().catch(e => {
+    console.warn('ISR content pages purge failed after publish:', e)
+  })
   return mapContentRow(result[0])
 }
 
@@ -225,6 +231,8 @@ export async function archiveContent(id: string): Promise<Content | null> {
     .where(eq(contents.id, numId))
     .returning()
 
-  purgeContentPages().catch(() => {})
+  purgeContentPages().catch(e => {
+    console.warn('ISR content pages purge failed after archive:', e)
+  })
   return mapContentRow(result[0])
 }
