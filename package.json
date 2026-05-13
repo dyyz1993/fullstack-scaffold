@@ -9,6 +9,9 @@
     "dist/cli",
     "template"
   ],
+  "workspaces": [
+    "template"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -73,7 +76,12 @@
     "dev:guide": "node --import tsx/esm lint-scripts/dev-guide-generator.ts",
     "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts",
     "validate:template": "npm run typecheck:template && npm run lint:template",
-    "test:template": "cd template && npx vitest run"
+    "test:template": "cd template && npx vitest run",
+    "turbo:build": "turbo build",
+    "turbo:test": "turbo test",
+    "turbo:lint": "turbo lint",
+    "turbo:typecheck": "turbo typecheck",
+    "turbo:all": "turbo lint typecheck test build"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.4",
@@ -167,5 +175,6 @@
   },
   "overrides": {
     "esbuild": "^0.25.0"
-  }
+  },
+  "packageManager": "npm@11.6.2"
 }

@@ -70,3 +70,4 @@ my-test-app/
 uploads/**/
 !settings.json.trae
 .codenomad/
+.turbo

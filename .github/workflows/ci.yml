@@ -62,22 +62,20 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-      - name: Install root dependencies
+      - name: Install dependencies
         run: npm ci
-      - name: Install template dependencies
-        run: cd template && npm ci
-      - name: Type check template
-        run: npm run typecheck:template
+      - name: Type check
+        run: npx turbo typecheck --filter=biomimic-todo-app
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
-      - name: Lint template
-        run: npm run lint:template
-      - name: Run template tests
-        run: npm run test:template
+      - name: Lint
+        run: npx turbo lint --filter=biomimic-todo-app
+      - name: Unit tests
+        run: npx turbo test --filter=biomimic-todo-app
       - name: Validate modules
-        run: cd template && npm run validate:modules
-      - name: Run template integration tests
-        run: cd template && npm run test:integration
+        run: npm run validate:modules --workspace=biomimic-todo-app
+      - name: Integration tests
+        run: npm run test:integration --workspace=biomimic-todo-app
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
@@ -96,10 +94,10 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-      - run: npm ci
-      - run: cd template && npm ci
+      - name: Install dependencies
+        run: npm ci
       - name: Build template
-        run: cd template && npm run build
+        run: npx turbo build --filter=biomimic-todo-app
       - name: Verify build output
         run: test -d template/dist && echo "Build succeeded" || (echo "Build failed - no dist directory" && exit 1)
 
@@ -115,9 +113,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install dependencies
-        run: |
-          npm ci
-          cd template && npm ci
+        run: npm ci
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -153,9 +149,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install dependencies
-        run: |
-          npm ci
-          cd template && npm ci
+        run: npm ci
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
