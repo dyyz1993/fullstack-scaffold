@@ -267,6 +267,206 @@ async function seedPlugins(
   }
 }
 
+async function seedOrders(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  adminToken: string
+): Promise<void> {
+  const headers: Record<string, string> = adminToken
+    ? { Authorization: `Bearer ${adminToken}` }
+    : {}
+  const orders = [
+    {
+      customerName: 'Alice Johnson',
+      customerEmail: 'alice@example.com',
+      productName: 'Wireless Headphones',
+      amount: 89.99,
+    },
+    {
+      customerName: 'Bob Smith',
+      customerEmail: 'bob@example.com',
+      productName: 'Mechanical Keyboard',
+      amount: 149.99,
+    },
+    {
+      customerName: 'Carol Williams',
+      customerEmail: 'carol@example.com',
+      productName: 'USB-C Hub',
+      amount: 45.5,
+    },
+    {
+      customerName: 'David Brown',
+      customerEmail: 'david@example.com',
+      productName: '4K Monitor',
+      amount: 399.0,
+    },
+  ]
+  for (const order of orders) {
+    await page.request.post(`${baseUrl}/api/orders`, { data: order, headers }).catch(() => {})
+  }
+}
+
+async function seedTickets(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  _clientToken: string,
+  adminToken: string
+): Promise<void> {
+  const headers: Record<string, string> = adminToken
+    ? { Authorization: `Bearer ${adminToken}` }
+    : {}
+  const tickets = [
+    {
+      customerName: 'Alice Johnson',
+      customerEmail: 'alice@example.com',
+      subject: 'Cannot connect to VPN after update',
+      description:
+        'After the latest firmware update, my VPN client fails to connect. I have tried reinstalling but the issue persists.',
+      category: 'technical',
+      priority: 'high',
+    },
+    {
+      customerName: 'Bob Smith',
+      customerEmail: 'bob@example.com',
+      subject: 'Billing discrepancy on invoice #1042',
+      description:
+        'My invoice shows a charge for 2 items but I only ordered 1. Please correct this.',
+      category: 'billing',
+      priority: 'medium',
+    },
+    {
+      customerName: 'Carol Williams',
+      customerEmail: 'carol@example.com',
+      subject: 'Feature request: Dark mode for dashboard',
+      description:
+        'It would be great to have a dark mode option for the admin dashboard to reduce eye strain during late-night work.',
+      category: 'feature_request',
+      priority: 'low',
+    },
+  ]
+  const createdIds: string[] = []
+  for (const ticket of tickets) {
+    const res = await page.request
+      .post(`${baseUrl}/api/tickets`, { data: ticket, headers })
+      .catch(() => null)
+    if (res) {
+      try {
+        const body = await res.json()
+        if (body.success && body.data?.id) createdIds.push(body.data.id)
+      } catch {
+        // ignore
+      }
+    }
+  }
+  // Add a reply to the first ticket
+  if (createdIds.length > 0) {
+    await page.request
+      .post(`${baseUrl}/api/tickets/${createdIds[0]}/reply`, {
+        data: {
+          content: 'Thank you for reporting this. We are looking into the VPN connectivity issue.',
+          author: 'Support Team',
+        },
+        headers,
+      })
+      .catch(() => {})
+  }
+}
+
+async function seedDisputes(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  _clientToken: string,
+  adminToken: string
+): Promise<void> {
+  const headers: Record<string, string> = adminToken
+    ? { Authorization: `Bearer ${adminToken}` }
+    : {}
+  const disputes = [
+    {
+      orderId: 'order-001',
+      orderNo: 'ORD-2024-001',
+      customerName: 'Alice Johnson',
+      customerEmail: 'alice@example.com',
+      type: 'product_quality',
+      description:
+        'The headphones I received have a crackling sound in the left ear after 2 days of use.',
+      amount: 89.99,
+    },
+    {
+      orderId: 'order-002',
+      orderNo: 'ORD-2024-002',
+      customerName: 'Bob Smith',
+      customerEmail: 'bob@example.com',
+      type: 'refund',
+      description: 'I requested a cancellation within 30 minutes but the order was still shipped.',
+      amount: 149.99,
+    },
+  ]
+  for (const dispute of disputes) {
+    await page.request.post(`${baseUrl}/api/disputes`, { data: dispute, headers }).catch(() => {})
+  }
+}
+
+async function seedContents(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  adminToken: string
+): Promise<void> {
+  const headers: Record<string, string> = adminToken
+    ? { Authorization: `Bearer ${adminToken}` }
+    : {}
+  const contents = [
+    {
+      title: 'Getting Started with Biomimic',
+      content:
+        'Welcome to Biomimic! This guide will walk you through setting up your first project, configuring modules, and deploying to production. We cover everything from the CLI scaffold command to customizing your admin panel.',
+      category: 'tutorial',
+      tags: ['getting-started', 'tutorial', 'beginner'],
+    },
+    {
+      title: 'Version 2.0 Release Notes',
+      content:
+        'We are excited to announce Biomimic 2.0! This release includes a brand-new plugin marketplace, improved RBAC with audit logging, and Cloudflare Workers support. Read on for the full changelog.',
+      category: 'announcement',
+      tags: ['release', 'v2'],
+    },
+    {
+      title: 'Building a Plugin Marketplace',
+      content:
+        'Learn how to create, publish, and monetize plugins for the xbrowser ecosystem. This tutorial covers the plugin API, review process, and best practices for plugin development.',
+      category: 'article',
+      tags: ['plugins', 'marketplace', 'development'],
+    },
+    {
+      title: 'Privacy Policy Update — December 2024',
+      content:
+        'We have updated our privacy policy to reflect changes in data processing. Key changes include improved data retention controls and new cookie consent options.',
+      category: 'policy',
+      tags: ['privacy', 'legal'],
+    },
+  ]
+  const createdIds: string[] = []
+  for (const c of contents) {
+    const res = await page.request
+      .post(`${baseUrl}/api/contents`, { data: c, headers })
+      .catch(() => null)
+    if (res) {
+      try {
+        const body = await res.json()
+        if (body.success && body.data?.id) createdIds.push(body.data.id)
+      } catch {
+        // ignore
+      }
+    }
+  }
+  // Publish the first 3 items so they appear on public content pages
+  for (let i = 0; i < Math.min(createdIds.length, 3); i++) {
+    await page.request
+      .put(`${baseUrl}/api/contents/${createdIds[i]}/publish`, { headers })
+      .catch(() => {})
+  }
+}
+
 async function seedAllData(
   page: import('@playwright/test').Page,
   baseUrl: string,
@@ -279,6 +479,11 @@ async function seedAllData(
   if (modules.has('todos')) await seedTodos(page, baseUrl, tokens.clientToken)
   if (modules.has('notifications')) await seedNotifications(page, baseUrl)
   if (modules.has('plugin')) await seedPlugins(page, baseUrl, tokens.clientToken, tokens.adminToken)
+  if (modules.has('order')) await seedOrders(page, baseUrl, tokens.adminToken)
+  if (modules.has('ticket')) await seedTickets(page, baseUrl, tokens.clientToken, tokens.adminToken)
+  if (modules.has('dispute'))
+    await seedDisputes(page, baseUrl, tokens.clientToken, tokens.adminToken)
+  if (modules.has('content')) await seedContents(page, baseUrl, tokens.adminToken)
 }
 
 // ─── CLI Terminal Screenshot ────────────────────────────────────────
@@ -395,7 +600,7 @@ async function screenshotPage(
 interface FlowStep {
   route: string
   label: string
-  section: 'cli' | 'client-public' | 'client-auth' | 'admin-public' | 'admin-auth'
+  section: 'cli' | 'client-public' | 'client-auth' | 'admin-public' | 'admin-auth' | 'crud'
   waitForSelector?: string
   waitForTimeout?: number
 }
@@ -612,6 +817,87 @@ function buildStepsForPreset(presetId: string): FlowStep[] {
     })
   }
 
+  // CRUD operation screenshots (interactive UI flows)
+  if (hasTodos) {
+    steps.push({
+      route: '/todos',
+      label: 'crud-todo-create-form',
+      section: 'crud',
+      waitForSelector: '[data-testid="todo-form"]',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/todos',
+      label: 'crud-todo-after-create',
+      section: 'crud',
+      waitForSelector: '[data-testid="todo-list"]',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/todos',
+      label: 'crud-todo-after-toggle',
+      section: 'crud',
+      waitForSelector: '[data-testid="todo-list"]',
+      waitForTimeout: 1200,
+    })
+    steps.push({
+      route: '/todos',
+      label: 'crud-todo-after-delete',
+      section: 'crud',
+      waitForSelector: '[data-testid="todo-list"]',
+      waitForTimeout: 1200,
+    })
+  }
+
+  if (hasChat) {
+    steps.push({
+      route: '/websocket',
+      label: 'crud-chat-after-send',
+      section: 'crud',
+      waitForSelector: '[data-testid="websocket-container"]',
+      waitForTimeout: 2000,
+    })
+  }
+
+  if (hasContent) {
+    steps.push({
+      route: '/content',
+      label: 'crud-content-with-published',
+      section: 'crud',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasAdmin) {
+    steps.push({
+      route: '/admin/users',
+      label: 'crud-admin-user-create-modal',
+      section: 'crud',
+      waitForSelector: 'table',
+      waitForTimeout: 2000,
+    })
+  }
+
+  if (hasOrders) {
+    steps.push({
+      route: '/admin/orders',
+      label: 'crud-admin-order-detail-modal',
+      section: 'crud',
+      waitForSelector: 'table',
+      waitForTimeout: 2000,
+    })
+  }
+
+  if (hasTickets) {
+    steps.push({
+      route: '/admin/tickets',
+      label: 'crud-admin-ticket-detail-modal',
+      section: 'crud',
+      waitForSelector: 'table',
+      waitForTimeout: 2000,
+    })
+  }
+
   return steps
 }
 
@@ -779,6 +1065,7 @@ function generateGallery(screenshotsBaseDir: string, presets: PresetConfig[]): v
   .card .section-badge.cli { background:#f9e2af22; color:#f9e2af; }
   .card .section-badge.client { background:#89b4fa22; color:#89b4fa; }
   .card .section-badge.admin { background:#a6e3a122; color:#a6e3a1; }
+  .card .section-badge.crud { background:#cba6f722; color:#cba6f7; }
   .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:9999; cursor:pointer; backdrop-filter:blur(8px); }
   .lightbox.active { display:flex; }
   .lightbox img { max-width:90vw; max-height:90vh; border-radius:var(--radius); box-shadow:0 24px 64px rgba(0,0,0,.5); }
@@ -817,6 +1104,8 @@ ${presets
             ? 'cli'
             : img.label.startsWith('admin-')
             ? 'admin'
+            : img.label.startsWith('crud-')
+            ? 'crud'
             : 'client'
           return `
       <div class="card" onclick="showLightbox('${img.relativePath}')">
@@ -1168,6 +1457,222 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
             idx++
           }
         }
+        expect(true).toBeTruthy()
+      })
+
+      test('04 — CRUD operations', async ({ page }) => {
+        if (!serverHandle) throw new Error('Dev server not started')
+        if (!tokens) throw new Error('Auth tokens not available')
+        checkConsoleErrors(page)
+
+        const crudSteps = preset.steps.filter(s => s.section === 'crud')
+        const presetConfig = getPreset(preset.id)
+        const modules = new Set(presetConfig?.modules ?? [])
+
+        if (crudSteps.length === 0) {
+          expect(true).toBeTruthy()
+          return
+        }
+
+        const nonCrudCount = preset.steps.filter(s => s.section !== 'crud').length
+        let idx = nonCrudCount + 1
+
+        const baseUrl = serverHandle.url
+
+        // --- Todo CRUD ---
+        if (modules.has('todos')) {
+          // Navigate to todos with client auth
+          await page.goto(`${baseUrl}/admin/login`)
+          await page.waitForLoadState('domcontentloaded')
+          await page.goto(baseUrl)
+          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+
+          // 1. Screenshot the form before creating (empty form)
+          await page.goto(`${baseUrl}/todos`)
+          await page.waitForSelector('[data-testid="todo-form"]', { timeout: 8000 })
+          await page.waitForTimeout(800)
+          const formIdx = idx++
+          await capturePage(
+            page,
+            `${String(formIdx).padStart(2, '0')}-crud-todo-create-form`,
+            presetOutputDir
+          )
+
+          // 2. Fill and submit a new todo
+          await page.fill('[data-testid="todo-title-input"]', 'Screenshot CRUD test todo')
+          await page.fill(
+            '[data-testid="todo-description-input"]',
+            'Created by E2E visual screenshot test'
+          )
+          await page.click('[data-testid="add-todo-button"]')
+          await page.waitForTimeout(1200)
+          const afterCreateIdx = idx++
+          await capturePage(
+            page,
+            `${String(afterCreateIdx).padStart(2, '0')}-crud-todo-after-create`,
+            presetOutputDir
+          )
+
+          // 3. Toggle the new todo's completion status
+          const todoItems = page.locator('[data-testid="todo-item"]')
+          const todoCount = await todoItems.count()
+          if (todoCount > 0) {
+            // Click the status toggle on the last item (the one we just created)
+            const lastItem = todoItems.nth(todoCount - 1)
+            const statusBtn = lastItem.locator('[data-testid="todo-status"]')
+            if (await statusBtn.isVisible()) {
+              await statusBtn.click()
+              await page.waitForTimeout(800)
+            }
+          }
+          const afterToggleIdx = idx++
+          await capturePage(
+            page,
+            `${String(afterToggleIdx).padStart(2, '0')}-crud-todo-after-toggle`,
+            presetOutputDir
+          )
+
+          // 4. Delete the todo we just created
+          if (todoCount > 0) {
+            const lastItem = todoItems.nth(todoCount - 1)
+            const deleteBtn = lastItem.locator('[data-testid="delete-button"]')
+            if (await deleteBtn.isVisible()) {
+              await deleteBtn.click()
+              await page.waitForTimeout(800)
+            }
+          }
+          const afterDeleteIdx = idx++
+          await capturePage(
+            page,
+            `${String(afterDeleteIdx).padStart(2, '0')}-crud-todo-after-delete`,
+            presetOutputDir
+          )
+        }
+
+        // --- Chat / WebSocket CRUD ---
+        if (modules.has('chat')) {
+          await page.goto(baseUrl)
+          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+          await page.goto(`${baseUrl}/websocket`)
+          await page.waitForSelector('[data-testid="websocket-container"]', { timeout: 8000 })
+
+          // Connect
+          const connectBtn = page.locator('[data-testid="connect-ws-button"]')
+          if (await connectBtn.isVisible()) {
+            await connectBtn.click()
+            await page.waitForTimeout(1500)
+          }
+
+          // Send a message
+          const msgInput = page.locator('[data-testid="ws-message-input"]')
+          const sendBtn = page.locator('[data-testid="send-message-button"]')
+          if (await msgInput.isVisible()) {
+            await msgInput.fill('Hello from screenshot test!')
+            if (await sendBtn.isVisible()) {
+              await sendBtn.click()
+              await page.waitForTimeout(1000)
+            }
+          }
+          const afterChatIdx = idx++
+          await capturePage(
+            page,
+            `${String(afterChatIdx).padStart(2, '0')}-crud-chat-after-send`,
+            presetOutputDir
+          )
+
+          // Disconnect
+          const disconnectBtn = page.locator('[data-testid="disconnect-ws-button"]')
+          if (await disconnectBtn.isVisible()) {
+            await disconnectBtn.click()
+            await page.waitForTimeout(500)
+          }
+        }
+
+        // --- Content page with published data ---
+        if (modules.has('content')) {
+          await page.goto(baseUrl)
+          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+          await page.goto(`${baseUrl}/content`)
+          await page.waitForTimeout(1500)
+          const contentIdx = idx++
+          await capturePage(
+            page,
+            `${String(contentIdx).padStart(2, '0')}-crud-content-with-published`,
+            presetOutputDir
+          )
+        }
+
+        // --- Admin CRUD: user create modal ---
+        if (modules.has('admin')) {
+          await page.goto(`${baseUrl}/admin/login`)
+          await page.waitForLoadState('domcontentloaded')
+          await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
+          await page.goto(`${baseUrl}/admin/users`)
+          await page.waitForSelector('table', { timeout: 10000 })
+          await page.waitForTimeout(1500)
+
+          // Try to open create user modal
+          const createUserBtn = page
+            .getByRole('button', { name: /新建|Create|添加|Add|New/i })
+            .first()
+          if (await createUserBtn.isVisible().catch(() => false)) {
+            await createUserBtn.click()
+            await page.waitForTimeout(1000)
+          }
+          const userCreateIdx = idx++
+          await capturePage(
+            page,
+            `${String(userCreateIdx).padStart(2, '0')}-crud-admin-user-create-modal`,
+            presetOutputDir
+          )
+        }
+
+        // --- Admin CRUD: order detail modal ---
+        if (modules.has('order')) {
+          await page.goto(`${baseUrl}/admin/login`)
+          await page.waitForLoadState('domcontentloaded')
+          await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
+          await page.goto(`${baseUrl}/admin/orders`)
+          await page.waitForSelector('table', { timeout: 10000 })
+          await page.waitForTimeout(1500)
+
+          // Try to open order detail/view modal
+          const viewBtn = page.getByRole('button', { name: /查看|View|详情|Detail/i }).first()
+          if (await viewBtn.isVisible().catch(() => false)) {
+            await viewBtn.click()
+            await page.waitForTimeout(1000)
+          }
+          const orderDetailIdx = idx++
+          await capturePage(
+            page,
+            `${String(orderDetailIdx).padStart(2, '0')}-crud-admin-order-detail-modal`,
+            presetOutputDir
+          )
+        }
+
+        // --- Admin CRUD: ticket detail modal ---
+        if (modules.has('ticket')) {
+          await page.goto(`${baseUrl}/admin/login`)
+          await page.waitForLoadState('domcontentloaded')
+          await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
+          await page.goto(`${baseUrl}/admin/tickets`)
+          await page.waitForSelector('table', { timeout: 10000 })
+          await page.waitForTimeout(1500)
+
+          // Try to open ticket detail/view modal
+          const viewBtn = page.getByRole('button', { name: /查看|View|详情|Detail/i }).first()
+          if (await viewBtn.isVisible().catch(() => false)) {
+            await viewBtn.click()
+            await page.waitForTimeout(1000)
+          }
+          const ticketDetailIdx = idx++
+          await capturePage(
+            page,
+            `${String(ticketDetailIdx).padStart(2, '0')}-crud-admin-ticket-detail-modal`,
+            presetOutputDir
+          )
+        }
+
         expect(true).toBeTruthy()
       })
     })
