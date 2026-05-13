@@ -33,7 +33,8 @@ export const DeveloperDashboardPage: React.FC = () => {
     rejected: 'red',
   }
 
-  const totalDownloads = myPlugins.reduce((sum, p) => sum + p.downloadCount, 0)
+  const safePlugins = myPlugins?.filter(Boolean) ?? []
+  const totalDownloads = safePlugins.reduce((sum, p) => sum + (p?.downloadCount ?? 0), 0)
 
   return (
     <div className="min-h-screen" data-testid="developer-dashboard-page">
@@ -77,7 +78,7 @@ export const DeveloperDashboardPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs text-gray-500 font-medium">My Plugins</p>
-                <p className="text-2xl font-bold text-gray-900">{myPlugins.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{safePlugins.length}</p>
               </div>
             </div>
           </div>
@@ -90,7 +91,7 @@ export const DeveloperDashboardPage: React.FC = () => {
               <div>
                 <p className="text-xs text-gray-500 font-medium">Approved</p>
                 <p className="text-2xl font-bold text-emerald-600">
-                  {myPlugins.filter(p => p.status === 'approved').length}
+                  {safePlugins.filter(p => p.status === 'approved').length}
                 </p>
               </div>
             </div>
@@ -104,7 +105,7 @@ export const DeveloperDashboardPage: React.FC = () => {
               <div>
                 <p className="text-xs text-gray-500 font-medium">Pending</p>
                 <p className="text-2xl font-bold text-amber-600">
-                  {myPlugins.filter(p => p.status === 'pending').length}
+                  {safePlugins.filter(p => p.status === 'pending').length}
                 </p>
               </div>
             </div>
@@ -129,11 +130,11 @@ export const DeveloperDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {loading && myPlugins.length === 0 ? (
+        {loading && safePlugins.length === 0 ? (
           <div className="flex items-center justify-center py-20">
             <LoadingSpinner size="lg" />
           </div>
-        ) : myPlugins.length === 0 ? (
+        ) : safePlugins.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-xl shadow-black/5 border border-gray-100 p-12">
             <EmptyState
               icon={Package}
@@ -143,7 +144,7 @@ export const DeveloperDashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {myPlugins.map(plugin => (
+            {safePlugins.map(plugin => (
               <div
                 key={plugin.id}
                 className="group bg-white rounded-2xl border border-gray-100 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-300 p-5"
