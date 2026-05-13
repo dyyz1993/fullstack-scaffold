@@ -1,8 +1,7 @@
 diff --git a/node_modules/typescript/lib/_tsc.js b/node_modules/typescript/lib/_tsc.js
-index ae2f844..7355946 100644
 --- a/node_modules/typescript/lib/_tsc.js
 +++ b/node_modules/typescript/lib/_tsc.js
-@@ -62701,7 +62701,7 @@ function createTypeChecker(host) {
+@@ -63591,7 +63591,7 @@ function createTypeChecker(host) {
      if (!couldContainTypeVariables(type)) {
        return type;
      }
@@ -12,10 +11,9 @@ index ae2f844..7355946 100644
        error(currentNode, Diagnostics.Type_instantiation_is_excessively_deep_and_possibly_infinite);
        return errorType;
 diff --git a/node_modules/typescript/lib/typescript.js b/node_modules/typescript/lib/typescript.js
-index 927ce9..01fcfa 100644
 --- a/node_modules/typescript/lib/typescript.js
 +++ b/node_modules/typescript/lib/typescript.js
-@@ -67311,7 +67311,7 @@ function createTypeChecker(host) {
+@@ -68202,7 +68202,7 @@ function createTypeChecker(host) {
      if (!couldContainTypeVariables(type)) {
        return type;
      }

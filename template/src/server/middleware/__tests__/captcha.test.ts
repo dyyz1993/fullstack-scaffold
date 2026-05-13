@@ -8,9 +8,7 @@ import {
 } from '../captcha'
 
 describe('captchaMiddleware', () => {
-  beforeEach(() => {
-    vi.stubEnv('NODE_ENV', 'development')
-  })
+  beforeEach(() => {})
 
   afterEach(() => {
     vi.unstubAllEnvs()
@@ -28,10 +26,22 @@ describe('captchaMiddleware', () => {
     expect(handler).toHaveBeenCalled()
   })
 
-  it('should skip configured skip paths', async () => {
+  it('should skip in development environment', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
     const app = new Hono()
     const handler = vi.fn().mockResolvedValue(new Response('ok'))
     app.use('*', captchaMiddleware())
+    app.get('/api/dev', handler)
+
+    const res = await app.request('/api/dev')
+    expect(res.status).toBe(200)
+    expect(handler).toHaveBeenCalled()
+  })
+
+  it('should skip configured skip paths', async () => {
+    const app = new Hono()
+    const handler = vi.fn().mockResolvedValue(new Response('ok'))
+    app.use('*', captchaMiddleware({ forceEnabled: true }))
     app.get('/api/captcha', handler)
     app.post('/api/verify-captcha', handler)
     app.post('/api/admin/login', handler)
@@ -54,7 +64,7 @@ describe('captchaMiddleware', () => {
   it('should skip custom skip paths', async () => {
     const app = new Hono()
     const handler = vi.fn().mockResolvedValue(new Response('ok'))
-    app.use('*', captchaMiddleware({ skipPaths: ['/api/custom'] }))
+    app.use('*', captchaMiddleware({ forceEnabled: true, skipPaths: ['/api/custom'] }))
     app.get('/api/custom', handler)
 
     const res = await app.request('/api/custom')
@@ -65,7 +75,7 @@ describe('captchaMiddleware', () => {
   it('should allow requests within rate limit', async () => {
     const app = new Hono()
     let callCount = 0
-    app.use('*', captchaMiddleware({ maxRequests: 10, windowMs: 60000 }))
+    app.use('*', captchaMiddleware({ forceEnabled: true, maxRequests: 10, windowMs: 60000 }))
     app.get('/api/data', c => {
       callCount++
       return c.json({ ok: true })
@@ -82,7 +92,7 @@ describe('captchaMiddleware', () => {
 
   it('should block requests exceeding rate limit', async () => {
     const app = new Hono()
-    app.use('*', captchaMiddleware({ maxRequests: 3, windowMs: 60000 }))
+    app.use('*', captchaMiddleware({ forceEnabled: true, maxRequests: 3, windowMs: 60000 }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const ua = 'Mozilla/5.0 Test Browser For Rate Limit Testing'
@@ -109,7 +119,7 @@ describe('captchaMiddleware', () => {
 
   it('should block suspicious requests with short User-Agent', async () => {
     const app = new Hono()
-    app.use('*', captchaMiddleware())
+    app.use('*', captchaMiddleware({ forceEnabled: true }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
@@ -122,7 +132,7 @@ describe('captchaMiddleware', () => {
 
   it('should block requests with bot in User-Agent', async () => {
     const app = new Hono()
-    app.use('*', captchaMiddleware())
+    app.use('*', captchaMiddleware({ forceEnabled: true }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
@@ -133,7 +143,7 @@ describe('captchaMiddleware', () => {
 
   it('should block requests with crawler in User-Agent', async () => {
     const app = new Hono()
-    app.use('*', captchaMiddleware())
+    app.use('*', captchaMiddleware({ forceEnabled: true }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {
@@ -144,7 +154,7 @@ describe('captchaMiddleware', () => {
 
   it('should block requests with empty User-Agent', async () => {
     const app = new Hono()
-    app.use('*', captchaMiddleware())
+    app.use('*', captchaMiddleware({ forceEnabled: true }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data')
@@ -154,7 +164,7 @@ describe('captchaMiddleware', () => {
   it('should reset rate limit after window expires', async () => {
     vi.useFakeTimers()
     const app = new Hono()
-    app.use('*', captchaMiddleware({ maxRequests: 2, windowMs: 1000 }))
+    app.use('*', captchaMiddleware({ forceEnabled: true, maxRequests: 2, windowMs: 1000 }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const ua = 'Mozilla/5.0 Window Reset Test Browser'
@@ -191,7 +201,7 @@ describe('captchaMiddleware', () => {
     markCaptchaVerifiedMiddleware(sessionId)
 
     const app = new Hono()
-    app.use('*', captchaMiddleware({ maxRequests: 1, windowMs: 60000 }))
+    app.use('*', captchaMiddleware({ forceEnabled: true, maxRequests: 1, windowMs: 60000 }))
     app.get('/api/data', c => c.json({ ok: true }))
 
     const res = await app.request('/api/data', {

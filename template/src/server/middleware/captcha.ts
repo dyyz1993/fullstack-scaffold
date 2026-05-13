@@ -6,6 +6,7 @@ export interface CaptchaConfig {
   skipPaths?: string[]
   maxRequests?: number
   windowMs?: number
+  forceEnabled?: boolean
 }
 
 interface CaptchaSession {
@@ -40,10 +41,12 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
     skipPaths = ['/api/captcha', '/api/verify-captcha', '/api/admin/login', '/api/admin/register'],
     maxRequests = 10,
     windowMs = 60000,
+    forceEnabled = false,
   } = config
 
   return async (c: Context, next: Next) => {
-    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+    const skipEnvCheck = !forceEnabled && process.env.NODE_ENV === 'test'
+    if (skipEnvCheck) {
       return next()
     }
 
@@ -97,7 +100,7 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
       )
     }
 
-    if (isSuspiciousRequest(c)) {
+    if (isSuspiciousRequest(c, forceEnabled)) {
       return c.json(
         {
           success: false as const,
@@ -136,8 +139,11 @@ function generateSessionId(): string {
   return randomUUID()
 }
 
-function isSuspiciousRequest(c: Context): boolean {
-  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+function isSuspiciousRequest(c: Context, forceEnabled = false): boolean {
+  if (
+    !forceEnabled &&
+    (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development')
+  ) {
     return false
   }
 

@@ -1,18 +1,6 @@
 import { getDb } from './driver'
-import {
-  permissions,
-  roles,
-  rolePermissions,
-  plugins,
-  pluginVersions,
-  pluginCategories,
-  pluginCategoryMappings,
-} from './schema'
+import { permissions, roles, rolePermissions } from './schema'
 import { logger } from '../utils/logger'
-import { seedOrdersIfEmpty } from '../module-order/services/order-service'
-import { seedTicketsIfEmpty } from '../module-ticket/services/ticket-service'
-import { seedDisputesIfEmpty } from '../module-dispute/services/dispute-service'
-import { seedContentsIfEmpty } from '../module-content/services/content-service'
 import { generateUUID } from '../utils/uuid'
 
 const log = logger.db()
@@ -365,6 +353,26 @@ const initialRolePermissions = [
 ]
 
 async function seedPluginsIfEmpty() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic import for presets that may not have plugin module
+  let plugins: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pluginVersions: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pluginCategories: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pluginCategoryMappings: any
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema = (await import('./schema')) as Record<string, any>
+    plugins = schema.plugins
+    pluginVersions = schema.pluginVersions
+    pluginCategories = schema.pluginCategories
+    pluginCategoryMappings = schema.pluginCategoryMappings
+    if (!plugins) return
+  } catch {
+    return
+  }
+
   const db = await getDb()
 
   const existing = await db.select().from(plugins)
@@ -639,12 +647,13 @@ export async function initializeDatabase() {
   log.info({}, 'Database initialization complete!')
 
   log.info({}, 'Seeding module data...')
-  await Promise.all([
-    seedOrdersIfEmpty(),
-    seedTicketsIfEmpty(),
-    seedDisputesIfEmpty(),
-    seedContentsIfEmpty(),
-    seedPluginsIfEmpty(),
-  ])
+  const moduleSeeders = [
+    () => import('../module-order/services/order-service').then(m => m.seedOrdersIfEmpty()),
+    () => import('../module-ticket/services/ticket-service').then(m => m.seedTicketsIfEmpty()),
+    () => import('../module-dispute/services/dispute-service').then(m => m.seedDisputesIfEmpty()),
+    () => import('../module-content/services/content-service').then(m => m.seedContentsIfEmpty()),
+    () => seedPluginsIfEmpty(),
+  ]
+  await Promise.all(moduleSeeders.map(fn => fn().catch(() => {})))
   log.info({}, 'Module data seeding complete!')
 }
