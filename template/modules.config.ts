@@ -11,7 +11,7 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
     id: 'fullstack-admin',
     name: 'Full Admin (Recommended)',
     description:
-      'Complete fullstack app with all modules: todos, chat, notifications, admin panel, RBAC, orders, tickets, disputes, content management, file upload, and CAPTCHA',
+      'Complete fullstack app with all modules: todos, chat, notifications, admin panel, RBAC, auth, plugin marketplace, orders, tickets, disputes, content management, file upload, and CAPTCHA',
     modules: [
       // Core (no dependencies)
       'todos',
@@ -22,6 +22,8 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
       // System (permission first, then dependents)
       'permission',
       'admin',
+      'auth',
+      'plugin',
       // Business (all depend on permission)
       'order',
       'ticket',
@@ -46,6 +48,25 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
       'notifications',
       'file',
       'permission',
+      'order',
+      'ticket',
+      'dispute',
+      'content',
+    ],
+  },
+  {
+    id: 'xbrowser-marketplace',
+    name: 'Plugin Marketplace',
+    description:
+      'xbrowser plugin marketplace with developer auth, plugin CRUD, reviews, categories, admin management, and CLI support',
+    modules: [
+      'notifications',
+      'file',
+      'captcha',
+      'auth',
+      'permission',
+      'admin',
+      'plugin',
       'order',
       'ticket',
       'dispute',

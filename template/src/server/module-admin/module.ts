@@ -33,8 +33,6 @@ const adminManifest: ModuleManifest = {
     { name: 'MediaTestPage', route: '/test/media' },
   ],
 
-  clientStores: ['authStore'],
-
   hasSSE: true,
 }
 
