@@ -42,7 +42,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Run CLI unit tests
-        run: npx vitest run --reporter=verbose
+        run: npx vitest run --reporter=verbose --config vitest.config.ts
       - name: Scaffold E2E verify
         run: npx vitest run src/__tests__/e2e-scaffold-verify.test.ts --testTimeout=300000
         timeout-minutes: 15
