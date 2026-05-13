@@ -1482,12 +1482,11 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Todo CRUD ---
         if (modules.has('todos')) {
-          await page.goto(baseUrl)
+          // 1. Navigate to todos page, set auth, then reload so app reads auth from localStorage
+          await page.goto(`${baseUrl}/todos`)
           await page.waitForLoadState('domcontentloaded')
           await setClientAuth(page, tokens.clientToken, tokens.clientUser)
-
-          // 1. Screenshot the form before creating (empty form)
-          await page.goto(`${baseUrl}/todos`)
+          await page.reload()
           await page.waitForLoadState('domcontentloaded')
           await page.waitForSelector('[data-testid="todo-form"], form, input[type="text"]', {
             timeout: 15000,
@@ -1553,9 +1552,11 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Chat / WebSocket CRUD ---
         if (modules.has('chat')) {
-          await page.goto(baseUrl)
-          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
           await page.goto(`${baseUrl}/websocket`)
+          await page.waitForLoadState('domcontentloaded')
+          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+          await page.reload()
+          await page.waitForLoadState('domcontentloaded')
           await page.waitForSelector('[data-testid="websocket-container"]', { timeout: 15000 })
 
           // Connect
@@ -1592,9 +1593,11 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Content page with published data ---
         if (modules.has('content')) {
-          await page.goto(baseUrl)
-          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
           await page.goto(`${baseUrl}/content`)
+          await page.waitForLoadState('domcontentloaded')
+          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+          await page.reload()
+          await page.waitForLoadState('domcontentloaded')
           await page.waitForTimeout(1500)
           const contentIdx = idx++
           await capturePage(
@@ -1606,10 +1609,11 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Admin CRUD: user create modal ---
         if (modules.has('admin')) {
-          await page.goto(`${baseUrl}/admin/login`)
+          await page.goto(`${baseUrl}/admin/users`)
           await page.waitForLoadState('domcontentloaded')
           await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
-          await page.goto(`${baseUrl}/admin/users`)
+          await page.reload()
+          await page.waitForLoadState('domcontentloaded')
           await page.waitForSelector('table', { timeout: 10000 })
           await page.waitForTimeout(1500)
 
@@ -1631,10 +1635,11 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Admin CRUD: order detail modal ---
         if (modules.has('order')) {
-          await page.goto(`${baseUrl}/admin/login`)
+          await page.goto(`${baseUrl}/admin/orders`)
           await page.waitForLoadState('domcontentloaded')
           await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
-          await page.goto(`${baseUrl}/admin/orders`)
+          await page.reload()
+          await page.waitForLoadState('domcontentloaded')
           await page.waitForSelector('table', { timeout: 10000 })
           await page.waitForTimeout(1500)
 
@@ -1654,10 +1659,11 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Admin CRUD: ticket detail modal ---
         if (modules.has('ticket')) {
-          await page.goto(`${baseUrl}/admin/login`)
+          await page.goto(`${baseUrl}/admin/tickets`)
           await page.waitForLoadState('domcontentloaded')
           await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
-          await page.goto(`${baseUrl}/admin/tickets`)
+          await page.reload()
+          await page.waitForLoadState('domcontentloaded')
           await page.waitForSelector('table', { timeout: 10000 })
           await page.waitForTimeout(1500)
 
