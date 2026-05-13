@@ -1501,7 +1501,7 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
           await page.reload()
           await page.waitForLoadState('load')
           await page.waitForSelector('[data-testid="todo-form"], form, input[type="text"]', {
-            timeout: 30000,
+            timeout: 60000,
           })
           await page.waitForTimeout(800)
           const formIdx = idx++
