@@ -82,12 +82,10 @@ export function getExcludePatterns(
     excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
     // auth.ts imports from @shared/modules/admin - generate a version without admin deps
     excludes.push('src/server/utils/auth.ts')
-    // Client-side LoginPage/RegisterPage depend on authStore (admin-only)
-    excludes.push('src/client/pages/LoginPage.tsx')
-    excludes.push('src/client/pages/RegisterPage.tsx')
-    excludes.push('src/client/pages/__tests__/LoginPage.test.tsx')
-    excludes.push('src/client/pages/__tests__/RegisterPage.test.tsx')
   }
+
+  // LoginPage/RegisterPage are excluded via the for loop above (auth clientPages)
+  // when auth module is not in the preset
 
   if (!resolved.hasPermission) {
     excludes.push('src/server/utils/permission-utils.ts')

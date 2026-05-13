@@ -19,6 +19,11 @@ const authManifest: ModuleManifest = {
 
   clientStores: ['authStore'],
 
+  clientPages: [
+    { name: 'LoginPage', route: '/login' },
+    { name: 'RegisterPage', route: '/register' },
+  ],
+
   dbSchemas: {
     files: ['developers'],
     hasSeed: false,

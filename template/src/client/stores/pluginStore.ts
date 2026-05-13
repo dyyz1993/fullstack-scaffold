@@ -83,6 +83,11 @@ export const usePluginStore = create<PluginState>((set, get) => ({
           },
           loading: false,
         })
+      } else {
+        set({
+          loading: false,
+          error: (result as { error?: string }).error ?? 'Failed to fetch plugins',
+        })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -96,6 +101,8 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       const result = await response.json()
       if (result.success) {
         set({ currentPlugin: result.data, loading: false })
+      } else {
+        set({ loading: false, error: (result as { error?: string }).error ?? 'Plugin not found' })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -138,6 +145,8 @@ export const usePluginStore = create<PluginState>((set, get) => ({
           },
           loading: false,
         })
+      } else {
+        set({ loading: false, error: (result as { error?: string }).error ?? 'Search failed' })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -175,6 +184,11 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       const result = await response.json()
       if (result.success) {
         set({ myPlugins: result.data, loading: false })
+      } else {
+        set({
+          loading: false,
+          error: (result as { error?: string }).error ?? 'Failed to fetch your plugins',
+        })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -193,6 +207,10 @@ export const usePluginStore = create<PluginState>((set, get) => ({
         }))
         return result.data.slug
       }
+      set({
+        loading: false,
+        error: (result as { error?: string }).error ?? 'Failed to create plugin',
+      })
       return null
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -211,6 +229,11 @@ export const usePluginStore = create<PluginState>((set, get) => ({
           plugins: state.plugins.filter(p => p.slug !== slug),
           loading: false,
         }))
+      } else {
+        set({
+          loading: false,
+          error: (result as { error?: string }).error ?? 'Failed to delete plugin',
+        })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -230,6 +253,11 @@ export const usePluginStore = create<PluginState>((set, get) => ({
           reviews: [result.data, ...state.reviews],
           loading: false,
         }))
+      } else {
+        set({
+          loading: false,
+          error: (result as { error?: string }).error ?? 'Failed to submit review',
+        })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })

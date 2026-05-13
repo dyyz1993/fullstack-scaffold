@@ -13,7 +13,7 @@ npm run check:refs
 echo "Checking framework modifications..."
 npm run framework:check
 
-npx lint-staged
+npx lint-staged --concurrent false
 
 echo "Running smart tests for changed files..."
 npm run test:smart:staged

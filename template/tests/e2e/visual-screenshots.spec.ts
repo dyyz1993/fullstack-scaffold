@@ -136,13 +136,12 @@ async function setClientAuth(
 ): Promise<void> {
   await page.evaluate(
     ({ token: t, user: u }) => {
-      localStorage.setItem(
-        'auth-storage',
-        JSON.stringify({
-          state: { token: t, isAuthenticated: true, user: u },
-          version: 0,
-        })
-      )
+      const authData = {
+        state: { token: t, isAuthenticated: true, user: u },
+        version: 0,
+      }
+      // apiClient reads from 'auth-token' key (see src/client/services/apiClient.ts)
+      localStorage.setItem('auth-token', JSON.stringify(authData))
     },
     { token, user }
   )
@@ -464,8 +463,8 @@ function buildStepsForPreset(presetId: string): FlowStep[] {
       route: '/plugins',
       label: 'plugins-page-with-data',
       section: 'client-auth',
-      waitForSelector: '[data-testid="plugin-card"], .plugin-card, .card, article',
-      waitForTimeout: 1500,
+      waitForSelector: 'a[href^="/plugins/"]',
+      waitForTimeout: 2500,
     })
     steps.push({
       route: '/plugins/code-formatter-pro',

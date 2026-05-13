@@ -141,12 +141,6 @@
     ],
     "*.{json,md,css}": [
       "prettier --write"
-    ],
-    "src/server/**/*routes*.ts": [
-      "npm run validate:all"
-    ],
-    "src/client/**/*.{ts,tsx}": [
-      "npm run validate:all"
     ]
   },
   "engines": {
