@@ -58,7 +58,7 @@
     "dev:context": "node --import tsx/esm lint-scripts/dev-context-analyzer.ts",
     "dev:guide": "node --import tsx/esm lint-scripts/dev-guide-generator.ts",
     "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts",
-    "postinstall": "patch-package",
+    "postinstall": "node -e \"process.exit(require('fs').existsSync('node_modules/hono')?0:1)\" && patch-package || true",
     "prepare": "husky",
     "typecheck:full": "tsc --noEmit && eslint . --max-warnings=0"
   },
