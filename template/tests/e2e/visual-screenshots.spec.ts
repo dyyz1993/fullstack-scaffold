@@ -116,41 +116,14 @@ async function registerAndLoginUsers(
     if (profile.role) clientUser.role = profile.role
   }
 
-  // Admin auth: use /api/admin/* if admin module present (fallback if no auth module)
+  // Admin auth: always use dev token (more reliable than register/login)
+  // Dev tokens are enabled in dev/test environments and provide guaranteed super_admin access
   if (hasAdmin) {
-    if (hasAuth) {
-      // Auth module provides user management — register admin via auth
-      await page.request
-        .post(`${baseUrl}/api/auth/register`, {
-          data: { username: 'superadmin', email: 'admin@test.com', password: 'admin123456' },
-        })
-        .catch(() => {})
-      const adminLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
-        data: { account: 'superadmin', password: 'admin123456' },
-      })
-      const adminLoginBody = await adminLoginRes.json()
-      adminToken = adminLoginBody.data?.token ?? adminLoginBody.data?.profile?.token ?? ''
-      const profile = adminLoginBody.data?.profile ?? adminLoginBody.data ?? {}
-      if (profile.id) adminUser.id = profile.id
-      if (profile.username) adminUser.username = profile.username
-      if (profile.email) adminUser.email = profile.email
-      if (profile.role) adminUser.role = profile.role
-    } else {
-      // No auth module — use admin module's own auth
-      await page.request
-        .post(`${baseUrl}/api/admin/register`, {
-          data: { username: 'superadmin', password: 'admin123456' },
-        })
-        .catch(() => {})
-      const adminLoginRes = await page.request.post(`${baseUrl}/api/admin/login`, {
-        data: { username: 'superadmin', password: 'admin123456' },
-      })
-      const adminLoginBody = await adminLoginRes.json()
-      adminToken = adminLoginBody.data?.token ?? ''
-      const profile = adminLoginBody.data?.profile ?? adminLoginBody.data ?? {}
-      if (profile.id) adminUser.id = profile.id
-      if (profile.username) adminUser.username = profile.username
-    }
+    adminToken = 'super-admin-token'
+    adminUser.id = 'super-admin-1'
+    adminUser.username = 'superadmin'
+    adminUser.email = 'superadmin@example.com'
+    adminUser.role = 'super_admin'
   }
 
   return { clientToken, clientUser, adminToken, adminUser }
@@ -244,9 +217,13 @@ async function seedNotifications(
 async function seedPlugins(
   page: import('@playwright/test').Page,
   baseUrl: string,
-  token: string
+  token: string,
+  adminToken?: string
 ): Promise<void> {
   const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+  const adminHeaders: Record<string, string> = adminToken
+    ? { Authorization: `Bearer ${adminToken}` }
+    : {}
   const plugins = [
     {
       name: 'Code Formatter Pro',
@@ -273,8 +250,21 @@ async function seedPlugins(
       tags: ['themes', 'customization'],
     },
   ]
+  // Create plugins (status defaults to 'pending')
   for (const p of plugins) {
-    await page.request.post(`${baseUrl}/api/plugins`, { data: p, headers })
+    await page.request.post(`${baseUrl}/api/plugins`, { data: p, headers }).catch(() => {})
+  }
+  // Approve all plugins so they appear on client pages (GET /api/plugins defaults to status='approved')
+  if (adminToken) {
+    for (const p of plugins) {
+      await page.request
+        .put(`${baseUrl}/api/plugins/${p.slug}/approve`, { headers: adminHeaders })
+        .catch(() => {})
+    }
+    // Toggle featured for Git Lens (approve doesn't set featured flag)
+    await page.request
+      .put(`${baseUrl}/api/plugins/git-lens/feature`, { headers: adminHeaders })
+      .catch(() => {})
   }
 }
 
@@ -289,7 +279,7 @@ async function seedAllData(
 
   if (modules.has('todos')) await seedTodos(page, baseUrl, tokens.clientToken)
   if (modules.has('notifications')) await seedNotifications(page, baseUrl)
-  if (modules.has('plugin')) await seedPlugins(page, baseUrl, tokens.clientToken)
+  if (modules.has('plugin')) await seedPlugins(page, baseUrl, tokens.clientToken, tokens.adminToken)
 }
 
 // ─── CLI Terminal Screenshot ────────────────────────────────────────
@@ -1017,7 +1007,7 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
         const cliEntry = path.join(TEMPLATE_ROOT, '../src/index.ts')
         const ok = await captureTerminalScreenshot(
           'npx',
-          [`tsx "${cliEntry}" "test-${preset.id}" --preset ${preset.id}`],
+          [`tsx "${cliEntry}" "test-${preset.id}" --preset ${preset.id} -o "${presetProjectPath}"`],
           TEMPLATE_ROOT,
           presetOutputDir,
           '00-cli-create',
