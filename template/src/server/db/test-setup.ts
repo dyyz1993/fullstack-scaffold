@@ -191,6 +191,87 @@ export async function setupTestDatabase(): Promise<void> {
       created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
       updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS developers (
+      id TEXT PRIMARY KEY NOT NULL,
+      username TEXT NOT NULL UNIQUE,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'developer' NOT NULL,
+      api_key TEXT NOT NULL UNIQUE,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS plugins (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL DEFAULT '',
+      readme TEXT,
+      author_id TEXT NOT NULL,
+      author_name TEXT NOT NULL,
+      repository_url TEXT,
+      homepage_url TEXT,
+      npm_package TEXT,
+      license TEXT,
+      version TEXT NOT NULL DEFAULT '0.0.1',
+      status TEXT NOT NULL DEFAULT 'pending',
+      download_count INTEGER NOT NULL DEFAULT 0,
+      view_count INTEGER NOT NULL DEFAULT 0,
+      featured INTEGER NOT NULL DEFAULT 0,
+      screenshot_url TEXT,
+      site_urls TEXT,
+      tags TEXT,
+      commands TEXT,
+      reject_reason TEXT,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS plugin_versions (
+      id TEXT PRIMARY KEY NOT NULL,
+      plugin_id TEXT NOT NULL,
+      version TEXT NOT NULL,
+      changelog TEXT,
+      package_url TEXT,
+      file_size INTEGER,
+      checksum TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      published_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
+      UNIQUE(plugin_id, version)
+    );
+
+    CREATE TABLE IF NOT EXISTS plugin_reviews (
+      id TEXT PRIMARY KEY NOT NULL,
+      plugin_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      user_name TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      title TEXT,
+      content TEXT,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
+      UNIQUE(plugin_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS plugin_categories (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL UNIQUE,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT,
+      icon TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS plugin_category_mappings (
+      plugin_id TEXT NOT NULL,
+      category_id TEXT NOT NULL,
+      FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
+      FOREIGN KEY (category_id) REFERENCES plugin_categories(id) ON DELETE CASCADE,
+      UNIQUE(plugin_id, category_id)
+    );
   `
 
   const statements = migrationSQL.split(';').filter(s => s.trim())
@@ -643,5 +724,11 @@ export async function cleanupTestDatabase(): Promise<void> {
     await client.execute('DELETE FROM orders')
     await client.execute('DELETE FROM disputes')
     await client.execute('DELETE FROM contents')
+    await client.execute('DELETE FROM plugin_category_mappings')
+    await client.execute('DELETE FROM plugin_reviews')
+    await client.execute('DELETE FROM plugin_versions')
+    await client.execute('DELETE FROM plugins')
+    await client.execute('DELETE FROM plugin_categories')
+    await client.execute('DELETE FROM developers')
   }
 }
