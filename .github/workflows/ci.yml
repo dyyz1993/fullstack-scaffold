@@ -216,7 +216,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - run: npm ci
-      - run: cd template && npm ci
       - name: Scaffold project with ${{ matrix.preset }} preset
         run: npx tsx src/index.ts test-preset-build --preset ${{ matrix.preset }} --output-dir /tmp/preset-build-${{ matrix.preset }}
       - name: Install scaffolded dependencies

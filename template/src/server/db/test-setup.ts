@@ -724,11 +724,15 @@ export async function cleanupTestDatabase(): Promise<void> {
     await client.execute('DELETE FROM orders')
     await client.execute('DELETE FROM disputes')
     await client.execute('DELETE FROM contents')
-    await client.execute('DELETE FROM plugin_category_mappings')
-    await client.execute('DELETE FROM plugin_reviews')
-    await client.execute('DELETE FROM plugin_versions')
-    await client.execute('DELETE FROM plugins')
-    await client.execute('DELETE FROM plugin_categories')
-    await client.execute('DELETE FROM developers')
+    try {
+      await client.execute('DELETE FROM plugin_category_mappings')
+      await client.execute('DELETE FROM plugin_reviews')
+      await client.execute('DELETE FROM plugin_versions')
+      await client.execute('DELETE FROM plugins')
+      await client.execute('DELETE FROM plugin_categories')
+      await client.execute('DELETE FROM developers')
+    } catch {
+      // Plugin tables may not exist in all test environments
+    }
   }
 }
