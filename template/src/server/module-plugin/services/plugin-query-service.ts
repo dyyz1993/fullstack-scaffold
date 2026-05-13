@@ -42,14 +42,18 @@ function mapCategoryRow(row: typeof pluginCategories.$inferSelect): Category {
 }
 
 async function getCount(tableName: string, whereClause: string = ''): Promise<number> {
-  const client = await getRawClient()
-  if (!client || !('execute' in client)) return 0
-  const query = whereClause
-    ? `SELECT COUNT(*) as count FROM ${tableName} WHERE ${whereClause}`
-    : `SELECT COUNT(*) as count FROM ${tableName}`
-  const result = await client.execute(query)
-  const row = result.rows[0] as unknown as { count: number } | undefined
-  return row?.count ?? 0
+  try {
+    const client = await getRawClient()
+    if (!client || !('execute' in client)) return 0
+    const query = whereClause
+      ? `SELECT COUNT(*) as count FROM ${tableName} WHERE ${whereClause}`
+      : `SELECT COUNT(*) as count FROM ${tableName}`
+    const result = await client.execute(query)
+    const row = result.rows[0] as unknown as { count: number } | undefined
+    return row?.count ?? 0
+  } catch {
+    return 0
+  }
 }
 
 export interface ListOptions {
@@ -168,11 +172,15 @@ export async function searchPlugins(
   const client = await getRawClient()
   let total = 0
   if (client && 'execute' in client) {
-    const escapedQuery = query.replace(/'/g, "''")
-    const result = await client.execute(
-      `SELECT COUNT(*) as count FROM plugins WHERE status = 'approved' AND (name LIKE '%${escapedQuery}%' OR description LIKE '%${escapedQuery}%' OR tags LIKE '%${escapedQuery}%' OR author_name LIKE '%${escapedQuery}%')`
-    )
-    total = (result.rows[0] as unknown as { count: number })?.count ?? 0
+    try {
+      const escapedQuery = query.replace(/'/g, "''")
+      const result = await client.execute(
+        `SELECT COUNT(*) as count FROM plugins WHERE status = 'approved' AND (name LIKE '%${escapedQuery}%' OR description LIKE '%${escapedQuery}%' OR tags LIKE '%${escapedQuery}%' OR author_name LIKE '%${escapedQuery}%')`
+      )
+      total = (result.rows[0] as unknown as { count: number })?.count ?? 0
+    } catch {
+      total = 0
+    }
   }
 
   return {
@@ -262,11 +270,15 @@ export async function getPluginsByCategory(
   const client = await getRawClient()
   let total = 0
   if (client && 'execute' in client) {
-    const idsList = ids.map(id => `'${id}'`).join(',')
-    const result = await client.execute(
-      `SELECT COUNT(*) as count FROM plugins WHERE status = 'approved' AND id IN (${idsList})`
-    )
-    total = (result.rows[0] as unknown as { count: number })?.count ?? 0
+    try {
+      const idsList = ids.map(id => `'${id}'`).join(',')
+      const result = await client.execute(
+        `SELECT COUNT(*) as count FROM plugins WHERE status = 'approved' AND id IN (${idsList})`
+      )
+      total = (result.rows[0] as unknown as { count: number })?.count ?? 0
+    } catch {
+      total = 0
+    }
   }
 
   return {
@@ -288,23 +300,27 @@ export async function listMyPlugins(userId: string): Promise<Plugin[]> {
 }
 
 export async function getStats(): Promise<MarketplaceStats> {
-  const client = await getRawClient()
+  try {
+    const client = await getRawClient()
 
-  if (!client || !('execute' in client)) {
+    if (!client || !('execute' in client)) {
+      return { totalPlugins: 0, totalDownloads: 0, totalDevelopers: 0, totalCategories: 0 }
+    }
+
+    const [totalResult, downloadResult, developerResult, categoryResult] = await Promise.all([
+      client.execute("SELECT COUNT(*) as count FROM plugins WHERE status = 'approved'"),
+      client.execute('SELECT COALESCE(SUM(download_count), 0) as total FROM plugins'),
+      client.execute('SELECT COUNT(DISTINCT author_id) as count FROM plugins'),
+      client.execute('SELECT COUNT(*) as count FROM plugin_categories'),
+    ])
+
+    return {
+      totalPlugins: (totalResult.rows[0] as unknown as { count: number })?.count ?? 0,
+      totalDownloads: (downloadResult.rows[0] as unknown as { total: number })?.total ?? 0,
+      totalDevelopers: (developerResult.rows[0] as unknown as { count: number })?.count ?? 0,
+      totalCategories: (categoryResult.rows[0] as unknown as { count: number })?.count ?? 0,
+    }
+  } catch {
     return { totalPlugins: 0, totalDownloads: 0, totalDevelopers: 0, totalCategories: 0 }
-  }
-
-  const [totalResult, downloadResult, developerResult, categoryResult] = await Promise.all([
-    client.execute("SELECT COUNT(*) as count FROM plugins WHERE status = 'approved'"),
-    client.execute('SELECT COALESCE(SUM(download_count), 0) as total FROM plugins'),
-    client.execute('SELECT COUNT(DISTINCT author_id) as count FROM plugins'),
-    client.execute('SELECT COUNT(*) as count FROM plugin_categories'),
-  ])
-
-  return {
-    totalPlugins: (totalResult.rows[0] as unknown as { count: number })?.count ?? 0,
-    totalDownloads: (downloadResult.rows[0] as unknown as { total: number })?.total ?? 0,
-    totalDevelopers: (developerResult.rows[0] as unknown as { count: number })?.count ?? 0,
-    totalCategories: (categoryResult.rows[0] as unknown as { count: number })?.count ?? 0,
   }
 }

@@ -15,7 +15,7 @@ import { parseModuleId } from '@server/utils/id-helpers'
 
 export async function seedDisputesIfEmpty(): Promise<void> {
   const db = await getDb()
-  const existing = await db.select().from(disputes).all()
+  const existing = await db.select().from(disputes)
   if (existing.length === 0) {
     const DISPUTE_TYPES: DisputeType[] = [
       'refund',

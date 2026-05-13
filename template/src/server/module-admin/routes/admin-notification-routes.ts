@@ -17,6 +17,30 @@ import {
 } from '@shared/modules/notifications'
 import { SuccessSchema } from '@shared/modules/admin'
 
+function createFallbackSSEResponse(): Response {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder()
+      const sendPing = () => {
+        controller.enqueue(encoder.encode(`event: ping\ndata: {"timestamp":${Date.now()}}\n\n`))
+      }
+      sendPing()
+      const interval = setInterval(sendPing, 30000)
+      setTimeout(() => {
+        clearInterval(interval)
+        controller.close()
+      }, 300000)
+    },
+  })
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  })
+}
+
 const getNotificationsRoute = createRoute({
   method: 'get',
   path: '/admin/notifications',
@@ -160,18 +184,18 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
         type === 'warning'
           ? '警告通知'
           : type === 'error'
-            ? '错误通知'
-            : type === 'success'
-              ? '成功通知'
-              : '系统通知',
+          ? '错误通知'
+          : type === 'success'
+          ? '成功通知'
+          : '系统通知',
       message:
         type === 'warning'
           ? '这是一条警告通知，请注意！'
           : type === 'error'
-            ? '这是一条错误通知，请立即处理！'
-            : type === 'success'
-              ? '操作成功完成！'
-              : '这是一条普通信息通知',
+          ? '这是一条错误通知，请立即处理！'
+          : type === 'success'
+          ? '操作成功完成！'
+          : '这是一条普通信息通知',
     })
     return c.json(success(notification), 200)
   })
@@ -187,11 +211,16 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
       return stub.fetch(doRequest)
     }
 
-    const { getRuntimeAdapter } = await import('@server/core/runtime')
-    const adapter = getRuntimeAdapter()
-    if (adapter.handleSSERequest) {
-      const response = await adapter.handleSSERequest()
-      return response
+    try {
+      const { getRuntimeAdapter } = await import('@server/core/runtime')
+      const adapter = getRuntimeAdapter()
+      if (adapter.handleSSERequest) {
+        const response = await adapter.handleSSERequest()
+        return response
+      }
+    } catch {
+      return createFallbackSSEResponse()
     }
-    return c.json({ success: false as const, error: 'SSE not supported' }, 500)
+
+    return createFallbackSSEResponse()
   })

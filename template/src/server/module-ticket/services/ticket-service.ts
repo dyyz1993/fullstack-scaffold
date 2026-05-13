@@ -68,7 +68,7 @@ function ticketWithoutReplies(row: TicketTable): Ticket {
 
 export async function seedTicketsIfEmpty(): Promise<void> {
   const db = await getDb()
-  const existing = await db.select().from(tickets).all()
+  const existing = await db.select().from(tickets)
   if (existing.length === 0) {
     const PRIORITIES: TicketPriority[] = ['low', 'medium', 'high', 'urgent']
     const STATUSES: TicketStatus[] = [

@@ -8,7 +8,7 @@ import { parseModuleId } from '@server/utils/id-helpers'
 
 export async function seedOrdersIfEmpty(): Promise<void> {
   const db = await getDb()
-  const existing = await db.select().from(orders).all()
+  const existing = await db.select().from(orders)
   if (existing.length === 0) {
     const STATUSES: OrderStatus[] = ['pending', 'processing', 'completed', 'cancelled', 'disputed']
     const CUSTOMERS = [

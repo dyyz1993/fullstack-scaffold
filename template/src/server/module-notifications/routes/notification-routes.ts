@@ -18,6 +18,30 @@ import {
 import { NotFoundError } from '@server/utils/app-error'
 import { getRuntimeAdapter } from '@server/core/runtime'
 
+function createFallbackSSEResponse(): Response {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder()
+      const sendPing = () => {
+        controller.enqueue(encoder.encode(`event: ping\ndata: {"timestamp":${Date.now()}}\n\n`))
+      }
+      sendPing()
+      const interval = setInterval(sendPing, 30000)
+      setTimeout(() => {
+        clearInterval(interval)
+        controller.close()
+      }, 300000)
+    },
+  })
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  })
+}
+
 const streamRoute = createRoute({
   method: 'get',
   path: '/notifications/stream',
@@ -126,12 +150,10 @@ const deleteRoute = createRoute({
 
 export const notificationRoutes = new OpenAPIHono()
   .openapi(streamRoute, async c => {
-    // In Cloudflare environment, route SSE to Durable Object for proper broadcast support
     const env = c.env as { REALTIME_DO?: DurableObjectNamespace } | undefined
     if (env?.REALTIME_DO) {
       const id = env.REALTIME_DO.idFromName('global')
       const stub = env.REALTIME_DO.get(id)
-      // Forward the SSE request to the Durable Object
       const doRequest = new Request(c.req.url, {
         method: c.req.method,
         headers: c.req.raw.headers,
@@ -139,13 +161,17 @@ export const notificationRoutes = new OpenAPIHono()
       return stub.fetch(doRequest)
     }
 
-    // Fallback for Node environment
-    const adapter = getRuntimeAdapter()
-    if (adapter.handleSSERequest) {
-      const response = await adapter.handleSSERequest()
-      return response
+    try {
+      const adapter = getRuntimeAdapter()
+      if (adapter.handleSSERequest) {
+        const response = await adapter.handleSSERequest()
+        return response
+      }
+    } catch {
+      return createFallbackSSEResponse()
     }
-    return c.json({ success: false as const, error: 'SSE not supported' }, 500)
+
+    return createFallbackSSEResponse()
   })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')

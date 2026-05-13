@@ -16,7 +16,7 @@ import { purgeContentPages } from '@server/core/isr-invalidation'
 
 export async function seedContentsIfEmpty(): Promise<void> {
   const db = await getDb()
-  const existing = await db.select().from(contents).all()
+  const existing = await db.select().from(contents)
   if (existing.length === 0) {
     const CATEGORIES: ContentCategory[] = ['article', 'announcement', 'tutorial', 'news', 'policy']
     const STATUSES: ContentStatus[] = ['draft', 'published', 'archived']
@@ -50,7 +50,9 @@ export async function seedContentsIfEmpty(): Promise<void> {
 
       await db.insert(contents).values({
         title: TITLES[i % TITLES.length],
-        body: `这是${TITLES[i % TITLES.length]}的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
+        body: `这是${
+          TITLES[i % TITLES.length]
+        }的详细内容。这里包含了完整的文章内容，用户可以阅读和学习相关知识。`,
         category,
         status,
         author: randomElement(AUTHORS),

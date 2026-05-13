@@ -1,10 +1,19 @@
 import { getDb } from './driver'
-import { permissions, roles, rolePermissions } from './schema'
+import {
+  permissions,
+  roles,
+  rolePermissions,
+  plugins,
+  pluginVersions,
+  pluginCategories,
+  pluginCategoryMappings,
+} from './schema'
 import { logger } from '../utils/logger'
 import { seedOrdersIfEmpty } from '../module-order/services/order-service'
 import { seedTicketsIfEmpty } from '../module-ticket/services/ticket-service'
 import { seedDisputesIfEmpty } from '../module-dispute/services/dispute-service'
 import { seedContentsIfEmpty } from '../module-content/services/content-service'
+import { generateUUID } from '../utils/uuid'
 
 const log = logger.db()
 
@@ -355,6 +364,234 @@ const initialRolePermissions = [
   { roleId: 'role_user', permissionId: 'perm_order_view' },
 ]
 
+async function seedPluginsIfEmpty() {
+  const db = await getDb()
+
+  const existing = await db.select().from(plugins)
+  if (existing.length > 0) return
+
+  log.info({}, 'Seeding plugins...')
+
+  const sampleCategories = [
+    {
+      id: generateUUID(),
+      name: 'UI & Design',
+      slug: 'ui-design',
+      description: 'Visual customization and theming',
+      icon: 'palette',
+      sortOrder: 1,
+    },
+    {
+      id: generateUUID(),
+      name: 'Analytics',
+      slug: 'analytics',
+      description: 'Data tracking and reporting',
+      icon: 'chart',
+      sortOrder: 2,
+    },
+    {
+      id: generateUUID(),
+      name: 'SEO & Marketing',
+      slug: 'seo-marketing',
+      description: 'Search optimization and growth tools',
+      icon: 'trending-up',
+      sortOrder: 3,
+    },
+    {
+      id: generateUUID(),
+      name: 'Developer Tools',
+      slug: 'developer-tools',
+      description: 'Utilities for developers',
+      icon: 'code',
+      sortOrder: 4,
+    },
+    {
+      id: generateUUID(),
+      name: 'Integration',
+      slug: 'integration',
+      description: 'Third-party service integrations',
+      icon: 'plug',
+      sortOrder: 5,
+    },
+  ]
+
+  await db.insert(pluginCategories).values(sampleCategories)
+
+  const samplePlugins = [
+    {
+      id: generateUUID(),
+      name: 'Theme Engine',
+      slug: 'theme-engine',
+      description:
+        'Advanced theming system with dark mode, custom color palettes, and responsive layout controls.',
+      readme:
+        '# Theme Engine\n\nA powerful theming plugin for customizing the look and feel of your application.',
+      authorId: '1',
+      authorName: 'superadmin',
+      repositoryUrl: 'https://github.com/example/theme-engine',
+      homepageUrl: 'https://theme-engine.example.com',
+      license: 'MIT',
+      version: '2.1.0',
+      status: 'approved',
+      downloadCount: 1520,
+      viewCount: 4320,
+      featured: true,
+      screenshotUrl: 'https://picsum.photos/seed/theme/800/400',
+      tags: '["theme","dark-mode","customization"]',
+    },
+    {
+      id: generateUUID(),
+      slug: 'analytics-dashboard',
+      name: 'Analytics Dashboard',
+      description:
+        'Real-time analytics dashboard with charts, heatmaps, and user behavior tracking.',
+      readme: '# Analytics Dashboard\n\nTrack user engagement and visualize data in real time.',
+      authorId: '1',
+      authorName: 'superadmin',
+      repositoryUrl: 'https://github.com/example/analytics-dashboard',
+      homepageUrl: 'https://analytics.example.com',
+      license: 'Apache-2.0',
+      version: '1.5.3',
+      status: 'approved',
+      downloadCount: 980,
+      viewCount: 2100,
+      featured: true,
+      screenshotUrl: 'https://picsum.photos/seed/analytics/800/400',
+      tags: '["analytics","dashboard","charts"]',
+    },
+    {
+      id: generateUUID(),
+      slug: 'seo-optimizer',
+      name: 'SEO Optimizer',
+      description:
+        'Automated SEO optimization with meta tags, sitemap generation, and structured data support.',
+      authorId: '2',
+      authorName: 'customerservice',
+      repositoryUrl: 'https://github.com/example/seo-optimizer',
+      license: 'MIT',
+      version: '1.2.0',
+      status: 'approved',
+      downloadCount: 740,
+      viewCount: 1800,
+      featured: false,
+      screenshotUrl: 'https://picsum.photos/seed/seo/800/400',
+      tags: '["seo","meta","sitemap"]',
+    },
+    {
+      id: generateUUID(),
+      slug: 'api-toolkit',
+      name: 'API Toolkit',
+      description:
+        'Developer toolkit for building and testing REST APIs with auto-documentation and mock servers.',
+      authorId: '2',
+      authorName: 'customerservice',
+      repositoryUrl: 'https://github.com/example/api-toolkit',
+      homepageUrl: 'https://api-toolkit.example.com',
+      license: 'MIT',
+      version: '3.0.1',
+      status: 'approved',
+      downloadCount: 2100,
+      viewCount: 5600,
+      featured: true,
+      screenshotUrl: 'https://picsum.photos/seed/apitoolkit/800/400',
+      tags: '["api","developer","testing","documentation"]',
+    },
+    {
+      id: generateUUID(),
+      slug: 'notification-hub',
+      name: 'Notification Hub',
+      description:
+        'Unified notification management supporting email, SMS, push, and in-app notifications.',
+      authorId: '3',
+      authorName: 'user1',
+      repositoryUrl: 'https://github.com/example/notification-hub',
+      license: 'ISC',
+      version: '1.0.0',
+      status: 'pending',
+      downloadCount: 0,
+      viewCount: 50,
+      featured: false,
+      screenshotUrl: 'https://picsum.photos/seed/notify/800/400',
+      tags: '["notification","email","push"]',
+    },
+  ]
+
+  await db.insert(plugins).values(samplePlugins)
+
+  const sampleVersions = [
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[0].id,
+      version: '2.1.0',
+      changelog: 'Added responsive layout controls',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[0].id,
+      version: '2.0.0',
+      changelog: 'Major rewrite with dark mode support',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[1].id,
+      version: '1.5.3',
+      changelog: 'Fixed heatmap rendering',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[1].id,
+      version: '1.5.0',
+      changelog: 'Added real-time tracking',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[2].id,
+      version: '1.2.0',
+      changelog: 'Structured data support',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[3].id,
+      version: '3.0.1',
+      changelog: 'Auto-documentation improvements',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[3].id,
+      version: '3.0.0',
+      changelog: 'Major version with mock server',
+      status: 'approved',
+    },
+    {
+      id: generateUUID(),
+      pluginId: samplePlugins[4].id,
+      version: '1.0.0',
+      changelog: 'Initial release',
+      status: 'pending',
+    },
+  ]
+
+  await db.insert(pluginVersions).values(sampleVersions)
+
+  const sampleMappings = [
+    { pluginId: samplePlugins[0].id, categoryId: sampleCategories[0].id },
+    { pluginId: samplePlugins[1].id, categoryId: sampleCategories[1].id },
+    { pluginId: samplePlugins[2].id, categoryId: sampleCategories[2].id },
+    { pluginId: samplePlugins[3].id, categoryId: sampleCategories[3].id },
+    { pluginId: samplePlugins[4].id, categoryId: sampleCategories[4].id },
+  ]
+
+  await db.insert(pluginCategoryMappings).values(sampleMappings)
+
+  log.info({}, 'Plugin seeding complete!')
+}
+
 export async function initializeDatabase() {
   const db = await getDb()
 
@@ -407,6 +644,7 @@ export async function initializeDatabase() {
     seedTicketsIfEmpty(),
     seedDisputesIfEmpty(),
     seedContentsIfEmpty(),
+    seedPluginsIfEmpty(),
   ])
   log.info({}, 'Module data seeding complete!')
 }

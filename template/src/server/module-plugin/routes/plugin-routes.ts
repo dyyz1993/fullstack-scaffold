@@ -210,6 +210,9 @@ const listMyPluginsRoute = createRoute({
 export const pluginRoutes = new OpenAPIHono()
   .openapi(listMyPluginsRoute, async c => {
     const user = getAuthUser(c)
+    if (!user) {
+      return c.json({ success: false as const, error: 'Unauthorized' }, 401)
+    }
     const plugins = await queryService.listMyPlugins(user.id)
     return c.json(success(plugins), 200)
   })

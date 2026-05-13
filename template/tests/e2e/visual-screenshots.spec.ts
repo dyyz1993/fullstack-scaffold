@@ -1194,3 +1194,96 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════
+//  PART 3: CLI Screenshots
+// ════════════════════════════════════════════════════════════════════
+
+test.describe('CLI Screenshots @slow', () => {
+  test.describe.configure({ retries: 1, mode: 'serial' })
+  test.setTimeout(120_000)
+
+  test.skip(({ browserName }) => browserName !== 'chromium', 'CLI screenshots only run on Chromium')
+
+  const CLI_DIR = path.join(GALLERY_DIR, 'cli')
+  const PROJECT_ROOT = path.resolve(TEMPLATE_ROOT, '..')
+  const CLI_ENTRY = path.join(PROJECT_ROOT, 'src/cli/index.ts')
+  const SCAFFOLD_ENTRY = path.join(PROJECT_ROOT, 'src/index.ts')
+
+  const CLI_COMMANDS: Array<{
+    label: string
+    args: string[]
+    cwd: string
+    entry: string
+  }> = [
+    {
+      label: '01-scaffold-help',
+      args: ['tsx', `"${SCAFFOLD_ENTRY}"`, '--help'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '02-scaffold-presets',
+      args: ['tsx', `"${SCAFFOLD_ENTRY}"`, 'presets'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '03-cli-help',
+      args: ['tsx', `"${CLI_ENTRY}"`, '--help'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '04-todo-help',
+      args: ['tsx', `"${CLI_ENTRY}"`, 'todo', '--help'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '05-notification-help',
+      args: ['tsx', `"${CLI_ENTRY}"`, 'notification', '--help'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '06-config-help',
+      args: ['tsx', `"${CLI_ENTRY}"`, 'config', '--help'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '07-config-path',
+      args: ['tsx', `"${CLI_ENTRY}"`, 'config', 'path'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+    {
+      label: '08-config-get',
+      args: ['tsx', `"${CLI_ENTRY}"`, 'config', 'get'],
+      cwd: PROJECT_ROOT,
+      entry: 'npx',
+    },
+  ]
+
+  test.beforeAll(() => {
+    fs.mkdirSync(CLI_DIR, { recursive: true })
+  })
+
+  for (const cmd of CLI_COMMANDS) {
+    test(`${cmd.label} — ${cmd.args
+      .filter(a => !a.startsWith('"'))
+      .slice(-3)
+      .join(' ')}`, async ({ page }) => {
+      const ok = await captureTerminalScreenshot(
+        cmd.entry,
+        cmd.args,
+        cmd.cwd,
+        CLI_DIR,
+        cmd.label,
+        page
+      )
+      expect(ok).toBeTruthy()
+    })
+  }
+})

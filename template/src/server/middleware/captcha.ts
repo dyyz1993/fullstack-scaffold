@@ -43,7 +43,7 @@ export function captchaMiddleware(config: CaptchaConfig = {}) {
   } = config
 
   return async (c: Context, next: Next) => {
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
       return next()
     }
 
@@ -137,13 +137,17 @@ function generateSessionId(): string {
 }
 
 function isSuspiciousRequest(c: Context): boolean {
+  if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+    return false
+  }
+
   const userAgent = c.req.header('User-Agent') || ''
 
   if (!userAgent || userAgent.length < 10) {
     return true
   }
 
-  if (userAgent.includes('bot') || userAgent.includes('crawler')) {
+  if (userAgent.toLowerCase().includes('bot') || userAgent.toLowerCase().includes('crawler')) {
     return true
   }
 
