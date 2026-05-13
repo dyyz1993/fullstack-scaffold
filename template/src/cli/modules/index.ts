@@ -2,6 +2,8 @@ import type { Core } from '@dyyz1993/xcli-core'
 import { registerTodoCommands } from './todo'
 import { registerNotificationCommands } from './notification'
 import { registerConfigCommands } from './config'
+import { registerPluginCommands } from './plugin'
+import { registerAuthCommands } from './auth'
 
 /**
  * Register all builtin CLI commands to xcli-core.
@@ -19,6 +21,14 @@ export function registerBuiltinCommands(app: Core) {
   registerTodoCommands(site)
   registerNotificationCommands(site)
   registerConfigCommands(site)
+  registerPluginCommands(site)
+  registerAuthCommands(site)
 }
 
-export { registerTodoCommands, registerNotificationCommands, registerConfigCommands }
+export {
+  registerTodoCommands,
+  registerNotificationCommands,
+  registerConfigCommands,
+  registerPluginCommands,
+  registerAuthCommands,
+}

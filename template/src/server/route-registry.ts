@@ -15,6 +15,9 @@ import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
 import { publicContentRoutes } from './module-content/routes/public-content-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
+import { authRoutes } from './module-auth/routes/auth-routes'
+import { pluginRoutes } from './module-plugin/routes/plugin-routes'
+import { pluginAdminRoutes } from './module-plugin/routes/plugin-admin-routes'
 
 const apiRateLimit = rateLimitMiddleware({
   windowMs: 60_000,
@@ -25,9 +28,11 @@ const apiRateLimit = rateLimitMiddleware({
 export const clientApiRoutes = new OpenAPIHono()
   .use('*', apiRateLimit)
   .route('/api', clientAuthRoutes)
+  .route('/api', authRoutes)
   .route('/api', chatRoutes)
   .route('/api', notificationRoutes)
   .route('/api', apiRoutes)
+  .route('/api', pluginRoutes)
   .route('/api', publicContentRoutes)
 
 // 管理后台路由 - 普通用户使用的 API + 管理功能
@@ -42,6 +47,7 @@ export const adminApiRoutes = new OpenAPIHono()
   .route('/api', roleRoutes)
   .route('/api', auditLogRoutes)
   .route('/api', adminRoutes)
+  .route('/api', pluginAdminRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes

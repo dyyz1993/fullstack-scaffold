@@ -7,6 +7,12 @@ import { ContentListPage } from './pages/ContentListPage'
 import { ContentDetailPage } from './pages/ContentDetailPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { PluginsPage } from './pages/PluginsPage'
+import { PluginDetailPage } from './pages/PluginDetailPage'
+import { CategoriesPage } from './pages/CategoriesPage'
+import { SearchPage } from './pages/SearchPage'
+import { PublishPage } from './pages/PublishPage'
+import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage'
 
 export const App: React.FC = () => {
   return (
@@ -21,6 +27,12 @@ export const App: React.FC = () => {
           <Route path="/websocket" element={<WebSocketPage />} />
           <Route path="/content" element={<ContentListPage />} />
           <Route path="/content/:id" element={<ContentDetailPage />} />
+          <Route path="/plugins" element={<PluginsPage />} />
+          <Route path="/plugins/:slug" element={<PluginDetailPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/publish" element={<PublishPage />} />
+          <Route path="/developer" element={<DeveloperDashboardPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
