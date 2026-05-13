@@ -25,6 +25,9 @@ import path from 'node:path'
 import { execSync, spawn } from 'node:child_process'
 import os from 'node:os'
 
+// @ts-expect-error — TS config doesn't resolve .ts imports for E2E
+import { getPreset } from '../../modules.config.ts'
+
 const ARTIFACTS_DIR = path.resolve(import.meta.dirname, '../../playwright-artifacts/screenshots')
 const GALLERY_DIR = path.resolve(import.meta.dirname, '../../playwright-artifacts/gallery')
 const TEMPLATE_ROOT = path.resolve(import.meta.dirname, '../..')
@@ -71,46 +74,86 @@ interface AuthTokens {
 
 async function registerAndLoginUsers(
   page: import('@playwright/test').Page,
-  baseUrl: string
+  baseUrl: string,
+  presetId: string
 ): Promise<AuthTokens> {
-  // Register + login client user (developer auth)
-  await page.request.post(`${baseUrl}/api/auth/register`, {
-    data: { username: 'screenshotuser', email: 'screenshot@test.com', password: 'test123456' },
-  })
-  const clientLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
-    data: { account: 'screenshotuser', password: 'test123456' },
-  })
-  const clientLoginBody = await clientLoginRes.json()
-  const clientToken = clientLoginBody.data?.token ?? clientLoginBody.data?.profile?.token ?? ''
-  const clientProfile = clientLoginBody.data?.profile ?? clientLoginBody.data ?? {}
+  const preset = getPreset(presetId)
+  const modules = new Set(preset?.modules ?? [])
+  const hasAuth = modules.has('auth')
+  const hasAdmin = modules.has('admin')
 
-  // Register + login admin user
-  await page.request.post(`${baseUrl}/api/auth/register`, {
-    data: { username: 'superadmin', email: 'admin@test.com', password: 'admin123456' },
-  })
-  const adminLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
-    data: { account: 'superadmin', password: 'admin123456' },
-  })
-  const adminLoginBody = await adminLoginRes.json()
-  const adminToken = adminLoginBody.data?.token ?? adminLoginBody.data?.profile?.token ?? ''
-  const adminProfile = adminLoginBody.data?.profile ?? adminLoginBody.data ?? {}
-
-  return {
-    clientToken,
-    clientUser: {
-      id: clientProfile.id ?? '1',
-      email: clientProfile.email ?? 'screenshot@test.com',
-      username: clientProfile.username ?? 'screenshotuser',
-      role: clientProfile.role ?? 'developer',
-    },
-    adminToken,
-    adminUser: {
-      id: adminProfile.id ?? '2',
-      email: adminProfile.email ?? 'admin@test.com',
-      username: adminProfile.username ?? 'superadmin',
-      role: adminProfile.role ?? 'super_admin',
-    },
+  let clientToken = ''
+  const clientUser = {
+    id: '1',
+    username: 'screenshotuser',
+    email: 'screenshot@test.com',
+    role: 'developer',
   }
+  let adminToken = ''
+  const adminUser = {
+    id: '2',
+    username: 'superadmin',
+    email: 'admin@test.com',
+    role: 'super_admin',
+  }
+
+  // Client auth: use /api/auth/* if auth module present
+  if (hasAuth) {
+    await page.request
+      .post(`${baseUrl}/api/auth/register`, {
+        data: { username: 'screenshotuser', email: 'screenshot@test.com', password: 'test123456' },
+      })
+      .catch(() => {})
+    const clientLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
+      data: { account: 'screenshotuser', password: 'test123456' },
+    })
+    const clientLoginBody = await clientLoginRes.json()
+    clientToken = clientLoginBody.data?.token ?? clientLoginBody.data?.profile?.token ?? ''
+    const profile = clientLoginBody.data?.profile ?? clientLoginBody.data ?? {}
+    if (profile.id) clientUser.id = profile.id
+    if (profile.username) clientUser.username = profile.username
+    if (profile.email) clientUser.email = profile.email
+    if (profile.role) clientUser.role = profile.role
+  }
+
+  // Admin auth: use /api/admin/* if admin module present (fallback if no auth module)
+  if (hasAdmin) {
+    if (hasAuth) {
+      // Auth module provides user management — register admin via auth
+      await page.request
+        .post(`${baseUrl}/api/auth/register`, {
+          data: { username: 'superadmin', email: 'admin@test.com', password: 'admin123456' },
+        })
+        .catch(() => {})
+      const adminLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
+        data: { account: 'superadmin', password: 'admin123456' },
+      })
+      const adminLoginBody = await adminLoginRes.json()
+      adminToken = adminLoginBody.data?.token ?? adminLoginBody.data?.profile?.token ?? ''
+      const profile = adminLoginBody.data?.profile ?? adminLoginBody.data ?? {}
+      if (profile.id) adminUser.id = profile.id
+      if (profile.username) adminUser.username = profile.username
+      if (profile.email) adminUser.email = profile.email
+      if (profile.role) adminUser.role = profile.role
+    } else {
+      // No auth module — use admin module's own auth
+      await page.request
+        .post(`${baseUrl}/api/admin/register`, {
+          data: { username: 'superadmin', password: 'admin123456' },
+        })
+        .catch(() => {})
+      const adminLoginRes = await page.request.post(`${baseUrl}/api/admin/login`, {
+        data: { username: 'superadmin', password: 'admin123456' },
+      })
+      const adminLoginBody = await adminLoginRes.json()
+      adminToken = adminLoginBody.data?.token ?? ''
+      const profile = adminLoginBody.data?.profile ?? adminLoginBody.data ?? {}
+      if (profile.id) adminUser.id = profile.id
+      if (profile.username) adminUser.username = profile.username
+    }
+  }
+
+  return { clientToken, clientUser, adminToken, adminUser }
 }
 
 async function setClientAuth(
@@ -158,7 +201,7 @@ async function seedTodos(
   baseUrl: string,
   token: string
 ): Promise<void> {
-  const headers = { Authorization: `Bearer ${token}` }
+  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
   const todos = [
     { title: 'Buy groceries for the week', completed: false },
     { title: 'Read "Designing Data-Intensive Applications"', completed: false },
@@ -203,7 +246,7 @@ async function seedPlugins(
   baseUrl: string,
   token: string
 ): Promise<void> {
-  const headers = { Authorization: `Bearer ${token}` }
+  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
   const plugins = [
     {
       name: 'Code Formatter Pro',
@@ -241,24 +284,12 @@ async function seedAllData(
   tokens: AuthTokens,
   presetId: string
 ): Promise<void> {
-  const hasTodos = [
-    'fullstack-admin',
-    'todo-app',
-    'ecommerce',
-    'xbrowser-marketplace',
-    'minimal',
-  ].includes(presetId)
-  const hasNotifications = [
-    'fullstack-admin',
-    'todo-app',
-    'ecommerce',
-    'xbrowser-marketplace',
-  ].includes(presetId)
-  const hasPlugins = ['fullstack-admin', 'xbrowser-marketplace'].includes(presetId)
+  const preset = getPreset(presetId)
+  const modules = new Set(preset?.modules ?? [])
 
-  if (hasTodos) await seedTodos(page, baseUrl, tokens.clientToken)
-  if (hasNotifications) await seedNotifications(page, baseUrl)
-  if (hasPlugins) await seedPlugins(page, baseUrl, tokens.clientToken)
+  if (modules.has('todos')) await seedTodos(page, baseUrl, tokens.clientToken)
+  if (modules.has('notifications')) await seedNotifications(page, baseUrl)
+  if (modules.has('plugin')) await seedPlugins(page, baseUrl, tokens.clientToken)
 }
 
 // ─── CLI Terminal Screenshot ────────────────────────────────────────
@@ -389,27 +420,20 @@ interface PresetConfig {
 function buildStepsForPreset(presetId: string): FlowStep[] {
   const steps: FlowStep[] = []
 
-  const hasTodos = [
-    'fullstack-admin',
-    'todo-app',
-    'ecommerce',
-    'xbrowser-marketplace',
-    'minimal',
-  ].includes(presetId)
-  const hasChat = ['fullstack-admin', 'todo-app', 'ecommerce'].includes(presetId)
-  const hasNotifications = [
-    'fullstack-admin',
-    'todo-app',
-    'ecommerce',
-    'xbrowser-marketplace',
-  ].includes(presetId)
-  const hasPlugins = ['fullstack-admin', 'xbrowser-marketplace'].includes(presetId)
-  const hasAuth = ['fullstack-admin', 'xbrowser-marketplace', 'ecommerce'].includes(presetId)
-  const hasAdmin = ['fullstack-admin', 'xbrowser-marketplace', 'ecommerce'].includes(presetId)
-  const hasOrders = ['fullstack-admin', 'ecommerce'].includes(presetId)
-  const hasTickets = ['fullstack-admin', 'ecommerce'].includes(presetId)
-  const hasDisputes = ['fullstack-admin', 'ecommerce'].includes(presetId)
-  const hasContent = ['fullstack-admin', 'ecommerce'].includes(presetId)
+  // Dynamically read module list from modules.config.ts
+  const preset = getPreset(presetId)
+  const modules = new Set(preset?.modules ?? [])
+
+  const hasTodos = modules.has('todos')
+  const hasChat = modules.has('chat')
+  const hasNotifications = modules.has('notifications')
+  const hasPlugins = modules.has('plugin')
+  const hasAuth = modules.has('auth')
+  const hasAdmin = modules.has('admin')
+  const hasOrders = modules.has('order')
+  const hasTickets = modules.has('ticket')
+  const hasDisputes = modules.has('dispute')
+  const hasContent = modules.has('content')
 
   // CLI steps
   steps.push({ route: '', label: 'cli-create', section: 'cli' })
@@ -1036,14 +1060,22 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
         checkConsoleErrors(page)
 
         const authSteps = preset.steps.filter(s => s.section === 'client-auth')
+        const adminSteps = preset.steps.filter(
+          s => s.section === 'admin-public' || s.section === 'admin-auth'
+        )
+
+        // Cleanup
+        await page.request.post(`${serverHandle.url}/api/__test__/cleanup`).catch(() => {})
+
+        // Register + login users (works for both auth and no-auth presets)
+        if (authSteps.length > 0 || adminSteps.length > 0) {
+          tokens = await registerAndLoginUsers(page, serverHandle.url, preset.id)
+        }
+
         if (authSteps.length === 0) {
           expect(true).toBeTruthy()
           return
         }
-
-        // Cleanup + register + login
-        await page.request.post(`${serverHandle.url}/api/__test__/cleanup`).catch(() => {})
-        tokens = await registerAndLoginUsers(page, serverHandle.url)
 
         // Seed data
         await seedAllData(page, serverHandle.url, tokens, preset.id)
