@@ -14,6 +14,16 @@ export function generateCliModulesIndex(resolved: ResolvedPreset): string {
     registrations.push('registerNotificationCommands(site)')
   }
 
+  if (resolved.modules.has('auth')) {
+    modules.push("import { registerAuthCommands } from './auth'")
+    registrations.push('registerAuthCommands(site)')
+  }
+
+  if (resolved.modules.has('plugin')) {
+    modules.push("import { registerPluginCommands } from './plugin'")
+    registrations.push('registerPluginCommands(site)')
+  }
+
   modules.push("import { registerConfigCommands } from './config'")
   registrations.push('registerConfigCommands(site)')
 

@@ -17,8 +17,8 @@ describe('template-generator', () => {
       manifests = await loadManifests(TEMPLATE_DIR)
     })
 
-    it('should discover all 11 modules', () => {
-      expect(manifests.size).toBe(11)
+    it('should discover all 13 modules', () => {
+      expect(manifests.size).toBe(13)
     })
 
     it('should parse standalone modules correctly', () => {
@@ -118,8 +118,8 @@ describe('template-generator', () => {
       presets = await loadPresets(TEMPLATE_DIR)
     })
 
-    it('should load all 4 presets', () => {
-      expect(presets.length).toBe(4)
+    it('should load all 5 presets', () => {
+      expect(presets.length).toBe(5)
     })
 
     it('should parse preset IDs', () => {
@@ -136,9 +136,21 @@ describe('template-generator', () => {
 
     it('should handle comments in modules array without breaking', () => {
       const fullstack = presets.find(p => p.id === 'fullstack-admin')
-      expect(fullstack.modules.length).toBe(11)
+      expect(fullstack.modules.length).toBe(13)
       expect(fullstack.modules).toContain('todos')
       expect(fullstack.modules).toContain('order')
+      expect(fullstack.modules).toContain('auth')
+      expect(fullstack.modules).toContain('plugin')
+    })
+
+    it('should parse xbrowser-marketplace preset', () => {
+      const marketplace = presets.find(p => p.id === 'xbrowser-marketplace')
+      expect(marketplace).toBeDefined()
+      expect(marketplace.modules).toContain('auth')
+      expect(marketplace.modules).toContain('plugin')
+      expect(marketplace.modules).toContain('permission')
+      expect(marketplace.modules).not.toContain('todos')
+      expect(marketplace.modules).not.toContain('chat')
     })
   })
 
@@ -158,7 +170,23 @@ describe('template-generator', () => {
 
       const fullstack = presets.find(p => p.id === 'fullstack-admin')!
       const resolved = resolvePreset(fullstack, allManifests)
-      expect(resolved.modules.size).toBe(11)
+      expect(resolved.modules.size).toBe(13)
+    })
+
+    it('should resolve xbrowser-marketplace with dependencies', async () => {
+      const allManifests = await loadManifests(TEMPLATE_DIR)
+      const presets = await loadPresets(TEMPLATE_DIR)
+
+      const marketplace = presets.find(p => p.id === 'xbrowser-marketplace')!
+      const resolved = resolvePreset(marketplace, allManifests)
+      expect(resolved.modules.has('auth')).toBe(true)
+      expect(resolved.modules.has('plugin')).toBe(true)
+      expect(resolved.modules.has('permission')).toBe(true)
+      expect(resolved.modules.has('admin')).toBe(true)
+      expect(resolved.modules.has('todos')).toBe(false)
+      expect(resolved.modules.has('chat')).toBe(false)
+      expect(resolved.hasAdmin).toBe(true)
+      expect(resolved.hasPermission).toBe(true)
     })
 
     it('should compute hasAdmin correctly', async () => {

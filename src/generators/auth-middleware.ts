@@ -1,4 +1,4 @@
-import type { ResolvedPreset } from "./template-generator";
+import type { ResolvedPreset } from './template-generator'
 
 export function generateAuthMiddleware(_resolved: ResolvedPreset): string {
   return `import type { MiddlewareHandler } from 'hono'
@@ -68,5 +68,5 @@ export function requireCustomerServiceMiddleware(): MiddlewareHandler {
 export function requirePermissionsMiddleware(): MiddlewareHandler {
   return authMiddleware()
 }
-`;
+`
 }

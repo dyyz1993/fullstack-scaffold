@@ -64,6 +64,14 @@ export function getExcludePatterns(
     if (name === 'notifications') {
       excludes.push('src/cli/modules/notification')
     }
+
+    if (name === 'auth') {
+      excludes.push('src/cli/modules/auth')
+    }
+
+    if (name === 'plugin') {
+      excludes.push('src/cli/modules/plugin')
+    }
   }
 
   if (!resolved.modules.has('admin')) {

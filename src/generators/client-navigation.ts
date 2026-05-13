@@ -8,6 +8,12 @@ const ICON_MAP: Record<string, string> = {
   NotificationPage: 'Bell',
   WebSocketPage: 'Plug',
   ContentListPage: 'FileText',
+  PluginsPage: 'Package',
+  CategoriesPage: 'Grid',
+  SearchPage: 'Search',
+  PublishPage: 'Upload',
+  DeveloperDashboardPage: 'Code',
+  PluginDetailPage: 'Package',
 }
 
 export function generateClientNavigation(resolved: ResolvedPreset): string {
@@ -36,7 +42,17 @@ export function generateClientNavigation(resolved: ResolvedPreset): string {
           ? 'Notifications'
           : key === 'websocket'
             ? 'WebSocket'
-            : key.charAt(0).toUpperCase() + key.slice(1)
+            : key === 'plugins'
+              ? 'Plugins'
+              : key === 'categories'
+                ? 'Categories'
+                : key === 'search'
+                  ? 'Search'
+                  : key === 'publish'
+                    ? 'Publish'
+                    : key === 'developer'
+                      ? 'Developer'
+                      : key.charAt(0).toUpperCase() + key.slice(1)
 
     const safeKey = /^[a-zA-Z0-9_]+$/.test(key) ? key : `'${key}'`
     routeEntries.push(`  ${safeKey}: { label: '${label}', icon: ${icon}, path: '${page.route}' },`)

@@ -83,12 +83,66 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[]; hasTypeOnly?: boo
       'type UserPermissions',
     ],
   },
+  auth: {
+    namedExports: [
+      'DeveloperProfileSchema',
+      'LoginSchema',
+      'RegisterSchema',
+      'TokenResponseSchema',
+      'type DeveloperProfile',
+      'type LoginInput',
+      'type RegisterInput',
+      'type TokenResponse',
+    ],
+  },
+  plugin: {
+    namedExports: [
+      'PluginSchema',
+      'PluginStatusSchema',
+      'CreatePluginSchema',
+      'UpdatePluginSchema',
+      'PluginVersionStatusSchema',
+      'VersionSchema',
+      'CategorySchema',
+      'ReviewSchema',
+      'CreateReviewSchema',
+      'MarketplaceStatsSchema',
+      'PluginListResponseSchema',
+      'AdminPluginSchema',
+      'AdminDashboardStatsSchema',
+      'PluginListQuerySchema',
+      'PluginSlugSchema',
+      'type Plugin',
+      'type PluginStatus',
+      'type CreatePluginInput',
+      'type UpdatePluginInput',
+      'type PluginVersionStatus',
+      'type Version',
+      'type Category',
+      'type Review',
+      'type CreateReviewInput',
+      'type MarketplaceStats',
+      'type PluginListResponse',
+      'type AdminPlugin',
+      'type AdminDashboardStats',
+      'type PluginListQuery',
+    ],
+  },
 }
 
 export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
   const lines: string[] = []
 
-  const moduleOrder = ['chat', 'todos', 'file', 'notifications', 'admin', 'permission']
+  const moduleOrder = [
+    'chat',
+    'todos',
+    'file',
+    'notifications',
+    'admin',
+    'permission',
+    'auth',
+    'plugin',
+  ]
 
   for (const moduleName of moduleOrder) {
     if (!resolved.modules.has(moduleName)) continue

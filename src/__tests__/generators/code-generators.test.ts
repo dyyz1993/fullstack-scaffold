@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import {
-  loadManifests,
-  loadPresets,
-  resolvePreset,
-} from '../../generators/template-generator'
+import { loadManifests, loadPresets, resolvePreset } from '../../generators/template-generator'
 import { generateRouteRegistry } from '../../generators/route-registry'
 import { generateClientApp } from '../../generators/client-app'
 import { generateClientNavigation } from '../../generators/client-navigation'
@@ -18,10 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const TEMPLATE_DIR = path.join(__dirname, '../../../template')
 
 function getPreset(id: string, manifests: Map<string, any>, presets: any[]) {
-  return resolvePreset(
-    presets.find((p) => p.id === id)!,
-    manifests,
-  )
+  return resolvePreset(presets.find(p => p.id === id)!, manifests)
 }
 
 describe('code generators', () => {
@@ -38,7 +31,7 @@ describe('code generators', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateRouteRegistry(resolved)
 
-      expect(content).toContain("import { apiRoutes }")
+      expect(content).toContain('import { apiRoutes }')
       expect(content).toContain("from './module-todos/routes/todos-routes'")
       expect(content).toContain(".route('/api', apiRoutes)")
       expect(content).toContain('export type ClientApiRoutes')
@@ -52,9 +45,7 @@ describe('code generators', () => {
 
       expect(content).toContain("from './module-todos/routes/todos-routes'")
       expect(content).toContain("from './module-chat/routes/chat-routes'")
-      expect(content).toContain(
-        "from './module-notifications/routes/notification-routes'",
-      )
+      expect(content).toContain("from './module-notifications/routes/notification-routes'")
       expect(content).toContain('// No admin modules selected')
     })
 
@@ -64,9 +55,7 @@ describe('code generators', () => {
 
       expect(content).toContain("from './module-todos/routes/todos-routes'")
       expect(content).toContain("from './module-chat/routes/chat-routes'")
-      expect(content).toContain(
-        "from './module-admin/routes/admin-routes'",
-      )
+      expect(content).toContain("from './module-admin/routes/admin-routes'")
       expect(content).toContain('// admin API routes')
       expect(content).toContain('adminApiRoutes')
     })
@@ -75,19 +64,15 @@ describe('code generators', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateRouteRegistry(resolved)
 
-      expect(content).toContain(
-        'export type ClientApiRoutes = typeof clientApiRoutes',
-      )
-      expect(content).toContain(
-        'export type AdminApiRoutes = typeof adminApiRoutes',
-      )
+      expect(content).toContain('export type ClientApiRoutes = typeof clientApiRoutes')
+      expect(content).toContain('export type AdminApiRoutes = typeof adminApiRoutes')
     })
 
     it('includes rate limit middleware', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateRouteRegistry(resolved)
 
-      expect(content).toContain("import { rateLimitMiddleware }")
+      expect(content).toContain('import { rateLimitMiddleware }')
       expect(content).toContain('const apiRateLimit = rateLimitMiddleware')
       expect(content).toContain(".use('*', apiRateLimit)")
     })
@@ -99,9 +84,7 @@ describe('code generators', () => {
       const content = generateClientApp(resolved)
 
       expect(content).toContain("import { TodoPage } from './pages/TodoPage'")
-      expect(content).toContain(
-        '<Route path="/" element={<Navigate to="/todos" replace />}',
-      )
+      expect(content).toContain('<Route path="/" element={<Navigate to="/todos" replace />}')
       expect(content).toContain('<Route path="/todos" element={<TodoPage />} />')
       expect(content).not.toContain('NotificationPage')
       expect(content).not.toContain('WebSocketPage')
@@ -111,9 +94,9 @@ describe('code generators', () => {
       const resolved = getPreset('todo-app', allManifests, presets)
       const content = generateClientApp(resolved)
 
-      expect(content).toContain("import { TodoPage }")
-      expect(content).toContain("import { WebSocketPage }")
-      expect(content).toContain("import { NotificationPage }")
+      expect(content).toContain('import { TodoPage }')
+      expect(content).toContain('import { WebSocketPage }')
+      expect(content).toContain('import { NotificationPage }')
       expect(content).toContain('<Route path="/todos"')
       expect(content).toContain('<Route path="/websocket"')
       expect(content).toContain('<Route path="/notifications"')
@@ -135,9 +118,7 @@ describe('code generators', () => {
       const content = generateClientNavigation(resolved)
 
       expect(content).toContain("type RouteKey = 'todos'")
-      expect(content).toContain(
-        "todos: { label: 'Todo List', icon: CheckCircle, path: '/todos' }",
-      )
+      expect(content).toContain("todos: { label: 'Todo List', icon: CheckCircle, path: '/todos' }")
     })
 
     it('includes AuthButton for admin presets', () => {
@@ -340,7 +321,7 @@ describe('code generators', () => {
       const content = generateViteConfig(resolved, TEMPLATE_DIR)
 
       expect(content).toContain("main: path.resolve(__dirname, 'index.html')")
-      expect(content).not.toContain("admin: path.resolve")
+      expect(content).not.toContain('admin: path.resolve')
       expect(content).not.toContain("'admin.html'")
     })
 
@@ -365,7 +346,7 @@ describe('code generators', () => {
       const resolved = getPreset('todo-app', allManifests, presets)
       const content = generateViteConfig(resolved, TEMPLATE_DIR)
 
-      expect(content).not.toContain("admin: path.resolve")
+      expect(content).not.toContain('admin: path.resolve')
     })
   })
 })
