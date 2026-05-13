@@ -104,9 +104,21 @@ async function registerAndLoginUsers(
         data: { username: 'screenshotuser', email: 'screenshot@test.com', password: 'test123456' },
       })
       .catch(() => {})
-    const clientLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
-      data: { account: 'screenshotuser', password: 'test123456' },
-    })
+
+    // Retry login up to 3 times to handle transient ECONNREFUSED (IPv4/IPv6 mismatch)
+    let clientLoginRes: Awaited<ReturnType<typeof page.request.post>> | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        clientLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
+          data: { account: 'screenshotuser', password: 'test123456' },
+          timeout: 5000,
+        })
+        if (clientLoginRes.ok()) break
+      } catch {
+        if (attempt < 2) await new Promise(r => setTimeout(r, 2000))
+      }
+    }
+    if (!clientLoginRes) throw new Error('Failed to login after 3 retries')
     const clientLoginBody = await clientLoginRes.json()
     clientToken = clientLoginBody.data?.token ?? clientLoginBody.data?.profile?.token ?? ''
     const profile = clientLoginBody.data?.profile ?? clientLoginBody.data ?? {}
@@ -1484,12 +1496,12 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
         if (modules.has('todos')) {
           // 1. Navigate to todos page, set auth, then reload so app reads auth from localStorage
           await page.goto(`${baseUrl}/todos`)
-          await page.waitForLoadState('domcontentloaded')
+          await page.waitForLoadState('load')
           await setClientAuth(page, tokens.clientToken, tokens.clientUser)
           await page.reload()
-          await page.waitForLoadState('domcontentloaded')
+          await page.waitForLoadState('load')
           await page.waitForSelector('[data-testid="todo-form"], form, input[type="text"]', {
-            timeout: 15000,
+            timeout: 30000,
           })
           await page.waitForTimeout(800)
           const formIdx = idx++
