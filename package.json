@@ -11,7 +11,9 @@
   ],
   "workspaces": [
     "template",
-    "packages/core"
+    "packages/core",
+    "packages/infrastructure",
+    "packages/domain-plugin"
   ],
   "publishConfig": {
     "access": "public"

@@ -1,0 +1,22 @@
+{
+  "name": "@biomimic/infrastructure",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server/*": "./src/server/*",
+    "./shared/*": "./src/shared/*",
+    "./admin/*": "./src/admin/*",
+    "./client/*": "./src/client/*"
+  },
+  "peerDependencies": {
+    "@biomimic/core": "workspace:*",
+    "@hono/zod-openapi": "*",
+    "hono": "*",
+    "drizzle-orm": "*",
+    "react": "*",
+    "react-router-dom": "*",
+    "zustand": "*",
+    "zod": "*"
+  }
+}
