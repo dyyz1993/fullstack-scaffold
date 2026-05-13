@@ -13,8 +13,8 @@ setRuntimeAdapter(getNodeRuntimeAdapter())
 let sseTestContext: { port: number; close: () => Promise<void> }
 let client: ReturnType<typeof createTestClient>
 
-function connectSSE() {
-  const conn = client.api.notifications.stream.$sse()
+async function connectSSE() {
+  const conn = await client.api.notifications.stream.$sse()
   return conn as unknown as SSEClientImpl<AppSSEProtocol>
 }
 
@@ -44,7 +44,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
 
   describe('GET /api/notifications/stream via $sse()', () => {
     it('should use patched $sse() method for type-safe SSE connection', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       expect(['connecting', 'open', 'closed']).toContain(conn.status)
 
@@ -83,7 +83,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should receive typed notification events', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const receivedNotifications: AppSSEProtocol['events']['notification'][] = []
 
@@ -110,7 +110,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should receive typed ping events', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const receivedPings: AppSSEProtocol['events']['ping'][] = []
 
@@ -130,7 +130,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should receive typed connected events', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const receivedConnected: AppSSEProtocol['events']['connected'][] = []
 
@@ -150,7 +150,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should handle connection status changes', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const statusHistory: ('connecting' | 'open' | 'closed')[] = []
 
@@ -170,7 +170,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should handle errors gracefully', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const unsubscribe = conn.onError((error: Error) => {
         console.error('SSE error:', error)
@@ -187,7 +187,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
 
   describe('Error Scenarios', () => {
     it('should handle connection abort during event reception', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const receivedEvents: unknown[] = []
       const unsubscribe = conn.on('notification', (event: unknown) => {
@@ -206,7 +206,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should handle multiple abort calls gracefully', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -218,7 +218,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should handle unsubscribe before connection close', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       const unsubscribe = conn.on('notification', () => {})
 
@@ -232,7 +232,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should handle error events', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       let errorReceived = false
       const unsubscribe = conn.onError((error: Error) => {
@@ -253,7 +253,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should handle non-existent event type gracefully', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       let received = false
       const unsubscribe = conn.on('nonExistentEvent' as 'notification', () => {
@@ -273,7 +273,7 @@ describe('SSE Routes with Patched $sse() RPC Method', () => {
     })
 
     it('should test error assertion pattern', async () => {
-      const conn = connectSSE()
+      const conn = await connectSSE()
 
       await new Promise(resolve => setTimeout(resolve, 500))
 

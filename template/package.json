@@ -58,6 +58,7 @@
     "dev:context": "node --import tsx/esm lint-scripts/dev-context-analyzer.ts",
     "dev:guide": "node --import tsx/esm lint-scripts/dev-guide-generator.ts",
     "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts",
+    "postinstall": "patch-package",
     "prepare": "husky",
     "typecheck:full": "tsc --noEmit && eslint . --max-warnings=0"
   },
