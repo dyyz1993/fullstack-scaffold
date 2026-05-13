@@ -71,3 +71,4 @@ uploads/**/
 !settings.json.trae
 .codenomad/
 .turbo
+.opencode/
