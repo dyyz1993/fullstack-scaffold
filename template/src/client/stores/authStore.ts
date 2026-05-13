@@ -1,12 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiClient } from '@client/services/apiClient'
+import type { DeveloperProfile } from '@shared/schemas'
 
-interface UserProfile {
-  id: string
-  username: string
-  role: string
-}
+type UserProfile = Pick<DeveloperProfile, 'id' | 'username' | 'role'>
 
 interface AuthState {
   token: string | null

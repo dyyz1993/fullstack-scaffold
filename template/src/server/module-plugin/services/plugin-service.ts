@@ -4,20 +4,7 @@ import { getDb } from '@server/db'
 import { plugins, type PluginTable } from '@server/db/schema'
 import { generateUUID } from '@server/utils/uuid'
 import { NotFoundError, AuthorizationError, ConflictError } from '@server/utils/app-error'
-
-function parseJsonField<T>(field: string | null | undefined): T | undefined {
-  if (!field) return undefined
-  try {
-    return JSON.parse(field) as T
-  } catch {
-    return undefined
-  }
-}
-
-function serializeJsonField<T>(value: T | undefined): string | null {
-  if (value === undefined || value === null) return null
-  return JSON.stringify(value)
-}
+import { parseJsonField, serializeJsonField } from '@server/utils/json'
 
 function mapRow(row: PluginTable): Plugin {
   return {
