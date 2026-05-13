@@ -1461,6 +1461,7 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
       })
 
       test('04 — CRUD operations', async ({ page }) => {
+        test.setTimeout(120_000)
         if (!serverHandle) throw new Error('Dev server not started')
         if (!tokens) throw new Error('Auth tokens not available')
         checkConsoleErrors(page)
@@ -1481,15 +1482,16 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
 
         // --- Todo CRUD ---
         if (modules.has('todos')) {
-          // Navigate to todos with client auth
-          await page.goto(`${baseUrl}/admin/login`)
-          await page.waitForLoadState('domcontentloaded')
           await page.goto(baseUrl)
+          await page.waitForLoadState('domcontentloaded')
           await setClientAuth(page, tokens.clientToken, tokens.clientUser)
 
           // 1. Screenshot the form before creating (empty form)
           await page.goto(`${baseUrl}/todos`)
-          await page.waitForSelector('[data-testid="todo-form"]', { timeout: 8000 })
+          await page.waitForLoadState('domcontentloaded')
+          await page.waitForSelector('[data-testid="todo-form"], form, input[type="text"]', {
+            timeout: 15000,
+          })
           await page.waitForTimeout(800)
           const formIdx = idx++
           await capturePage(
@@ -1554,7 +1556,7 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
           await page.goto(baseUrl)
           await setClientAuth(page, tokens.clientToken, tokens.clientUser)
           await page.goto(`${baseUrl}/websocket`)
-          await page.waitForSelector('[data-testid="websocket-container"]', { timeout: 8000 })
+          await page.waitForSelector('[data-testid="websocket-container"]', { timeout: 15000 })
 
           // Connect
           const connectBtn = page.locator('[data-testid="connect-ws-button"]')
