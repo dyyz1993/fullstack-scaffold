@@ -47,7 +47,7 @@ async function capturePage(
   const screenshotPath = path.join(dir, `${name}.png`)
   const buffer = await page.screenshot({ fullPage: true })
   fs.writeFileSync(screenshotPath, buffer)
-   
+
   console.log(`  📸 Saved: ${screenshotPath}`)
 }
 
@@ -150,7 +150,6 @@ const PRESET_PAGE_CONFIGS: PresetConfig[] = [
 const DEV_SERVER_PORT = 30999
 
 async function scaffoldProject(presetId: string, outputDir: string): Promise<string> {
-   
   console.log(`\n  🏗️  Scaffolding preset "${presetId}" → ${outputDir}`)
 
   const cliEntry = path.join(TEMPLATE_ROOT, '../src/index.ts')
@@ -161,13 +160,11 @@ async function scaffoldProject(presetId: string, outputDir: string): Promise<str
     env: { ...process.env, CI: 'true' },
   })
 
-   
   console.log(`  ✅ Scaffolded to ${outputDir}`)
   return outputDir
 }
 
 async function installDeps(projectPath: string): Promise<void> {
-   
   console.log(`  📦 Installing dependencies in ${projectPath}...`)
 
   execSync('npm install --prefer-offline', {
@@ -176,7 +173,6 @@ async function installDeps(projectPath: string): Promise<void> {
     timeout: 180_000,
   })
 
-   
   console.log('  ✅ Dependencies installed')
 }
 
@@ -187,7 +183,6 @@ interface DevServerHandle {
 }
 
 async function startDevServer(projectPath: string, port: number): Promise<DevServerHandle> {
-   
   console.log(`  🚀 Starting dev server on port ${port}...`)
 
   const proc = spawn('npx', ['vite', '--port', String(port), '--host'], {
@@ -214,7 +209,6 @@ async function startDevServer(projectPath: string, port: number): Promise<DevSer
     try {
       const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(3000) })
       if (res.ok) {
-         
         console.log(`  ✅ Dev server ready at ${url}`)
         return { port, process: proc, url }
       }
@@ -252,7 +246,6 @@ async function safeScreenshotPage(
   try {
     const res = await page.goto(fullUrl, { timeout: 15_000 })
     if (!res || (res.status() >= 400 && res.status() < 600)) {
-       
       console.log(`  ⚠️  Skip ${name}: HTTP ${res?.status()} for ${route}`)
       return false
     }
@@ -262,7 +255,6 @@ async function safeScreenshotPage(
     await capturePage(page, name, outputDir)
     return true
   } catch (err) {
-     
     console.log(`  ⚠️  Skip ${name}: ${(err as Error).message.slice(0, 100)} for ${route}`)
     return false
   }
@@ -581,6 +573,10 @@ test.describe('Visual Screenshots — Template', () => {
 test.describe('Per-Preset Screenshot Gallery @slow', () => {
   test.describe.configure({ retries: 1, mode: 'serial' })
   test.setTimeout(300_000)
+
+  // Gallery tests scaffold projects + start dev servers — too heavy for cross-browser matrix.
+  // Only run on Chromium; Firefox/WebKit are skipped automatically.
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Gallery only runs on Chromium')
 
   for (const preset of PRESET_PAGE_CONFIGS) {
     test.describe(`Preset: ${preset.name} (${preset.id})`, () => {
