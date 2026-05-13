@@ -65,7 +65,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Type check
-        run: npx turbo typecheck --filter=biomimic-todo-app
+        run: cd template && npx tsc --noEmit
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
       - name: Lint
