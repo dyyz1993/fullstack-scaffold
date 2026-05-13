@@ -77,6 +77,8 @@ function getChangedFiles(): ChangedFiles {
       const filePath = paths[0]
 
       if (!filePath) continue
+      // Skip packages/ (own toolchain configs)
+      if (filePath.startsWith('packages/')) continue
 
       switch (status) {
         case 'A':

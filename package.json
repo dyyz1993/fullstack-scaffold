@@ -10,7 +10,8 @@
     "template"
   ],
   "workspaces": [
-    "template"
+    "template",
+    "packages/core"
   ],
   "publishConfig": {
     "access": "public"

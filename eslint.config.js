@@ -83,6 +83,7 @@ export default tseslint.config(
       'e2e',
       'scripts',
       'template',
+      'packages',
       'coverage',
       'testapp',
       'test-scaffold-debug',
