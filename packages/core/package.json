@@ -2,30 +2,5 @@
   "name": "@biomimic/core",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "exports": {
-    "./server/*": "./src/server/*",
-    "./shared/*": "./src/shared/*"
-  },
-  "dependencies": {
-    "@hono/node-server": "^1.14.4",
-    "@hono/zod-openapi": "1.2.2",
-    "@libsql/client": "^0.17.0",
-    "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.45.1",
-    "hono": "^4.12.16",
-    "ws": "^8.18.3",
-    "zod": "^4.4.3"
-  },
-  "peerDependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.13.1",
-    "zustand": "^5.0.2"
-  },
-  "devDependencies": {
-    "@types/ws": "^8.18.0",
-    "typescript": "^5.8.3",
-    "vitest": "^4.0.16"
-  }
+  "type": "module"
 }

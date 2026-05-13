@@ -2,16 +2,5 @@
   "name": "@biomimic/domain-plugin",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "exports": {
-    "./*": "./src/*"
-  },
-  "peerDependencies": {
-    "@biomimic/core": "workspace:*",
-    "@biomimic/infrastructure": "workspace:*",
-    "react": "*",
-    "react-router-dom": "*",
-    "zustand": "*",
-    "zod": "*"
-  }
+  "type": "module"
 }
