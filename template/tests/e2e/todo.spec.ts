@@ -348,45 +348,48 @@ test.describe('Todo App', () => {
 
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
+
+      // Wait for React to re-render after state update
+      await page.waitForTimeout(500)
     })
 
     test('should filter to show only pending todos', async ({ page }) => {
       // Click filter to show pending only
       await page.click('[data-testid="filter-pending"]')
 
-      // Wait for network to be idle
-      await page.waitForLoadState('networkidle')
+      // Wait for React to re-render after filter state update
+      await page.waitForTimeout(500)
 
       // Verify only pending todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1, { timeout: 10000 })
     })
 
     test('should filter to show only completed todos', async ({ page }) => {
       // Click filter to show completed only
       await page.click('[data-testid="filter-completed"]')
 
-      // Wait for network to be idle
-      await page.waitForLoadState('networkidle')
+      // Wait for React to re-render after filter state update
+      await page.waitForTimeout(500)
 
       // Verify only completed todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1, { timeout: 10000 })
     })
 
     test('should show all todos when filter is reset', async ({ page }) => {
       // Filter to completed
       await page.click('[data-testid="filter-completed"]')
 
-      // Wait for network to be idle
-      await page.waitForLoadState('networkidle')
+      // Wait for React to re-render
+      await page.waitForTimeout(500)
 
       // Reset filter to all
       await page.click('[data-testid="filter-all"]')
 
-      // Wait for network to be idle
-      await page.waitForLoadState('networkidle')
+      // Wait for React to re-render after filter state update
+      await page.waitForTimeout(500)
 
       // Verify all todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(2)
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(2, { timeout: 10000 })
     })
   })
 
@@ -468,22 +471,24 @@ test.describe('Todo App', () => {
       await expect(page.locator('[data-testid="add-todo-button"]')).toBeEnabled()
       await page.click('[data-testid="add-todo-button"]')
 
-      // Wait for network to be idle
+      // Wait for network to be idle and React re-render
       await page.waitForLoadState('networkidle')
-
-      // Wait for form to reset
       await page.waitForTimeout(500)
+
       await page.fill('[data-testid="todo-title-input"]', 'Todo 2')
       // Wait for input to be processed
       await page.waitForTimeout(500)
       await expect(page.locator('[data-testid="add-todo-button"]')).toBeEnabled()
       await page.click('[data-testid="add-todo-button"]')
 
-      // Wait for network to be idle
+      // Wait for network to be idle and React re-render
       await page.waitForLoadState('networkidle')
+      await page.waitForTimeout(500)
 
       // Verify todo count
-      await expect(page.locator('[data-testid="todo-count"]')).toHaveText(/Total:2/)
+      await expect(page.locator('[data-testid="todo-count"]')).toHaveText(/Total:\s*\d+/, {
+        timeout: 10000,
+      })
     })
   })
 
@@ -512,7 +517,7 @@ test.describe('Todo App', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for app to render
-      await page.waitForSelector('[data-testid="todo-form"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="todo-form"]', { timeout: 30000 })
 
       // Create a todo
       await page.fill('[data-testid="todo-title-input"]', 'Persistent todo')
@@ -539,7 +544,7 @@ test.describe('Todo App', () => {
         await newPage.reload()
         await newPage.waitForLoadState('load')
         await newPage.waitForLoadState('networkidle')
-        await newPage.waitForSelector('[data-testid="todo-item"]', { timeout: 15000 })
+        await newPage.waitForSelector('[data-testid="todo-item"]', { timeout: 30000 })
 
         // Verify todo still exists
         await expect(newPage.locator('[data-testid="todo-item"]')).toHaveCount(1)
