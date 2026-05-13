@@ -42,6 +42,8 @@ const mockTokens: Map<string, string> = new Map([
   ['user-token', '3'],
 ])
 
+const userPasswordHashes: Map<string, string> = new Map()
+
 export function getAuthUser(c: Context): AuthUser {
   return c.get('authUser')
 }
@@ -62,4 +64,8 @@ export function getMockUsers(): User[] {
 
 export function getMockTokens(): Map<string, string> {
   return mockTokens
+}
+
+export function getUserPasswordHashes(): Map<string, string> {
+  return userPasswordHashes
 }

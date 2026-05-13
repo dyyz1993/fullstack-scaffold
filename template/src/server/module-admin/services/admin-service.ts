@@ -3,7 +3,7 @@ import { getDb, getRawClient } from '@server/db'
 import { todos } from '@server/db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '@server/utils/date'
-import { getMockUsers } from '@server/utils/auth'
+import { getMockUsers, getMockTokens, getUserPasswordHashes } from '@server/utils/auth'
 import { Role, getPermissionsByRole } from '@shared/modules/permission'
 import type {
   SystemStats,
@@ -98,17 +98,31 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   const mockUsers = getMockUsers()
   const user = mockUsers.find(u => u.username === data.username)
 
-  if (!user || !(await bcrypt.compare(data.password, MOCK_PASSWORD_HASH))) {
+  if (!user) {
     throw new Error('Invalid credentials')
   }
 
-  let token: string
-  if (user.role === Role.SUPER_ADMIN) {
-    token = `test-super-admin-${user.id}`
-  } else if (user.role === Role.CUSTOMER_SERVICE) {
-    token = `test-customer-service-${user.id}`
-  } else {
-    token = `test-user-${user.id}`
+  const passwordHashes = getUserPasswordHashes()
+  const storedHash = passwordHashes.get(user.id)
+  const passwordMatch = storedHash
+    ? await bcrypt.compare(data.password, storedHash)
+    : await bcrypt.compare(data.password, MOCK_PASSWORD_HASH)
+
+  if (!passwordMatch) {
+    throw new Error('Invalid credentials')
+  }
+
+  const mockTokens = getMockTokens()
+  let token: string | undefined
+  for (const [t, userId] of mockTokens) {
+    if (userId === user.id) {
+      token = t
+      break
+    }
+  }
+  if (!token) {
+    token = `test-token-${user.id}-${Date.now()}`
+    mockTokens.set(token, user.id)
   }
 
   return {
@@ -132,6 +146,8 @@ export async function register(data: RegisterRequest): Promise<User> {
     throw new Error('User already exists')
   }
 
+  const passwordHash = await bcrypt.hash(data.password, 10)
+
   const newUser: User = {
     id: String(mockUsers.length + 1),
     username: data.username,
@@ -144,6 +160,7 @@ export async function register(data: RegisterRequest): Promise<User> {
   }
 
   mockUsers.push(newUser)
+  getUserPasswordHashes().set(newUser.id, passwordHash)
 
   return newUser
 }
