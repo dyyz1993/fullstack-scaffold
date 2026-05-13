@@ -72,7 +72,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.45.1",
-    "hono": "^4.12.16",
+    "hono": "4.12.16",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.576.0",
     "pino": "^9.7.0",
