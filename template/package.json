@@ -67,7 +67,7 @@
     "@hono/zod-openapi": "1.2.2",
     "@hono/zod-validator": "0.7.6",
     "@libsql/client": "^0.17.0",
-    "antd": "^5.24.0",
+    "antd": "^6.3.7",
     "bcryptjs": "^3.0.3",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.45.1",
