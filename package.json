@@ -149,13 +149,16 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "prettier --write",
-      "eslint --fix --no-warn-ignored",
+      "eslint --fix",
       "eslint --max-warnings=0 --no-warn-ignored"
     ],
     "*.{json,md,css}": [
       "prettier --write"
     ],
     "src/server/**/*routes*.ts": [
+      "npm run validate:all"
+    ],
+    "src/client/**/*.{ts,tsx}": [
       "npm run validate:all"
     ]
   },
