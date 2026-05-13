@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Visual Screenshot Capture
  *
@@ -7,8 +8,9 @@
  *
  * Two modes:
  *   1. Template screenshots (existing) — screenshots the template's own pages
- *   2. Per-Preset Gallery (new) — scaffolds each preset, starts dev server,
- *      captures all pages, generates HTML gallery
+ *   2. Per-Preset Gallery — scaffolds each preset, starts dev server,
+ *      captures all pages in user-flow order with login + data seeding,
+ *      generates HTML gallery
  *
  * Usage:
  *   - CI: Screenshots uploaded as artifacts automatically
@@ -16,8 +18,6 @@
  *
  * Tagged @slow — these tests take time due to scaffolding + dev server startup.
  */
-
-/* eslint-disable no-console */
 
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
@@ -47,7 +47,6 @@ async function capturePage(
   const screenshotPath = path.join(dir, `${name}.png`)
   const buffer = await page.screenshot({ fullPage: true })
   fs.writeFileSync(screenshotPath, buffer)
-
   console.log(`  📸 Saved: ${screenshotPath}`)
 }
 
@@ -61,184 +60,290 @@ async function checkConsoleErrors(page: import('@playwright/test').Page): Promis
   return errors
 }
 
-interface PresetConfig {
-  id: string
-  name: string
-  clientPages: Array<{ route: string; label: string; slug?: string }>
-  adminPages: Array<{ route: string; label: string }>
+// ─── Login Helpers ──────────────────────────────────────────────────
+
+interface AuthTokens {
+  clientToken: string
+  clientUser: { id: string; email: string; username: string; role: string }
+  adminToken: string
+  adminUser: { id: string; username: string; email: string; role: string }
 }
 
-const PRESET_PAGE_CONFIGS: PresetConfig[] = [
-  {
-    id: 'fullstack-admin',
-    name: 'Full Admin (Recommended)',
-    clientPages: [
-      { route: '/todos', label: 'todo-page' },
-      { route: '/notifications', label: 'notifications-page' },
-      { route: '/websocket', label: 'websocket-page' },
-      { route: '/content', label: 'content-page' },
-      { route: '/login', label: 'login-page' },
-      { route: '/register', label: 'register-page' },
-      { route: '/plugins', label: 'plugins-page' },
-      { route: '/plugins/sample-plugin', label: 'plugin-detail-page' },
-      { route: '/categories', label: 'categories-page' },
-      { route: '/search', label: 'search-page' },
-      { route: '/publish', label: 'publish-page' },
-      { route: '/developer', label: 'developer-dashboard' },
-    ],
-    adminPages: [
-      { route: '/admin/login', label: 'admin-login' },
-      { route: '/admin/dashboard', label: 'admin-dashboard' },
-      { route: '/admin/users', label: 'admin-users' },
-      { route: '/admin/orders', label: 'admin-orders' },
-      { route: '/admin/tickets', label: 'admin-tickets' },
-      { route: '/admin/disputes', label: 'admin-disputes' },
-      { route: '/admin/content', label: 'admin-content' },
-      { route: '/admin/system/settings', label: 'admin-settings' },
-      { route: '/admin/system/permissions', label: 'admin-permissions' },
-      { route: '/admin/system/roles', label: 'admin-roles' },
-      { route: '/admin/plugins', label: 'admin-plugins' },
-      { route: '/admin/plugins/review', label: 'admin-plugin-review' },
-      { route: '/admin/categories', label: 'admin-categories' },
-    ],
-  },
-  {
-    id: 'xbrowser-marketplace',
-    name: 'Plugin Marketplace',
-    clientPages: [
-      { route: '/notifications', label: 'notifications-page' },
-      { route: '/login', label: 'login-page' },
-      { route: '/register', label: 'register-page' },
-      { route: '/plugins', label: 'plugins-page' },
-      { route: '/plugins/sample-plugin', label: 'plugin-detail-page' },
-      { route: '/categories', label: 'categories-page' },
-      { route: '/search', label: 'search-page' },
-      { route: '/publish', label: 'publish-page' },
-      { route: '/developer', label: 'developer-dashboard' },
-    ],
-    adminPages: [
-      { route: '/admin/login', label: 'admin-login' },
-      { route: '/admin/plugins', label: 'admin-plugins' },
-      { route: '/admin/plugins/review', label: 'admin-plugin-review' },
-      { route: '/admin/categories', label: 'admin-categories' },
-    ],
-  },
-  {
-    id: 'todo-app',
-    name: 'Todo App',
-    clientPages: [
-      { route: '/todos', label: 'todo-page' },
-      { route: '/notifications', label: 'notifications-page' },
-      { route: '/websocket', label: 'websocket-page' },
-      { route: '/login', label: 'login-page' },
-      { route: '/register', label: 'register-page' },
-    ],
-    adminPages: [],
-  },
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    clientPages: [
-      { route: '/todos', label: 'todo-page' },
-      { route: '/login', label: 'login-page' },
-      { route: '/register', label: 'register-page' },
-    ],
-    adminPages: [],
-  },
-]
-
-const DEV_SERVER_PORT = 30999
-
-async function scaffoldProject(presetId: string, outputDir: string): Promise<string> {
-  console.log(`\n  🏗️  Scaffolding preset "${presetId}" → ${outputDir}`)
-
-  const cliEntry = path.join(TEMPLATE_ROOT, '../src/index.ts')
-  execSync(`npx tsx "${cliEntry}" "test-${presetId}" -p ${presetId} -o "${outputDir}"`, {
-    cwd: TEMPLATE_ROOT,
-    stdio: 'pipe',
-    timeout: 120_000,
-    env: { ...process.env, CI: 'true' },
+async function registerAndLoginUsers(
+  page: import('@playwright/test').Page,
+  baseUrl: string
+): Promise<AuthTokens> {
+  // Register + login client user (developer auth)
+  await page.request.post(`${baseUrl}/api/auth/register`, {
+    data: { username: 'screenshotuser', email: 'screenshot@test.com', password: 'test123456' },
   })
-
-  console.log(`  ✅ Scaffolded to ${outputDir}`)
-  return outputDir
-}
-
-async function installDeps(projectPath: string): Promise<void> {
-  console.log(`  📦 Installing dependencies in ${projectPath}...`)
-
-  execSync('npm install --prefer-offline', {
-    cwd: projectPath,
-    stdio: 'pipe',
-    timeout: 180_000,
+  const clientLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
+    data: { account: 'screenshotuser', password: 'test123456' },
   })
+  const clientLoginBody = await clientLoginRes.json()
+  const clientToken = clientLoginBody.data?.token ?? clientLoginBody.data?.profile?.token ?? ''
+  const clientProfile = clientLoginBody.data?.profile ?? clientLoginBody.data ?? {}
 
-  console.log('  ✅ Dependencies installed')
-}
-
-interface DevServerHandle {
-  port: number
-  process: ReturnType<typeof spawn>
-  url: string
-}
-
-async function startDevServer(projectPath: string, port: number): Promise<DevServerHandle> {
-  console.log(`  🚀 Starting dev server on port ${port}...`)
-
-  const proc = spawn('npx', ['vite', '--port', String(port), '--host'], {
-    cwd: projectPath,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, NODE_ENV: 'development' },
-    detached: false,
+  // Register + login admin user
+  await page.request.post(`${baseUrl}/api/auth/register`, {
+    data: { username: 'superadmin', email: 'admin@test.com', password: 'admin123456' },
   })
-
-  let stdout = ''
-  let stderr = ''
-
-  proc.stdout?.on('data', (chunk: Buffer) => {
-    stdout += chunk.toString()
+  const adminLoginRes = await page.request.post(`${baseUrl}/api/auth/login`, {
+    data: { account: 'superadmin', password: 'admin123456' },
   })
-  proc.stderr?.on('data', (chunk: Buffer) => {
-    stderr += chunk.toString()
-  })
+  const adminLoginBody = await adminLoginRes.json()
+  const adminToken = adminLoginBody.data?.token ?? adminLoginBody.data?.profile?.token ?? ''
+  const adminProfile = adminLoginBody.data?.profile ?? adminLoginBody.data ?? {}
 
-  const url = `http://localhost:${port}`
-
-  for (let i = 0; i < 60; i++) {
-    await new Promise(r => setTimeout(r, 1000))
-    try {
-      const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(3000) })
-      if (res.ok) {
-        console.log(`  ✅ Dev server ready at ${url}`)
-        return { port, process: proc, url }
-      }
-    } catch {
-      // keep waiting
-    }
-
-    if (!proc.pid || proc.exitCode !== null) {
-      throw new Error(`Dev server exited unexpectedly:\nstdout: ${stdout}\nstderr: ${stderr}`)
-    }
+  return {
+    clientToken,
+    clientUser: {
+      id: clientProfile.id ?? '1',
+      email: clientProfile.email ?? 'screenshot@test.com',
+      username: clientProfile.username ?? 'screenshotuser',
+      role: clientProfile.role ?? 'developer',
+    },
+    adminToken,
+    adminUser: {
+      id: adminProfile.id ?? '2',
+      email: adminProfile.email ?? 'admin@test.com',
+      username: adminProfile.username ?? 'superadmin',
+      role: adminProfile.role ?? 'super_admin',
+    },
   }
-
-  throw new Error(`Dev server did not start within 60s:\nstdout: ${stdout}\nstderr: ${stderr}`)
 }
 
-function stopDevServer(handle: DevServerHandle): void {
+async function setClientAuth(
+  page: import('@playwright/test').Page,
+  token: string,
+  user: AuthTokens['clientUser']
+): Promise<void> {
+  await page.evaluate(
+    ({ token: t, user: u }) => {
+      localStorage.setItem(
+        'auth-storage',
+        JSON.stringify({
+          state: { token: t, isAuthenticated: true, user: u },
+          version: 0,
+        })
+      )
+    },
+    { token, user }
+  )
+}
+
+async function setAdminAuth(
+  page: import('@playwright/test').Page,
+  token: string,
+  user: AuthTokens['adminUser']
+): Promise<void> {
+  await page.evaluate(
+    ({ token: t, user: u }) => {
+      localStorage.setItem(
+        'admin-storage',
+        JSON.stringify({
+          state: { token: t, isAuthenticated: true, user: u },
+          version: 0,
+        })
+      )
+    },
+    { token, user }
+  )
+}
+
+// ─── Data Seeding ───────────────────────────────────────────────────
+
+async function seedTodos(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  token: string
+): Promise<void> {
+  const headers = { Authorization: `Bearer ${token}` }
+  const todos = [
+    { title: 'Buy groceries for the week', completed: false },
+    { title: 'Read "Designing Data-Intensive Applications"', completed: false },
+    { title: 'Review pull request #42', completed: true },
+    { title: 'Set up CI/CD pipeline', completed: false },
+    { title: 'Write unit tests for auth module', completed: true },
+  ]
+  for (const todo of todos) {
+    await page.request.post(`${baseUrl}/api/todos`, { data: todo, headers })
+  }
+}
+
+async function seedNotifications(
+  page: import('@playwright/test').Page,
+  baseUrl: string
+): Promise<void> {
+  const notifications = [
+    {
+      type: 'success',
+      title: 'Deployment Successful',
+      message: 'Your application has been deployed to production.',
+    },
+    { type: 'info', title: 'New Comment', message: 'John Doe commented on your pull request.' },
+    {
+      type: 'warning',
+      title: 'Storage Running Low',
+      message: 'Your cloud storage is 85% full. Consider upgrading.',
+    },
+    {
+      type: 'error',
+      title: 'Build Failed',
+      message: 'The CI build for branch feature/auth failed.',
+    },
+  ]
+  for (const n of notifications) {
+    await page.request.post(`${baseUrl}/api/notifications`, { data: n })
+  }
+}
+
+async function seedPlugins(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  token: string
+): Promise<void> {
+  const headers = { Authorization: `Bearer ${token}` }
+  const plugins = [
+    {
+      name: 'Code Formatter Pro',
+      slug: 'code-formatter-pro',
+      description:
+        'Advanced code formatting with support for 50+ languages. Customizable rules, team presets, and auto-format on save.',
+      tags: ['formatting', 'productivity'],
+      license: 'MIT',
+    },
+    {
+      name: 'Git Lens',
+      slug: 'git-lens',
+      description:
+        'Supercharge Git within your editor. See commit blame, file history, and branch comparisons at a glance.',
+      tags: ['git', 'version-control'],
+      license: 'MIT',
+      featured: true,
+    },
+    {
+      name: 'Theme Studio',
+      slug: 'theme-studio',
+      description:
+        'Create and share custom editor themes with a visual designer. Import from VS Code, export everywhere.',
+      tags: ['themes', 'customization'],
+    },
+  ]
+  for (const p of plugins) {
+    await page.request.post(`${baseUrl}/api/plugins`, { data: p, headers })
+  }
+}
+
+async function seedAllData(
+  page: import('@playwright/test').Page,
+  baseUrl: string,
+  tokens: AuthTokens,
+  presetId: string
+): Promise<void> {
+  const hasTodos = [
+    'fullstack-admin',
+    'todo-app',
+    'ecommerce',
+    'xbrowser-marketplace',
+    'minimal',
+  ].includes(presetId)
+  const hasNotifications = [
+    'fullstack-admin',
+    'todo-app',
+    'ecommerce',
+    'xbrowser-marketplace',
+  ].includes(presetId)
+  const hasPlugins = ['fullstack-admin', 'xbrowser-marketplace'].includes(presetId)
+
+  if (hasTodos) await seedTodos(page, baseUrl, tokens.clientToken)
+  if (hasNotifications) await seedNotifications(page, baseUrl)
+  if (hasPlugins) await seedPlugins(page, baseUrl, tokens.clientToken)
+}
+
+// ─── CLI Terminal Screenshot ────────────────────────────────────────
+
+function generateTerminalHtml(command: string, stdout: string, stderr: string): string {
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+  const lines = (stdout + (stderr ? '\n' + stderr : ''))
+    .split('\n')
+    .map(l => `<span class="output">${esc(l)}</span>`)
+    .join('\n')
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#1e1e2e; color:#cdd6f4; font-family:'Menlo','Monaco','Courier New',monospace; font-size:13px; line-height:1.6; padding:20px; min-height:100vh; }
+  .terminal { background:#181825; border-radius:12px; padding:16px; border:1px solid #313244; max-width:900px; margin:0 auto; }
+  .titlebar { display:flex; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #313244; }
+  .dot { width:12px; height:12px; border-radius:50%; }
+  .dot.red { background:#f38ba8; } .dot.yellow { background:#f9e2af; } .dot.green { background:#a6e3a1; }
+  .prompt { color:#a6e3a1; font-weight:bold; }
+  .cmd { color:#89b4fa; }
+  .output { color:#cdd6f4; }
+  pre { white-space:pre-wrap; word-break:break-all; margin:0; }
+</style></head>
+<body>
+<div class="terminal">
+  <div class="titlebar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+  <pre><span class="prompt">$</span> <span class="cmd">${esc(command)}</span>
+${lines}</pre>
+</div>
+</body></html>`
+}
+
+async function captureTerminalScreenshot(
+  command: string,
+  args: string[],
+  cwd: string,
+  outputDir: string,
+  label: string,
+  page: import('@playwright/test').Page
+): Promise<boolean> {
   try {
-    handle.process.kill('SIGTERM')
-  } catch {
-    // already dead
+    const result = execSync(`${command} ${args.join(' ')}`, {
+      cwd,
+      stdio: 'pipe',
+      timeout: 120_000,
+      env: { ...process.env, CI: 'true' },
+    })
+
+    const stdout = result.toString()
+    const terminalHtml = generateTerminalHtml(`${command} ${args.join(' ')}`, stdout, '')
+    const htmlPath = path.join(outputDir, `${label}.html`)
+    fs.writeFileSync(htmlPath, terminalHtml, 'utf-8')
+
+    await page.goto(`file://${htmlPath}`)
+    await page.waitForTimeout(300)
+    await capturePage(page, label, outputDir)
+    return true
+  } catch (err) {
+    const execErr = err as { stdout?: Buffer; stderr?: Buffer }
+    const stdout = execErr.stdout?.toString() ?? ''
+    const stderr = execErr.stderr?.toString() ?? ''
+    const terminalHtml = generateTerminalHtml(`${command} ${args.join(' ')}`, stdout, stderr)
+    const htmlPath = path.join(outputDir, `${label}.html`)
+    fs.writeFileSync(htmlPath, terminalHtml, 'utf-8')
+
+    await page.goto(`file://${htmlPath}`)
+    await page.waitForTimeout(300)
+    await capturePage(page, label, outputDir)
+    return true
   }
 }
 
-async function safeScreenshotPage(
+// ─── Safe Screenshot with Auth ──────────────────────────────────────
+
+async function screenshotPage(
   page: import('@playwright/test').Page,
   baseUrl: string,
   route: string,
   label: string,
   outputDir: string,
-  index: number
+  index: number,
+  options?: { waitForTimeout?: number; waitForSelector?: string }
 ): Promise<boolean> {
   const name = `${String(index).padStart(2, '0')}-${label}`
   const fullUrl = `${baseUrl}${route}`
@@ -251,12 +356,339 @@ async function safeScreenshotPage(
     }
 
     await page.waitForLoadState('domcontentloaded', { timeout: 10_000 }).catch(() => {})
-    await page.waitForTimeout(500)
+
+    if (options?.waitForSelector) {
+      await page.waitForSelector(options.waitForSelector, { timeout: 8_000 }).catch(() => {})
+    }
+
+    await page.waitForTimeout(options?.waitForTimeout ?? 800)
     await capturePage(page, name, outputDir)
     return true
   } catch (err) {
     console.log(`  ⚠️  Skip ${name}: ${(err as Error).message.slice(0, 100)} for ${route}`)
     return false
+  }
+}
+
+// ─── Preset Configuration ───────────────────────────────────────────
+
+interface FlowStep {
+  route: string
+  label: string
+  section: 'cli' | 'client-public' | 'client-auth' | 'admin-public' | 'admin-auth'
+  waitForSelector?: string
+  waitForTimeout?: number
+}
+
+interface PresetConfig {
+  id: string
+  name: string
+  steps: FlowStep[]
+}
+
+function buildStepsForPreset(presetId: string): FlowStep[] {
+  const steps: FlowStep[] = []
+
+  const hasTodos = [
+    'fullstack-admin',
+    'todo-app',
+    'ecommerce',
+    'xbrowser-marketplace',
+    'minimal',
+  ].includes(presetId)
+  const hasChat = ['fullstack-admin', 'todo-app', 'ecommerce'].includes(presetId)
+  const hasNotifications = [
+    'fullstack-admin',
+    'todo-app',
+    'ecommerce',
+    'xbrowser-marketplace',
+  ].includes(presetId)
+  const hasPlugins = ['fullstack-admin', 'xbrowser-marketplace'].includes(presetId)
+  const hasAuth = ['fullstack-admin', 'xbrowser-marketplace', 'ecommerce'].includes(presetId)
+  const hasAdmin = ['fullstack-admin', 'xbrowser-marketplace', 'ecommerce'].includes(presetId)
+  const hasOrders = ['fullstack-admin', 'ecommerce'].includes(presetId)
+  const hasTickets = ['fullstack-admin', 'ecommerce'].includes(presetId)
+  const hasDisputes = ['fullstack-admin', 'ecommerce'].includes(presetId)
+  const hasContent = ['fullstack-admin', 'ecommerce'].includes(presetId)
+
+  // CLI steps
+  steps.push({ route: '', label: 'cli-create', section: 'cli' })
+
+  // Client public pages
+  if (hasAuth) {
+    steps.push({ route: '/', label: 'home-page', section: 'client-public' })
+    steps.push({ route: '/register', label: 'register-page', section: 'client-public' })
+    steps.push({ route: '/login', label: 'login-page', section: 'client-public' })
+  }
+
+  // Client authenticated pages
+  if (hasTodos) {
+    steps.push({
+      route: '/todos',
+      label: 'todo-page-with-data',
+      section: 'client-auth',
+      waitForSelector: '[data-testid="todo-list"], ul, table, .todo',
+      waitForTimeout: 1200,
+    })
+  }
+
+  if (hasNotifications) {
+    steps.push({
+      route: '/notifications',
+      label: 'notifications-page-with-data',
+      section: 'client-auth',
+      waitForTimeout: 1200,
+    })
+  }
+
+  if (hasChat) {
+    steps.push({ route: '/websocket', label: 'websocket-page', section: 'client-auth' })
+  }
+
+  if (hasPlugins) {
+    steps.push({
+      route: '/plugins',
+      label: 'plugins-page-with-data',
+      section: 'client-auth',
+      waitForSelector: '[data-testid="plugin-card"], .plugin-card, .card, article',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/plugins/code-formatter-pro',
+      label: 'plugin-detail-page',
+      section: 'client-auth',
+      waitForTimeout: 1200,
+    })
+    steps.push({
+      route: '/categories',
+      label: 'categories-page',
+      section: 'client-auth',
+      waitForTimeout: 1000,
+    })
+    steps.push({
+      route: '/search',
+      label: 'search-page',
+      section: 'client-auth',
+      waitForTimeout: 1000,
+    })
+    steps.push({ route: '/publish', label: 'publish-page', section: 'client-auth' })
+    steps.push({ route: '/developer', label: 'developer-dashboard', section: 'client-auth' })
+  }
+
+  if (hasContent) {
+    steps.push({ route: '/content', label: 'content-page', section: 'client-auth' })
+  }
+
+  // No-auth fallback pages
+  if (!hasAuth && hasTodos) {
+    steps.unshift({ route: '/', label: 'home-page', section: 'client-public' })
+    steps.push({
+      route: '/todos',
+      label: 'todo-page-with-data',
+      section: 'client-public',
+      waitForSelector: '[data-testid="todo-list"], ul, table, .todo',
+      waitForTimeout: 1200,
+    })
+  }
+
+  if (!hasAuth && hasNotifications) {
+    steps.push({
+      route: '/notifications',
+      label: 'notifications-page',
+      section: 'client-public',
+      waitForTimeout: 1000,
+    })
+  }
+
+  if (!hasAuth && hasChat) {
+    steps.push({ route: '/websocket', label: 'websocket-page', section: 'client-public' })
+  }
+
+  // Admin pages
+  if (hasAdmin) {
+    steps.push({ route: '/admin/login', label: 'admin-login-page', section: 'admin-public' })
+    steps.push({
+      route: '/admin/dashboard',
+      label: 'admin-dashboard',
+      section: 'admin-auth',
+      waitForTimeout: 2000,
+    })
+    steps.push({
+      route: '/admin/users',
+      label: 'admin-users',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasOrders) {
+    steps.push({
+      route: '/admin/orders',
+      label: 'admin-orders',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasTickets) {
+    steps.push({
+      route: '/admin/tickets',
+      label: 'admin-tickets',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasDisputes) {
+    steps.push({
+      route: '/admin/disputes',
+      label: 'admin-disputes',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasContent) {
+    steps.push({
+      route: '/admin/content',
+      label: 'admin-content',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasPlugins) {
+    steps.push({
+      route: '/admin/plugins',
+      label: 'admin-plugins',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/admin/plugins/review',
+      label: 'admin-plugin-review',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/admin/categories',
+      label: 'admin-categories',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  if (hasAdmin) {
+    steps.push({
+      route: '/admin/system/settings',
+      label: 'admin-settings',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/admin/system/permissions',
+      label: 'admin-permissions',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+    steps.push({
+      route: '/admin/system/roles',
+      label: 'admin-roles',
+      section: 'admin-auth',
+      waitForTimeout: 1500,
+    })
+  }
+
+  return steps
+}
+
+const PRESET_PAGE_CONFIGS: PresetConfig[] = [
+  {
+    id: 'fullstack-admin',
+    name: 'Full Admin (Recommended)',
+    steps: buildStepsForPreset('fullstack-admin'),
+  },
+  {
+    id: 'xbrowser-marketplace',
+    name: 'Plugin Marketplace',
+    steps: buildStepsForPreset('xbrowser-marketplace'),
+  },
+  { id: 'ecommerce', name: 'E-Commerce', steps: buildStepsForPreset('ecommerce') },
+  { id: 'todo-app', name: 'Todo App', steps: buildStepsForPreset('todo-app') },
+  { id: 'minimal', name: 'Minimal', steps: buildStepsForPreset('minimal') },
+]
+
+// ─── Dev Server Helpers ─────────────────────────────────────────────
+
+const DEV_SERVER_PORT = 30999
+
+async function scaffoldProject(presetId: string, outputDir: string): Promise<string> {
+  console.log(`\n  🏗️  Scaffolding preset "${presetId}" → ${outputDir}`)
+  const cliEntry = path.join(TEMPLATE_ROOT, '../src/index.ts')
+  execSync(`npx tsx "${cliEntry}" "test-${presetId}" -p ${presetId} -o "${outputDir}"`, {
+    cwd: TEMPLATE_ROOT,
+    stdio: 'pipe',
+    timeout: 120_000,
+    env: { ...process.env, CI: 'true' },
+  })
+  console.log(`  ✅ Scaffolded to ${outputDir}`)
+  return outputDir
+}
+
+async function installDeps(projectPath: string): Promise<void> {
+  console.log(`  📦 Installing dependencies in ${projectPath}...`)
+  execSync('npm install --prefer-offline', { cwd: projectPath, stdio: 'pipe', timeout: 180_000 })
+  console.log('  ✅ Dependencies installed')
+}
+
+interface DevServerHandle {
+  port: number
+  process: ReturnType<typeof spawn>
+  url: string
+}
+
+async function startDevServer(projectPath: string, port: number): Promise<DevServerHandle> {
+  console.log(`  🚀 Starting dev server on port ${port}...`)
+  const proc = spawn('npx', ['vite', '--port', String(port), '--host'], {
+    cwd: projectPath,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, NODE_ENV: 'development' },
+    detached: false,
+  })
+
+  let stdout = ''
+  let stderr = ''
+  proc.stdout?.on('data', (chunk: Buffer) => {
+    stdout += chunk.toString()
+  })
+  proc.stderr?.on('data', (chunk: Buffer) => {
+    stderr += chunk.toString()
+  })
+
+  const url = `http://localhost:${port}`
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 1000))
+    try {
+      const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(3000) })
+      if (res.ok) {
+        console.log(`  ✅ Dev server ready at ${url}`)
+        return { port, process: proc, url }
+      }
+    } catch {
+      // keep waiting
+    }
+    if (!proc.pid || proc.exitCode !== null) {
+      throw new Error(`Dev server exited unexpectedly:\nstdout: ${stdout}\nstderr: ${stderr}`)
+    }
+  }
+  throw new Error(`Dev server did not start within 60s:\nstdout: ${stdout}\nstderr: ${stderr}`)
+}
+
+function stopDevServer(handle: DevServerHandle): void {
+  try {
+    handle.process.kill('SIGTERM')
+  } catch {
+    /* already dead */
   }
 }
 
@@ -276,7 +708,6 @@ function generateGallery(screenshotsBaseDir: string, presets: PresetConfig[]): v
   for (const preset of presets) {
     const presetDir = path.join(screenshotsBaseDir, preset.id)
     if (!fs.existsSync(presetDir)) continue
-
     const files = fs
       .readdirSync(presetDir)
       .filter(f => f.endsWith('.png'))
@@ -312,81 +743,33 @@ function generateGallery(screenshotsBaseDir: string, presets: PresetConfig[]): v
     --radius: 12px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    background: var(--bg); color: var(--text);
-    line-height: 1.6;
-  }
-  .header {
-    text-align:center; padding:48px 24px 32px;
-    background: linear-gradient(135deg,#1a1d27 0%,#161922 100%);
-    border-bottom:1px solid var(--border);
-  }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  .header { text-align:center; padding:48px 24px 32px; background:linear-gradient(135deg,#1a1d27 0%,#161922 100%); border-bottom:1px solid var(--border); }
   .header h1 { font-size:28px; font-weight:700; letter-spacing:-.5px; margin-bottom:8px; }
   .header p { color:var(--text-muted); font-size:14px; }
-  .header .badge {
-    display:inline-block; padding:4px 12px; border-radius:20px;
-    background:var(--accent-glow); color:var(--accent);
-    font-size:12px; font-weight:600; margin-top:12px;
-  }
-  .stats {
-    display:flex; justify-content:center; gap:32px; margin-top:20px;
-  }
+  .header .badge { display:inline-block; padding:4px 12px; border-radius:20px; background:var(--accent-glow); color:var(--accent); font-size:12px; font-weight:600; margin-top:12px; }
+  .stats { display:flex; justify-content:center; gap:32px; margin-top:20px; }
   .stat { text-align:center; }
   .stat .num { font-size:24px; font-weight:700; color:var(--accent); }
   .stat .lbl { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; }
   .container { max-width:1400px; margin:0 auto; padding:32px 24px; }
   .section { margin-bottom:56px; }
-  .section-title {
-    display:flex; align-items:center; gap:10px;
-    font-size:18px; font-weight:600; margin-bottom:20px;
-    padding-bottom:12px; border-bottom:1px solid var(--border);
-  }
-  .section-title .dot {
-    width:8px; height:8px; border-radius:50%; background:var(--success);
-    box-shadow:0 0 8px var(--success);
-  }
-  .grid {
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-    gap:20px;
-  }
-  .card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius); overflow:hidden;
-    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-    cursor:pointer;
-  }
-  .card:hover {
-    transform:translateY(-4px);
-    box-shadow:0 12px 32px rgba(0,0,0,.35);
-    border-color:var(--accent);
-  }
-  .card img {
-    width:100%; height:auto; display:block;
-    border-bottom:1px solid var(--border);
-  }
-  .card-label {
-    padding:10px 14px; font-size:13px; font-weight:500;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .card-label code {
-    background:var(--bg); padding:2px 6px; border-radius:4px;
-    font-size:11px; color:var(--accent); margin-left:6px;
-  }
-  .lightbox {
-    position:fixed; inset:0; background:rgba(0,0,0,.85);
-    display:none; align-items:center; justify-content:center;
-    z-index:9999; cursor:pointer; backdrop-filter:blur(8px);
-  }
+  .section-title { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:600; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .section-title .dot { width:8px; height:8px; border-radius:50%; background:var(--success); box-shadow:0 0 8px var(--success); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; cursor:pointer; }
+  .card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,.35); border-color:var(--accent); }
+  .card img { width:100%; height:auto; display:block; border-bottom:1px solid var(--border); }
+  .card-label { padding:10px 14px; font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-label code { background:var(--bg); padding:2px 6px; border-radius:4px; font-size:11px; color:var(--accent); margin-left:6px; }
+  .card .section-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-right:6px; }
+  .card .section-badge.cli { background:#f9e2af22; color:#f9e2af; }
+  .card .section-badge.client { background:#89b4fa22; color:#89b4fa; }
+  .card .section-badge.admin { background:#a6e3a122; color:#a6e3a1; }
+  .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:9999; cursor:pointer; backdrop-filter:blur(8px); }
   .lightbox.active { display:flex; }
-  .lightbox img {
-    max-width:90vw; max-height:90vh;
-    border-radius:var(--radius); box-shadow:0 24px 64px rgba(0,0,0,.5);
-  }
-  .footer {
-    text-align:center; padding:32px; color:var(--text-muted);
-    font-size:12px; border-top:1px solid var(--border);
-  }
+  .lightbox img { max-width:90vw; max-height:90vh; border-radius:var(--radius); box-shadow:0 24px 64px rgba(0,0,0,.5); }
+  .footer { text-align:center; padding:32px; color:var(--text-muted); font-size:12px; border-top:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -412,13 +795,18 @@ ${presets
     <div class="section-title"><span class="dot"></span>${preset.name}<code style="color:var(--text-muted);font-size:13px;margin-left:8px;">${preset.id}</code></div>
     <div class="grid">
       ${presetImages
-        .map(
-          img => `
+        .map(img => {
+          const badge = img.label.startsWith('cli-')
+            ? 'cli'
+            : img.label.startsWith('admin-')
+              ? 'admin'
+              : 'client'
+          return `
       <div class="card" onclick="showLightbox('${img.relativePath}')">
         <img src="${img.relativePath}" alt="${img.label}" loading="lazy" />
-        <div class="card-label">${img.label.replace(/-/g, ' ')}</div>
+        <div class="card-label"><span class="section-badge ${badge}">${badge}</span>${img.label.replace(/-/g, ' ')}</div>
       </div>`
-        )
+        })
         .join('\n')}
     </div>
   </div>`
@@ -436,17 +824,11 @@ ${presets
 </div>
 
 <script>
-function showLightbox(src) {
-  document.getElementById('lb-img').src = src;
-  document.getElementById('lightbox').classList.add('active');
-}
-function hideLightbox() {
-  document.getElementById('lightbox').classList.remove('active');
-}
+function showLightbox(src) { document.getElementById('lb-img').src = src; document.getElementById('lightbox').classList.add('active'); }
+function hideLightbox() { document.getElementById('lightbox').classList.remove('active'); }
 document.addEventListener('keydown', e => { if(e.key==='Escape') hideLightbox(); });
 </script>
-</body>
-</html>`
+</body></html>`
 
   const indexPath = path.join(screenshotsBaseDir, 'index.html')
   fs.writeFileSync(indexPath, html, 'utf-8')
@@ -572,23 +954,24 @@ test.describe('Visual Screenshots — Template', () => {
 
 test.describe('Per-Preset Screenshot Gallery @slow', () => {
   test.describe.configure({ retries: 1, mode: 'serial' })
-  test.setTimeout(300_000)
+  test.setTimeout(600_000)
 
-  // Gallery tests scaffold projects + start dev servers — too heavy for cross-browser matrix.
-  // Only run on Chromium; Firefox/WebKit are skipped automatically.
   test.skip(({ browserName }) => browserName !== 'chromium', 'Gallery only runs on Chromium')
 
   for (const preset of PRESET_PAGE_CONFIGS) {
     test.describe(`Preset: ${preset.name} (${preset.id})`, () => {
       let serverHandle: DevServerHandle | null = null
+      let tokens: AuthTokens | null = null
       const presetOutputDir = path.join(GALLERY_DIR, preset.id)
-      let pageIndex = 0
+      const presetProjectPath = path.join(
+        os.tmpdir(),
+        `biomimic-gallery-${preset.id}-${Date.now()}`
+      )
 
       test.beforeAll(async () => {
         fs.mkdirSync(presetOutputDir, { recursive: true })
 
-        const tmpRoot = path.join(os.tmpdir(), `biomimic-gallery-${preset.id}-${Date.now()}`)
-        const projectPath = await scaffoldProject(preset.id, tmpRoot)
+        const projectPath = await scaffoldProject(preset.id, presetProjectPath)
         await installDeps(projectPath)
         serverHandle = await startDevServer(
           projectPath,
@@ -603,38 +986,159 @@ test.describe('Per-Preset Screenshot Gallery @slow', () => {
         }
       })
 
-      for (const pageCfg of preset.clientPages) {
-        test(`client: ${pageCfg.label}`, async ({ page }) => {
-          if (!serverHandle) throw new Error('Dev server not started')
-          checkConsoleErrors(page)
-          const ok = await safeScreenshotPage(
+      test('00 — CLI creation screenshot', async ({ page }) => {
+        if (!serverHandle) throw new Error('Dev server not started')
+        checkConsoleErrors(page)
+
+        const cliEntry = path.join(TEMPLATE_ROOT, '../src/index.ts')
+        const ok = await captureTerminalScreenshot(
+          'npx',
+          [`tsx "${cliEntry}" "test-${preset.id}" --preset ${preset.id}`],
+          TEMPLATE_ROOT,
+          presetOutputDir,
+          '00-cli-create',
+          page
+        )
+        expect(ok).toBeTruthy()
+      })
+
+      test('01 — client public pages', async ({ page }) => {
+        if (!serverHandle) throw new Error('Dev server not started')
+        checkConsoleErrors(page)
+
+        const publicSteps = preset.steps.filter(s => s.section === 'client-public')
+        if (publicSteps.length === 0) {
+          expect(true).toBeTruthy()
+          return
+        }
+
+        let idx = 1
+        for (const step of publicSteps) {
+          await screenshotPage(
             page,
             serverHandle.url,
-            pageCfg.route,
-            pageCfg.label,
+            step.route,
+            step.label,
             presetOutputDir,
-            ++pageIndex
+            idx,
+            {
+              waitForSelector: step.waitForSelector,
+              waitForTimeout: step.waitForTimeout,
+            }
           )
-          expect(ok).toBeTruthy()
-        })
-      }
+          idx++
+        }
+        expect(true).toBeTruthy()
+      })
 
-      for (const pageCfg of preset.adminPages) {
-        test(`admin: ${pageCfg.label}`, async ({ page }) => {
-          if (!serverHandle) throw new Error('Dev server not started')
-          checkConsoleErrors(page)
+      test('02 — seed data + client authenticated pages', async ({ page }) => {
+        if (!serverHandle) throw new Error('Dev server not started')
+        checkConsoleErrors(page)
 
-          const ok = await safeScreenshotPage(
+        const authSteps = preset.steps.filter(s => s.section === 'client-auth')
+        if (authSteps.length === 0) {
+          expect(true).toBeTruthy()
+          return
+        }
+
+        // Cleanup + register + login
+        await page.request.post(`${serverHandle.url}/api/__test__/cleanup`).catch(() => {})
+        tokens = await registerAndLoginUsers(page, serverHandle.url)
+
+        // Seed data
+        await seedAllData(page, serverHandle.url, tokens, preset.id)
+
+        // Set client auth in localStorage
+        await page.goto(serverHandle.url)
+        await page.waitForLoadState('domcontentloaded')
+        await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+
+        // Take authenticated screenshots
+        const clientPublicCount = preset.steps.filter(s => s.section === 'client-public').length
+        let idx = clientPublicCount + 1
+        for (const step of authSteps) {
+          await page.goto(serverHandle.url)
+          await setClientAuth(page, tokens.clientToken, tokens.clientUser)
+          await screenshotPage(
             page,
             serverHandle.url,
-            pageCfg.route,
-            pageCfg.label,
+            step.route,
+            step.label,
             presetOutputDir,
-            ++pageIndex
+            idx,
+            {
+              waitForSelector: step.waitForSelector,
+              waitForTimeout: step.waitForTimeout,
+            }
           )
-          expect(ok).toBeTruthy()
-        })
-      }
+          idx++
+        }
+        expect(true).toBeTruthy()
+      })
+
+      test('03 — admin pages', async ({ page }) => {
+        if (!serverHandle) throw new Error('Dev server not started')
+        if (!tokens) throw new Error('Auth tokens not available')
+        checkConsoleErrors(page)
+
+        const adminPublicSteps = preset.steps.filter(s => s.section === 'admin-public')
+        const adminAuthSteps = preset.steps.filter(s => s.section === 'admin-auth')
+        if (adminPublicSteps.length === 0 && adminAuthSteps.length === 0) {
+          expect(true).toBeTruthy()
+          return
+        }
+
+        const clientPublicCount = preset.steps.filter(s => s.section === 'client-public').length
+        const clientAuthCount = preset.steps.filter(s => s.section === 'client-auth').length
+        let idx = clientPublicCount + clientAuthCount + 1
+
+        // Screenshot admin login page (public)
+        for (const step of adminPublicSteps) {
+          await screenshotPage(
+            page,
+            serverHandle.url,
+            step.route,
+            step.label,
+            presetOutputDir,
+            idx,
+            {
+              waitForSelector: step.waitForSelector,
+              waitForTimeout: step.waitForTimeout,
+            }
+          )
+          idx++
+        }
+
+        // Login as admin + take authenticated screenshots
+        if (adminAuthSteps.length > 0 && tokens) {
+          // Navigate to admin and set auth
+          await page.goto(`${serverHandle.url}/admin/login`)
+          await page.waitForLoadState('domcontentloaded')
+          await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
+
+          for (const step of adminAuthSteps) {
+            // Re-set admin auth before each page (in case navigation clears it)
+            await page.goto(`${serverHandle.url}/admin/login`)
+            await page.waitForLoadState('domcontentloaded')
+            await setAdminAuth(page, tokens.adminToken, tokens.adminUser)
+
+            await screenshotPage(
+              page,
+              serverHandle.url,
+              step.route,
+              step.label,
+              presetOutputDir,
+              idx,
+              {
+                waitForSelector: step.waitForSelector,
+                waitForTimeout: step.waitForTimeout,
+              }
+            )
+            idx++
+          }
+        }
+        expect(true).toBeTruthy()
+      })
     })
   }
 
