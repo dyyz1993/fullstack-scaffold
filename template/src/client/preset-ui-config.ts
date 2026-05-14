@@ -287,12 +287,12 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
       },
       {
         path: '/cart',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage }))),
         label: 'Cart',
       },
       {
         path: '/orders',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage }))),
         label: 'Orders',
       },
       {
@@ -344,12 +344,12 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
     routes: [
       {
         path: '/topics',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage }))),
         label: 'Topics',
       },
       {
         path: '/popular',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage }))),
         label: 'Popular',
       },
       {
@@ -361,7 +361,9 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
       },
       {
         path: '/profile',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() =>
+          import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage }))
+        ),
         label: 'Profile',
       },
       {
@@ -395,12 +397,16 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
     routes: [
       {
         path: '/dashboard',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() =>
+          import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage }))
+        ),
         label: 'Dashboard',
       },
       {
         path: '/settings',
-        component: lazy(() => import('./pages/TodoPage').then(m => ({ default: m.TodoPage }))),
+        component: lazy(() =>
+          import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage }))
+        ),
         label: 'Settings',
       },
       {
