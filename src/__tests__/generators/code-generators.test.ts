@@ -107,18 +107,20 @@ describe('code generators', () => {
       const content = generateClientApp(resolved)
 
       expect(content).toContain('BrowserRouter')
-      expect(content).toContain('<Layout>')
+      expect(content).toContain('<Layout')
+      expect(content).toContain('preset={presetId}')
       expect(content).toContain('<Routes>')
     })
   })
 
   describe('generateClientNavigation', () => {
-    it('maps pages to RouteKey and routes object', () => {
+    it('maps pages to nav items with ClientNavItem interface', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain("type RouteKey = 'todos'")
-      expect(content).toContain("todos: { label: 'Todo List', icon: CheckCircle, path: '/todos' }")
+      expect(content).toContain('ClientNavItem')
+      expect(content).toContain("label: 'Todos'")
+      expect(content).toContain("path: '/todos'")
     })
 
     it('includes AuthButton for admin presets', () => {
@@ -136,23 +138,23 @@ describe('code generators', () => {
       expect(content).not.toContain('AuthButton')
     })
 
-    it('todo-app: has 3 route keys', () => {
+    it('todo-app: has 3 nav items', () => {
       const resolved = getPreset('todo-app', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain("'todos'")
-      expect(content).toContain("'websocket'")
-      expect(content).toContain("'notifications'")
+      expect(content).toContain("label: 'Todos'")
+      expect(content).toContain("label: 'WebSocket'")
+      expect(content).toContain("label: 'Notifications'")
       expect(content).toContain("from 'lucide-react'")
     })
 
-    it('includes brand and github link', () => {
+    it('includes brand with dynamic theme', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain('<Rocket className="w-6 h-6 text-blue-500" />')
-      expect(content).toContain('Biomimic App')
-      expect(content).toContain('<Github className="w-5 h-5" />')
+      expect(content).toContain('<Rocket className="w-4 h-4 text-white" />')
+      expect(content).toContain('{logoText}')
+      expect(content).toContain('<Sparkles')
     })
   })
 
