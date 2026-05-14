@@ -1,120 +1,137 @@
-import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Layout, Menu } from 'antd'
 import {
-  LayoutDashboard,
-  Users,
-  ShoppingCart,
-  Headphones,
-  FileText,
-  AlertTriangle,
-  Settings,
-  Shield,
-  UserCog,
-  Activity,
-  ChevronDown,
-  ChevronRight,
-  type LucideIcon,
-} from 'lucide-react'
-import { usePermissions } from '../hooks/usePermissions'
-import type { MenuItem } from '@shared/modules/permission'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  Users,
-  ShoppingCart,
-  Headphones,
-  FileText,
-  AlertTriangle,
-  Settings,
-  Shield,
-  UserCog,
-  Activity,
-}
+  DashboardOutlined,
+  FileTextOutlined,
+  TeamOutlined,
+  SettingOutlined,
+  RocketOutlined,
+} from '@ant-design/icons'
+import { NavLink, useLocation } from 'react-router-dom'
 
 interface SidebarProps {
-  isOpen: boolean
+  collapsed: boolean
+  onCollapse: (collapsed: boolean) => void
 }
 
-interface MenuItemComponentProps {
-  item: MenuItem
-  level?: number
-}
+const MENU_ITEMS = [
+  {
+    key: 'dashboard',
+    icon: <DashboardOutlined />,
+    label: <NavLink to="/dashboard">Dashboard</NavLink>,
+  },
+  {
+    key: 'content',
+    icon: <FileTextOutlined />,
+    label: 'Content Management',
+    children: [
+      {
+        key: 'content-list',
+        label: <NavLink to="/content">Content List</NavLink>,
+      },
+      {
+        key: 'categories',
+        label: <NavLink to="/categories">Categories</NavLink>,
+      },
+    ],
+  },
+  {
+    key: 'users-orders',
+    icon: <TeamOutlined />,
+    label: 'Users & Orders',
+    children: [
+      {
+        key: 'users',
+        label: <NavLink to="/users">Users</NavLink>,
+      },
+      {
+        key: 'orders',
+        label: <NavLink to="/orders">Orders</NavLink>,
+      },
+      {
+        key: 'tickets',
+        label: <NavLink to="/tickets">Tickets</NavLink>,
+      },
+      {
+        key: 'disputes',
+        label: <NavLink to="/disputes">Disputes</NavLink>,
+      },
+    ],
+  },
+  {
+    key: 'system',
+    icon: <SettingOutlined />,
+    label: 'System',
+    children: [
+      {
+        key: 'roles',
+        label: <NavLink to="/roles">Roles & Permissions</NavLink>,
+      },
+      {
+        key: 'system-settings',
+        label: <NavLink to="/settings">Settings</NavLink>,
+      },
+      {
+        key: 'logs',
+        label: <NavLink to="/system-logs">System Logs</NavLink>,
+      },
+    ],
+  },
+]
 
-const MenuItemComponent: React.FC<MenuItemComponentProps> = ({ item, level = 0 }) => {
-  const [expanded, setExpanded] = useState(false)
-  const Icon = ICON_MAP[item.icon] || LayoutDashboard
-  const hasChildren = item.children && item.children.length > 0
+export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
+  const location = useLocation()
 
-  if (hasChildren) {
-    return (
-      <div>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors text-gray-300 hover:bg-gray-800 ${
-            level > 0 ? 'pl-8' : ''
-          }`}
-        >
-          <Icon className="w-5 h-5" />
-          <span className="flex-1 text-left">{item.label}</span>
-          {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        </button>
-        {expanded && (
-          <div className="ml-4">
-            {item.children!.map(child => (
-              <MenuItemComponent key={child.path} item={child} level={level + 1} />
-            ))}
-          </div>
-        )}
-      </div>
-    )
+  const getSelectedKey = () => {
+    const path = location.pathname
+    if (path === '/dashboard') return 'dashboard'
+    if (path.startsWith('/content')) return 'content-list'
+    if (path.startsWith('/categories')) return 'categories'
+    if (path.startsWith('/users')) return 'users'
+    if (path.startsWith('/orders')) return 'orders'
+    if (path.startsWith('/tickets')) return 'tickets'
+    if (path.startsWith('/disputes')) return 'disputes'
+    if (path.startsWith('/roles')) return 'roles'
+    if (path.startsWith('/settings') || path === '/settings') return 'system-settings'
+    if (path.startsWith('/system-logs')) return 'logs'
+    return 'dashboard'
   }
 
   return (
-    <NavLink
-      to={item.path}
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition-colors ${
-          isActive ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'
-        } ${level > 0 ? 'pl-8 text-sm' : ''}`
-      }
-    >
-      <Icon className="w-5 h-5" />
-      <span>{item.label}</span>
-    </NavLink>
-  )
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
-  const { menuConfig, loading, initialized } = usePermissions()
-
-  if (loading || !initialized) {
-    return (
-      <aside className="bg-gray-900 text-white w-64 overflow-hidden" data-testid="admin-sidebar">
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
-          <h1 className="text-lg font-bold">Admin Panel</h1>
-        </div>
-        <nav className="p-4">
-          <div className="text-gray-400">加载中...</div>
-        </nav>
-      </aside>
-    )
-  }
-
-  return (
-    <aside
-      className={`bg-gray-900 text-white transition-all duration-300 ${
-        isOpen ? 'w-64' : 'w-0'
-      } overflow-hidden`}
+    <Layout.Sider
+      collapsible
+      collapsed={collapsed}
+      onCollapse={onCollapse}
+      trigger={null}
+      width={256}
+      collapsedWidth={80}
+      className="!bg-[#001529]"
       data-testid="admin-sidebar"
     >
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
-        <h1 className="text-lg font-bold">Admin Panel</h1>
+      <div
+        className="h-16 flex items-center justify-center border-b border-gray-700 overflow-hidden transition-all duration-300"
+        data-testid="admin-sidebar-logo"
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center flex-shrink-0">
+            <RocketOutlined className="text-white text-base" />
+          </div>
+          {!collapsed && (
+            <span className="text-white font-semibold text-base whitespace-nowrap tracking-tight">
+              Biomimic
+            </span>
+          )}
+        </div>
       </div>
-      <nav className="p-4">
-        {menuConfig.map((item: MenuItem) => (
-          <MenuItemComponent key={item.path} item={item} />
-        ))}
-      </nav>
-    </aside>
+
+      <Menu
+        mode="inline"
+        selectedKeys={[getSelectedKey()]}
+        defaultOpenKeys={['content', 'users-orders', 'system']}
+        inlineCollapsed={false}
+        items={MENU_ITEMS}
+        className="!border-r-0 !bg-transparent mt-2"
+        style={{ background: 'transparent' }}
+      />
+    </Layout.Sider>
   )
 }

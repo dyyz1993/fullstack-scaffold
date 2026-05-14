@@ -1,38 +1,36 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from './Layout'
-import { TodoPage } from './pages/TodoPage'
-import { NotificationPage } from './pages/NotificationPage'
-import { WebSocketPage } from './pages/WebSocketPage'
-import { ContentListPage } from './pages/ContentListPage'
-import { ContentDetailPage } from './pages/ContentDetailPage'
-import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage'
-import { PluginsPage } from './pages/PluginsPage'
-import { PluginDetailPage } from './pages/PluginDetailPage'
-import { CategoriesPage } from './pages/CategoriesPage'
-import { SearchPage } from './pages/SearchPage'
-import { PublishPage } from './pages/PublishPage'
-import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage'
+import { getPresetUIConfig, type PresetType, type RouteDef } from './preset-ui-config'
 
-export const App: React.FC = () => {
+export const App: React.FC<{ presetId?: PresetType }> = ({ presetId = 'saas' }) => {
+  const config = getPresetUIConfig(presetId)
+
   return (
     <BrowserRouter>
-      <Layout>
+      <Layout
+        preset={presetId}
+        theme={config.theme}
+        desktopNav={config.desktopNav}
+        mobileTabs={config.mobileTabs}
+      >
         <Routes>
-          <Route path="/" element={<Navigate to="/todos" replace />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/todos" element={<TodoPage />} />
-          <Route path="/notifications" element={<NotificationPage />} />
-          <Route path="/websocket" element={<WebSocketPage />} />
-          <Route path="/content" element={<ContentListPage />} />
-          <Route path="/content/:id" element={<ContentDetailPage />} />
-          <Route path="/plugins" element={<PluginsPage />} />
-          <Route path="/plugins/:slug" element={<PluginDetailPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/publish" element={<PublishPage />} />
-          <Route path="/developer" element={<DeveloperDashboardPage />} />
+          <Route path="/" element={<Navigate to={config.defaultRoute} replace />} />
+          {config.routes
+            .filter(
+              (r): r is RouteDef & { component: NonNullable<RouteDef['component']> } =>
+                r.component !== null
+            )
+            .map(route => (
+              <Route key={route.path} path={route.path} element={<route.component />} />
+            ))}
+          <Route
+            path="*"
+            element={
+              <div className="flex items-center justify-center min-h-[50vh] text-gray-400">
+                404 - Page not found
+              </div>
+            }
+          />
         </Routes>
       </Layout>
     </BrowserRouter>

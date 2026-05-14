@@ -1,7 +1,8 @@
-import { Menu, User, LogOut } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { Dropdown, Avatar } from 'antd'
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { Breadcrumb, Select, Avatar, Dropdown, Layout as AntLayout, theme } from 'antd'
 import type { MenuProps } from 'antd'
+import { User, LogOut, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
 import { useAdminNotifications } from '../hooks/useAdminNotifications'
 import { NotificationDrawer, NotificationBell } from '../components/NotificationDrawer'
@@ -9,10 +10,17 @@ import { AccountSwitcher } from '../components/AccountSwitcher'
 import { useEffect, useState } from 'react'
 
 interface HeaderProps {
-  onToggleSidebar: () => void
+  collapsed: boolean
+  onToggle: () => void
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
+const ROLE_OPTIONS = [
+  { label: 'Super Admin', value: 'super_admin' },
+  { label: 'Moderator', value: 'moderator' },
+  { label: 'Operator', value: 'operator' },
+]
+
+export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
   const navigate = useNavigate()
   const { user, logout } = useAdminStore()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -30,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     navigate('/login')
   }
 
-  const menuItems: MenuProps['items'] = [
+  const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       label: 'Profile',
@@ -39,11 +47,10 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     {
       key: 'settings',
       label: 'Settings',
+      icon: <Settings className="w-4 h-4" />,
       onClick: () => navigate('/settings'),
     },
-    {
-      type: 'divider',
-    },
+    { type: 'divider' },
     {
       key: 'logout',
       label: 'Logout',
@@ -53,31 +60,58 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     },
   ]
 
+  const { token } = theme.useToken()
+
   return (
     <>
-      <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-        <button
-          onClick={onToggleSidebar}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          data-testid="toggle-sidebar-button"
-        >
-          <Menu className="w-5 h-5 text-gray-600" />
-        </button>
-
+      <AntLayout.Header
+        className="flex items-center justify-between px-6 bg-white border-b border-gray-200"
+        style={{
+          paddingInline: 24,
+          height: 64,
+          lineHeight: '64px',
+          backgroundColor: token.colorBgContainer,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        }}
+        data-testid="admin-header"
+      >
         <div className="flex items-center gap-4">
+          <button
+            onClick={onToggle}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border-none bg-transparent"
+            data-testid="toggle-sidebar-button"
+          >
+            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          </button>
+
+          <Breadcrumb
+            items={[{ title: 'Home' }, { title: 'Dashboard' }]}
+            style={{ fontSize: 14 }}
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Select
+            size="small"
+            defaultValue="super_admin"
+            options={ROLE_OPTIONS}
+            style={{ width: 130 }}
+            data-testid="role-switcher"
+          />
+
           <NotificationBell unreadCount={unreadCount} onClick={() => setDrawerOpen(true)} />
           <AccountSwitcher />
-          <Dropdown menu={{ items: menuItems }} placement="bottomRight" trigger={['click']}>
-            <button className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+            <button className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border-none bg-transparent">
               <Avatar
-                size="small"
+                size={32}
                 src={user?.avatar}
                 icon={!user?.avatar && <User className="w-4 h-4" />}
               />
             </button>
           </Dropdown>
         </div>
-      </header>
+      </AntLayout.Header>
 
       <NotificationDrawer
         open={drawerOpen}

@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react'
+import { Layout as AntLayout } from 'antd'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 
@@ -7,17 +8,21 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar isOpen={sidebarOpen} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 overflow-y-auto p-6" data-testid="admin-main">
+    <AntLayout className="min-h-screen" data-testid="admin-layout">
+      <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+      <AntLayout>
+        <Header collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <AntLayout.Content
+          className="m-6 p-6 bg-white rounded-lg shadow-sm"
+          style={{ minHeight: 'calc(100vh - 64px - 48px)' }}
+          data-testid="admin-main"
+        >
           {children}
-        </main>
-      </div>
-    </div>
+        </AntLayout.Content>
+      </AntLayout>
+    </AntLayout>
   )
 }
