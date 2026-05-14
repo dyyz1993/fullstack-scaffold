@@ -28,10 +28,6 @@ export function generateClientNavigation(resolved: ResolvedPreset): string {
   const iconsNeeded = new Set<string>()
   iconsNeeded.add('Rocket')
   iconsNeeded.add('Sparkles')
-  for (const page of pages) {
-    const icon = ICON_MAP[page.name] || DEFAULT_ICON
-    iconsNeeded.add(icon)
-  }
 
   const navItems: string[] = []
 

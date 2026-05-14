@@ -39,8 +39,8 @@ export function generateClientApp(resolved: ResolvedPreset): string {
 
   return `${imports.join('\n')}
 
-export function App() {
-  const presetId: PresetType = '${presetId}'
+export const App: React.FC<{ presetId?: PresetType }> = ({ presetId: propPresetId }) => {
+  const presetId: PresetType = propPresetId ?? '${presetId}'
   const config = getPresetUIConfig(presetId)
 
   return (
