@@ -1,94 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
-import {
-  Users,
-  UserCheck,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpRight,
-  ChevronDown,
-} from 'lucide-react'
+import { TrendingUp, TrendingDown, ArrowUpRight, ChevronDown } from 'lucide-react'
+import { apiClient } from '@client/services/apiClient'
+import { LoadingSpinner } from '@client/components'
+import type { DashboardStat, RevenueData, ActivityStatus, Activity } from '@shared/schemas'
 
-interface StatCard {
-  label: string
-  value: string
-  trend: number
-  icon: React.FC<{ className?: string }>
-}
-
-const stats: StatCard[] = [
-  { label: 'Total Users', value: '12,847', trend: 12.5, icon: Users },
-  { label: 'Active Users', value: '8,234', trend: 8.2, icon: UserCheck },
-  { label: 'Revenue', value: '$48,293', trend: -2.4, icon: DollarSign },
-  { label: 'Conversion', value: '3.2%', trend: 4.1, icon: TrendingUp },
-]
-
-const revenueData = [
-  { month: 'Jan', value: 65 },
-  { month: 'Feb', value: 45 },
-  { month: 'Mar', value: 78 },
-  { month: 'Apr', value: 52 },
-  { month: 'May', value: 90 },
-  { month: 'Jun', value: 70 },
-]
-
-const userGrowthData = [
-  { month: 'Jan', value: 30 },
-  { month: 'Feb', value: 45 },
-  { month: 'Mar', value: 55 },
-  { month: 'Apr', value: 60 },
-  { month: 'May', value: 72 },
-  { month: 'Jun', value: 85 },
-]
-
-type ActivityStatus = 'Active' | 'Pending' | 'Inactive'
-
-interface ActivityRow {
-  id: number
-  user: string
-  action: string
-  date: string
-  status: ActivityStatus
-}
-
-const recentActivity: ActivityRow[] = [
-  {
-    id: 1,
-    user: 'Sarah Chen',
-    action: 'Upgraded to Pro plan',
-    date: '2024-01-15',
-    status: 'Active',
-  },
-  {
-    id: 2,
-    user: 'Mike Johnson',
-    action: 'Submitted support ticket',
-    date: '2024-01-14',
-    status: 'Pending',
-  },
-  {
-    id: 3,
-    user: 'Emily Davis',
-    action: 'Cancelled subscription',
-    date: '2024-01-13',
-    status: 'Inactive',
-  },
-  {
-    id: 4,
-    user: 'Alex Turner',
-    action: 'Registered new account',
-    date: '2024-01-12',
-    status: 'Active',
-  },
-  {
-    id: 5,
-    user: 'Lisa Park',
-    action: 'Updated billing info',
-    date: '2024-01-11',
-    status: 'Active',
-  },
-]
+type StatCard = DashboardStat & { icon: React.FC<{ className?: string }> }
 
 const statusStyles: Record<ActivityStatus, string> = {
   Active: 'bg-green-100 text-green-700',
@@ -101,6 +18,50 @@ const timeRanges = ['Last 7 days', 'Last 30 days', 'Last 90 days', 'Last year']
 export const DashboardPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState('Last 30 days')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<StatCard[]>([])
+  const [revenueData, setRevenueData] = useState<RevenueData[]>([])
+  const [userGrowthData, setUserGrowthData] = useState<RevenueData[]>([])
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([])
+
+  useEffect(() => {
+    async function fetchDashboard() {
+      try {
+        const api = apiClient.api as unknown as Record<
+          string,
+          Record<string, Record<string, () => Promise<Response>>>
+        >
+        const statsEndpoint = api?.admin?.dashboard?.stats
+        if (!statsEndpoint) {
+          setLoading(false)
+          return
+        }
+        const res = await statsEndpoint()
+        const result = (await res.json()) as Record<string, unknown>
+        const data = (result.data ?? {}) as Record<string, unknown>
+        if (result.success) {
+          setStats((data.stats as StatCard[]) || [])
+          setRevenueData((data.revenue as RevenueData[]) || [])
+          setUserGrowthData((data.userGrowth as RevenueData[]) || [])
+          setRecentActivity((data.activity as Activity[]) || [])
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDashboard()
+  }, [])
+
+  if (loading) {
+    return (
+      <div
+        className="flex items-center justify-center min-h-screen"
+        data-testid="dashboard-loading"
+      >
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8" data-testid="dashboard-page">

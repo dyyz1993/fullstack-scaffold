@@ -7,10 +7,16 @@ const authManifest: ModuleManifest = {
   dependsOn: [],
 
   routes: {
-    client: {
-      importPath: './routes/auth-routes',
-      exportName: 'authRoutes',
-    },
+    client: [
+      {
+        importPath: './routes/auth-routes',
+        exportName: 'authRoutes',
+      },
+      {
+        importPath: './routes/profile-routes',
+        exportName: 'profileRoutes',
+      },
+    ],
   },
 
   sharedSchemas: {
@@ -22,6 +28,7 @@ const authManifest: ModuleManifest = {
   clientPages: [
     { name: 'LoginPage', route: '/login' },
     { name: 'RegisterPage', route: '/register' },
+    { name: 'ProfilePage', route: '/profile' },
   ],
 
   dbSchemas: {

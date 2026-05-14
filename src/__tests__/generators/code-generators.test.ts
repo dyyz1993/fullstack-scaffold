@@ -117,17 +117,20 @@ describe('code generators', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain('NavItem')
-      expect(content).toContain("label: 'Todos'")
-      expect(content).toContain("path: '/todos'")
+      expect(content).toContain('ClientNavItem')
+      expect(content).toContain('navItems.map(item =>')
+      expect(content).toContain('items')
+      expect(content).toContain('theme')
+      expect(content).toContain('navigation')
     })
 
-    it('includes AuthButton for admin presets', () => {
+    it('includes AuthSection for admin presets', () => {
       const resolved = getPreset('fullstack-admin', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain("import { AuthButton } from './AuthButton'")
-      expect(content).toContain('<AuthButton />')
+      expect(content).toContain("import { useAuthStore } from '../stores/authStore'")
+      expect(content).toContain('function AuthSection')
+      expect(content).toContain('<AuthSection style={authStyle} />')
     })
 
     it('excludes AuthButton for non-admin presets', () => {
@@ -137,13 +140,12 @@ describe('code generators', () => {
       expect(content).not.toContain('AuthButton')
     })
 
-    it('todo-app: has 3 nav items', () => {
+    it('todo-app: renders nav items dynamically', () => {
       const resolved = getPreset('todo-app', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain("label: 'Todos'")
-      expect(content).toContain("label: 'WebSocket'")
-      expect(content).toContain("label: 'Notifications'")
+      expect(content).toContain('navItems.map(item =>')
+      expect(content).toContain('{item.label}')
       expect(content).toContain("from 'lucide-react'")
     })
 
@@ -174,7 +176,7 @@ describe('code generators', () => {
 
       expect(content).not.toBeNull()
       expect(content).toContain('ConfigProvider')
-      expect(content).toContain('BrowserRouter basename="/admin"')
+      expect(content).toContain('basename={basePath}')
       expect(content).toContain('ProtectedRoute')
     })
 

@@ -44,7 +44,7 @@ export function generateAdminApp(resolved: ResolvedPreset): string | null {
 
   return `${imports.join('\n')}
 
-export const App: React.FC = () => {
+export const App: React.FC<{ basePath?: string }> = ({ basePath = '/admin' }) => {
   return (
     <ConfigProvider
       theme={{
@@ -53,7 +53,7 @@ export const App: React.FC = () => {
         },
       }}
     >
-      <BrowserRouter basename="/admin">
+      <BrowserRouter basename={basePath}>
         <Routes>
 ${publicRouteLines.join('\n')}
           <Route

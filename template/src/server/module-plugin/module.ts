@@ -31,6 +31,7 @@ const pluginManifest: ModuleManifest = {
     { name: 'SearchPage', route: '/search' },
     { name: 'PublishPage', route: '/publish' },
     { name: 'DeveloperDashboardPage', route: '/developer' },
+    { name: 'TopicsPage', route: '/topics' },
   ],
 
   adminPages: [

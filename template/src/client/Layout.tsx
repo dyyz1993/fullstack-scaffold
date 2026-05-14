@@ -2,17 +2,23 @@ import { ReactNode } from 'react'
 import { Navigation } from './components/Navigation'
 import { Footer } from './components/Footer'
 import { BottomTabBar } from './components/BottomTabBar'
-import type { PresetTheme, ClientNavItem, TabItem } from './preset-ui-config'
+import type {
+  PresetTheme,
+  ClientNavItem,
+  TabItem,
+  LayoutType,
+  NavigationConfig,
+} from './preset-ui-config'
 
-export type PresetType = 'todo' | 'plugin' | 'ecommerce' | 'community' | 'saas'
+export type PresetType = string
 
 interface LayoutProps {
   children: ReactNode
   className?: string
-  showNavigation?: boolean
-  showFooter?: boolean
   preset?: PresetType
+  layout?: LayoutType
   theme?: PresetTheme
+  navigation?: NavigationConfig
   desktopNav?: ClientNavItem[]
   mobileTabs?: TabItem[]
 }
@@ -20,10 +26,10 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({
   children,
   className: classNameProp = '',
-  showNavigation = true,
-  showFooter = true,
-  preset = 'saas',
+  preset = 'todo',
+  layout = 'top-nav',
   theme,
+  navigation,
   desktopNav,
   mobileTabs,
 }) => {
@@ -39,6 +45,9 @@ export const Layout: React.FC<LayoutProps> = ({
       } as React.CSSProperties)
     : undefined
 
+  const navVisible = navigation?.visible !== false
+  const showFooter = layout === 'top-nav'
+
   return (
     <div
       className={`min-h-screen bg-white text-gray-900 ${classNameProp}`}
@@ -46,21 +55,30 @@ export const Layout: React.FC<LayoutProps> = ({
         fontFamily:
           theme?.fontFamily ?? "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         ...cssVars,
+        overflowX: 'hidden',
       }}
       data-testid="app-container"
     >
-      {showNavigation && <Navigation preset={preset} items={desktopNav} theme={theme} />}
+      {navVisible && layout === 'top-nav' && (
+        <Navigation preset={preset} items={desktopNav} theme={theme} navigation={navigation} />
+      )}
 
-      <main
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8"
-        data-testid="app-main"
-      >
-        {children}
-      </main>
+      {layout === 'minimal' ? (
+        <main data-testid="app-main">{children}</main>
+      ) : (
+        <main
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8"
+          data-testid="app-main"
+        >
+          {children}
+        </main>
+      )}
 
       {showFooter && <Footer />}
 
-      {mobileTabs && mobileTabs.length > 0 && <BottomTabBar tabs={mobileTabs} theme={theme} />}
+      {mobileTabs && mobileTabs.length > 0 && layout !== 'minimal' && (
+        <BottomTabBar tabs={mobileTabs} theme={theme} />
+      )}
     </div>
   )
 }

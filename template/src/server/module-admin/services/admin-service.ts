@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs'
 import { getDb, getRawClient } from '@server/db'
-import { todos } from '@server/db/schema'
 import { desc } from 'drizzle-orm'
 import { toISOString } from '@server/utils/date'
 import { getMockUsers, getMockTokens, getUserPasswordHashes } from '@server/utils/auth'
@@ -15,6 +14,24 @@ import type {
   UpdateUserRequest,
   CreateUserRequest,
 } from '@shared/modules/admin'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let todosTable: any = null
+let todosTableLoaded = false
+
+async function getTodosTable() {
+  if (todosTableLoaded) return todosTable
+  try {
+    const schema = (await import('@server/db/schema')) as Record<string, unknown>
+    todosTable = schema.todos ?? null
+    todosTableLoaded = true
+    return todosTable
+  } catch {
+    todosTableLoaded = true
+    return null
+  }
+}
+
 export async function getSystemStats(): Promise<SystemStats> {
   const rawClient = await getRawClient()
 
@@ -40,6 +57,16 @@ export async function getSystemStats(): Promise<SystemStats> {
     }
   }
 
+  const todos = await getTodosTable()
+  if (!todos) {
+    return {
+      totalTodos: 0,
+      pendingTodos: 0,
+      completedTodos: 0,
+      lastUpdated: new Date().toISOString(),
+    }
+  }
+
   const db = await getDb()
   const allTodos = await db.select().from(todos)
 
@@ -53,6 +80,13 @@ export async function getSystemStats(): Promise<SystemStats> {
 
 export async function checkDatabaseHealth(): Promise<HealthCheck> {
   try {
+    const todos = await getTodosTable()
+    if (!todos) {
+      return {
+        database: 'disconnected',
+        timestamp: new Date().toISOString(),
+      }
+    }
     const db = await getDb()
     await db.select().from(todos).limit(1)
     return {
@@ -68,8 +102,10 @@ export async function checkDatabaseHealth(): Promise<HealthCheck> {
 }
 
 export async function clearAllTodos(): Promise<{ deletedCount: number }> {
+  const todos = await getTodosTable()
+  if (!todos) return { deletedCount: 0 }
   const db = await getDb()
-  const result = await db.delete(todos).returning()
+  const result = (await db.delete(todos).returning()) as unknown[]
   return { deletedCount: result.length }
 }
 
@@ -81,6 +117,8 @@ export async function getRecentActivity(limit: number = 10): Promise<
     updatedAt: string
   }>
 > {
+  const todos = await getTodosTable()
+  if (!todos) return []
   const db = await getDb()
   const results = await db.select().from(todos).orderBy(desc(todos.updatedAt)).limit(limit)
 
@@ -238,6 +276,8 @@ export async function getAllTodos(): Promise<
     createdAt: string
   }>
 > {
+  const todos = await getTodosTable()
+  if (!todos) return []
   const db = await getDb()
   const results = await db.select().from(todos).orderBy(desc(todos.createdAt))
 

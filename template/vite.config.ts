@@ -49,8 +49,9 @@ export default defineConfig({
     port: 0,
     host: '0.0.0.0',
     hmr: {
-      overlay: true,
+      overlay: false,
     },
+    allowedHosts: true,
   },
   plugins: [
     devServer({

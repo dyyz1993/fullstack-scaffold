@@ -1,128 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { ChevronUp, ChevronDown, MessageSquare, Eye, Search, Plus } from 'lucide-react'
+import { apiClient } from '@client/services/apiClient'
+import { LoadingSpinner } from '@client/components'
+import type { TopicStatus, Topic } from '@shared/schemas'
 
-type TopicStatus = 'hot' | 'unanswered' | 'solved'
 type FilterType = 'all' | TopicStatus
-
-interface TopicTag {
-  label: string
-  color: string
-}
-
-interface Topic {
-  id: string
-  title: string
-  excerpt: string
-  votes: number
-  replyCount: number
-  viewCount: number
-  status: TopicStatus
-  tags: TopicTag[]
-  author: { name: string; initials: string }
-  createdAt: string
-}
-
-const MOCK_TOPICS: Topic[] = [
-  {
-    id: '1',
-    title: 'How to implement real-time notifications with SSE?',
-    excerpt:
-      'I am trying to set up server-sent events for my community app. The connection keeps dropping after a few minutes. Has anyone dealt with this issue before?',
-    votes: 24,
-    replyCount: 8,
-    viewCount: 342,
-    status: 'solved',
-    tags: [
-      { label: 'SSE', color: 'bg-emerald-100 text-emerald-700' },
-      { label: 'Real-time', color: 'bg-blue-100 text-blue-700' },
-    ],
-    author: { name: 'Sarah Chen', initials: 'SC' },
-    createdAt: '1h ago',
-  },
-  {
-    id: '2',
-    title: 'Best practices for WebSocket reconnection logic',
-    excerpt:
-      'My WebSocket client disconnects when the user switches tabs. What reconnection strategies do you recommend for a production environment?',
-    votes: 18,
-    replyCount: 0,
-    viewCount: 156,
-    status: 'unanswered',
-    tags: [
-      { label: 'WebSocket', color: 'bg-purple-100 text-purple-700' },
-      { label: 'Architecture', color: 'bg-orange-100 text-orange-700' },
-    ],
-    author: { name: 'Alex Rivera', initials: 'AR' },
-    createdAt: '2h ago',
-  },
-  {
-    id: '3',
-    title: 'Type-safe API routes with Hono RPC — a complete guide',
-    excerpt:
-      'After months of using Hono RPC in production, here is my comprehensive guide to achieving full end-to-end type safety across your stack.',
-    votes: 56,
-    replyCount: 12,
-    viewCount: 891,
-    status: 'hot',
-    tags: [
-      { label: 'Hono', color: 'bg-sky-100 text-sky-700' },
-      { label: 'TypeScript', color: 'bg-blue-100 text-blue-700' },
-      { label: 'Guide', color: 'bg-emerald-100 text-emerald-700' },
-    ],
-    author: { name: 'Jordan Park', initials: 'JP' },
-    createdAt: '3h ago',
-  },
-  {
-    id: '4',
-    title: 'Deploying Hono apps to Cloudflare Workers with D1',
-    excerpt:
-      'Step-by-step walkthrough of deploying a full-stack Hono application to Cloudflare Workers, including database setup with D1 and R2 storage.',
-    votes: 31,
-    replyCount: 5,
-    viewCount: 478,
-    status: 'solved',
-    tags: [
-      { label: 'Cloudflare', color: 'bg-amber-100 text-amber-700' },
-      { label: 'Deployment', color: 'bg-rose-100 text-rose-700' },
-    ],
-    author: { name: 'Mika Tanaka', initials: 'MT' },
-    createdAt: '5h ago',
-  },
-  {
-    id: '5',
-    title: 'Zustand vs Jotai — which state manager for community apps?',
-    excerpt:
-      'Comparing Zustand and Jotai for a medium-complexity community application. Performance benchmarks and developer experience included.',
-    votes: 42,
-    replyCount: 0,
-    viewCount: 267,
-    status: 'unanswered',
-    tags: [
-      { label: 'React', color: 'bg-cyan-100 text-cyan-700' },
-      { label: 'State Management', color: 'bg-violet-100 text-violet-700' },
-    ],
-    author: { name: 'Liam Nguyen', initials: 'LN' },
-    createdAt: '8h ago',
-  },
-  {
-    id: '6',
-    title: 'Building a plugin system with module manifests',
-    excerpt:
-      'How we designed a declarative module manifest system that lets users scaffold apps with only the features they need. Patterns and lessons learned.',
-    votes: 67,
-    replyCount: 19,
-    viewCount: 1204,
-    status: 'hot',
-    tags: [
-      { label: 'Architecture', color: 'bg-orange-100 text-orange-700' },
-      { label: 'Plugins', color: 'bg-pink-100 text-pink-700' },
-    ],
-    author: { name: 'Emma Wilson', initials: 'EW' },
-    createdAt: '12h ago',
-  },
-]
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -134,26 +18,36 @@ const FILTERS: { value: FilterType; label: string }[] = [
 export const TopicsPage: React.FC = () => {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
+  const [topics, setTopics] = useState<Topic[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchTopics() {
+      try {
+        const endpoint = filter === 'hot' ? apiClient.api.topics.popular : apiClient.api.topics
+        const res = await endpoint.$get()
+        const result = await res.json()
+        if (result.success) {
+          const d = result.data as unknown
+          setTopics(Array.isArray(d) ? d : ((d as Record<string, unknown>).topics as Topic[]) ?? [])
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTopics()
+  }, [filter])
 
   const filteredTopics = useMemo(() => {
-    let result = MOCK_TOPICS
-
-    if (filter !== 'all') {
-      result = result.filter(t => t.status === filter)
-    }
-
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      result = result.filter(
-        t =>
-          t.title.toLowerCase().includes(q) ||
-          t.excerpt.toLowerCase().includes(q) ||
-          t.tags.some(tag => tag.label.toLowerCase().includes(q))
-      )
-    }
-
-    return result
-  }, [search, filter])
+    if (!search.trim()) return topics
+    const q = search.toLowerCase()
+    return topics.filter(
+      t =>
+        t.title.toLowerCase().includes(q) ||
+        t.excerpt.toLowerCase().includes(q) ||
+        t.tags.some(tag => tag.label.toLowerCase().includes(q))
+    )
+  }, [search, topics])
 
   const voteColor = (votes: number) =>
     votes > 0 ? 'text-emerald-600' : votes < 0 ? 'text-red-500' : 'text-gray-400'
@@ -211,7 +105,11 @@ export const TopicsPage: React.FC = () => {
           </div>
         </div>
 
-        {filteredTopics.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20" data-testid="topics-loading">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : filteredTopics.length === 0 ? (
           <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
               <MessageSquare className="w-7 h-7 text-gray-400" />

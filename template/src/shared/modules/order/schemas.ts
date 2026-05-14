@@ -61,3 +61,32 @@ export type DeleteResult = z.infer<typeof DeleteResultSchema>
 export type ProcessOrderInput = z.infer<typeof ProcessOrderSchema>
 export type CancelOrderInput = z.infer<typeof CancelOrderSchema>
 export type OrderQueryInput = z.infer<typeof OrderQuerySchema>
+
+export const RemoveCartItemResponseSchema = z.object({ removedId: z.string() })
+
+export const ECommerceProductSchema = z.object({
+  name: z.string(),
+  color: z.string(),
+})
+
+export const ECommerceOrderStatusSchema = z.enum([
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+])
+
+export const ECommerceOrderSchema = z.object({
+  id: z.string(),
+  date: z.string(),
+  status: ECommerceOrderStatusSchema,
+  products: z.array(ECommerceProductSchema),
+  total: z.number(),
+})
+
+export const ECommerceOrderListSchema = z.array(ECommerceOrderSchema)
+
+export type RemoveCartItemResponse = z.infer<typeof RemoveCartItemResponseSchema>
+export type ECommerceProduct = z.infer<typeof ECommerceProductSchema>
+export type ECommerceOrderStatus = z.infer<typeof ECommerceOrderStatusSchema>
+export type ECommerceOrder = z.infer<typeof ECommerceOrderSchema>

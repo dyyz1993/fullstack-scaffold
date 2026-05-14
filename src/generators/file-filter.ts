@@ -65,6 +65,11 @@ export function getExcludePatterns(
       excludes.push('src/cli/modules/notification')
     }
 
+    if (name === 'todos') {
+      excludes.push('src/cli/modules/todo')
+      excludes.push('src/server/__tests__/integration/todos-api.test.ts')
+    }
+
     if (name === 'auth') {
       excludes.push('src/cli/modules/auth')
     }
@@ -84,7 +89,6 @@ export function getExcludePatterns(
   }
 
   excludes.push('src/client/preset-ui-config.ts')
-  excludes.push('src/client/components/BottomTabBar.tsx')
 
   // LoginPage/RegisterPage are excluded via the for loop above (auth clientPages)
   // when auth module is not in the preset

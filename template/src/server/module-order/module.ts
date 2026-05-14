@@ -7,6 +7,16 @@ const orderManifest: ModuleManifest = {
   dependsOn: ['permission'],
 
   routes: {
+    client: [
+      {
+        importPath: './routes/cart-routes',
+        exportName: 'cartRoutes',
+      },
+      {
+        importPath: './routes/orders-mock-routes',
+        exportName: 'ordersMockRoutes',
+      },
+    ],
     admin: [
       {
         importPath: './routes/order-routes',
@@ -18,6 +28,11 @@ const orderManifest: ModuleManifest = {
   sharedSchemas: {
     path: 'order',
   },
+
+  clientPages: [
+    { name: 'CartPage', route: '/cart' },
+    { name: 'OrdersPage', route: '/orders' },
+  ],
 
   adminPages: [{ name: 'OrdersPage', route: '/orders', requiredPermission: 'ORDER_VIEW' }],
 

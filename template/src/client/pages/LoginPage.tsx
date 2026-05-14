@@ -1,8 +1,17 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { LogIn, User } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { useAuthStore } from '@client/stores/authStore'
+import { usePreset } from '../contexts/PresetContext'
+
+const DEMO_CREDENTIALS: Record<string, { email: string; password: string; name: string }> = {
+  todo: { email: 'demo@biomimic.app', password: 'demo123', name: 'Demo User' },
+  plugin: { email: 'developer@pluginhub.io', password: 'dev123', name: 'Plugin Developer' },
+  ecommerce: { email: 'shopper@shopmart.com', password: 'shop123', name: 'Shopper' },
+  community: { email: 'member@community.dev', password: 'member123', name: 'Community Member' },
+  saas: { email: 'admin@biomimic.app', password: 'admin123', name: 'Admin' },
+}
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -11,8 +20,11 @@ export const LoginPage: React.FC = () => {
   const error = useAuthStore(state => state.error)
   const clearError = useAuthStore(state => state.clearError)
 
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const preset = usePreset()
+  const creds = DEMO_CREDENTIALS[preset] ?? DEMO_CREDENTIALS.todo
+
+  const [username, setUsername] = useState(creds.email)
+  const [password, setPassword] = useState(creds.password)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,11 +33,6 @@ export const LoginPage: React.FC = () => {
     if (state.isAuthenticated) {
       navigate('/todos')
     }
-  }
-
-  const handleDemoLogin = (demoUser: string, demoPass: string) => {
-    setUsername(demoUser)
-    setPassword(demoPass)
   }
 
   return (
@@ -101,28 +108,6 @@ export const LoginPage: React.FC = () => {
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
-
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500 mb-3">Quick demo login:</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleDemoLogin('user1', 'admin123')}
-                  data-testid="demo-user-login"
-                  className="flex-1 flex items-center justify-center gap-1 py-2 px-3 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <User className="w-3 h-3" />
-                  User
-                </button>
-                <button
-                  onClick={() => handleDemoLogin('superadmin', 'admin123')}
-                  data-testid="demo-admin-login"
-                  className="flex-1 flex items-center justify-center gap-1 py-2 px-3 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <User className="w-3 h-3" />
-                  Admin
-                </button>
-              </div>
-            </div>
 
             <p className="mt-4 text-center text-sm text-gray-500">
               Don&apos;t have an account?{' '}

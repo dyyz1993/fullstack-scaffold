@@ -15,11 +15,16 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
     const moduleDir = `module-${name}`
 
     if (manifest.routes.client) {
-      const { importPath, exportName } = manifest.routes.client
-      imports.push(
-        `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
-      )
-      clientRoutes.push(`  .route('/api', ${exportName})`)
+      const clientRouteList = Array.isArray(manifest.routes.client)
+        ? manifest.routes.client
+        : [manifest.routes.client]
+      for (const route of clientRouteList) {
+        const { importPath, exportName } = route
+        imports.push(
+          `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
+        )
+        clientRoutes.push(`  .route('/api', ${exportName})`)
+      }
     }
 
     if (manifest.routes.admin) {

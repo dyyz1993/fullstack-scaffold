@@ -1,74 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Package, Truck, Clock, CheckCircle, XCircle, RotateCcw, Search } from 'lucide-react'
+import { apiClient } from '@client/services/apiClient'
+import { LoadingSpinner } from '@client/components'
+
+import type { ECommerceOrder } from '@shared/schemas'
 
 type ECommerceOrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled'
 
-interface ECommerceProduct {
-  name: string
-  color: string
-}
-
-interface ECommerceOrder {
-  id: string
-  date: string
-  status: ECommerceOrderStatus
-  products: ECommerceProduct[]
-  total: number
-}
-
 type FilterStatus = 'all' | ECommerceOrderStatus
-
-const MOCK_ORDERS: ECommerceOrder[] = [
-  {
-    id: 'ORD-2024-001',
-    date: '2024-12-10',
-    status: 'processing',
-    products: [
-      { name: 'Wireless Headphones', color: '#374151' },
-      { name: 'USB-C Cable', color: '#6366f1' },
-    ],
-    total: 94.98,
-  },
-  {
-    id: 'ORD-2024-002',
-    date: '2024-12-08',
-    status: 'shipped',
-    products: [
-      { name: 'Organic Cotton T-Shirt', color: '#6ee7b7' },
-      { name: 'Ceramic Travel Mug', color: '#f59e0b' },
-      { name: 'Linen Tote Bag', color: '#d4a574' },
-    ],
-    total: 79.97,
-  },
-  {
-    id: 'ORD-2024-003',
-    date: '2024-12-01',
-    status: 'delivered',
-    products: [
-      { name: 'Bamboo Desk Organizer', color: '#a3e635' },
-      { name: 'Recycled Notebook', color: '#f472b6' },
-    ],
-    total: 45.98,
-  },
-  {
-    id: 'ORD-2024-004',
-    date: '2024-11-25',
-    status: 'delivered',
-    products: [{ name: 'Beeswax Candle Set', color: '#fbbf24' }],
-    total: 29.99,
-  },
-  {
-    id: 'ORD-2024-005',
-    date: '2024-11-20',
-    status: 'cancelled',
-    products: [
-      { name: 'Wooden Phone Stand', color: '#92400e' },
-      { name: 'Plant-Based Soap', color: '#86efac' },
-    ],
-    total: 39.98,
-  },
-]
 
 const STATUS_CONFIG: Record<
   ECommerceOrderStatus,
@@ -90,11 +30,34 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
 
 export const OrdersPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
+  const [orders, setOrders] = useState<ECommerceOrder[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        const res = await apiClient.api.orders.$get()
+        const result = await res.json()
+        if (result.success) {
+          setOrders(result.data)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchOrders()
+  }, [])
 
   const filteredOrders =
-    activeFilter === 'all'
-      ? MOCK_ORDERS
-      : MOCK_ORDERS.filter(order => order.status === activeFilter)
+    activeFilter === 'all' ? orders : orders.filter(order => order.status === activeFilter)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20" data-testid="orders-loading">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6" data-testid="orders-page">
@@ -107,7 +70,7 @@ export const OrdersPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900" data-testid="orders-title">
           Order History
         </h1>
-        <p className="text-gray-500 mt-2">{MOCK_ORDERS.length} orders placed</p>
+        <p className="text-gray-500 mt-2">{orders.length} orders placed</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6" data-testid="orders-filters">

@@ -169,13 +169,20 @@ export async function validateModules(): Promise<{
     const modulePath = join(MODULES_DIR, actualDir)
 
     if (manifest.routes.client) {
-      const filePath = resolve(modulePath, manifest.routes.client.importPath + '.ts')
-      if (!existsSync(filePath)) {
-        errors.push({
-          module: name,
-          type: 'route-file',
-          message: `client route file not found: ${manifest.routes.client.importPath}.ts`,
-        })
+      const clientRoutes = Array.isArray(manifest.routes.client)
+        ? manifest.routes.client
+        : manifest.routes.client
+        ? [manifest.routes.client]
+        : []
+      for (const route of clientRoutes) {
+        const filePath = resolve(modulePath, route.importPath + '.ts')
+        if (!existsSync(filePath)) {
+          errors.push({
+            module: name,
+            type: 'route-file',
+            message: `client route file not found: ${route.importPath}.ts`,
+          })
+        }
       }
     }
 

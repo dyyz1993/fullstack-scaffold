@@ -23,17 +23,24 @@ describe('module drift detection', () => {
         const moduleDir = `module-${name}`
 
         if (manifest.routes.client) {
-          const { importPath, exportName } = manifest.routes.client
-          const filePath = path.join(
-            TEMPLATE_DIR,
-            'src/server',
-            moduleDir,
-            importPath.replace(/^\.\//, '') + '.ts'
-          )
-          if (existsSync(filePath)) {
-            const content = readFileSync(filePath, 'utf-8')
-            if (!content.includes('export') || !content.includes(exportName)) {
-              errors.push(`${name}: client route export '${exportName}' not found in ${importPath}`)
+          const clientRoutes = Array.isArray(manifest.routes.client)
+            ? manifest.routes.client
+            : [manifest.routes.client]
+          for (const route of clientRoutes) {
+            const { importPath, exportName } = route
+            const filePath = path.join(
+              TEMPLATE_DIR,
+              'src/server',
+              moduleDir,
+              importPath.replace(/^\.\//, '') + '.ts'
+            )
+            if (existsSync(filePath)) {
+              const content = readFileSync(filePath, 'utf-8')
+              if (!content.includes('export') || !content.includes(exportName)) {
+                errors.push(
+                  `${name}: client route export '${exportName}' not found in ${importPath}`
+                )
+              }
             }
           }
         }
@@ -70,16 +77,19 @@ describe('module drift detection', () => {
         const moduleDir = `module-${name}`
 
         if (manifest.routes.client) {
-          const filePath = path.join(
-            TEMPLATE_DIR,
-            'src/server',
-            moduleDir,
-            manifest.routes.client.importPath.replace(/^\.\//, '') + '.ts'
-          )
-          if (!existsSync(filePath)) {
-            errors.push(
-              `${name}: client route file not found: ${manifest.routes.client.importPath}.ts`
+          const clientRoutes = Array.isArray(manifest.routes.client)
+            ? manifest.routes.client
+            : [manifest.routes.client]
+          for (const route of clientRoutes) {
+            const filePath = path.join(
+              TEMPLATE_DIR,
+              'src/server',
+              moduleDir,
+              route.importPath.replace(/^\.\//, '') + '.ts'
             )
+            if (!existsSync(filePath)) {
+              errors.push(`${name}: client route file not found: ${route.importPath}.ts`)
+            }
           }
         }
 

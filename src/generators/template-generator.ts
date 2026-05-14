@@ -8,7 +8,9 @@ export interface ModuleManifest {
   category: 'core' | 'communication' | 'business' | 'system'
   dependsOn: string[]
   routes: {
-    client?: { importPath: string; exportName: string }
+    client?:
+      | { importPath: string; exportName: string }
+      | { importPath: string; exportName: string }[]
     admin?: { importPath: string; exportName: string }[]
     standalone?: { importPath: string; exportName: string; mountPath: string }
   }

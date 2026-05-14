@@ -28,12 +28,9 @@ export interface ModuleManifest {
   /** Route registration info */
   routes: {
     /** Routes mounted under client API (/api) */
-    client?: {
-      /** Import path to the route variable (relative to module dir) */
-      importPath: string
-      /** Exported variable name from the route file */
-      exportName: string
-    }
+    client?:
+      | { importPath: string; exportName: string }
+      | { importPath: string; exportName: string }[]
     /** Routes mounted under admin API (/api/admin) */
     admin?: {
       importPath: string

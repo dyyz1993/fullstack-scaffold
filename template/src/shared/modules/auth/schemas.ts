@@ -30,7 +30,21 @@ export const TokenResponseSchema = z.object({
   profile: DeveloperProfileSchema,
 })
 
+export const ProfileSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  email: z.string().email(),
+  bio: z.string().optional().nullable(),
+  joinDate: z.string(),
+  stats: z.object({
+    posts: z.number(),
+    followers: z.number(),
+    following: z.number(),
+  }),
+})
+
 export type DeveloperProfile = z.infer<typeof DeveloperProfileSchema>
 export type LoginInput = z.infer<typeof LoginSchema>
 export type RegisterInput = z.infer<typeof RegisterSchema>
 export type TokenResponse = z.infer<typeof TokenResponseSchema>
+export type Profile = z.infer<typeof ProfileSchema>

@@ -7,10 +7,16 @@ const contentManifest: ModuleManifest = {
   dependsOn: ['permission'],
 
   routes: {
-    client: {
-      importPath: './routes/public-content-routes',
-      exportName: 'publicContentRoutes',
-    },
+    client: [
+      {
+        importPath: './routes/public-content-routes',
+        exportName: 'publicContentRoutes',
+      },
+      {
+        importPath: './routes/topics-routes',
+        exportName: 'topicsRoutes',
+      },
+    ],
     admin: [
       {
         importPath: './routes/content-routes',

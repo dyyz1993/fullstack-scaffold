@@ -1,7 +1,10 @@
 import { lazy, type ComponentType } from 'react'
-import type { PresetType } from './Layout'
 
-export type { PresetType } from './Layout'
+export type PresetType = 'todo' | 'plugin' | 'ecommerce' | 'community' | 'saas'
+
+export type AppType = 'client' | 'admin'
+export type LayoutType = 'top-nav' | 'minimal'
+export type AuthStyle = 'buttons' | 'text-link' | 'icon' | 'avatar' | 'none'
 
 // ClientNavItem is intentionally simpler than admin MenuItem (no permissions/children needed for client nav)
 // eslint-disable-next-line local-rules/prefer-shared-types
@@ -12,6 +15,15 @@ export interface ClientNavItem {
 }
 
 export type TabItem = ClientNavItem
+
+export interface NavigationConfig {
+  visible: boolean
+  showLogo: boolean
+  showSearch: boolean
+  showCart: boolean
+  authStyle: AuthStyle
+  navItems: 'desktop' | 'none'
+}
 
 export interface PresetTheme {
   primaryColor: string
@@ -34,7 +46,10 @@ export interface RouteDef {
 export interface PresetUIConfig {
   id: PresetType
   name: string
+  appType: AppType
+  layout: LayoutType
   theme: PresetTheme
+  navigation: NavigationConfig
   desktopNav: ClientNavItem[]
   mobileTabs: ClientNavItem[]
   routes: RouteDef[]
@@ -105,16 +120,26 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   todo: {
     id: 'todo',
     name: 'Todo App',
+    appType: 'client',
+    layout: 'top-nav',
     theme: TODO_THEME,
+    navigation: {
+      visible: true,
+      showLogo: true,
+      showSearch: false,
+      showCart: false,
+      authStyle: 'none',
+      navItems: 'desktop',
+    },
     desktopNav: [
-      { label: 'Today', icon: 'Sun', path: '/todos' },
-      { label: 'Calendar', icon: 'Calendar', path: '/todos/calendar' },
-      { label: 'Projects', icon: 'FolderKanban', path: '/todos/projects' },
+      { label: 'Todos', icon: 'CheckSquare', path: '/todos' },
+      { label: 'SSE Demo', icon: 'Bell', path: '/notifications' },
+      { label: 'WebSocket', icon: 'Zap', path: '/websocket' },
     ],
     mobileTabs: [
-      { label: 'Today', icon: 'Sun', path: '/todos' },
-      { label: 'Calendar', icon: 'Calendar', path: '/todos/calendar' },
-      { label: 'Projects', icon: 'FolderKanban', path: '/todos/projects' },
+      { label: 'Todos', icon: 'CheckSquare', path: '/todos' },
+      { label: 'SSE', icon: 'Bell', path: '/notifications' },
+      { label: 'WS', icon: 'Zap', path: '/websocket' },
     ],
     defaultRoute: '/todos',
     routes: [
@@ -155,7 +180,17 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   plugin: {
     id: 'plugin',
     name: 'Plugin Market',
+    appType: 'client',
+    layout: 'top-nav',
     theme: PLUGIN_MARKET_THEME,
+    navigation: {
+      visible: true,
+      showLogo: true,
+      showSearch: true,
+      showCart: false,
+      authStyle: 'text-link',
+      navItems: 'desktop',
+    },
     desktopNav: [
       { label: 'Discover', icon: 'Compass', path: '/plugins' },
       { label: 'Plugins', icon: 'Puzzle', path: '/plugins/list' },
@@ -247,7 +282,17 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   ecommerce: {
     id: 'ecommerce',
     name: 'E-Commerce',
+    appType: 'client',
+    layout: 'top-nav',
     theme: ECOMMERCE_THEME,
+    navigation: {
+      visible: true,
+      showLogo: true,
+      showSearch: true,
+      showCart: true,
+      authStyle: 'icon',
+      navItems: 'desktop',
+    },
     desktopNav: [
       { label: 'Home', icon: 'Home', path: '/' },
       { label: 'Products', icon: 'ShoppingBag', path: '/products' },
@@ -327,7 +372,17 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   community: {
     id: 'community',
     name: 'Community',
+    appType: 'client',
+    layout: 'top-nav',
     theme: COMMUNITY_THEME,
+    navigation: {
+      visible: true,
+      showLogo: true,
+      showSearch: false,
+      showCart: false,
+      authStyle: 'avatar',
+      navItems: 'desktop',
+    },
     desktopNav: [
       { label: 'Topics', icon: 'Hash', path: '/topics' },
       { label: 'Popular', icon: 'TrendingUp', path: '/popular' },
@@ -384,7 +439,17 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   saas: {
     id: 'saas',
     name: 'SaaS Admin',
+    appType: 'admin',
+    layout: 'minimal',
     theme: SAAS_ADMIN_THEME,
+    navigation: {
+      visible: false,
+      showLogo: false,
+      showSearch: false,
+      showCart: false,
+      authStyle: 'none',
+      navItems: 'none',
+    },
     desktopNav: [
       { label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard' },
       { label: 'Settings', icon: 'Settings', path: '/settings' },
@@ -418,8 +483,8 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   },
 }
 
-export function getPresetUIConfig(id: PresetType): PresetUIConfig {
-  return PRESET_UI_CONFIGS[id]
+export function getPresetUIConfig(id: string): PresetUIConfig {
+  return PRESET_UI_CONFIGS[id as PresetType] ?? PRESET_UI_CONFIGS.todo
 }
 
 export function getPresetUIConfigs(): Record<PresetType, PresetUIConfig> {

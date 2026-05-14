@@ -11,9 +11,7 @@ import {
 } from '../generators/template-generator'
 import { getExcludePatterns, getGeneratedFiles } from '../generators/file-filter'
 import { generateRouteRegistry } from '../generators/route-registry'
-import { generateClientApp } from '../generators/client-app'
 import { generateClientNavigation } from '../generators/client-navigation'
-import { generateClientLayout } from '../generators/client-layout'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
 import { generateAdminApp } from '../generators/admin-app'
@@ -29,6 +27,8 @@ import { generateClientComponentsIndex } from '../generators/client-components-i
 import { generateCliModulesIndex } from '../generators/cli-modules-index'
 import { filterPackageJson } from '../generators/package-json'
 import { generateViteConfig } from '../generators/vite-config'
+import { generatePresetUIConfig } from '../generators/client-preset-ui-config'
+import { generateClientMain } from '../generators/client-main'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -363,17 +363,11 @@ export async function createProject(
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/db/schema/index.ts'), dbSchemaContent)
 
-    const clientAppContent = generateClientApp(resolved)
-    await fs.writeFile(path.join(targetDir, 'src/client/App.tsx'), clientAppContent)
-
     const clientNavContent = generateClientNavigation(resolved)
     await fs.writeFile(
       path.join(targetDir, 'src/client/components/Navigation.tsx'),
       clientNavContent
     )
-
-    const clientLayoutContent = generateClientLayout(resolved)
-    await fs.writeFile(path.join(targetDir, 'src/client/Layout.tsx'), clientLayoutContent)
 
     const clientAppTestContent = generateClientAppTest(resolved)
     await fs.ensureDir(path.join(targetDir, 'src/client/components/__tests__'))
@@ -387,6 +381,15 @@ export async function createProject(
       path.join(targetDir, 'src/client/components/__tests__/Navigation.test.tsx'),
       clientNavTestContent
     )
+
+    const presetUIConfigContent = generatePresetUIConfig(resolved, selectedPreset.id)
+    await fs.writeFile(
+      path.join(targetDir, 'src/client/preset-ui-config.ts'),
+      presetUIConfigContent
+    )
+
+    const clientMainContent = generateClientMain(resolved, selectedPreset.id)
+    await fs.writeFile(path.join(targetDir, 'src/client/main.tsx'), clientMainContent)
 
     if (resolved.modules.has('admin')) {
       const adminAppContent = generateAdminApp(resolved)

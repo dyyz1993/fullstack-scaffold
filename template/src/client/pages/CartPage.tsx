@@ -1,48 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Package, Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
-
-interface CartItem {
-  id: number
-  name: string
-  variant: string
-  price: number
-  quantity: number
-  color: string
-}
-
-const INITIAL_CART: CartItem[] = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    variant: 'Black',
-    price: 79.99,
-    quantity: 1,
-    color: '#374151',
-  },
-  {
-    id: 2,
-    name: 'Organic Cotton T-Shirt',
-    variant: 'Medium / Sage',
-    price: 34.99,
-    quantity: 2,
-    color: '#6ee7b7',
-  },
-  {
-    id: 3,
-    name: 'Ceramic Travel Mug',
-    variant: 'Amber / 350ml',
-    price: 24.99,
-    quantity: 1,
-    color: '#f59e0b',
-  },
-]
+import { apiClient } from '@client/services/apiClient'
+import { LoadingSpinner } from '@client/components'
+import type { CartItem } from '@shared/schemas'
 
 const SHIPPING_THRESHOLD = 50
 const TAX_RATE = 0.08
 
 export const CartPage: React.FC = () => {
-  const [items, setItems] = useState<CartItem[]>(INITIAL_CART)
+  const [items, setItems] = useState<CartItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchCart() {
+      try {
+        const res = await apiClient.api.cart.$get()
+        const result = await res.json()
+        if (result.success) {
+          setItems(result.data.items)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCart()
+  }, [])
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : 5.99
@@ -62,6 +45,14 @@ export const CartPage: React.FC = () => {
 
   const removeItem = (id: number) => {
     setItems(prev => prev.filter(item => item.id !== id))
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20" data-testid="cart-loading">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
   }
 
   return (

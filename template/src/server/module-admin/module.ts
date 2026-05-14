@@ -24,6 +24,11 @@ const adminManifest: ModuleManifest = {
     path: 'admin',
   },
 
+  clientPages: [
+    { name: 'DashboardPage', route: '/dashboard' },
+    { name: 'SettingsPage', route: '/settings' },
+  ],
+
   adminPages: [
     { name: 'LoginPage', route: '/login', isPublic: true },
     { name: 'RegisterPage', route: '/register', isPublic: true },

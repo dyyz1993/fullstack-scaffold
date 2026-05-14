@@ -15,7 +15,7 @@ import { DisputesPage } from './pages/DisputesPage'
 import { ContentPage } from './pages/ContentPage'
 import { ProtectedRoute, CaptchaModal } from './components'
 
-export const App: React.FC = () => {
+export const App: React.FC<{ basePath?: string }> = ({ basePath = '/admin' }) => {
   return (
     <ConfigProvider
       theme={{
@@ -24,7 +24,7 @@ export const App: React.FC = () => {
         },
       }}
     >
-      <BrowserRouter basename="/admin">
+      <BrowserRouter basename={basePath}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
