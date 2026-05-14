@@ -116,6 +116,9 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     'src/shared/schemas/index.ts',
     'src/server/middleware/index.ts',
     'src/client/components/index.ts',
+    'src/client/Layout.tsx',
+    'src/client/components/__tests__/App.test.tsx',
+    'src/client/components/__tests__/Navigation.test.tsx',
   ]
 
   if (resolved.modules.has('admin')) {
