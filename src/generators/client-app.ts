@@ -5,23 +5,9 @@ export function generateClientApp(resolved: ResolvedPreset): string {
   const pages = getClientPages(resolved)
   const defaultRoute = getDefaultRoute(resolved)
 
-  const rawPresetId = resolved.preset.id
-  const presetId =
-    rawPresetId === 'todo-app'
-      ? 'todo'
-      : rawPresetId === 'xbrowser-marketplace'
-      ? 'plugin'
-      : rawPresetId === 'ecommerce'
-      ? 'ecommerce'
-      : rawPresetId === 'community'
-      ? 'community'
-      : 'saas'
-
   const imports = [
     `import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'`,
     `import { Layout } from './Layout'`,
-    `import { getPresetUIConfig } from './preset-ui-config'`,
-    `import type { PresetType } from './preset-ui-config'`,
   ]
 
   for (const page of pages) {
@@ -39,18 +25,10 @@ export function generateClientApp(resolved: ResolvedPreset): string {
 
   return `${imports.join('\n')}
 
-export const App: React.FC<{ presetId?: PresetType }> = ({ presetId: propPresetId }) => {
-  const presetId: PresetType = propPresetId ?? '${presetId}'
-  const config = getPresetUIConfig(presetId)
-
+export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <Layout
-        preset={presetId}
-        theme={config.theme}
-        desktopNav={config.desktopNav}
-        mobileTabs={config.mobileTabs}
-      >
+      <Layout>
         <Routes>
 ${routeElements.join('\n')}
         </Routes>

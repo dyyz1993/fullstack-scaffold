@@ -80,9 +80,11 @@ export function getExcludePatterns(
     excludes.push('admin.html')
     excludes.push('auth-inject.html')
     excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
-    // auth.ts imports from @shared/modules/admin - generate a version without admin deps
     excludes.push('src/server/utils/auth.ts')
   }
+
+  excludes.push('src/client/preset-ui-config.ts')
+  excludes.push('src/client/components/BottomTabBar.tsx')
 
   // LoginPage/RegisterPage are excluded via the for loop above (auth clientPages)
   // when auth module is not in the preset

@@ -107,18 +107,17 @@ describe('code generators', () => {
       const content = generateClientApp(resolved)
 
       expect(content).toContain('BrowserRouter')
-      expect(content).toContain('<Layout')
-      expect(content).toContain('preset={presetId}')
+      expect(content).toContain('<Layout>')
       expect(content).toContain('<Routes>')
     })
   })
 
   describe('generateClientNavigation', () => {
-    it('maps pages to nav items with ClientNavItem interface', () => {
+    it('maps pages to nav items with NavItem interface', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
-      expect(content).toContain('ClientNavItem')
+      expect(content).toContain('NavItem')
       expect(content).toContain("label: 'Todos'")
       expect(content).toContain("path: '/todos'")
     })
@@ -148,12 +147,12 @@ describe('code generators', () => {
       expect(content).toContain("from 'lucide-react'")
     })
 
-    it('includes brand with dynamic theme', () => {
+    it('includes brand with Biomimic', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateClientNavigation(resolved)
 
       expect(content).toContain('<Rocket className="w-4 h-4 text-white" />')
-      expect(content).toContain('{logoText}')
+      expect(content).toContain('Biomimic')
       expect(content).toContain('<Sparkles')
     })
   })
