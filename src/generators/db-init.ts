@@ -8,24 +8,34 @@ interface SeedModule {
 
 const SEED_MODULES: SeedModule[] = [
   {
+    module: 'todos',
+    importLine: '',
+    call: "import('../module-todos/services/todo-service').then(m => m.seedTodosIfEmpty())",
+  },
+  {
     module: 'order',
-    importLine: "import { seedOrdersIfEmpty } from '../module-order/services/order-service'",
-    call: 'seedOrdersIfEmpty()',
+    importLine: '',
+    call: "import('../module-order/services/order-service').then(m => m.seedOrdersIfEmpty())",
   },
   {
     module: 'ticket',
-    importLine: "import { seedTicketsIfEmpty } from '../module-ticket/services/ticket-service'",
-    call: 'seedTicketsIfEmpty()',
+    importLine: '',
+    call: "import('../module-ticket/services/ticket-service').then(m => m.seedTicketsIfEmpty())",
   },
   {
     module: 'dispute',
-    importLine: "import { seedDisputesIfEmpty } from '../module-dispute/services/dispute-service'",
-    call: 'seedDisputesIfEmpty()',
+    importLine: '',
+    call: "import('../module-dispute/services/dispute-service').then(m => m.seedDisputesIfEmpty())",
   },
   {
     module: 'content',
-    importLine: "import { seedContentsIfEmpty } from '../module-content/services/content-service'",
-    call: 'seedContentsIfEmpty()',
+    importLine: '',
+    call: "import('../module-content/services/content-service').then(m => m.seedContentsIfEmpty())",
+  },
+  {
+    module: 'tenant',
+    importLine: '',
+    call: "import('../module-tenant/services/tenant-service').then(m => m.seedTenantsIfEmpty())",
   },
 ]
 
@@ -380,13 +390,25 @@ export function generateDbInit(resolved: ResolvedPreset): string {
   const activeSeeds = SEED_MODULES.filter(s => resolved.modules.has(s.module))
 
   if (!resolved.hasPermission) {
-    return generateMinimalDbInit()
+    return generateMinimalDbInit(activeSeeds)
   }
 
   return generateFullDbInit(activeSeeds)
 }
 
-function generateMinimalDbInit(): string {
+function generateMinimalDbInit(activeSeeds: SeedModule[]): string {
+  const seedCalls = activeSeeds.map(s => `    ${s.call},`).join('\n')
+
+  const seedBlock =
+    activeSeeds.length > 0
+      ? `
+  log.info({}, 'Seeding module data...')
+  await Promise.all([
+${seedCalls}
+  ])
+  log.info({}, 'Module data seeding complete!')`
+      : ''
+
   return `import { getDb } from './driver'
 import { logger } from '../utils/logger'
 
@@ -396,14 +418,14 @@ export async function initializeDatabase() {
   await getDb()
 
   log.info({}, 'Initializing database...')
-  log.info({}, 'Database initialization complete!')
+
+  log.info({}, 'Database initialization complete!')${seedBlock}
 }
 `
 }
 
 function generateFullDbInit(activeSeeds: SeedModule[]): string {
-  const seedImports = activeSeeds.map(s => s.importLine).join('\n')
-  const seedCalls = activeSeeds.map(s => `    ${s.call}(),`).join('\n')
+  const seedCalls = activeSeeds.map(s => `    ${s.call},`).join('\n')
 
   const seedBlock =
     activeSeeds.length > 0
@@ -418,7 +440,6 @@ ${seedCalls}
   return `import { getDb } from './driver'
 import { permissions, roles, rolePermissions } from './schema'
 import { logger } from '../utils/logger'
-${seedImports}
 
 const log = logger.db()
 

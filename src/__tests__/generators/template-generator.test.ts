@@ -17,8 +17,8 @@ describe('template-generator', () => {
       manifests = await loadManifests(TEMPLATE_DIR)
     })
 
-    it('should discover all 13 modules', () => {
-      expect(manifests.size).toBe(13)
+    it('should discover all 14 modules', () => {
+      expect(manifests.size).toBe(14)
     })
 
     it('should parse standalone modules correctly', () => {
@@ -118,8 +118,8 @@ describe('template-generator', () => {
       presets = await loadPresets(TEMPLATE_DIR)
     })
 
-    it('should load all 7 presets', () => {
-      expect(presets.length).toBe(7)
+    it('should load all 8 presets', () => {
+      expect(presets.length).toBe(8)
     })
 
     it('should parse preset IDs', () => {

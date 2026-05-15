@@ -175,10 +175,8 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     files.push('src/server/utils/auth.ts')
   }
 
-  const seedModules = ['order', 'ticket', 'dispute', 'content']
-  if (seedModules.some(m => !resolved.modules.has(m)) || !resolved.hasPermission) {
-    files.push('src/server/db/init.ts')
-  }
+  // Always generate init.ts — every preset has different seed combinations
+  files.push('src/server/db/init.ts')
 
   return files
 }
