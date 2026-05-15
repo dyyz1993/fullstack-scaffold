@@ -19,7 +19,9 @@ export const App: React.FC<{ presetId?: string }> = ({ presetId = 'todo' }) => {
           mobileTabs={mobileTabs}
         >
           <Routes>
-            <Route path="/" element={<Navigate to={defaultRoute} replace />} />
+            {defaultRoute !== '/' && (
+              <Route path="/" element={<Navigate to={defaultRoute} replace />} />
+            )}
             {routes
               .filter(
                 (r): r is RouteDef & { component: NonNullable<RouteDef['component']> } =>

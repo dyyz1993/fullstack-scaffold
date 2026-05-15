@@ -42,7 +42,7 @@ export async function seedContentsIfEmpty(): Promise<void> {
       JSON.stringify(['最佳实践', '经验']),
     ]
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 25; i++) {
       const category = randomElement(CATEGORIES)
       const status = randomElement(STATUSES)
       const createdAt = new Date(randomDate(new Date('2024-01-01'), new Date()))

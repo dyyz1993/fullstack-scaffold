@@ -45,7 +45,7 @@ export async function seedTodosIfEmpty(): Promise<void> {
   const existing = await db.select().from(todos)
   if (existing.length === 0) {
     const STATUS = ['pending', 'in_progress', 'completed'] as const
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 25; i++) {
       const createdAt = new Date(randomDate(new Date('2024-01-01'), new Date()))
       await db.insert(todos).values({
         title: TODO_TITLES[i % TODO_TITLES.length],
