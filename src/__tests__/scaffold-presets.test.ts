@@ -142,11 +142,10 @@ describe('Scaffold Presets', () => {
       expect(content).not.toMatch(/admin/)
     })
 
-    it('should have client App.tsx with only TodoPage', () => {
+    it('should have client App.tsx with config-driven routing', () => {
       const content = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
-      expect(content).toMatch(/TodoPage/)
-      expect(content).not.toMatch(/WebSocketPage/)
-      expect(content).not.toMatch(/NotificationPage/)
+      expect(content).toMatch(/PresetProvider/)
+      expect(content).toMatch(/getPresetUIConfig/)
     })
 
     it('should not have excluded client stores', () => {
@@ -166,7 +165,7 @@ describe('Scaffold Presets', () => {
   })
 
   describe('todo-app preset', () => {
-    const includedModules = ['todos', 'chat', 'notifications']
+    const includedModules = ['todos', 'chat', 'notifications', 'auth']
     const excludedModules = ALL_MODULES.filter(m => !includedModules.includes(m))
     let projectDir: string
 
@@ -180,7 +179,7 @@ describe('Scaffold Presets', () => {
       expect(fs.existsSync(path.join(projectDir, 'tsconfig.json'))).toBe(true)
     })
 
-    it('should have module-todos, module-chat, module-notifications', () => {
+    it('should have module-todos, module-chat, module-notifications, module-auth', () => {
       for (const mod of includedModules) {
         expect(
           fs.existsSync(path.join(projectDir, `src/server/module-${mod}`)),
@@ -202,15 +201,14 @@ describe('Scaffold Presets', () => {
       expect(fs.existsSync(path.join(projectDir, 'src/admin'))).toBe(false)
     })
 
-    it('should not have antd or bcryptjs in package.json', () => {
+    it('should not have antd or commander in package.json', () => {
       const pkg = readPackageJson(projectDir)
       const deps = pkg.dependencies as Record<string, string>
       expect(deps).not.toHaveProperty('antd')
-      expect(deps).not.toHaveProperty('bcryptjs')
       expect(deps).not.toHaveProperty('commander')
     })
 
-    it('should have route-registry with 3 client routes', () => {
+    it('should have route-registry with 4 client routes', () => {
       const content = fs.readFileSync(
         path.join(projectDir, 'src/server/route-registry.ts'),
         'utf-8'
@@ -218,33 +216,30 @@ describe('Scaffold Presets', () => {
       expect(content).toContain('module-todos')
       expect(content).toContain('module-chat')
       expect(content).toContain('module-notifications')
+      expect(content).toContain('module-auth')
       for (const mod of excludedModules) {
         expect(content).not.toContain(`module-${mod}`)
       }
       const clientRoutes = content.match(/\.route\('\/api', \w+\)/g)
-      expect(clientRoutes?.length).toBeGreaterThanOrEqual(3)
+      expect(clientRoutes?.length).toBeGreaterThanOrEqual(4)
     })
 
-    it('should have client App.tsx with 3 pages', () => {
+    it('should have client App.tsx with config-driven routing', () => {
       const content = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
-      expect(content).toMatch(/TodoPage/)
-      expect(content).toMatch(/WebSocketPage/)
-      expect(content).toMatch(/NotificationPage/)
+      expect(content).toMatch(/PresetProvider/)
+      expect(content).toMatch(/getPresetUIConfig/)
     })
 
-    it('should have all 3 client stores', () => {
+    it('should have all client stores', () => {
       expect(fs.existsSync(path.join(projectDir, 'src/client/stores/todoStore.ts'))).toBe(true)
       expect(fs.existsSync(path.join(projectDir, 'src/client/stores/chatWSStore.ts'))).toBe(true)
       expect(fs.existsSync(path.join(projectDir, 'src/client/stores/notificationStore.ts'))).toBe(
         true
       )
+      expect(fs.existsSync(path.join(projectDir, 'src/client/stores/authStore.ts'))).toBe(true)
     })
 
-    it('should not have auth store', () => {
-      expect(fs.existsSync(path.join(projectDir, 'src/client/stores/authStore.ts'))).toBe(false)
-    })
-
-    it('should have shared schemas for all 3 modules', () => {
+    it('should have shared schemas for all modules', () => {
       const content = fs.readFileSync(path.join(projectDir, 'src/shared/modules/index.ts'), 'utf-8')
       expect(content).toMatch(/todos/)
       expect(content).toMatch(/chat/)
@@ -254,12 +249,14 @@ describe('Scaffold Presets', () => {
       expect(content).not.toMatch(/order/)
     })
 
-    it('should have all 3 client pages', () => {
+    it('should have all client pages', () => {
       expect(fs.existsSync(path.join(projectDir, 'src/client/pages/TodoPage.tsx'))).toBe(true)
       expect(fs.existsSync(path.join(projectDir, 'src/client/pages/WebSocketPage.tsx'))).toBe(true)
       expect(fs.existsSync(path.join(projectDir, 'src/client/pages/NotificationPage.tsx'))).toBe(
         true
       )
+      expect(fs.existsSync(path.join(projectDir, 'src/client/pages/LoginPage.tsx'))).toBe(true)
+      expect(fs.existsSync(path.join(projectDir, 'src/client/pages/RegisterPage.tsx'))).toBe(true)
     })
   })
 
