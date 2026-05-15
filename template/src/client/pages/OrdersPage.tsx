@@ -36,7 +36,7 @@ export const OrdersPage: React.FC = () => {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const res = await apiClient.api.orders.$get()
+        const res = await apiClient.api['orders-mock'].$get()
         const result = await res.json()
         if (result.success) {
           setOrders(result.data)

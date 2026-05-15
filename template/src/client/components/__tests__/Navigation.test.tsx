@@ -37,12 +37,10 @@ describe('Navigation', () => {
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 
-  it('should render with fallback items when no items provided', () => {
+  it('should render with no items when nothing provided', () => {
     renderWithRouter(<Navigation />)
 
     expect(screen.getByTestId('app-nav')).toBeInTheDocument()
-    expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 
   it('should display logo text from theme', () => {

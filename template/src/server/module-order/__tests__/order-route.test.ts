@@ -65,8 +65,18 @@ describe('Order Routes', () => {
     it('should filter orders by both status and customerName', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
 
+      const createRes = await client.api['orders'].$post({
+        json: {
+          customerName: 'Filter Test',
+          customerEmail: 'filter@example.com',
+          productName: 'Filter Product',
+          amount: 100,
+        },
+      })
+      expect(createRes.status).toBe(201)
+
       const res = await client.api['orders'].$get({
-        query: { status: 'pending', customerName: '李四' },
+        query: { status: 'pending', customerName: 'Filter Test' },
       })
       expect(res.status).toBe(200)
 
@@ -76,13 +86,23 @@ describe('Order Routes', () => {
         expect(Array.isArray(data.data)).toBe(true)
         data.data.forEach((order: { status: string; customerName: string }) => {
           expect(order.status).toBe('pending')
-          expect(order.customerName).toContain('李四')
+          expect(order.customerName).toContain('Filter Test')
         })
       }
     })
 
     it('should return empty array when no orders match filter', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
+
+      const createRes = await client.api['orders'].$post({
+        json: {
+          customerName: 'Exists Test',
+          customerEmail: 'exists@example.com',
+          productName: 'Exists Product',
+          amount: 100,
+        },
+      })
+      expect(createRes.status).toBe(201)
 
       const res = await client.api['orders'].$get({
         query: { customerName: 'NonExistentCustomer12345' },

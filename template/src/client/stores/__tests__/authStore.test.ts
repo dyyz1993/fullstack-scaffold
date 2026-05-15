@@ -271,7 +271,7 @@ describe('authStore - login action', () => {
       success: true,
       data: {
         token: 'jwt-abc',
-        user: { id: '1', username: 'testuser', role: 'user' },
+        profile: { id: '1', username: 'testuser', role: 'user' },
       },
     })
 

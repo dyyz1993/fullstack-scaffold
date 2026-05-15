@@ -42,17 +42,17 @@ describe('App Component', () => {
 
   describe('Initial Render', () => {
     it('should render navigation', () => {
-      render(<App presetId="saas" />)
+      render(<App presetId="todo" />)
       expect(screen.getByTestId('app-nav')).toBeInTheDocument()
     })
 
     it('should render main content area', () => {
-      render(<App presetId="saas" />)
+      render(<App presetId="todo" />)
       expect(screen.getByTestId('app-main')).toBeInTheDocument()
     })
 
     it('should render container', () => {
-      render(<App presetId="saas" />)
+      render(<App presetId="todo" />)
       expect(screen.getByTestId('app-container')).toBeInTheDocument()
     })
   })
@@ -85,14 +85,10 @@ describe('App Component', () => {
     })
   })
 
-  describe('Navigation Links', () => {
-    it('should render nav items for saas preset', () => {
-      render(<App presetId="saas" />)
+  describe('Layout Features', () => {
+    it('should render nav and footer for top-nav preset', () => {
+      render(<App presetId="todo" />)
       expect(screen.getByTestId('app-nav')).toBeInTheDocument()
-    })
-
-    it('should render footer', () => {
-      render(<App presetId="saas" />)
       expect(screen.getByTestId('app-footer')).toBeInTheDocument()
     })
   })

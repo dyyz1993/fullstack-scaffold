@@ -56,7 +56,7 @@ const MOCK_ORDERS = [
 
 const getOrdersRoute = createRoute({
   method: 'get',
-  path: '/orders',
+  path: '/orders-mock',
   responses: {
     200: successResponse(ECommerceOrderListSchema, 'List e-commerce orders'),
   },

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { LoginPage } from '../LoginPage'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -36,9 +37,11 @@ vi.mock('@client/stores/authStore', () => ({
 
 const renderLoginPage = () =>
   render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>
+    <HelmetProvider>
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    </HelmetProvider>
   )
 
 describe('LoginPage', () => {
@@ -143,32 +146,12 @@ describe('LoginPage', () => {
   })
 
   describe('Quick Demo Login', () => {
-    it('should render demo user login button', () => {
+    it('should pre-fill username and password from preset credentials', () => {
       renderLoginPage()
-      expect(screen.getByTestId('demo-user-login')).toBeInTheDocument()
-    })
-
-    it('should render demo admin login button', () => {
-      renderLoginPage()
-      expect(screen.getByTestId('demo-admin-login')).toBeInTheDocument()
-    })
-
-    it('should fill username and password when demo user button is clicked', () => {
-      renderLoginPage()
-      fireEvent.click(screen.getByTestId('demo-user-login'))
       const usernameInput = screen.getByTestId('login-username') as HTMLInputElement
       const passwordInput = screen.getByTestId('login-password') as HTMLInputElement
-      expect(usernameInput.value).toBe('user1')
-      expect(passwordInput.value).toBe('admin123')
-    })
-
-    it('should fill username and password when demo admin button is clicked', () => {
-      renderLoginPage()
-      fireEvent.click(screen.getByTestId('demo-admin-login'))
-      const usernameInput = screen.getByTestId('login-username') as HTMLInputElement
-      const passwordInput = screen.getByTestId('login-password') as HTMLInputElement
-      expect(usernameInput.value).toBe('superadmin')
-      expect(passwordInput.value).toBe('admin123')
+      expect(usernameInput.value).toBe('demo@biomimic.app')
+      expect(passwordInput.value).toBe('demo123')
     })
   })
 
