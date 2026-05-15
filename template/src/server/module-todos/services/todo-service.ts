@@ -10,8 +10,53 @@ import { getDb } from '@server/db'
 import { todos, todoAttachments, type TodoTable, type TodoAttachmentTable } from '@server/db/schema'
 import { toISOString } from '@server/utils/date'
 import { saveFile, deleteFile, validateFile, getUploadConfig } from '@server/utils/file-storage'
+import { randomDate, randomElement } from '@server/utils/generate'
 
 const TODO_NAMESPACE = 'todos'
+
+const TODO_TITLES = [
+  '学习 Hono RPC',
+  '尝试 SSE 通知',
+  '探索 WebSocket 聊天',
+  '实现用户认证',
+  '添加文件上传功能',
+  '设置权限控制',
+  '优化前端性能',
+  '编写单元测试',
+  '部署到 Cloudflare',
+  '创建管理后台',
+]
+
+const TODO_DESCRIPTIONS = [
+  '构建类型安全的 API 调用',
+  '实时服务器推送更新',
+  '双向实时通信',
+  '使用 JWT 进行用户认证',
+  '支持多种文件格式上传',
+  '基于角色的访问控制',
+  '减少不必要的渲染',
+  '确保代码质量',
+  'Serverless 部署方案',
+  '管理员可以管理所有数据',
+]
+
+export async function seedTodosIfEmpty(): Promise<void> {
+  const db = await getDb()
+  const existing = await db.select().from(todos)
+  if (existing.length === 0) {
+    const STATUS = ['pending', 'in_progress', 'completed'] as const
+    for (let i = 0; i < 10; i++) {
+      const createdAt = new Date(randomDate(new Date('2024-01-01'), new Date()))
+      await db.insert(todos).values({
+        title: TODO_TITLES[i % TODO_TITLES.length],
+        description: TODO_DESCRIPTIONS[i % TODO_DESCRIPTIONS.length],
+        status: randomElement(STATUS),
+        createdAt,
+        updatedAt: new Date(randomDate(createdAt, new Date())),
+      })
+    }
+  }
+}
 
 export async function listTodos(): Promise<Todo[]> {
   const db = await getDb()
