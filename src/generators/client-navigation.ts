@@ -83,6 +83,25 @@ function AuthSection({ style }: { style: string }) {
     )
   }
 
+  if (style === 'buttons') {
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          to="/login"
+          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Sign In
+        </Link>
+        <Link
+          to="/register"
+          className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+        >
+          Sign Up
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <Link to="/login" className="text-sm text-gray-500 hover:text-gray-900">
       Login

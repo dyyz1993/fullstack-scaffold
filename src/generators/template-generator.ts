@@ -46,6 +46,7 @@ export interface ResolvedPreset {
   modules: Map<string, ModuleManifest>
   hasAdmin: boolean
   hasClient: boolean
+  hasCli: boolean
   hasSSE: boolean
   hasWebSocket: boolean
   hasPermission: boolean
@@ -173,11 +174,14 @@ export function resolvePreset(
     if (manifest.routes.admin && manifest.routes.admin.length > 0) hasAdmin = true
   }
 
+  const isCliOnly = preset.id === 'cli-only'
+
   return {
     preset,
     modules,
     hasAdmin,
-    hasClient: true,
+    hasClient: !isCliOnly,
+    hasCli: true,
     hasSSE,
     hasWebSocket,
     hasPermission: modules.has('permission'),

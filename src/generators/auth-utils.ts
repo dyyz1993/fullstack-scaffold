@@ -1,12 +1,32 @@
 import type { ResolvedPreset } from './template-generator'
 
 export function generateAuthUtils(resolved: ResolvedPreset): string {
-  if (!resolved.hasPermission) {
+  const hasAuthOrPermission = resolved.modules.has('auth') || resolved.hasPermission
+
+  if (!hasAuthOrPermission) {
     return `import type { Context } from 'hono'
 import type { AuthUser } from '../middleware/auth'
 
 export function getAuthUser(c: Context): AuthUser {
   return c.get('authUser')
+}
+`
+  }
+
+  if (resolved.modules.has('auth') && !resolved.hasPermission) {
+    return `import type { Context } from 'hono'
+import type { AuthUser } from '../middleware/auth'
+
+export function getAuthUser(c: Context): AuthUser {
+  return c.get('authUser')
+}
+
+export function getOptionalAuthUser(c: Context): AuthUser | null {
+  try {
+    return c.get('authUser')
+  } catch {
+    return null
+  }
 }
 `
   }

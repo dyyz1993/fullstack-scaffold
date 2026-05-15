@@ -80,10 +80,27 @@ export function getExcludePatterns(
   }
 
   if (!resolved.modules.has('admin')) {
-    excludes.push('src/client/components/AuthButton.tsx')
     excludes.push('src/admin')
     excludes.push('admin.html')
     excludes.push('auth-inject.html')
+  }
+
+  if (!resolved.hasClient) {
+    excludes.push('src/client')
+    excludes.push('index.html')
+    excludes.push('admin.html')
+    excludes.push('auth-inject.html')
+    excludes.push('src/admin')
+    excludes.push('vite.config.ts')
+    excludes.push('postcss.config.js')
+    excludes.push('tailwind.config.js')
+  }
+
+  if (!resolved.hasClient) {
+    excludes.push('src/client/components/AuthButton.tsx')
+    excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
+  } else if (!resolved.modules.has('admin') && !resolved.modules.has('auth')) {
+    excludes.push('src/client/components/AuthButton.tsx')
     excludes.push('src/client/components/__tests__/AuthButton.test.tsx')
     excludes.push('src/server/utils/auth.ts')
   }
@@ -93,12 +110,19 @@ export function getExcludePatterns(
   // LoginPage/RegisterPage are excluded via the for loop above (auth clientPages)
   // when auth module is not in the preset
 
-  if (!resolved.hasPermission) {
+  if (!resolved.hasPermission && !resolved.modules.has('auth')) {
     excludes.push('src/server/utils/permission-utils.ts')
     excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
     excludes.push('src/server/utils/__tests__/auth.test.ts')
+  } else if (!resolved.hasPermission && resolved.modules.has('auth')) {
+    excludes.push('src/server/utils/permission-utils.ts')
+    excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
+    excludes.push('src/server/middleware/__tests__/auth.test.ts')
+    excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
+    excludes.push('src/server/utils/__tests__/auth.test.ts')
+    excludes.push('src/server/module-auth/__tests__/auth-service.test.ts')
   } else if (!resolved.modules.has('admin')) {
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
   }
@@ -114,23 +138,33 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
   const files: string[] = [
     'src/server/route-registry.ts',
     'src/server/db/schema/index.ts',
-    'src/client/App.tsx',
-    'src/client/components/Navigation.tsx',
     'src/shared/modules/index.ts',
     'src/shared/schemas/index.ts',
     'src/server/middleware/index.ts',
-    'src/client/components/index.ts',
-    'src/client/Layout.tsx',
-    'src/client/components/__tests__/App.test.tsx',
-    'src/client/components/__tests__/Navigation.test.tsx',
+    'src/server/app.ts',
+    'src/cli/modules/index.ts',
   ]
 
-  if (resolved.modules.has('admin')) {
+  if (resolved.hasClient) {
+    files.push(
+      'src/client/App.tsx',
+      'src/client/components/Navigation.tsx',
+      'src/client/components/index.ts',
+      'src/client/Layout.tsx',
+      'src/client/components/__tests__/App.test.tsx',
+      'src/client/components/__tests__/Navigation.test.tsx',
+      'src/client/main.tsx',
+      'src/client/preset-ui-config.ts'
+    )
+  }
+
+  if (resolved.hasClient && resolved.modules.has('admin')) {
     files.push('src/admin/App.tsx')
   }
 
-  // CLI modules index is always generated (CLI is independent of admin)
-  files.push('src/cli/modules/index.ts')
+  if (resolved.hasClient && !resolved.modules.has('admin')) {
+    files.push('vite.config.ts')
+  }
 
   if (!resolved.hasPermission) {
     files.push('src/server/middleware/auth.ts')
@@ -139,12 +173,6 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
 
   if (!resolved.modules.has('admin') && resolved.hasPermission) {
     files.push('src/server/utils/auth.ts')
-  }
-
-  files.push('src/server/app.ts')
-
-  if (!resolved.modules.has('admin')) {
-    files.push('vite.config.ts')
   }
 
   const seedModules = ['order', 'ticket', 'dispute', 'content']

@@ -38,10 +38,20 @@ const authenticatedFetch = (url: string | URL | Request, init?: RequestInit): Pr
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  return window.fetch(url, {
-    ...init,
-    headers,
-  })
+  return window
+    .fetch(url, {
+      ...init,
+      headers,
+    })
+    .then(response => {
+      if (response.status === 401) {
+        localStorage.removeItem('auth-token')
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login'
+        }
+      }
+      return response
+    })
 }
 
 export const apiClient = hc<ClientApiType>(baseUrl, {

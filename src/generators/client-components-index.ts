@@ -15,7 +15,7 @@ export function generateClientComponentsIndex(resolved: ResolvedPreset): string 
     lines.push(`export { MessageCard } from './MessageCard'`)
   }
 
-  if (resolved.modules.has('admin')) {
+  if (resolved.modules.has('admin') || resolved.modules.has('auth')) {
     lines.push(`export { AuthButton } from './AuthButton'`)
   }
 

@@ -33,15 +33,19 @@ export const useAuthStore = create<AuthState>()(
         set({ loading: true, error: null })
         try {
           const response = await apiClient.api.auth.login.$post({
-            json: { username, password },
+            json: { account: username, password },
           })
           const result = await response.json()
           if (result.success) {
-            const { token, user } = result.data
+            const { token, profile } = result.data
             set({
               token,
               isAuthenticated: true,
-              user: { id: user.id, username: user.username, role: user.role },
+              user: {
+                id: profile.id,
+                username: profile.username,
+                role: profile.role as 'user' | 'admin',
+              },
               loading: false,
               error: null,
             })

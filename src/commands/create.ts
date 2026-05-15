@@ -363,35 +363,37 @@ export async function createProject(
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/db/schema/index.ts'), dbSchemaContent)
 
-    const clientNavContent = generateClientNavigation(resolved)
-    await fs.writeFile(
-      path.join(targetDir, 'src/client/components/Navigation.tsx'),
-      clientNavContent
-    )
+    if (resolved.hasClient) {
+      const clientNavContent = generateClientNavigation(resolved)
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/components/Navigation.tsx'),
+        clientNavContent
+      )
 
-    const clientAppTestContent = generateClientAppTest(resolved)
-    await fs.ensureDir(path.join(targetDir, 'src/client/components/__tests__'))
-    await fs.writeFile(
-      path.join(targetDir, 'src/client/components/__tests__/App.test.tsx'),
-      clientAppTestContent
-    )
+      const clientAppTestContent = generateClientAppTest(resolved)
+      await fs.ensureDir(path.join(targetDir, 'src/client/components/__tests__'))
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/components/__tests__/App.test.tsx'),
+        clientAppTestContent
+      )
 
-    const clientNavTestContent = generateClientNavigationTest(resolved)
-    await fs.writeFile(
-      path.join(targetDir, 'src/client/components/__tests__/Navigation.test.tsx'),
-      clientNavTestContent
-    )
+      const clientNavTestContent = generateClientNavigationTest(resolved)
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/components/__tests__/Navigation.test.tsx'),
+        clientNavTestContent
+      )
 
-    const presetUIConfigContent = generatePresetUIConfig(resolved, selectedPreset.id)
-    await fs.writeFile(
-      path.join(targetDir, 'src/client/preset-ui-config.ts'),
-      presetUIConfigContent
-    )
+      const presetUIConfigContent = generatePresetUIConfig(resolved, selectedPreset.id)
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/preset-ui-config.ts'),
+        presetUIConfigContent
+      )
 
-    const clientMainContent = generateClientMain(resolved, selectedPreset.id)
-    await fs.writeFile(path.join(targetDir, 'src/client/main.tsx'), clientMainContent)
+      const clientMainContent = generateClientMain(resolved, selectedPreset.id)
+      await fs.writeFile(path.join(targetDir, 'src/client/main.tsx'), clientMainContent)
+    }
 
-    if (resolved.modules.has('admin')) {
+    if (resolved.hasClient && resolved.modules.has('admin')) {
       const adminAppContent = generateAdminApp(resolved)
       if (adminAppContent) {
         await fs.ensureDir(path.join(targetDir, 'src/admin'))
@@ -433,17 +435,19 @@ export async function createProject(
       await fs.writeFile(path.join(targetDir, 'src/server/utils/auth.ts'), authUtilsContent)
     }
 
-    const clientComponentsContent = generateClientComponentsIndex(resolved)
-    await fs.writeFile(
-      path.join(targetDir, 'src/client/components/index.ts'),
-      clientComponentsContent
-    )
+    if (resolved.hasClient) {
+      const clientComponentsContent = generateClientComponentsIndex(resolved)
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/components/index.ts'),
+        clientComponentsContent
+      )
+    }
 
     // CLI modules index is always generated (CLI is independent of admin)
     const cliModulesContent = generateCliModulesIndex(resolved)
     await fs.writeFile(path.join(targetDir, 'src/cli/modules/index.ts'), cliModulesContent)
 
-    if (generatedFiles.includes('vite.config.ts')) {
+    if (resolved.hasClient && generatedFiles.includes('vite.config.ts')) {
       const viteConfigContent = generateViteConfig(resolved, templateDir)
       await fs.writeFile(path.join(targetDir, 'vite.config.ts'), viteConfigContent)
     }
@@ -476,14 +480,25 @@ export async function createProject(
       console.log(chalk.white(`    cd ${projectName}`))
     }
     console.log(chalk.white('    npm install'))
-    console.log(chalk.white('    npm run dev'))
-    console.log('')
-    console.log(chalk.yellow('  ⚠️  Cloudflare Setup:'))
-    console.log(
-      chalk.white(`    1. Create D1 database: wrangler d1 create ${generateDbName(projectName)}`)
-    )
-    console.log(chalk.white('    2. Copy the database ID to wrangler.toml'))
-    console.log(chalk.white('    3. Deploy: npm run deploy:cf'))
+
+    if (resolved.hasClient) {
+      console.log(chalk.white('    npm run dev'))
+      console.log('')
+      console.log(chalk.yellow('  ⚠️  Cloudflare Setup:'))
+      console.log(
+        chalk.white(`    1. Create D1 database: wrangler d1 create ${generateDbName(projectName)}`)
+      )
+      console.log(chalk.white('    2. Copy the database ID to wrangler.toml'))
+      console.log(chalk.white('    3. Deploy: npm run deploy:cf'))
+    } else {
+      console.log(chalk.white('    npm run build'))
+      console.log(chalk.white('    npm start'))
+      console.log('')
+      console.log(chalk.cyan('  CLI usage:'))
+      console.log(chalk.white('    node dist/cli/index.js config status'))
+      console.log(chalk.white('    node dist/cli/index.js todo list'))
+      console.log(chalk.white('    node dist/cli/index.js --help'))
+    }
     console.log('')
     console.log(chalk.gray('  Happy coding! 🐟'))
     console.log('')

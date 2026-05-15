@@ -10,9 +10,12 @@ import { loadPresets } from './generators/template-generator.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const packageJson = JSON.parse(
-  readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf-8')
-)
+const rootDir =
+  __dirname.endsWith(path.join('src')) || __dirname.endsWith(path.join('dist'))
+    ? path.resolve(__dirname, '..')
+    : path.resolve(__dirname, '..', '..')
+
+const packageJson = JSON.parse(readFileSync(path.join(rootDir, 'package.json'), 'utf-8'))
 
 const program = new Command()
 
@@ -22,7 +25,10 @@ program
   .version(packageJson.version)
   .argument('[project-name]', 'Name of your project')
   .option('-c, --current-dir', 'Create project in current directory')
-  .option('-p, --preset <preset>', 'Template preset to use (fullstack-admin, todo-app, minimal)')
+  .option(
+    '-p, --preset <preset>',
+    'Template preset to use (fullstack-admin, todo-app, cli-only, minimal)'
+  )
   .option('-o, --output-dir <path>', 'Output directory (defaults to project name)')
   .option('--dry-run', 'Show what would be generated without creating files')
   .action(

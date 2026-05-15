@@ -118,8 +118,8 @@ describe('template-generator', () => {
       presets = await loadPresets(TEMPLATE_DIR)
     })
 
-    it('should load all 5 presets', () => {
-      expect(presets.length).toBe(5)
+    it('should load all 6 presets', () => {
+      expect(presets.length).toBe(6)
     })
 
     it('should parse preset IDs', () => {
@@ -161,7 +161,7 @@ describe('template-generator', () => {
 
       const todoApp = presets.find(p => p.id === 'todo-app')!
       const resolved = resolvePreset(todoApp, allManifests)
-      expect(resolved.modules.size).toBe(3)
+      expect(resolved.modules.size).toBe(4)
     })
 
     it('should include all modules for fullstack-admin', async () => {

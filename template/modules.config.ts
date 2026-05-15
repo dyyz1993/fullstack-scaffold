@@ -35,7 +35,7 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
     id: 'todo-app',
     name: 'Todo App',
     description: 'Simple todo app with chat and notifications — great starting point for learning',
-    modules: ['todos', 'chat', 'notifications'],
+    modules: ['todos', 'chat', 'notifications', 'auth'],
   },
   {
     id: 'ecommerce',
@@ -72,6 +72,12 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
       'dispute',
       'content',
     ],
+  },
+  {
+    id: 'cli-only',
+    name: 'CLI Agent',
+    description: 'CLI + Server only, no web client. For AI agent automation — no browser UI needed',
+    modules: ['todos', 'chat', 'notifications', 'auth'],
   },
   {
     id: 'minimal',

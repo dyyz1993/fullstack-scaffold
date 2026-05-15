@@ -2,6 +2,7 @@ import type { ResolvedPreset } from './template-generator'
 
 export function generateMiddlewareIndex(resolved: ResolvedPreset): string {
   const lines: string[] = []
+  const hasAuthOrPermission = resolved.modules.has('auth') || resolved.hasPermission
 
   lines.push(`export { corsMiddleware, createCorsMiddleware, type CorsOptions } from './cors'`)
   lines.push(
@@ -11,7 +12,7 @@ export function generateMiddlewareIndex(resolved: ResolvedPreset): string {
     `export {\n  errorHandlerMiddleware,\n  createErrorHandlerMiddleware,\n  type ErrorHandlerOptions,\n} from './error-handler'`
   )
 
-  if (resolved.hasPermission) {
+  if (hasAuthOrPermission) {
     lines.push(
       `export {\n  authMiddleware,\n  requireSuperAdminMiddleware,\n  requireCustomerServiceMiddleware,\n  requirePermissionsMiddleware,\n  type AuthUser,\n  type AuthMiddlewareOptions,\n} from './auth'`
     )
@@ -29,7 +30,7 @@ export function generateMiddlewareIndex(resolved: ResolvedPreset): string {
 
   lines.push(`export { rateLimitMiddleware, type RateLimitOptions } from './rate-limit'`)
 
-  if (resolved.hasPermission) {
+  if (hasAuthOrPermission) {
     lines.push(`export { getAuthUser } from '../utils/auth'`)
   }
 

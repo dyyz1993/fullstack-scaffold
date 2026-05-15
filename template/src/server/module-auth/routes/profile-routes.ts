@@ -26,5 +26,6 @@ export const profileRoutes = new OpenAPIHono().openapi(getProfileRoute, async c 
         following: 25,
       },
     },
+    timestamp: new Date().toISOString(),
   })
 })

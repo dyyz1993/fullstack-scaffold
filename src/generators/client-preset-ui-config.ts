@@ -95,7 +95,18 @@ function getRoutesForPreset(presetType: string, resolved: ResolvedPreset): LazyR
     componentName: 'RegisterPage',
     label: 'Register',
   }
-  const maybeAuthRoutes = hasModule('auth') ? [loginRoute, registerRoute] : []
+  const maybeAuthRoutes = hasModule('auth')
+    ? [
+        loginRoute,
+        registerRoute,
+        {
+          path: '/profile',
+          importPath: './pages/ProfilePage',
+          componentName: 'ProfilePage',
+          label: 'Profile',
+        },
+      ]
+    : []
 
   switch (presetType) {
     case 'todo': {
@@ -270,7 +281,10 @@ function getRoutesForPreset(presetType: string, resolved: ResolvedPreset): LazyR
   }
 }
 
-function getNavConfigForPreset(presetType: string): {
+function getNavConfigForPreset(
+  presetType: string,
+  hasAuth: boolean
+): {
   desktopNav: string[]
   mobileTabs: string[]
   defaultRoute: string
@@ -285,8 +299,9 @@ function getNavConfigForPreset(presetType: string): {
         name: 'Todo App',
         appType: 'client',
         layout: 'top-nav',
-        navigationObj:
-          "{ visible: true, showLogo: true, showSearch: false, showCart: false, authStyle: 'none', navItems: 'desktop' }",
+        navigationObj: hasAuth
+          ? "{ visible: true, showLogo: true, showSearch: false, showCart: false, authStyle: 'buttons', navItems: 'desktop' }"
+          : "{ visible: true, showLogo: true, showSearch: false, showCart: false, authStyle: 'none', navItems: 'desktop' }",
         desktopNav: [
           "{ label: 'Todos', icon: 'CheckSquare', path: '/todos' }",
           "{ label: 'SSE Demo', icon: 'Bell', path: '/notifications' }",
@@ -412,7 +427,8 @@ function filterNavByModules(navItems: string[], resolved: ResolvedPreset): strin
 export function generatePresetUIConfig(resolved: ResolvedPreset, presetId: string): string {
   const presetType = getPresetType(presetId)
   const { constName, theme } = getThemeForPresetType(presetType)
-  const navConfig = getNavConfigForPreset(presetType)
+  const hasAuth = resolved.modules.has('auth')
+  const navConfig = getNavConfigForPreset(presetType, hasAuth)
   const routes = getRoutesForPreset(presetType, resolved)
 
   const desktopNav = filterNavByModules(navConfig.desktopNav, resolved)
