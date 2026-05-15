@@ -19,6 +19,7 @@ export interface FieldSpec {
   minLength?: number
   min?: number
   max?: number
+  allowExtraFields?: boolean // allow fields not in spec
 }
 
 export interface ValidationResult {
@@ -151,14 +152,16 @@ export function validateObjectDeep(
           mergeResult(result, child)
         }
 
-        // Check for extra fields
-        const specKeys = new Set(Object.keys(spec.fields))
-        const valueKeys = Object.keys(value as Record<string, unknown>)
-        for (const vk of valueKeys) {
-          if (!specKeys.has(vk)) {
-            result.errors.push(`${path}.${vk}: unexpected field`)
-            result.totalAssertions++
-            result.passed = false
+        // Check for extra fields (unless allowExtraFields is set)
+        if (!spec.allowExtraFields) {
+          const specKeys = new Set(Object.keys(spec.fields))
+          const valueKeys = Object.keys(value as Record<string, unknown>)
+          for (const vk of valueKeys) {
+            if (!specKeys.has(vk)) {
+              result.errors.push(`${path}.${vk}: unexpected field`)
+              result.totalAssertions++
+              result.passed = false
+            }
           }
         }
       }

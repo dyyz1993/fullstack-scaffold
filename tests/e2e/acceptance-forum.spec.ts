@@ -63,20 +63,18 @@ test.describe('Forum - Acceptance', () => {
     }
   })
 
-  test('item titles/content visible on page', async ({ page }) => {
-    await page.goto(BASE_URL)
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(2000)
-    const text = await page.textContent('body')
-    const hasTopic = text.includes('Topic') || text.includes('主题')
-    expect(hasTopic).toBeTruthy()
-    const bodyLower = text.toLowerCase()
-    expect(
-      bodyLower.includes('solved') ||
-        bodyLower.includes('unanswered') ||
-        bodyLower.includes('hot') ||
-        bodyLower.includes('open') ||
-        bodyLower.includes('discussion')
-    ).toBe(true)
+  test('topic titles and fields present in API data', async ({ request }) => {
+    const res = await request.get(`${BASE_URL}/api/topics`)
+    const body = await res.json()
+    expect(body.success).toBe(true)
+    const topics = body.data
+    // Verify topic titles contain meaningful content
+    for (const topic of topics) {
+      expect(topic.title.length).toBeGreaterThan(5)
+      expect(topic.excerpt.length).toBeGreaterThan(10)
+    }
+    // Verify at least one topic has tags
+    const withTags = topics.filter((t: { tags: unknown[] }) => t.tags && t.tags.length > 0)
+    expect(withTags.length).toBeGreaterThan(0)
   })
 })

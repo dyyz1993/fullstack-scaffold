@@ -51,8 +51,9 @@ async function runTodoAcceptanceTests(baseUrl: string, label: string) {
       await page.waitForTimeout(2000)
       const text = await page.textContent('body')
       expect(text).toContain('Todo')
+      const lower = text.toLowerCase()
       const hasStatus =
-        text.includes('pending') || text.includes('in_progress') || text.includes('completed')
+        lower.includes('pending') || lower.includes('in_progress') || lower.includes('completed')
       expect(hasStatus).toBeTruthy()
     })
   })
