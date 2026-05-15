@@ -26,5 +26,12 @@
     "parentID": "ses_1d5a1a002ffeLRukli6vArta39",
     "status": "running",
     "createdAt": 1778827856547
+  },
+  "test-seed-data-fix": {
+    "id": "ses_1d4f2c181ffe7VPPwQ7VnQihCy",
+    "name": "test-seed-data-fix",
+    "parentID": "ses_1d4fbe2b4ffep1P9LhZDbROgtu",
+    "status": "running",
+    "createdAt": 1778838748813
   }
 }
