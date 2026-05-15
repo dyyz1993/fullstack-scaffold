@@ -12,6 +12,7 @@
     "dev:plugin": "VITE_PRESET=plugin vite",
     "dev:ecommerce": "VITE_PRESET=ecommerce vite",
     "dev:community": "VITE_PRESET=community vite",
+    "dev:forum": "VITE_PRESET=community vite",
     "dev:saas": "VITE_PRESET=saas vite",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",

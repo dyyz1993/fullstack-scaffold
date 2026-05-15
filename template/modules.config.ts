@@ -74,6 +74,12 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
     ],
   },
   {
+    id: 'forum',
+    name: 'Forum',
+    description: 'Community forum with content moderation, user auth, and admin review',
+    modules: ['content', 'auth', 'permission', 'admin', 'notifications'],
+  },
+  {
     id: 'cli-only',
     name: 'CLI Agent',
     description: 'CLI + Server only, no web client. For AI agent automation — no browser UI needed',

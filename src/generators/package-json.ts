@@ -141,6 +141,7 @@ export function filterPackageJson(
     delete scripts['dev:plugin']
     delete scripts['dev:ecommerce']
     delete scripts['dev:community']
+    delete scripts['dev:forum']
     delete scripts['dev:saas']
     delete scripts['dev:cf']
     delete scripts['deploy:cf']

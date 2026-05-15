@@ -6,6 +6,7 @@ function getPresetType(presetId: string): string {
     'xbrowser-marketplace': 'plugin',
     ecommerce: 'ecommerce',
     'fullstack-admin': 'saas',
+    forum: 'community',
     minimal: 'todo',
   }
   return map[presetId] || 'todo'
