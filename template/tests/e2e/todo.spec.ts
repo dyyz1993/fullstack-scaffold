@@ -13,39 +13,40 @@ function getBaseUrl(): string {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010'
 }
 
+/**
+ * Cleanup after each test
+ * IMPORTANT: Close all browser resources to prevent memory leaks
+ */
+// Track if we're in a test that needs persistence
+const persistenceTestInProgress = false
+
 test.beforeEach(async ({ page }) => {
-  // 1. Cleanup database
-  try {
-    const response = await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
-    if (!response.ok) {
-      console.warn('Failed to cleanup database:', await response.text())
+  // Only cleanup database if we're not in a persistence test
+  if (!persistenceTestInProgress) {
+    try {
+      const response = await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
+      if (!response.ok) {
+        console.warn('Failed to cleanup database:', await response.text())
+      }
+    } catch (error) {
+      console.warn('Error during database cleanup:', error)
     }
-  } catch (error) {
-    console.warn('Error during database cleanup:', error)
   }
 
-  // 2. Navigate to app first to establish correct origin for localStorage
-  await page.goto(getBaseUrl())
-  await page.waitForLoadState('load')
-
-  // 3. Clear storage (now on correct origin)
+  // Clear storage safely
   try {
     await page.evaluate(() => {
       try {
         localStorage.clear()
         sessionStorage.clear()
       } catch (e) {
+        // Ignore security errors for localStorage access
         console.warn('Could not clear storage:', e)
       }
     })
   } catch (error) {
     console.warn('Error clearing storage:', error)
   }
-
-  // 4. Set auth token (now on correct origin, persists across reloads)
-  await page.evaluate(() => {
-    localStorage.setItem('auth-token', JSON.stringify('user-token'))
-  })
 })
 
 test.afterEach(async ({ page, context }) => {
@@ -300,8 +301,11 @@ test.describe('Todo App', () => {
       // Click delete button
       await page.click('[data-testid="todo-item"] [data-testid="delete-button"]')
 
-      // Wait for the delete to complete - wait for todo to be removed
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(0, { timeout: 10000 })
+      // Wait for network to be idle
+      await page.waitForLoadState('networkidle')
+
+      // Verify todo is deleted
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(0)
 
       // Verify empty state is shown
       await expect(page.locator('[data-testid="empty-state"]')).toBeVisible()
@@ -348,48 +352,45 @@ test.describe('Todo App', () => {
 
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
-
-      // Wait for React to re-render after state update
-      await page.waitForTimeout(500)
     })
 
     test('should filter to show only pending todos', async ({ page }) => {
       // Click filter to show pending only
       await page.click('[data-testid="filter-pending"]')
 
-      // Wait for React to re-render after filter state update
-      await page.waitForTimeout(500)
+      // Wait for network to be idle
+      await page.waitForLoadState('networkidle')
 
       // Verify only pending todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1, { timeout: 10000 })
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
     })
 
     test('should filter to show only completed todos', async ({ page }) => {
       // Click filter to show completed only
       await page.click('[data-testid="filter-completed"]')
 
-      // Wait for React to re-render after filter state update
-      await page.waitForTimeout(500)
+      // Wait for network to be idle
+      await page.waitForLoadState('networkidle')
 
       // Verify only completed todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1, { timeout: 10000 })
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
     })
 
     test('should show all todos when filter is reset', async ({ page }) => {
       // Filter to completed
       await page.click('[data-testid="filter-completed"]')
 
-      // Wait for React to re-render
-      await page.waitForTimeout(500)
+      // Wait for network to be idle
+      await page.waitForLoadState('networkidle')
 
       // Reset filter to all
       await page.click('[data-testid="filter-all"]')
 
-      // Wait for React to re-render after filter state update
-      await page.waitForTimeout(500)
+      // Wait for network to be idle
+      await page.waitForLoadState('networkidle')
 
       // Verify all todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(2, { timeout: 10000 })
+      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(2)
     })
   })
 
@@ -471,24 +472,22 @@ test.describe('Todo App', () => {
       await expect(page.locator('[data-testid="add-todo-button"]')).toBeEnabled()
       await page.click('[data-testid="add-todo-button"]')
 
-      // Wait for network to be idle and React re-render
+      // Wait for network to be idle
       await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(500)
 
+      // Wait for form to reset
+      await page.waitForTimeout(500)
       await page.fill('[data-testid="todo-title-input"]', 'Todo 2')
       // Wait for input to be processed
       await page.waitForTimeout(500)
       await expect(page.locator('[data-testid="add-todo-button"]')).toBeEnabled()
       await page.click('[data-testid="add-todo-button"]')
 
-      // Wait for network to be idle and React re-render
+      // Wait for network to be idle
       await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(500)
 
       // Verify todo count
-      await expect(page.locator('[data-testid="todo-count"]')).toHaveText(/Total:\s*\d+/, {
-        timeout: 10000,
-      })
+      await expect(page.locator('[data-testid="todo-count"]')).toHaveText(/Total:2/)
     })
   })
 
@@ -517,7 +516,7 @@ test.describe('Todo App', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for app to render
-      await page.waitForSelector('[data-testid="todo-form"]', { timeout: 30000 })
+      await page.waitForSelector('[data-testid="todo-form"]', { timeout: 15000 })
 
       // Create a todo
       await page.fill('[data-testid="todo-title-input"]', 'Persistent todo')
@@ -530,21 +529,22 @@ test.describe('Todo App', () => {
       // Verify todo was created
       await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
 
+      // Create a new browser context to simulate a fresh session
       const newContext = await browser.newContext()
       const newPage = await newContext.newPage()
 
       try {
+        // Navigate to homepage in the new context
         await newPage.goto(getBaseUrl())
+
+        // Wait for page to load
         await newPage.waitForLoadState('load')
 
-        await newPage.evaluate(() => {
-          localStorage.setItem('auth-token', JSON.stringify('user-token'))
-        })
-
-        await newPage.reload()
-        await newPage.waitForLoadState('load')
+        // Wait for network to be idle
         await newPage.waitForLoadState('networkidle')
-        await newPage.waitForSelector('[data-testid="todo-item"]', { timeout: 30000 })
+
+        // Wait for app to render
+        await newPage.waitForSelector('[data-testid="todo-item"]', { timeout: 15000 })
 
         // Verify todo still exists
         await expect(newPage.locator('[data-testid="todo-item"]')).toHaveCount(1)

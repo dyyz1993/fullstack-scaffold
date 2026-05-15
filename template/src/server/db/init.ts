@@ -704,6 +704,7 @@ export async function initializeDatabase() {
     () => import('../module-ticket/services/ticket-service').then(m => m.seedTicketsIfEmpty()),
     () => import('../module-dispute/services/dispute-service').then(m => m.seedDisputesIfEmpty()),
     () => import('../module-content/services/content-service').then(m => m.seedContentsIfEmpty()),
+    () => import('../module-tenant/services/tenant-service').then(m => m.seedTenantsIfEmpty()),
     () => seedPluginsIfEmpty(),
   ]
   await Promise.all(moduleSeeders.map(fn => fn().catch(() => {})))

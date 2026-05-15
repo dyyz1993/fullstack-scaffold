@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
   pull_request:
-    branches: [master]
-  workflow_dispatch:
+    branches: [master, main]
   schedule:
-    - cron: '0 3 * * 1'
+    - cron: '0 6 * * 1'  # 每周一早上6点UTC运行
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   cli-checks:
@@ -227,13 +227,64 @@ jobs:
       - name: Build scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npm run build
 
+  e2e-tests:
+    name: E2E Tests (Shanbox)
+    runs-on: ubuntu-latest
+    needs: []
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npx playwright test tests/e2e/*-preset.spec.ts --reporter=list --timeout=60000
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            playwright-artifacts/
+            test-results/
+          retention-days: 7
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: test-results/
+          retention-days: 30
+
   feishu-notify:
     name: Feishu Notification
     if: always() && github.actor != 'dependabot[bot]'
-    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules, preset-build-matrix]
+    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules, preset-build-matrix, e2e-tests]
     uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
     with:
-      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}"}'
+      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}","e2e-tests":"${{ needs.e2e-tests.result }}"}'
       sha: ${{ github.sha }}
       ref: ${{ github.ref_name }}
       actor: ${{ github.actor }}

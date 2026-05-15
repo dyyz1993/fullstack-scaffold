@@ -1,0 +1,27 @@
+biomimic v0.1.0
+Biomimic CLI - RPC service & code generation tools
+
+USAGE
+  biomimic <command> [options]
+
+COMMANDS
+  list                List all notifications
+  get                 Get a todo by ID
+  create              Create a new notification
+  update              Update a todo
+  delete              Delete a notification
+  unread-count        Get unread notification count
+  mark-read           Mark a notification as read
+  register            Register a new developer account
+  login               Login to get API key
+  verify              Verify API key
+  config-get          Show current configuration
+  config-set          Set configuration value
+  config-url          Show or set server URL
+  config-status       Check server connection status
+  config-reset        Reset configuration to defaults
+  config-path         Show config file path
+
+OPTIONS
+  --version, -v        Print version
+  --help, -h           Print help

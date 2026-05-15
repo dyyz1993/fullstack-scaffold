@@ -51,14 +51,14 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
-    allowedHosts: true,
+    allowedHosts: 'all',
   },
   plugins: [
     devServer({
       entry: 'src/server/index.ts',
       exclude: [
         /^\/$/,
-        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|admin\.html|src)/,
+        /^\/(@[a-zA-Z0-9_-]+|node_modules|__inspect|assets|index\.html|admin\.html|tenant\.html|merchant\.html|src)/,
         /.*\.(ts|tsx|js|jsx|css|json|png|jpg|svg)$/,
       ],
     }),
@@ -71,6 +71,8 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         admin: path.resolve(__dirname, 'admin.html'),
+        tenant: path.resolve(__dirname, 'tenant.html'),
+        merchant: path.resolve(__dirname, 'merchant.html'),
       },
       output: {
         plugins: [
@@ -91,6 +93,8 @@ export default defineConfig({
       '@client': path.resolve(__dirname, 'src/client'),
       '@server': path.resolve(__dirname, 'src/server'),
       '@admin': path.resolve(__dirname, 'src/admin'),
+      '@tenant': path.resolve(__dirname, 'src/tenant'),
+      '@merchant': path.resolve(__dirname, 'src/merchant'),
       '@cli': path.resolve(__dirname, 'src/cli'),
     },
   },

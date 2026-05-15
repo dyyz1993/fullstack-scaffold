@@ -1,0 +1,7 @@
+biomimic v0.1.0
+Biomimic CLI - RPC service & code generation tools
+
+Command: create
+Usage: biomimic create --title <value> --description <value>
+
+Example: biomimic create --title "Buy groceries" --description "Milk, eggs, bread"

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomimic v0.4.0 部署报告</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 30px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        .screenshot-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            display: block;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .screenshot-info {
+            padding: 15px;
+        }
+
+        .screenshot-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .screenshot-url {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: block;
+            word-break: break-all;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.8;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .cli-output {
+            background: #0f172a;
+            color: #cbd5e1;
+            padding: 25px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #334155;
+        }
+
+        .cli-output pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feature-tag {
+            background: #e0e7ff;
+            color: #667eea;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .deployment-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            margin: 0 10px;
+            position: relative;
+        }
+
+        .flow-step h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .flow-step p {
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .api-section {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .api-section h4 {
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                max-width: 100%;
+            }
+            section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Biomimic v0.4.0 部署报告</h1>
+            <div class="header-meta">
+                <div class="meta-item">
+                    <span>📅</span>
+                    <span>2025-05-15</span>
+                </div>
+                <div class="meta-item">
+                    <span>🎯</span>
+                    <span>7 个模板已部署</span>
+                </div>
+                <div class="meta-item">
+                    <span>✅</span>
+                    <span>所有服务正常运行</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 模板汇总表 -->
+        <section>
+            <h2>📊 模板部署汇总</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>模板名称</th>
+                        <th>访问地址</th>
+                        <th>端口</th>
+                        <th>模块数</th>
+                        <th>核心功能</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>todo-app</strong></td>
+                        <td>https://todo.shanbox.19930810.xyz:8443</td>
+                        <td>8443</td>
+                        <td>3</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">待办事项</span>
+                                <span class="feature-tag">SSE 通知</span>
+                                <span class="feature-tag">WebSocket 聊天</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>minimal</strong></td>
+                        <td>https://minimal.shanbox.19930810.xyz:8443</td>
+                        <td>8444</td>
+                        <td>1</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">最小化示例</span>
+                                <span class="feature-tag">单模块</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>ecommerce</strong></td>
+                        <td>https://ecommerce.shanbox.19930810.xyz:8443</td>
+                        <td>8445</td>
+                        <td>5</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">商品列表</span>
+                                <span class="feature-tag">购物车</span>
+                                <span class="feature-tag">订单管理</span>
+                                <span class="feature-tag">支付集成</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>marketplace</strong></td>
+                        <td>https://marketplace.shanbox.19930810.xyz:8443</td>
+                        <td>8446</td>
+                        <td>6</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">插件市场</span>
+                                <span class="feature-tag">分类浏览</span>
+                                <span class="feature-tag">搜索功能</span>
+                                <span class="feature-tag">用户评分</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>fullstack-admin</strong></td>
+                        <td>https://admin.shanbox.19930810.xyz:8443</td>
+                        <td>8447</td>
+                        <td>8</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">用户管理</span>
+                                <span class="feature-tag">权限控制</span>
+                                <span class="feature-tag">系统监控</span>
+                                <span class="feature-tag">数据统计</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>forum</strong></td>
+                        <td>https://forum.shanbox.19930810.xyz:8443</td>
+                        <td>8448</td>
+                        <td>5</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">主题讨论</span>
+                                <span class="feature-tag">内容管理</span>
+                                <span class="feature-tag">用户互动</span>
+                                <span class="feature-tag">实时通知</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>cli-demo</strong></td>
+                        <td>本地 CLI 工具</td>
+                        <td>3017</td>
+                        <td>6</td>
+                        <td>
+                            <div class="feature-tags">
+                                <span class="feature-tag">RPC 客户端</span>
+                                <span class="feature-tag">命令行工具</span>
+                                <span class="feature-tag">配置管理</span>
+                                <span class="feature-tag">代码生成</span>
+                            </div>
+                        </td>
+                        <td><span class="status-badge status-active">运行中</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Todo App 截图 -->
+        <section>
+            <h2>📝 Todo App 模板</h2>
+            <p>功能完整的待办事项应用，展示 SSE 和 WebSocket 实时通信功能。</p>
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="todo-todos.png" alt="Todos 页面">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">待办事项列表</div>
+                        <div class="screenshot-url">https://todo.shanbox.19930810.xyz:8443/todos</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="todo-sse.png" alt="SSE 通知页面">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">SSE 实时通知</div>
+                        <div class="screenshot-url">https://todo.shanbox.19930810.xyz:8443/notifications</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="todo-websocket.png" alt="WebSocket 聊天页面">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">WebSocket 聊天</div>
+                        <div class="screenshot-url">https://todo.shanbox.19930810.xyz:8443/websocket</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="todo-login.png" alt="登录页面">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">用户登录</div>
+                        <div class="screenshot-url">https://todo.shanbox.19930810.xyz:8443/login</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Minimal 模板 -->
+        <section>
+            <h2>🎯 Minimal 模板</h2>
+            <p>最简化的模板，包含核心模块，适合快速原型开发。</p>
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="minimal-home.png" alt="Minimal 首页">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">首页</div>
+                        <div class="screenshot-url">https://minimal.shanbox.19930810.xyz:8443/</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ecommerce 模板 -->
+        <section>
+            <h2>🛒 Ecommerce 模板</h2>
+            <p>完整的电商系统，包含商品、购物车、订单等核心功能。</p>
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="ecommerce-home.png" alt="Ecommerce 首页">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">商品首页</div>
+                        <div class="screenshot-url">https://ecommerce.shanbox.19930810.xyz:8443/</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="ecommerce-cart.png" alt="购物车页面">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">购物车</div>
+                        <div class="screenshot-url">https://ecommerce.shanbox.19930810.xyz:8443/cart</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="ecommerce-orders.png" alt="订单列表">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">我的订单</div>
+                        <div class="screenshot-url">https://ecommerce.shanbox.19930810.xyz:8443/orders</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marketplace 模板 -->
+        <section>
+            <h2>🏪 Marketplace 模板</h2>
+            <p>插件市场模板，展示分类、搜索和插件管理功能。</p>
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="marketplace-plugins.png" alt="插件列表">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">插件列表</div>
+                        <div class="screenshot-url">https://marketplace.shanbox.19930810.xyz:8443/plugins</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="marketplace-categories.png" alt="分类浏览">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">分类浏览</div>
+                        <div class="screenshot-url">https://marketplace.shanbox.19930810.xyz:8443/categories</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="marketplace-search.png" alt="搜索功能">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">搜索结果</div>
+                        <div class="screenshot-url">https://marketplace.shanbox.19930810.xyz:8443/search</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fullstack Admin 模板 -->
+        <section>
+            <h2>👥 Fullstack Admin 模板</h2>
+            <p>全栈管理后台，包含用户管理、权限控制、系统监控等功能。</p>
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="admin-login.png" alt="管理员登录">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">管理员登录</div>
+                        <div class="screenshot-url">https://admin.shanbox.19930810.xyz:8443/admin/login</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="admin-dashboard.png" alt="管理后台首页">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">系统仪表盘</div>
+                        <div class="screenshot-url">https://admin.shanbox.19930810.xyz:8443/admin/dashboard</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Forum 模板 -->
+        <section>
+            <h2>💬 Forum 模板</h2>
+            <p>论坛系统，包含主题讨论、内容管理和实时通知功能。</p>
+            <div class="screenshot-grid">
+                <div class="screenshot-card">
+                    <img src="forum-topics.png" alt="主题列表">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">主题讨论</div>
+                        <div class="screenshot-url">https://forum.shanbox.19930810.xyz:8443/topics</div>
+                    </div>
+                </div>
+                <div class="screenshot-card">
+                    <img src="forum-content.png" alt="内容管理">
+                    <div class="screenshot-info">
+                        <div class="screenshot-title">内容详情</div>
+                        <div class="screenshot-url">https://forum.shanbox.19930810.xyz:8443/content</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CLI 工具 -->
+        <section>
+            <h2>🔧 CLI 工具</h2>
+            <p>命令行工具，提供 RPC 服务和代码生成功能。</p>
+            
+            <h3>帮助信息</h3>
+            <div class="cli-output">
+                <pre>biomimic v0.1.0
+Biomimic CLI - RPC service & code generation tools
+
+USAGE
+  biomimic &lt;command&gt; [options]
+
+COMMANDS
+  list                List all notifications
+  get                 Get a todo by ID
+  create              Create a new notification
+  update              Update a todo
+  delete              Delete a notification
+  unread-count        Get unread notification count
+  mark-read           Mark a notification as read
+  register            Register a new developer account
+  login               Login to get API key
+  verify              Verify API key
+  config-get          Show current configuration
+  config-set          Set configuration value
+  config-url          Show or set server URL
+  config-status       Check server connection status
+  config-reset        Reset configuration to defaults
+  config-path         Show config file path
+
+OPTIONS
+  --version, -v        Print version
+  --help, -h           Print help</pre>
+            </div>
+
+            <h3>示例命令</h3>
+            <div class="cli-output">
+                <pre># 创建待办事项
+$ biomimic create --title "Buy groceries" --description "Milk, eggs, bread"
+
+# 查看配置
+$ biomimic config-get
+{
+  "success": true,
+  "data": {
+    "baseUrl": "http://localhost:3017"
+  },
+  "tips": []
+}
+
+# 用户登录
+$ biomimic login --account demo --password demo123</pre>
+            </div>
+        </section>
+
+        <!-- API 数据说明 -->
+        <section>
+            <h2>📡 API 接口</h2>
+            <div class="api-section">
+                <h4>⚠️ 网络访问限制</h4>
+                <p>由于 Vite 开发服务器的安全配置，外部网络请求被阻止。API 数据需要在本地环境或通过 VPN 访问。</p>
+                <div class="code-block">
+# API 端点示例
+GET  /health              # 健康检查
+GET  /api/todos           # 获取待办事项列表
+POST /api/todos           # 创建待办事项
+GET  /api/notifications   # 获取通知列表
+POST /api/notifications   # 创建通知
+GET  /api/chat/ws         # WebSocket 连接
+                </div>
+            </div>
+        </section>
+
+        <!-- 部署流程 -->
+        <section>
+            <h2>🔄 部署流程</h2>
+            <div class="deployment-flow">
+                <div class="flow-step">
+                    <h4>1. 项目构建</h4>
+                    <p>npm run build</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>2. 部署到服务器</h4>
+                    <p>PM2 启动服务</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>3. 配置 Nginx</h4>
+                    <p>SSL 证书 + 反向代理</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>4. 验证服务</h4>
+                    <p>健康检查 + 功能测试</p>
+                </div>
+            </div>
+
+            <h3>技术栈</h3>
+            <div class="code-block">
+前端: React 18 + TypeScript + Vite + Tailwind CSS
+后端: Hono + Node.js + Drizzle ORM
+数据库: PostgreSQL
+实时通信: WebSocket + SSE
+部署: PM2 + Nginx + SSL
+            </div>
+
+            <h3>项目特性</h3>
+            <div class="feature-tags">
+                <span class="feature-tag">类型安全</span>
+                <span class="feature-tag">实时通信</span>
+                <span class="feature-tag">模块化架构</span>
+                <span class="feature-tag">CLI 工具</span>
+                <span class="feature-tag">多模板支持</span>
+                <span class="feature-tag">云原生部署</span>
+                <span class="feature-tag">自动生成代码</span>
+                <span class="feature-tag">完整测试覆盖</span>
+            </div>
+        </section>
+
+        <!-- 系统信息 -->
+        <section>
+            <h2>📋 系统信息</h2>
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>版本</strong></td>
+                        <td>v0.4.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>部署日期</strong></td>
+                        <td>2025-05-15</td>
+                    </tr>
+                    <tr>
+                        <td><strong>部署环境</strong></td>
+                        <td>Production (Linux)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>服务器</strong></td>
+                        <td>shanbox (19930810.xyz)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>运行时</strong></td>
+                        <td>Node.js 18.x + PM2</td>
+                    </tr>
+                    <tr>
+                        <td><strong>反向代理</strong></td>
+                        <td>Nginx + Let's Encrypt SSL</td>
+                    </tr>
+                    <tr>
+                        <td><strong>数据库</strong></td>
+                        <td>PostgreSQL (每个模板独立数据库)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</body>
+</html>

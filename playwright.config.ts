@@ -27,6 +27,7 @@ export default defineConfig({
   ],
   outputDir: 'playwright-artifacts',
   use: {
+    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

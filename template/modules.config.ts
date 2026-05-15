@@ -91,6 +91,25 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
     description: 'Bare minimum: todos only. Add modules as you need them.',
     modules: ['todos'],
   },
+  {
+    id: 'saas',
+    name: 'SaaS Multi-Tenant',
+    description:
+      'SaaS multi-tenant application with tenant isolation, tenant admin dashboard, user management, subscription management, and content management',
+    modules: [
+      // Core
+      'todos',
+      'notifications',
+      'file',
+      'captcha',
+      // System
+      'permission',
+      'auth',
+      'tenant',
+      // Business
+      'content',
+    ],
+  },
 ]
 
 /** Get a preset by ID */

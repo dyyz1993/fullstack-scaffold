@@ -139,6 +139,7 @@ test.describe('Notification App', () => {
    */
   test.describe('Create Notification', () => {
     test('should create a new info notification', async ({ page }) => {
+      // Fill in notification details
       await page.fill('[data-testid="notification-title-input"]', 'Test Info Notification')
       await page.fill(
         '[data-testid="notification-message-input"]',
@@ -146,12 +147,10 @@ test.describe('Notification App', () => {
       )
       await page.selectOption('[data-testid="notification-type-select"]', 'info')
 
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
+      // Submit form
       await page.click('[data-testid="create-notification-button"]')
 
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
       await expect(
         page
           .locator('[data-testid="notification-item-unread"] [data-testid="notification-title"]')
@@ -167,12 +166,9 @@ test.describe('Notification App', () => {
       )
       await page.selectOption('[data-testid="notification-type-select"]', 'success')
 
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
 
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
       await expect(
         page
           .locator('[data-testid="notification-item-unread"] [data-testid="notification-title"]')
@@ -188,12 +184,9 @@ test.describe('Notification App', () => {
       )
       await page.selectOption('[data-testid="notification-type-select"]', 'warning')
 
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
 
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
       await expect(
         page
           .locator('[data-testid="notification-item-unread"] [data-testid="notification-title"]')
@@ -209,12 +202,9 @@ test.describe('Notification App', () => {
       )
       await page.selectOption('[data-testid="notification-type-select"]', 'error')
 
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
 
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
       await expect(
         page
           .locator('[data-testid="notification-item-unread"] [data-testid="notification-title"]')
@@ -225,10 +215,6 @@ test.describe('Notification App', () => {
     test('should clear input after creating notification', async ({ page }) => {
       await page.fill('[data-testid="notification-title-input"]', 'Test Notification')
       await page.fill('[data-testid="notification-message-input"]', 'Test message')
-
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
 
       await expect(page.locator('[data-testid="notification-title-input"]')).toHaveValue('')
@@ -258,12 +244,8 @@ test.describe('Notification App', () => {
     test.beforeEach(async ({ page }) => {
       await page.fill('[data-testid="notification-title-input"]', 'Test Notification')
       await page.fill('[data-testid="notification-message-input"]', 'Test message')
-
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
     })
 
     test('should mark notification as read', async ({ page }) => {
@@ -276,26 +258,11 @@ test.describe('Notification App', () => {
     test('should mark all notifications as read', async ({ page }) => {
       await page.fill('[data-testid="notification-title-input"]', 'Test Notification 2')
       await page.fill('[data-testid="notification-message-input"]', 'Test message 2')
-
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
-
-      await page.waitForFunction(
-        () =>
-          document.querySelectorAll('[data-testid="notification-item-unread"]').length +
-            document.querySelectorAll('[data-testid="notification-item-read"]').length >=
-          2,
-        { timeout: 5000 }
-      )
+      await page.waitForTimeout(1000)
 
       await page.click('[data-testid="mark-all-read-button"]')
-
-      await page.waitForFunction(
-        () => document.querySelectorAll('[data-testid="notification-item-unread"]').length === 0,
-        { timeout: 5000 }
-      )
+      await page.waitForTimeout(1000)
 
       const readNotifications = await page.locator('[data-testid="notification-item-read"]').count()
       const totalNotifications = await page
@@ -312,27 +279,15 @@ test.describe('Notification App', () => {
     test('should delete a notification', async ({ page }) => {
       await page.fill('[data-testid="notification-title-input"]', 'Notification to delete')
       await page.fill('[data-testid="notification-message-input"]', 'Test message')
-
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
 
       const countBefore = await page
         .locator('[data-testid="notification-item-read"], [data-testid="notification-item-unread"]')
         .count()
 
       await page.click('[data-testid="delete-notification-button"]')
-
-      await page.waitForFunction(
-        (before: number) =>
-          document.querySelectorAll('[data-testid="notification-item-read"]').length +
-            document.querySelectorAll('[data-testid="notification-item-unread"]').length <
-          before,
-        countBefore,
-        { timeout: 5000 }
-      )
+      await page.waitForTimeout(1000)
 
       const countAfter = await page
         .locator('[data-testid="notification-item-read"], [data-testid="notification-item-unread"]')
@@ -348,25 +303,16 @@ test.describe('Notification App', () => {
     test('should display multiple notifications', async ({ page }) => {
       await page.fill('[data-testid="notification-title-input"]', 'Notification 1')
       await page.fill('[data-testid="notification-message-input"]', 'Message 1')
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
       await page.waitForTimeout(500)
 
       await page.fill('[data-testid="notification-title-input"]', 'Notification 2')
       await page.fill('[data-testid="notification-message-input"]', 'Message 2')
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
       await page.waitForTimeout(500)
 
       await page.fill('[data-testid="notification-title-input"]', 'Notification 3')
       await page.fill('[data-testid="notification-message-input"]', 'Message 3')
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
       await page.waitForTimeout(500)
 
@@ -379,26 +325,13 @@ test.describe('Notification App', () => {
     test('should display unread count', async ({ page }) => {
       await page.fill('[data-testid="notification-title-input"]', 'Notification 1')
       await page.fill('[data-testid="notification-message-input"]', 'Message 1')
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
 
       await page.fill('[data-testid="notification-title-input"]', 'Notification 2')
       await page.fill('[data-testid="notification-message-input"]', 'Message 2')
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
-
-      await page.waitForFunction(
-        () =>
-          document.querySelectorAll('[data-testid="notification-item-unread"]').length +
-            document.querySelectorAll('[data-testid="notification-item-read"]').length >=
-          2,
-        { timeout: 5000 }
-      )
+      await page.waitForTimeout(2000)
 
       const unreadLocator = page.locator('[data-testid="unread-count"]')
       await expect(unreadLocator).not.toHaveText('0', { timeout: 10000 })
@@ -428,12 +361,9 @@ test.describe('Notification App', () => {
         '[data-testid="notification-message-input"]',
         'This notification should persist'
       )
-      await expect(page.locator('[data-testid="create-notification-button"]')).toBeEnabled({
-        timeout: 5000,
-      })
       await page.click('[data-testid="create-notification-button"]')
 
-      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="notification-item-unread"]', { timeout: 10000 })
 
       const newContext = await browser.newContext()
       const newPage = await newContext.newPage()

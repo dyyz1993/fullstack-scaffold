@@ -1,0 +1,7 @@
+biomimic v0.1.0
+Biomimic CLI - RPC service & code generation tools
+
+Command: login
+Usage: biomimic login --account <value> --password <value>
+
+Example: biomimic login --account demo --password demo123
