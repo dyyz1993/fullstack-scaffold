@@ -20,6 +20,10 @@ test.describe('Todo Preset E2E', () => {
 
     const body = page.locator('body')
     await expect(body).not.toBeEmpty()
+
+    // 验证页面包含 Todo 相关内容
+    const pageContent = await page.textContent('body')
+    expect(pageContent).toMatch(/todo|Todo|TODO/i)
   })
 
   test('todo list page is accessible', async ({ page }) => {
@@ -28,6 +32,8 @@ test.describe('Todo Preset E2E', () => {
 
     const pageContent = await page.textContent('body')
     expect(pageContent).toBeTruthy()
+    // 验证页面包含 Todo 相关内容
+    expect(pageContent).toMatch(/todo|Todo|TODO/i)
   })
 
   test('API /api/todos returns data', async () => {
@@ -36,11 +42,16 @@ test.describe('Todo Preset E2E', () => {
     const data = await response.json()
     expect(data.success).toBe(true)
     expect(Array.isArray(data.data)).toBe(true)
+    // 验证返回的数据结构正确
+    if (data.data.length > 0) {
+      expect(data.data[0]).toHaveProperty('id')
+      expect(data.data[0]).toHaveProperty('title')
+    }
   })
 
   test('screenshot - homepage', async ({ page }) => {
     await page.goto(BASE_URL)
     await waitForPageReady(page)
-    await page.screenshot({ path: 'test-results/todo-homepage.png', fullPage: true })
+    await page.screenshot({ path: 'report/screenshots/todo-homepage.png', fullPage: true })
   })
 })

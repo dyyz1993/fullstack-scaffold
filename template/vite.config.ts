@@ -51,7 +51,7 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
-    allowedHosts: 'all',
+    allowedHosts: ['.shanbox.19930810.xyz', 'localhost'],
   },
   plugins: [
     devServer({

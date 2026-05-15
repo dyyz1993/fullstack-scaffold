@@ -20,6 +20,10 @@ test.describe('Admin Preset E2E', () => {
 
     const body = page.locator('body')
     await expect(body).not.toBeEmpty()
+
+    const pageContent = await page.textContent('body')
+    expect(pageContent).toBeTruthy()
+    expect(pageContent!.length).toBeGreaterThan(50)
   })
 
   test('admin page loads successfully', async ({ page }) => {
@@ -28,6 +32,11 @@ test.describe('Admin Preset E2E', () => {
 
     const body = page.locator('body')
     await expect(body).not.toBeEmpty()
+
+    // 验证 admin 页面包含 Login、Dashboard 或 Admin 相关文字
+    const pageContent = await page.textContent('body')
+    expect(pageContent).toBeTruthy()
+    expect(pageContent).toMatch(/login|Login|dashboard|Dashboard|admin|Admin/i)
   })
 
   test('API /api/todos returns data', async () => {
@@ -36,6 +45,11 @@ test.describe('Admin Preset E2E', () => {
     const data = await response.json()
     expect(data.success).toBe(true)
     expect(Array.isArray(data.data)).toBe(true)
+    // 验证返回的数据结构正确
+    if (data.data.length > 0) {
+      expect(data.data[0]).toHaveProperty('id')
+      expect(data.data[0]).toHaveProperty('title')
+    }
   })
 
   test('API /api/admin/stats requires authentication', async () => {
@@ -48,12 +62,12 @@ test.describe('Admin Preset E2E', () => {
   test('screenshot - homepage', async ({ page }) => {
     await page.goto(BASE_URL)
     await waitForPageReady(page)
-    await page.screenshot({ path: 'test-results/admin-homepage.png', fullPage: true })
+    await page.screenshot({ path: 'report/screenshots/admin-homepage.png', fullPage: true })
   })
 
   test('screenshot - admin page', async ({ page }) => {
     await page.goto(`${BASE_URL}/admin`)
     await waitForPageReady(page)
-    await page.screenshot({ path: 'test-results/admin-dashboard.png', fullPage: true })
+    await page.screenshot({ path: 'report/screenshots/admin-dashboard.png', fullPage: true })
   })
 })
