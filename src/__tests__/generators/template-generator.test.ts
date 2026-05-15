@@ -118,8 +118,8 @@ describe('template-generator', () => {
       presets = await loadPresets(TEMPLATE_DIR)
     })
 
-    it('should load all 6 presets', () => {
-      expect(presets.length).toBe(6)
+    it('should load all 7 presets', () => {
+      expect(presets.length).toBe(7)
     })
 
     it('should parse preset IDs', () => {
