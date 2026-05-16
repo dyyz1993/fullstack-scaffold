@@ -10,7 +10,13 @@ import { getDb } from '@server/db'
 export async function seedPluginsIfEmpty() {
   const db = await getDb()
 
-  const existing = await db.select().from(plugins)
+  let existing
+  try {
+    existing = await db.select().from(plugins)
+  } catch {
+    // Table doesn't exist yet — migrations may not include plugin tables
+    return
+  }
   if (existing.length > 0) return
 
   const sampleCategories = [
