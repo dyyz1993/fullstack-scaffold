@@ -13,6 +13,8 @@ interface MerchantState {
   stats: MerchantStats | null
   loading: boolean
   error: string | null
+  startLoading: (message?: string) => void
+  stopLoading: () => void
   checkAuth: () => Promise<void>
   login: (username: string, password: string) => Promise<void>
   logout: () => void
@@ -28,12 +30,15 @@ export const useMerchantStore = create<MerchantState>(set => ({
   loading: false,
   error: null,
 
+  startLoading: (_message?: string) => set({ loading: true }),
+  stopLoading: () => set({ loading: false }),
+
   checkAuth: async () => {
     set({ loading: true, error: null })
     try {
       const response = await fetch('/api/merchant/me')
-      const result = await response.json()
-      if (result.success) {
+      const result = (await response.json()) as { success?: boolean; data?: User }
+      if (result.success === true && result.data) {
         set({ user: result.data, isAuthenticated: true })
       } else {
         set({ user: null, isAuthenticated: false })
@@ -56,8 +61,8 @@ export const useMerchantStore = create<MerchantState>(set => ({
         },
         body: JSON.stringify({ username, password }),
       })
-      const result = await response.json()
-      if (result.success) {
+      const result = (await response.json()) as { success?: boolean; data?: User; error?: string }
+      if (result.success === true && result.data) {
         set({ user: result.data, isAuthenticated: true })
       } else {
         set({ error: result.error || 'Login failed' })
@@ -78,8 +83,8 @@ export const useMerchantStore = create<MerchantState>(set => ({
     set({ loading: true, error: null })
     try {
       const response = await fetch('/api/merchant/stats')
-      const result = await response.json()
-      if (result.success) {
+      const result = (await response.json()) as { success?: boolean; data?: MerchantStats }
+      if (result.success === true && result.data) {
         set({ stats: result.data })
       }
     } catch (error) {

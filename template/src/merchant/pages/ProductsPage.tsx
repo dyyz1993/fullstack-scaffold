@@ -14,8 +14,8 @@ export const ProductsPage: FC = () => {
     setLoading(true)
     try {
       const response = await fetch('/api/merchant/products')
-      const result = await response.json()
-      if (result.success) {
+      const result = (await response.json()) as { success?: boolean; data?: Product[] }
+      if (result.success === true && result.data) {
         setProducts(result.data)
       }
     } catch (error) {

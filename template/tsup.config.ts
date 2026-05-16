@@ -1,8 +1,10 @@
-import { defineConfig } from 'tsup'
+import { defineConfig, type Options } from 'tsup'
 import { existsSync } from 'fs'
-import { join } from 'path'
+import { join, resolve } from 'path'
 
-const serverBuildConfigs = [
+const root = process.cwd()
+
+const serverBuildConfigs: Options[] = [
   {
     entry: ['src/server/entries/node.ts'],
     outDir: 'dist/server',
@@ -89,6 +91,12 @@ if (existsSync(cliEntryPath)) {
     treeshake: true,
     dts: true,
     external: ['hono', 'hono/client', 'commander', 'chalk', 'eslint'],
+    esbuildOptions(options) {
+      // Resolve @cli/* path aliases for CLI build
+      options.alias = {
+        '@cli': resolve(root, 'src/cli'),
+      }
+    },
   })
 }
 

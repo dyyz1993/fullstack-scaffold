@@ -124,8 +124,8 @@ export const apiRoutes = new OpenAPIHono()
     const query = c.req.valid('query')
 
     const result = await tenantService.listTenants(query.page, query.pageSize, {
-      status: query.status,
-      plan: query.plan,
+      status: query.status ?? undefined,
+      plan: query.plan ?? undefined,
     })
 
     return c.json(success(result), 200)

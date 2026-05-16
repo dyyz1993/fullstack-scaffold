@@ -37,6 +37,11 @@ const SEED_MODULES: SeedModule[] = [
     importLine: '',
     call: "import('../module-tenant/services/tenant-service').then(m => m.seedTenantsIfEmpty())",
   },
+  {
+    module: 'plugin',
+    importLine: '',
+    call: "import('../module-plugin/services/plugin-seed-service').then(m => m.seedPluginsIfEmpty())",
+  },
 ]
 
 const INITIAL_PERMISSIONS = `const initialPermissions = [

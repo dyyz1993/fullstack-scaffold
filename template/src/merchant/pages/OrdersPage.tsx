@@ -16,8 +16,8 @@ export const OrdersPage: FC = () => {
     setLoading(true)
     try {
       const response = await fetch('/api/merchant/orders')
-      const result = await response.json()
-      if (result.success) {
+      const result = (await response.json()) as { success?: boolean; data?: Order[] }
+      if (result.success === true && result.data) {
         setOrders(result.data)
       }
     } catch (error) {
@@ -31,7 +31,8 @@ export const OrdersPage: FC = () => {
     setStatusFilter(value)
   }
 
-  const handleDateRangeChange = (dates: [Date, Date] | null) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Ant Design RangePicker types are complex
+  const handleDateRangeChange = (dates: any) => {
     setDateRange(dates)
   }
 

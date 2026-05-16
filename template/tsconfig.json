@@ -28,6 +28,7 @@
       "@client/*": ["./src/client/*"],
       "@server/*": ["src/server/*"],
       "@admin/*": ["./src/admin/*"],
+      "@cli/*": ["./src/cli/*"],
       "@tenant/*": ["./src/tenant/*"],
       "@merchant/*": ["./src/merchant/*"]
     }

@@ -1,4 +1,4 @@
-import { Menu } from 'antd'
+import { Menu, Layout as AntLayout } from 'antd'
 import type { MenuProps } from 'antd'
 import {
   DashboardOutlined,

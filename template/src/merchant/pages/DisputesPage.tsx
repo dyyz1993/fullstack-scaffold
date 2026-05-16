@@ -15,8 +15,8 @@ export const DisputesPage: FC = () => {
     setLoading(true)
     try {
       const response = await fetch('/api/merchant/disputes')
-      const result = await response.json()
-      if (result.success) {
+      const result = (await response.json()) as { success?: boolean; data?: Dispute[] }
+      if (result.success === true && result.data) {
         setDisputes(result.data)
       }
     } catch (error) {
@@ -31,7 +31,7 @@ export const DisputesPage: FC = () => {
     setShowModal(true)
   }
 
-  const handleResolve = async (disputeId: number) => {
+  const handleResolve = async (disputeId: string) => {
     try {
       await fetch(`/api/merchant/disputes/${disputeId}/resolve`, {
         method: 'POST',
@@ -42,7 +42,7 @@ export const DisputesPage: FC = () => {
     }
   }
 
-  const handleClose = async (disputeId: number) => {
+  const handleClose = async (disputeId: string) => {
     try {
       await fetch(`/api/merchant/disputes/${disputeId}/close`, {
         method: 'POST',
@@ -59,10 +59,10 @@ export const DisputesPage: FC = () => {
 
   const getStatusColor = (status: DisputeStatus): string => {
     const colors: Record<DisputeStatus, string> = {
-      open: 'blue',
+      pending: 'blue',
       investigating: 'orange',
       resolved: 'green',
-      closed: 'red',
+      rejected: 'red',
     }
     return colors[status] || 'default'
   }
@@ -74,9 +74,9 @@ export const DisputesPage: FC = () => {
       key: 'orderId',
     },
     {
-      title: 'Reason',
-      dataIndex: 'reason',
-      key: 'reason',
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
     },
     {
       title: 'Status',
@@ -98,7 +98,7 @@ export const DisputesPage: FC = () => {
           <Button type="link" icon={<EyeOutlined />} onClick={() => handleView(record)}>
             View
           </Button>
-          {record.status === 'open' && (
+          {record.status === 'pending' && (
             <>
               <Button type="link" icon={<CheckOutlined />} onClick={() => handleResolve(record.id)}>
                 Resolve
@@ -128,7 +128,7 @@ export const DisputesPage: FC = () => {
           <h3>Dispute Details</h3>
           <Descriptions bordered>
             <Descriptions.Item label="Order ID">{selectedDispute.orderId}</Descriptions.Item>
-            <Descriptions.Item label="Reason">{selectedDispute.reason}</Descriptions.Item>
+            <Descriptions.Item label="Type">{selectedDispute.type}</Descriptions.Item>
             <Descriptions.Item label="Status">
               <Tag color={getStatusColor(selectedDispute.status)}>{selectedDispute.status}</Tag>
             </Descriptions.Item>

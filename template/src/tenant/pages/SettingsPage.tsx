@@ -13,8 +13,7 @@ export const SettingsPage: React.FC = () => {
       form.setFieldsValue({
         name: currentTenant.name,
         slug: currentTenant.slug,
-        email: currentTenant.email,
-        settings: currentTenant.settings ? JSON.parse(currentTenant.settings) : {},
+        settings: currentTenant.settings || {},
       })
     }
   }, [currentTenant, form])
@@ -25,10 +24,10 @@ export const SettingsPage: React.FC = () => {
       return
     }
 
+    const typedValues = values as { name: string; settings: Record<string, unknown> }
     const updateData: UpdateTenantInput = {
-      name: (values as { name: string }).name,
-      email: (values as { email: string }).email,
-      settings: JSON.stringify((values as { settings: Record<string, unknown> }).settings),
+      name: typedValues.name,
+      settings: typedValues.settings,
     }
 
     const success = await updateTenant(currentTenant.id, updateData)
@@ -47,9 +46,6 @@ export const SettingsPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="slug" label="Slug" rules={[{ required: true }]}>
             <Input disabled />
-          </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-            <Input />
           </Form.Item>
           <Form.Item name={['settings', 'logoUrl']} label="Logo URL">
             <Input />

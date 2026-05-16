@@ -13,6 +13,8 @@ export async function seedTenantsIfEmpty(): Promise<void> {
   if (existing.length === 0) {
     log.info({}, 'Seeding tenants...')
 
+    const now = new Date().toISOString()
+
     const sampleTenants: NewTenant[] = [
       {
         name: 'Demo Corp',
@@ -21,6 +23,8 @@ export async function seedTenantsIfEmpty(): Promise<void> {
         plan: 'pro',
         maxUsers: 50,
         settings: JSON.stringify({ theme: 'dark', language: 'en' }),
+        createdAt: now,
+        updatedAt: now,
       },
       {
         name: 'Test Inc',
@@ -29,6 +33,8 @@ export async function seedTenantsIfEmpty(): Promise<void> {
         plan: 'free',
         maxUsers: 5,
         settings: null,
+        createdAt: now,
+        updatedAt: now,
       },
     ]
 
@@ -50,12 +56,14 @@ export async function listTenants(
 
   if (filters.status) {
     baseQuery = baseQuery.where(
-      eq(tenants.status, filters.status as TenantStatus)
+      eq(tenants.status, filters.status as 'active' | 'suspended' | 'trial')
     ) as typeof baseQuery
   }
 
   if (filters.plan) {
-    baseQuery = baseQuery.where(eq(tenants.plan, filters.plan as TenantPlan)) as typeof baseQuery
+    baseQuery = baseQuery.where(
+      eq(tenants.plan, filters.plan as 'free' | 'starter' | 'pro' | 'enterprise')
+    ) as typeof baseQuery
   }
 
   if (filters.search) {
@@ -68,12 +76,14 @@ export async function listTenants(
 
   if (filters.status) {
     countQuery = countQuery.where(
-      eq(tenants.status, filters.status as TenantStatus)
+      eq(tenants.status, filters.status as 'active' | 'suspended' | 'trial')
     ) as typeof countQuery
   }
 
   if (filters.plan) {
-    countQuery = countQuery.where(eq(tenants.plan, filters.plan as TenantPlan)) as typeof countQuery
+    countQuery = countQuery.where(
+      eq(tenants.plan, filters.plan as 'free' | 'starter' | 'pro' | 'enterprise')
+    ) as typeof countQuery
   }
 
   if (filters.search) {
@@ -87,8 +97,8 @@ export async function listTenants(
     id: row.id,
     name: row.name,
     slug: row.slug,
-    status: row.status as TenantStatus,
-    plan: row.plan as TenantPlan,
+    status: row.status as 'active' | 'suspended' | 'trial',
+    plan: row.plan as 'free' | 'starter' | 'pro' | 'enterprise',
     maxUsers: row.maxUsers,
     settings: row.settings ? (JSON.parse(row.settings) as Record<string, unknown>) : null,
     createdAt: row.createdAt,
@@ -110,8 +120,8 @@ export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
     id: row.id,
     name: row.name,
     slug: row.slug,
-    status: row.status as TenantStatus,
-    plan: row.plan as TenantPlan,
+    status: row.status as 'active' | 'suspended' | 'trial',
+    plan: row.plan as 'free' | 'starter' | 'pro' | 'enterprise',
     maxUsers: row.maxUsers,
     settings: row.settings ? (JSON.parse(row.settings) as Record<string, unknown>) : null,
     createdAt: row.createdAt,
@@ -131,8 +141,8 @@ export async function getTenantById(id: number): Promise<Tenant | null> {
     id: row.id,
     name: row.name,
     slug: row.slug,
-    status: row.status as TenantStatus,
-    plan: row.plan as TenantPlan,
+    status: row.status as 'active' | 'suspended' | 'trial',
+    plan: row.plan as 'free' | 'starter' | 'pro' | 'enterprise',
     maxUsers: row.maxUsers,
     settings: row.settings ? (JSON.parse(row.settings) as Record<string, unknown>) : null,
     createdAt: row.createdAt,
@@ -172,8 +182,8 @@ export async function createTenant(input: CreateTenantInput): Promise<Tenant> {
     id: row.id,
     name: row.name,
     slug: row.slug,
-    status: row.status as TenantStatus,
-    plan: row.plan as TenantPlan,
+    status: row.status as 'active' | 'suspended' | 'trial',
+    plan: row.plan as 'free' | 'starter' | 'pro' | 'enterprise',
     maxUsers: row.maxUsers,
     settings: row.settings ? (JSON.parse(row.settings) as Record<string, unknown>) : null,
     createdAt: row.createdAt,
@@ -196,16 +206,52 @@ export async function updateTenant(id: number, input: UpdateTenantInput): Promis
     updateData.name = input.name
   }
 
-  if (input.status !== undefined) {
+  if (input.status !== undefined && input.status !== null) {
     updateData.status = input.status
   }
 
-  if (input.plan !== undefined) {
+  if (input.plan !== undefined && input.plan !== null) {
     updateData.plan = input.plan
   }
 
-  if (input.maxUsers !== undefined) {
+  if (input.maxUsers !== undefined && input.maxUsers !== null) {
     updateData.maxUsers = input.maxUsers
+  }
+
+  if (input.settings !== undefined) {
+    updateData.settings = input.settings ? JSON.stringify(input.settings) : null
+  }
+
+  if (input.name !== undefined) {
+    updateData.name = input.name
+  }
+
+  if (input.status !== undefined && input.status !== null) {
+    updateData.status = input.status
+  }
+
+  if (input.plan !== undefined && input.plan !== null) {
+    updateData.plan = input.plan
+  }
+
+  if (input.maxUsers !== undefined && input.maxUsers !== null) {
+    updateData.maxUsers = input.maxUsers
+  }
+
+  if (input.name !== undefined) {
+    updateData.name = input.name
+  }
+
+  if (input.status !== undefined && input.status !== null) {
+    ;(updateData as Record<string, unknown>).status = input.status
+  }
+
+  if (input.plan !== undefined && input.plan !== null) {
+    ;(updateData as Record<string, unknown>).plan = input.plan
+  }
+
+  if (input.maxUsers !== undefined && input.maxUsers !== null) {
+    ;(updateData as Record<string, unknown>).maxUsers = input.maxUsers
   }
 
   if (input.settings !== undefined) {
@@ -224,8 +270,8 @@ export async function updateTenant(id: number, input: UpdateTenantInput): Promis
     id: row.id,
     name: row.name,
     slug: row.slug,
-    status: row.status as TenantStatus,
-    plan: row.plan as TenantPlan,
+    status: row.status as 'active' | 'suspended' | 'trial',
+    plan: row.plan as 'free' | 'starter' | 'pro' | 'enterprise',
     maxUsers: row.maxUsers,
     settings: row.settings ? (JSON.parse(row.settings) as Record<string, unknown>) : null,
     createdAt: row.createdAt,

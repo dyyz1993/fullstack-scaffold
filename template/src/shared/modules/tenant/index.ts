@@ -9,6 +9,7 @@ export {
   TenantSlugSchema,
   TenantListResponseSchema,
   TenantQuerySchema,
+  TenantIdResponseSchema,
   type Tenant,
   type TenantStatus,
   type TenantPlan,
@@ -19,4 +20,5 @@ export {
   type TenantSlug,
   type TenantListResponse,
   type TenantQuery,
+  type TenantIdResponse,
 } from './schemas'
