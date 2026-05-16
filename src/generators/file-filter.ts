@@ -85,6 +85,14 @@ export function getExcludePatterns(
     excludes.push('auth-inject.html')
   }
 
+  // tenant/merchant HTML entries only needed when tenant module is present (saas preset)
+  if (!resolved.modules.has('tenant')) {
+    excludes.push('src/tenant')
+    excludes.push('tenant.html')
+    excludes.push('src/merchant')
+    excludes.push('merchant.html')
+  }
+
   if (!resolved.hasClient) {
     excludes.push('src/client')
     excludes.push('index.html')
@@ -163,6 +171,11 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
   }
 
   if (resolved.hasClient && !resolved.modules.has('admin')) {
+    files.push('vite.config.ts')
+  }
+
+  if (resolved.hasClient && resolved.modules.has('admin')) {
+    // admin preset needs generated vite.config.ts to filter tenant/merchant entries
     files.push('vite.config.ts')
   }
 

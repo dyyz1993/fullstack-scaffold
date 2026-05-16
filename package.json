@@ -1,13 +1,33 @@
 {
   "name": "create-fullstack-scaffold",
-  "version": "0.4.6",
+  "version": "0.4.9",
   "type": "module",
   "bin": {
     "create-fullstack-scaffold": "dist/cli/index.js"
   },
   "files": [
     "dist/cli",
-    "template"
+    "template/src",
+    "template/drizzle",
+    "template/drizzle.config.ts",
+    "template/patches",
+    "template/eslint-rules",
+    "template/eslint.config.js",
+    "template/lint-scripts",
+    "template/scripts",
+    "template/docs",
+    "template/*.html",
+    "template/*.json",
+    "template/*.ts",
+    "template/*.js",
+    "template/*.md",
+    "template/*.toml",
+    "template/*.yaml",
+    "template/.husky",
+    "template/.gitignore",
+    "template/.npmrc",
+    "template/.env.example",
+    "template/public"
   ],
   "workspaces": [
     "template",

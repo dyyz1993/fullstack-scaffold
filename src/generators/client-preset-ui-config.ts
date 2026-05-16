@@ -432,6 +432,28 @@ export function generatePresetUIConfig(resolved: ResolvedPreset, presetId: strin
   const navConfig = getNavConfigForPreset(presetType, hasAuth)
   const routes = getRoutesForPreset(presetType, resolved)
 
+  // Build aliases: presetId → presetType (only if they differ)
+  const aliases: Record<string, string> = {}
+  if (presetId !== presetType) {
+    aliases[presetId] = presetType
+  }
+  // Also add common aliases for convenience (e.g., 'fullstack-admin' → 'saas')
+  const allAliases: Record<string, string> = {
+    'todo-app': 'todo',
+    'xbrowser-marketplace': 'plugin',
+    ecommerce: 'ecommerce',
+    'fullstack-admin': 'saas',
+    forum: 'community',
+    minimal: 'todo',
+    saas: 'saas',
+  }
+  // Include all aliases that point to the same preset type
+  for (const [alias, type] of Object.entries(allAliases)) {
+    if (type === presetType && alias !== presetType) {
+      aliases[alias] = presetType
+    }
+  }
+
   const desktopNav = filterNavByModules(navConfig.desktopNav, resolved)
   const mobileTabs = filterNavByModules(navConfig.mobileTabs, resolved)
 
@@ -503,6 +525,13 @@ export interface PresetUIConfig {
 
 const ${constName}: PresetTheme = ${theme}
 
+// Preset ID aliases: allows dev:xxx scripts and VITE_PRESET to use config IDs
+const PRESET_ALIASES: Record<string, '${presetType}'> = {
+${Object.entries(aliases)
+  .map(([k, v]) => `  '${k}': '${v}',`)
+  .join('\n')}
+}
+
 export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
   ${presetType}: {
     id: '${presetType}',
@@ -525,7 +554,8 @@ ${routeDefs.join(',\n')}
 }
 
 export function getPresetUIConfig(id: string): PresetUIConfig {
-  return PRESET_UI_CONFIGS[id as PresetType] ?? PRESET_UI_CONFIGS[Object.keys(PRESET_UI_CONFIGS)[0] as PresetType]
+  const resolvedId = PRESET_ALIASES[id] ?? (id as PresetType)
+  return PRESET_UI_CONFIGS[resolvedId] ?? PRESET_UI_CONFIGS['${presetType}']
 }
 
 export function getPresetUIConfigs(): Record<PresetType, PresetUIConfig> {
