@@ -60,25 +60,24 @@ const mockStatsResponse = {
   data: mockStats,
 }
 
+// Extract mock functions to top level (same pattern as todoStore.test.ts)
+const mockMeGet = vi.fn(async () => ({
+  json: async () => mockCheckAuthResponse,
+}))
+const mockLoginPost = vi.fn(async () => ({
+  json: async () => mockLoginResponse,
+}))
+const mockStatsGet = vi.fn(async () => ({
+  json: async () => mockStatsResponse,
+}))
+
 vi.mock('@client/services/apiClient', () => ({
   apiClient: {
     api: {
       merchant: {
-        me: {
-          $get: vi.fn(async () => ({
-            json: async () => mockCheckAuthResponse,
-          })),
-        },
-        login: {
-          $post: vi.fn(async () => ({
-            json: async () => mockLoginResponse,
-          })),
-        },
-        stats: {
-          $get: vi.fn(async () => ({
-            json: async () => mockStatsResponse,
-          })),
-        },
+        me: { $get: mockMeGet },
+        login: { $post: mockLoginPost },
+        stats: { $get: mockStatsGet },
       },
     },
   },
@@ -126,8 +125,7 @@ describe('useMerchantStore', () => {
     })
 
     it('should clear merchant on failed check (success: false)', async () => {
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.me.$get).mockImplementationOnce(
+      mockMeGet.mockImplementationOnce(
         async () =>
           ({
             json: async () => ({
@@ -146,8 +144,7 @@ describe('useMerchantStore', () => {
     })
 
     it('should handle network error gracefully', async () => {
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.me.$get).mockImplementationOnce(async () => {
+      mockMeGet.mockImplementationOnce(async () => {
         throw new Error('Network error')
       })
 
@@ -174,8 +171,7 @@ describe('useMerchantStore', () => {
     })
 
     it('should set error on failed login (success: false)', async () => {
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.login.$post).mockImplementationOnce(
+      mockLoginPost.mockImplementationOnce(
         async () =>
           ({
             json: async () => ({
@@ -196,8 +192,7 @@ describe('useMerchantStore', () => {
     })
 
     it('should handle network error', async () => {
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.login.$post).mockImplementationOnce(async () => {
+      mockLoginPost.mockImplementationOnce(async () => {
         throw new Error('Network error')
       })
 
@@ -216,8 +211,7 @@ describe('useMerchantStore', () => {
         resolveResponse = resolve
       })
 
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.login.$post).mockImplementationOnce(async () => {
+      mockLoginPost.mockImplementationOnce(async () => {
         await responsePromise
         return {
           json: async () => mockLoginResponse,
@@ -264,8 +258,7 @@ describe('useMerchantStore', () => {
     })
 
     it('should handle failed response', async () => {
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.stats.$get).mockImplementationOnce(
+      mockStatsGet.mockImplementationOnce(
         async () =>
           ({
             json: async () => ({
@@ -283,8 +276,7 @@ describe('useMerchantStore', () => {
     })
 
     it('should handle network error', async () => {
-      const { apiClient } = await import('@client/services/apiClient')
-      vi.mocked(apiClient.api.merchant.stats.$get).mockImplementationOnce(async () => {
+      mockStatsGet.mockImplementationOnce(async () => {
         throw new Error('Network error')
       })
 
