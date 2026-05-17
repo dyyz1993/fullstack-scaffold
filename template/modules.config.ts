@@ -24,11 +24,13 @@ export const TEMPLATE_PRESETS: TemplatePreset[] = [
       'admin',
       'auth',
       'plugin',
+      'tenant',
       // Business (all depend on permission)
       'order',
       'ticket',
       'dispute',
       'content',
+      'merchant',
     ],
   },
   {

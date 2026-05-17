@@ -22,6 +22,8 @@ import { dashboardRoutes } from './module-admin/routes/dashboard-routes'
 import { cartRoutes } from './module-order/routes/cart-routes'
 import { ordersMockRoutes } from './module-order/routes/orders-mock-routes'
 import { topicsRoutes } from './module-content/routes/topics-routes'
+import { apiRoutes as tenantRoutes } from './module-tenant/routes/tenant-routes'
+import { apiRoutes as merchantRoutes } from './module-merchant/routes/merchant-routes'
 
 const apiRateLimit = rateLimitMiddleware({
   windowMs: 60_000,
@@ -56,6 +58,8 @@ export const adminApiRoutes = new OpenAPIHono()
   .route('/api', adminRoutes)
   .route('/api', pluginAdminRoutes)
   .route('/api', dashboardRoutes)
+  .route('/api', tenantRoutes)
+  .route('/api', merchantRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes

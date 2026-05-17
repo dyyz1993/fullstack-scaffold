@@ -91,6 +91,7 @@ export function getExcludePatterns(
     excludes.push('tenant.html')
     excludes.push('src/merchant')
     excludes.push('merchant.html')
+    excludes.push('src/server/middleware/tenant-isolation.ts')
   }
 
   if (!resolved.hasClient) {

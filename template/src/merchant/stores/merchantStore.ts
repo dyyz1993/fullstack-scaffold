@@ -1,14 +1,10 @@
 import { create } from 'zustand'
-import type { User } from '@shared/schemas'
-
-interface MerchantStats {
-  totalSales: number
-  totalOrders: number
-  pendingOrders: number
-}
+import { apiClient } from '@client/services/apiClient'
+import type { Merchant, MerchantStats } from '@shared/schemas'
 
 interface MerchantState {
-  user: User | null
+  merchant: Merchant | null
+  token: string | null
   isAuthenticated: boolean
   stats: MerchantStats | null
   loading: boolean
@@ -24,7 +20,8 @@ interface MerchantState {
 }
 
 export const useMerchantStore = create<MerchantState>(set => ({
-  user: null,
+  merchant: null,
+  token: null,
   isAuthenticated: false,
   stats: null,
   loading: false,
@@ -36,16 +33,17 @@ export const useMerchantStore = create<MerchantState>(set => ({
   checkAuth: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch('/api/merchant/me')
-      const result = (await response.json()) as { success?: boolean; data?: User }
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      const response = await apiClient.api.merchant.me.$get()
+      const result = await response.json()
       if (result.success === true && result.data) {
-        set({ user: result.data, isAuthenticated: true })
+        set({ merchant: result.data, isAuthenticated: true })
       } else {
-        set({ user: null, isAuthenticated: false })
+        set({ merchant: null, isAuthenticated: false })
       }
     } catch (error) {
       console.error('Auth check failed:', error)
-      set({ user: null, isAuthenticated: false, error: 'Authentication failed' })
+      set({ merchant: null, isAuthenticated: false, error: 'Authentication failed' })
     } finally {
       set({ loading: false })
     }
@@ -54,18 +52,19 @@ export const useMerchantStore = create<MerchantState>(set => ({
   login: async (username: string, password: string) => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch('/api/merchant/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      const response = await apiClient.api.merchant.login.$post({
+        json: { username, password },
       })
-      const result = (await response.json()) as { success?: boolean; data?: User; error?: string }
+      const result = await response.json()
       if (result.success === true && result.data) {
-        set({ user: result.data, isAuthenticated: true })
-      } else {
-        set({ error: result.error || 'Login failed' })
+        set({
+          merchant: result.data.merchant,
+          token: result.data.token,
+          isAuthenticated: true,
+        })
+      } else if (result.success === false) {
+        set({ error: result.error })
       }
     } catch (error) {
       console.error('Login failed:', error)
@@ -76,14 +75,15 @@ export const useMerchantStore = create<MerchantState>(set => ({
   },
 
   logout: () => {
-    set({ user: null, isAuthenticated: false, stats: null })
+    set({ merchant: null, token: null, isAuthenticated: false, stats: null })
   },
 
   fetchStats: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch('/api/merchant/stats')
-      const result = (await response.json()) as { success?: boolean; data?: MerchantStats }
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      const response = await apiClient.api.merchant.stats.$get()
+      const result = await response.json()
       if (result.success === true && result.data) {
         set({ stats: result.data })
       }

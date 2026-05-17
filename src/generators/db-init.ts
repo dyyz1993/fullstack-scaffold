@@ -42,6 +42,11 @@ const SEED_MODULES: SeedModule[] = [
     importLine: '',
     call: "import('../module-plugin/services/plugin-seed-service').then(m => m.seedPluginsIfEmpty())",
   },
+  {
+    module: 'merchant',
+    importLine: '',
+    call: "import('../module-merchant/services/merchant-service').then(m => m.seedMerchantsIfEmpty())",
+  },
 ]
 
 const INITIAL_PERMISSIONS = `const initialPermissions = [

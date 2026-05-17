@@ -119,6 +119,22 @@ export async function setupTestDatabase(): Promise<void> {
       user_agent TEXT,
       created_at INTEGER
     );
+
+    CREATE TABLE IF NOT EXISTS merchants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      user_id TEXT NOT NULL,
+      tenant_id INTEGER NOT NULL,
+      business_name TEXT NOT NULL,
+      business_type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      description TEXT,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      password TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `
 
   const statements = migrationSQL.split(';').filter(s => s.trim())
@@ -437,6 +453,61 @@ async function seedTestData(client: any): Promise<void> {
       // Ignore duplicate errors
     }
   }
+
+  // Insert seed merchants
+  const merchants = [
+    {
+      id: 1,
+      userId: 'merchant-1',
+      tenantId: 1,
+      businessName: '示例商店',
+      businessType: 'retail',
+      status: 'active',
+      description: '一个示例零售商店',
+      phone: '13800138000',
+      email: 'merchant@example.com',
+      address: '北京市朝阳区',
+      password: 'password123',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    },
+    {
+      id: 2,
+      userId: 'merchant-2',
+      tenantId: 1,
+      businessName: '科技商店',
+      businessType: 'retail',
+      status: 'active',
+      password: 'password123',
+      createdAt: '2024-01-02T00:00:00.000Z',
+      updatedAt: '2024-01-02T00:00:00.000Z',
+    },
+  ]
+
+  for (const merchant of merchants) {
+    try {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO merchants (id, user_id, tenant_id, business_name, business_type, status, description, phone, email, address, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          merchant.id,
+          merchant.userId,
+          merchant.tenantId,
+          merchant.businessName,
+          merchant.businessType,
+          merchant.status,
+          merchant.description,
+          merchant.phone,
+          merchant.email,
+          merchant.address,
+          merchant.password,
+          merchant.createdAt,
+          merchant.updatedAt,
+        ],
+      })
+    } catch {
+      // Ignore duplicate errors
+    }
+  }
 }
 
 export async function cleanupTestDatabase(): Promise<void> {
@@ -457,5 +528,6 @@ export async function cleanupTestDatabase(): Promise<void> {
     await client.execute('DELETE FROM permissions')
     await client.execute('DELETE FROM roles')
     await client.execute('DELETE FROM routes')
+    await client.execute('DELETE FROM merchants')
   }
 }

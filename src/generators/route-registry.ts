@@ -11,6 +11,8 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
 
   const moduleEntries = [...resolved.modules.entries()]
 
+  const usedNames = new Set<string>()
+
   for (const [name, manifest] of moduleEntries) {
     const moduleDir = `module-${name}`
 
@@ -20,20 +22,38 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
         : [manifest.routes.client]
       for (const route of clientRouteList) {
         const { importPath, exportName } = route
-        imports.push(
-          `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
-        )
-        clientRoutes.push(`  .route('/api', ${exportName})`)
+        const localName = usedNames.has(exportName)
+          ? `${name}${exportName.charAt(0).toUpperCase()}${exportName.slice(1)}`
+          : exportName
+        usedNames.add(localName)
+        const importStmt =
+          localName === exportName
+            ? `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
+            : `import { ${exportName} as ${localName} } from './${moduleDir}/${importPath.replace(
+                /^\.\//,
+                ''
+              )}'`
+        imports.push(importStmt)
+        clientRoutes.push(`  .route('/api', ${localName})`)
       }
     }
 
     if (manifest.routes.admin) {
       for (const route of manifest.routes.admin) {
         const { importPath, exportName } = route
-        imports.push(
-          `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
-        )
-        adminRoutes.push(`  .route('/api', ${exportName})`)
+        const localName = usedNames.has(exportName)
+          ? `${name}${exportName.charAt(0).toUpperCase()}${exportName.slice(1)}`
+          : exportName
+        usedNames.add(localName)
+        const importStmt =
+          localName === exportName
+            ? `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
+            : `import { ${exportName} as ${localName} } from './${moduleDir}/${importPath.replace(
+                /^\.\//,
+                ''
+              )}'`
+        imports.push(importStmt)
+        adminRoutes.push(`  .route('/api', ${localName})`)
       }
     }
   }

@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export const Header: FC<HeaderProps> = ({ onToggle }) => {
-  const { user, logout } = useMerchantStore()
+  const { merchant, logout } = useMerchantStore()
 
   const handleLogout = () => {
     logout()
@@ -45,7 +45,7 @@ export const Header: FC<HeaderProps> = ({ onToggle }) => {
       <Button type="text" icon={<MenuOutlined />} onClick={onToggle} />
 
       <Space>
-        <Text>Welcome, {user?.username || 'Merchant'}</Text>
+        <Text>Welcome, {merchant?.businessName || 'Merchant'}</Text>
         <Dropdown menu={{ items }} placement="bottomRight">
           <Avatar icon={<UserOutlined />} style={{ cursor: 'pointer' }} />
         </Dropdown>

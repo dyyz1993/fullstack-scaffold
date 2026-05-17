@@ -128,6 +128,43 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[]; hasTypeOnly?: boo
       'type PluginListQuery',
     ],
   },
+  merchant: {
+    namedExports: [
+      'ProductSchema',
+      'CreateProductSchema',
+      'UpdateProductSchema',
+      'ProductListSchema',
+      'type Product',
+      'type CreateProductInput',
+      'type UpdateProductInput',
+    ],
+  },
+  tenant: {
+    namedExports: [
+      'TenantSchema',
+      'TenantStatusSchema',
+      'TenantPlanSchema',
+      'TenantSettingsSchema',
+      'CreateTenantSchema',
+      'UpdateTenantSchema',
+      'TenantIdSchema',
+      'TenantSlugSchema',
+      'TenantListResponseSchema',
+      'TenantQuerySchema',
+      'TenantIdResponseSchema',
+      'type Tenant',
+      'type TenantStatus',
+      'type TenantPlan',
+      'type TenantSettings',
+      'type CreateTenantInput',
+      'type UpdateTenantInput',
+      'type TenantId',
+      'type TenantSlug',
+      'type TenantListResponse',
+      'type TenantQuery',
+      'type TenantIdResponse',
+    ],
+  },
 }
 
 export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
@@ -142,6 +179,8 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     'permission',
     'auth',
     'plugin',
+    'merchant',
+    'tenant',
   ]
 
   for (const moduleName of moduleOrder) {

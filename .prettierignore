@@ -20,3 +20,6 @@ data/
 
 # Build artifacts
 *.tsbuildinfo
+
+# Skill templates (contain {Name} placeholders, not valid TS)
+.claude/skills/*/templates/

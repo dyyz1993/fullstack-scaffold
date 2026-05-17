@@ -17,8 +17,8 @@ describe('template-generator', () => {
       manifests = await loadManifests(TEMPLATE_DIR)
     })
 
-    it('should discover all 14 modules', () => {
-      expect(manifests.size).toBe(14)
+    it('should discover all 15 modules', () => {
+      expect(manifests.size).toBe(15)
     })
 
     it('should parse standalone modules correctly', () => {
@@ -136,7 +136,7 @@ describe('template-generator', () => {
 
     it('should handle comments in modules array without breaking', () => {
       const fullstack = presets.find(p => p.id === 'fullstack-admin')
-      expect(fullstack.modules.length).toBe(13)
+      expect(fullstack.modules.length).toBe(15)
       expect(fullstack.modules).toContain('todos')
       expect(fullstack.modules).toContain('order')
       expect(fullstack.modules).toContain('auth')
@@ -170,7 +170,7 @@ describe('template-generator', () => {
 
       const fullstack = presets.find(p => p.id === 'fullstack-admin')!
       const resolved = resolvePreset(fullstack, allManifests)
-      expect(resolved.modules.size).toBe(13)
+      expect(resolved.modules.size).toBe(15)
     })
 
     it('should resolve xbrowser-marketplace with dependencies', async () => {

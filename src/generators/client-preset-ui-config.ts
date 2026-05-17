@@ -70,6 +70,20 @@ function getThemeForPresetType(presetType: string): { constName: string; theme: 
   fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 }`,
     },
+    community: {
+      constName: 'COMMUNITY_THEME',
+      theme: `{
+  primaryColor: '#f97316',
+  primaryHover: '#ea580c',
+  bgColor: '#ffffff',
+  textColor: '#111827',
+  secondaryBg: '#fff7ed',
+  borderColor: '#fed7aa',
+  borderRadius: '12px',
+  logoText: 'CommunityHub',
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+}`,
+    },
   }
   return themes[presetType] || themes.todo
 }
@@ -277,6 +291,68 @@ function getRoutesForPreset(presetType: string, resolved: ResolvedPreset): LazyR
       return routes
     }
 
+    case 'community': {
+      const routes: LazyRoute[] = []
+      if (hasModule('content')) {
+        routes.push(
+          {
+            path: '/',
+            importPath: './pages/ContentListPage',
+            componentName: 'ContentListPage',
+            label: 'Home',
+          },
+          {
+            path: '/topics',
+            importPath: './pages/ContentListPage',
+            componentName: 'ContentListPage',
+            label: 'Topics',
+          },
+          {
+            path: '/topics/:id',
+            importPath: './pages/ContentDetailPage',
+            componentName: 'ContentDetailPage',
+            label: 'Topic Detail',
+          },
+          {
+            path: '/popular',
+            importPath: './pages/ContentListPage',
+            componentName: 'ContentListPage',
+            label: 'Popular',
+          },
+          {
+            path: '/content',
+            importPath: './pages/ContentListPage',
+            componentName: 'ContentListPage',
+            label: 'Content',
+          },
+          {
+            path: '/content/:id',
+            importPath: './pages/ContentDetailPage',
+            componentName: 'ContentDetailPage',
+            label: 'Content Detail',
+          }
+        )
+      }
+      if (hasModule('chat')) {
+        routes.push({
+          path: '/websocket',
+          importPath: './pages/WebSocketPage',
+          componentName: 'WebSocketPage',
+          label: 'WebSocket',
+        })
+      }
+      if (hasModule('notifications')) {
+        routes.push({
+          path: '/notifications',
+          importPath: './pages/NotificationPage',
+          componentName: 'NotificationPage',
+          label: 'Notifications',
+        })
+      }
+      routes.push(...maybeAuthRoutes)
+      return routes
+    }
+
     default:
       return [...maybeAuthRoutes]
   }
@@ -381,6 +457,30 @@ function getNavConfigForPreset(
           "{ label: 'Settings', icon: 'Settings', path: '/settings' }",
         ],
         defaultRoute: '/dashboard',
+      }
+
+    case 'community':
+      return {
+        name: 'Community Forum',
+        appType: 'client',
+        layout: 'top-nav',
+        navigationObj:
+          "{ visible: true, showLogo: true, showSearch: true, showCart: false, authStyle: 'text-link', navItems: 'desktop' }",
+        desktopNav: [
+          "{ label: 'Home', icon: 'Home', path: '/' }",
+          "{ label: 'Topics', icon: 'MessageSquare', path: '/topics' }",
+          "{ label: 'Popular', icon: 'Flame', path: '/popular' }",
+          "{ label: 'Profile', icon: 'User', path: '/profile' }",
+          "{ label: 'Chat', icon: 'MessageCircle', path: '/websocket' }",
+        ],
+        mobileTabs: [
+          "{ label: 'Home', icon: 'Home', path: '/' }",
+          "{ label: 'Topics', icon: 'MessageSquare', path: '/topics' }",
+          "{ label: 'Popular', icon: 'Flame', path: '/popular' }",
+          "{ label: 'Profile', icon: 'User', path: '/profile' }",
+          "{ label: 'Chat', icon: 'MessageCircle', path: '/websocket' }",
+        ],
+        defaultRoute: '/',
       }
 
     default:

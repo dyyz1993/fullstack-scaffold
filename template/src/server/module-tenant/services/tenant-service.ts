@@ -203,7 +203,7 @@ export async function updateTenant(id: number, input: UpdateTenantInput): Promis
   }
 
   if (input.name !== undefined) {
-    updateData.name = input.name
+    updateData.name = input.name ?? undefined
   }
 
   if (input.status !== undefined && input.status !== null) {
@@ -216,42 +216,6 @@ export async function updateTenant(id: number, input: UpdateTenantInput): Promis
 
   if (input.maxUsers !== undefined && input.maxUsers !== null) {
     updateData.maxUsers = input.maxUsers
-  }
-
-  if (input.settings !== undefined) {
-    updateData.settings = input.settings ? JSON.stringify(input.settings) : null
-  }
-
-  if (input.name !== undefined) {
-    updateData.name = input.name
-  }
-
-  if (input.status !== undefined && input.status !== null) {
-    updateData.status = input.status
-  }
-
-  if (input.plan !== undefined && input.plan !== null) {
-    updateData.plan = input.plan
-  }
-
-  if (input.maxUsers !== undefined && input.maxUsers !== null) {
-    updateData.maxUsers = input.maxUsers
-  }
-
-  if (input.name !== undefined) {
-    updateData.name = input.name
-  }
-
-  if (input.status !== undefined && input.status !== null) {
-    ;(updateData as Record<string, unknown>).status = input.status
-  }
-
-  if (input.plan !== undefined && input.plan !== null) {
-    ;(updateData as Record<string, unknown>).plan = input.plan
-  }
-
-  if (input.maxUsers !== undefined && input.maxUsers !== null) {
-    ;(updateData as Record<string, unknown>).maxUsers = input.maxUsers
   }
 
   if (input.settings !== undefined) {

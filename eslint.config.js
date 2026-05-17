@@ -92,6 +92,7 @@ export default tseslint.config(
       'my-test-app',
       'demo-app',
       '*.config.ts',
+      '.claude',
     ],
   },
   {

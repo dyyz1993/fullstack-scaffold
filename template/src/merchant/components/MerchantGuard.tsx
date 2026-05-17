@@ -6,13 +6,9 @@ interface MerchantGuardProps {
 }
 
 export const MerchantGuard: React.FC<MerchantGuardProps> = ({ children }) => {
-  const { isAuthenticated, user } = useMerchantStore()
+  const { isAuthenticated, merchant } = useMerchantStore()
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (!user || user.role !== 'merchant') {
+  if (!isAuthenticated || !merchant) {
     return <Navigate to="/login" replace />
   }
 

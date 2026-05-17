@@ -1,6 +1,6 @@
 {
   "name": "create-fullstack-scaffold",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "type": "module",
   "bin": {
     "create-fullstack-scaffold": "dist/cli/index.js"
@@ -86,7 +86,7 @@
     "validate:modules": "npx tsx src/server/core/module-loader.ts",
     "check:refs": "node --import tsx/esm lint-scripts/check-refs.ts",
     "create:module": "node --import tsx/esm scripts/create-template.ts",
-    "postinstall": "patch-package",
+    "postinstall": "node -e \"try{require.resolve('patch-package')&&require('child_process').execSync('npx patch-package',{stdio:'pipe'})}catch(e){}\"",
     "prepare": "husky",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

@@ -17,9 +17,9 @@ export const DashboardPage: FC = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="Total Sales"
+              title="Total Revenue"
               prefix={<DollarOutlined />}
-              value={stats?.totalSales || 0}
+              value={stats?.totalRevenue || 0}
               precision={2}
               suffix="$"
             />

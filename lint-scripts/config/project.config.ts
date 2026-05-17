@@ -211,7 +211,16 @@ export const directoryStructureConfig: DirectoryStructureConfig = {
       suggestion: 'Move to scripts/ directory at project root',
     },
   ],
-  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage', 'drizzle', 'patches'],
+  ignoreDirs: [
+    'node_modules',
+    'dist',
+    '.git',
+    'build',
+    'coverage',
+    'drizzle',
+    'patches',
+    '.claude',
+  ],
   allowedRootFiles: [
     '*.config.ts',
     '*.config.js',
@@ -307,6 +316,7 @@ export const clientTestsConfig: ClientTestsConfig = {
     'stores',
     'hooks',
     'services',
+    '.claude',
   ],
   checkDirs: ['src/client'],
 }
