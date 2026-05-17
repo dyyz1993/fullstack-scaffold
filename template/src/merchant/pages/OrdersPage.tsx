@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState, useEffect, useCallback } from 'react'
 import { Select, Space, DatePicker, Button } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
@@ -16,9 +17,7 @@ export const OrdersPage: FC = () => {
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
-       
-      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
-      const response = await apiClient.api.merchant.orders.$get()
+      const response = await (apiClient as any).api.merchant.orders.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         setOrders(result.data)
@@ -34,7 +33,7 @@ export const OrdersPage: FC = () => {
     setStatusFilter(value)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Ant Design RangePicker types are complex
+   
   const handleDateRangeChange = (dates: any) => {
     setDateRange(dates)
   }

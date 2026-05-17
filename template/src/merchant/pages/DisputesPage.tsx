@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState, useEffect, useCallback } from 'react'
 import { Table, Tag, Button, Space, Typography, Descriptions } from 'antd'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
@@ -15,9 +16,7 @@ export const DisputesPage: FC = () => {
   const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
-       
-      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
-      const response = await apiClient.api.merchant.disputes.$get()
+      const response = await (apiClient as any).api.merchant.disputes.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         setDisputes(result.data)
@@ -36,9 +35,9 @@ export const DisputesPage: FC = () => {
 
   const handleResolve = async (disputeId: string) => {
     try {
-       
-      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
-      await apiClient.api.merchant.disputes[':id'].resolve.$post({ param: { id: disputeId } })
+      await (apiClient as any).api.merchant.disputes[':id'].resolve.$post({
+        param: { id: disputeId },
+      })
       fetchDisputes()
     } catch (error) {
       console.error('Failed to resolve dispute:', error)
@@ -47,9 +46,9 @@ export const DisputesPage: FC = () => {
 
   const handleClose = async (disputeId: string) => {
     try {
-       
-      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
-      await apiClient.api.merchant.disputes[':id'].close.$post({ param: { id: disputeId } })
+      await (apiClient as any).api.merchant.disputes[':id'].close.$post({
+        param: { id: disputeId },
+      })
       fetchDisputes()
     } catch (error) {
       console.error('Failed to close dispute:', error)
