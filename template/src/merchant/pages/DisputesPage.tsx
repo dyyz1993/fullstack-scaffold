@@ -15,6 +15,7 @@ export const DisputesPage: FC = () => {
   const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       const response = await apiClient.api.merchant.disputes.$get()
       const result = await response.json()
@@ -35,6 +36,7 @@ export const DisputesPage: FC = () => {
 
   const handleResolve = async (disputeId: string) => {
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       await apiClient.api.merchant.disputes[':id'].resolve.$post({ param: { id: disputeId } })
       fetchDisputes()
@@ -45,6 +47,7 @@ export const DisputesPage: FC = () => {
 
   const handleClose = async (disputeId: string) => {
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       await apiClient.api.merchant.disputes[':id'].close.$post({ param: { id: disputeId } })
       fetchDisputes()

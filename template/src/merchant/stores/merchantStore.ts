@@ -33,6 +33,7 @@ export const useMerchantStore = create<MerchantState>(set => ({
   checkAuth: async () => {
     set({ loading: true, error: null })
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       const response = await apiClient.api.merchant.me.$get()
       const result = await response.json()
@@ -52,6 +53,7 @@ export const useMerchantStore = create<MerchantState>(set => ({
   login: async (username: string, password: string) => {
     set({ loading: true, error: null })
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       const response = await apiClient.api.merchant.login.$post({
         json: { username, password },
@@ -81,6 +83,7 @@ export const useMerchantStore = create<MerchantState>(set => ({
   fetchStats: async () => {
     set({ loading: true, error: null })
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       const response = await apiClient.api.merchant.stats.$get()
       const result = await response.json()

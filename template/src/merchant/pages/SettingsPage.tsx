@@ -11,6 +11,7 @@ export const SettingsPage: FC = () => {
 
   const handleSave = async (values: unknown) => {
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       await apiClient.api.merchant.settings.$put({ json: values })
       message.success('Settings saved successfully')

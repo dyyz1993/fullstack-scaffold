@@ -16,6 +16,7 @@ export const OrdersPage: FC = () => {
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       const response = await apiClient.api.merchant.orders.$get()
       const result = await response.json()

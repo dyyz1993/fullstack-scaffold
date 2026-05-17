@@ -10,15 +10,22 @@ const { Title } = Typography
 export const ProductsPage: FC = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
+       
       // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
       const response = await apiClient.api.merchant.products.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
-        setProducts(result.data)
+        setProducts(result.data.items)
+        setTotal(result.data.total)
+        setPage(result.data.page)
+        setPageSize(result.data.pageSize)
       }
     } catch (error) {
       console.error('Failed to fetch products:', error)
@@ -79,7 +86,22 @@ export const ProductsPage: FC = () => {
         </Button>
       </div>
       <ProductCard products={products} loading={loading} />
-      <Table dataSource={products} columns={columns} loading={loading} rowKey="id" />
+      <Table
+        dataSource={products}
+        columns={columns}
+        loading={loading}
+        rowKey="id"
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          onChange: (newPage, newPageSize) => {
+            setPage(newPage)
+            setPageSize(newPageSize)
+          },
+        }}
+      />
     </div>
   )
 }
