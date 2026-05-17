@@ -7,6 +7,7 @@ import { ProductsPage } from './pages/ProductsPage'
 import { OrdersPage } from './pages/OrdersPage'
 import { DisputesPage } from './pages/DisputesPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { LoginPage } from './pages/LoginPage'
 import { MerchantGuard } from './components/MerchantGuard'
 import { useMerchantStore } from './stores/merchantStore'
 
@@ -32,6 +33,7 @@ export const App: React.FC = () => {
     >
       <BrowserRouter basename="/merchant">
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/*"
             element={

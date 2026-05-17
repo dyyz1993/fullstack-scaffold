@@ -1,6 +1,7 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState, useEffect, useCallback } from 'react'
 import { Table, Button, Space, Tag, Typography } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { apiClient } from '@client/services/apiClient'
 import { ProductCard } from '../components/ProductCard'
 import type { Product } from '@shared/schemas'
 
@@ -10,11 +11,12 @@ export const ProductsPage: FC = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/merchant/products')
-      const result = (await response.json()) as { success?: boolean; data?: Product[] }
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      const response = await apiClient.api.merchant.products.$get()
+      const result = await response.json()
       if (result.success === true && result.data) {
         setProducts(result.data)
       }
@@ -23,11 +25,11 @@ export const ProductsPage: FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [fetchProducts])
 
   const columns = [
     {

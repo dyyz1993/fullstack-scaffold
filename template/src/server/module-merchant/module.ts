@@ -21,11 +21,11 @@ const merchantManifest: ModuleManifest = {
 
   clientPages: [],
 
-  clientStores: ['merchantStore'],
+  clientStores: [],
 
   dbSchemas: {
     files: ['merchants', 'products'],
-    hasSeed: false,
+    hasSeed: true,
   },
 }
 

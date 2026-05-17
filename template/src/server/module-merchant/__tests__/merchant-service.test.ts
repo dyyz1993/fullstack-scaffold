@@ -154,23 +154,6 @@ describe('Merchant Service', () => {
       expect(result.stock).toBe(50)
       expect(result.imageUrl).toBe('https://example.com/image.jpg')
     })
-
-    it('should create a product with explicit values', async () => {
-      const input: CreateProductInput = {
-        name: 'Premium Product',
-        description: 'A premium product',
-        price: 199.99,
-        status: 'out_of_stock',
-        stock: 50,
-        imageUrl: 'https://example.com/image.jpg',
-      }
-
-      const result = await createProduct(1, input)
-      expect(result.name).toBe('Premium Product')
-      expect(result.status).toBe('out_of_stock')
-      expect(result.stock).toBe(50)
-      expect(result.imageUrl).toBe('https://example.com/image.jpg')
-    })
   })
 
   describe('getProductById', () => {

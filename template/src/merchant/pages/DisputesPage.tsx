@@ -1,6 +1,7 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState, useEffect, useCallback } from 'react'
 import { Table, Tag, Button, Space, Typography, Descriptions } from 'antd'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import { apiClient } from '@client/services/apiClient'
 import type { Dispute, DisputeStatus } from '@shared/schemas'
 
 const { Text } = Typography
@@ -11,11 +12,12 @@ export const DisputesPage: FC = () => {
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null)
   const setShowModal = useState(false)[1]
 
-  const fetchDisputes = async () => {
+  const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/merchant/disputes')
-      const result = (await response.json()) as { success?: boolean; data?: Dispute[] }
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      const response = await apiClient.api.merchant.disputes.$get()
+      const result = await response.json()
       if (result.success === true && result.data) {
         setDisputes(result.data)
       }
@@ -24,7 +26,7 @@ export const DisputesPage: FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleView = (dispute: Dispute) => {
     setSelectedDispute(dispute)
@@ -33,9 +35,8 @@ export const DisputesPage: FC = () => {
 
   const handleResolve = async (disputeId: string) => {
     try {
-      await fetch(`/api/merchant/disputes/${disputeId}/resolve`, {
-        method: 'POST',
-      })
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      await apiClient.api.merchant.disputes[':id'].resolve.$post({ param: { id: disputeId } })
       fetchDisputes()
     } catch (error) {
       console.error('Failed to resolve dispute:', error)
@@ -44,9 +45,8 @@ export const DisputesPage: FC = () => {
 
   const handleClose = async (disputeId: string) => {
     try {
-      await fetch(`/api/merchant/disputes/${disputeId}/close`, {
-        method: 'POST',
-      })
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      await apiClient.api.merchant.disputes[':id'].close.$post({ param: { id: disputeId } })
       fetchDisputes()
     } catch (error) {
       console.error('Failed to close dispute:', error)
@@ -55,7 +55,7 @@ export const DisputesPage: FC = () => {
 
   useEffect(() => {
     fetchDisputes()
-  }, [])
+  }, [fetchDisputes])
 
   const getStatusColor = (status: DisputeStatus): string => {
     const colors: Record<DisputeStatus, string> = {

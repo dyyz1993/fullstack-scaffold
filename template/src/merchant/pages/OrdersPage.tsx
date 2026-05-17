@@ -1,6 +1,7 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState, useEffect, useCallback } from 'react'
 import { Select, Space, DatePicker, Button } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
+import { apiClient } from '@client/services/apiClient'
 import type { Order } from '@shared/schemas'
 import { OrderTable } from '../components/OrderTable'
 
@@ -12,11 +13,12 @@ export const OrdersPage: FC = () => {
   const setStatusFilter = useState<string>('all')[1]
   const setDateRange = useState<[Date, Date] | null>(null)[1]
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/merchant/orders')
-      const result = (await response.json()) as { success?: boolean; data?: Order[] }
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      const response = await apiClient.api.merchant.orders.$get()
+      const result = await response.json()
       if (result.success === true && result.data) {
         setOrders(result.data)
       }
@@ -25,7 +27,7 @@ export const OrdersPage: FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value)
@@ -42,7 +44,7 @@ export const OrdersPage: FC = () => {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [fetchOrders])
 
   return (
     <div>

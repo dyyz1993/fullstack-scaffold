@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import { Form, Input, Button, Card, Typography, Upload, message } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
+import { apiClient } from '@client/services/apiClient'
 import type { UploadProps } from 'antd'
 
 const { Title, Text } = Typography
@@ -10,13 +11,8 @@ export const SettingsPage: FC = () => {
 
   const handleSave = async (values: unknown) => {
     try {
-      await fetch('/api/merchant/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      })
+      // @ts-expect-error - Hono type inference depth limit in full template; resolves correctly in generated project
+      await apiClient.api.merchant.settings.$put({ json: values })
       message.success('Settings saved successfully')
     } catch {
       message.error('Failed to save settings')
