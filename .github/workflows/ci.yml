@@ -256,7 +256,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: npx playwright test tests/e2e/*-preset.spec.ts --reporter=list --timeout=60000
+        run: npx playwright test tests/e2e/*-preset.spec.ts --project=chromium --reporter=list --timeout=60000
         env:
           NODE_TLS_REJECT_UNAUTHORIZED: '0'
 
