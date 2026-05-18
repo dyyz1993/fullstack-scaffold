@@ -470,6 +470,8 @@ export {
 
   const moduleLines: string[] = []
   const exportedNames = new Set<string>()
+  const firstSeenModule = new Map<string, string>()
+  const droppedExports: { name: string; moduleName: string; originalModule: string }[] = []
 
   for (const moduleName of moduleOrder) {
     const exports = MODULE_EXPORTS[moduleName]
@@ -479,8 +481,13 @@ export {
     if (!shouldInclude) continue
 
     const uniqueExports = exports.namedExports.filter(name => {
-      if (exportedNames.has(name)) return false
+      if (exportedNames.has(name)) {
+        const originalModule = firstSeenModule.get(name) ?? 'unknown'
+        droppedExports.push({ name, moduleName, originalModule })
+        return false
+      }
       exportedNames.add(name)
+      firstSeenModule.set(name, moduleName)
       return true
     })
 
@@ -490,6 +497,12 @@ export {
 
     moduleLines.push(
       `export {\n  ${uniqueExports.join(',\n  ')},\n} from '../modules/${importPath}'`
+    )
+  }
+
+  for (const { name, moduleName, originalModule } of droppedExports) {
+    console.warn(
+      `⚠️  Schema collision: "${name}" defined in both ${originalModule} and ${moduleName}. Using ${originalModule}'s version. Rename to avoid ambiguity.`
     )
   }
 

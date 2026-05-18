@@ -36,6 +36,7 @@ import { moduleBoundary } from './eslint-rules/module-boundary.js'
 import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
 import { noDeepRelativeImports } from './eslint-rules/no-deep-relative-imports.js'
+import { noCrossModuleServiceImport } from './eslint-rules/no-cross-module-service-import.js'
 
 const localRules = {
   rules: {
@@ -71,6 +72,7 @@ const localRules = {
     'limit-type-complexity': limitTypeComplexity,
     'require-antd-generic-types': requireAntdGenericTypes,
     'no-deep-relative-imports': noDeepRelativeImports,
+    'no-cross-module-service-import': noCrossModuleServiceImport,
   },
 }
 
@@ -118,6 +120,7 @@ export default tseslint.config(
       'local-rules/flat-routes-services': 'error',
       'local-rules/no-middleware-in-routes': 'error',
       'local-rules/no-new-old-service-naming': 'error',
+      'local-rules/no-cross-module-service-import': 'error',
       'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
     },
   },

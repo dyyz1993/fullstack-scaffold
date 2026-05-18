@@ -28,6 +28,14 @@ import {
   formatAPICoverageErrors,
 } from './validators/api-coverage.validator.js'
 import { validateConsoleLog, formatConsoleLogErrors } from './validators/console-log.validator.js'
+import {
+  validateSchemaUniqueness,
+  formatSchemaUniquenessErrors,
+} from './validators/schema-uniqueness.validator.js'
+import {
+  validateModulePublicApi,
+  formatModulePublicApiErrors,
+} from './validators/module-public-api.validator.js'
 import projectConfig from './config/project.config.js'
 
 interface ValidatorResult {
@@ -41,7 +49,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   const results: ValidatorResult[] = []
 
   // 1. TODO 验证
-  console.log('🔍 [1/12] Checking TODO/FIXME comments...')
+  console.log('🔍 [1/14] Checking TODO/FIXME comments...')
   const todoErrors = validateTodos(projectConfig.todos, rootPath)
   results.push({
     name: 'TODO/FIXME',
@@ -55,7 +63,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 2. 敏感信息验证
-  console.log('🔍 [2/12] Checking for sensitive data...')
+  console.log('🔍 [2/14] Checking for sensitive data...')
   const sensitiveErrors = await validateSensitive(projectConfig.sensitive, rootPath)
   results.push({
     name: 'Sensitive Data',
@@ -69,7 +77,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 3. 导入路径验证
-  console.log('🔍 [3/12] Checking import paths...')
+  console.log('🔍 [3/14] Checking import paths...')
   const importErrors = validateImports(projectConfig.imports, rootPath)
   results.push({
     name: 'Import Paths',
@@ -83,7 +91,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 4. 服务端 RPC 验证
-  console.log('🔍 [4/12] Checking server RPC patterns...')
+  console.log('🔍 [4/14] Checking server RPC patterns...')
   const serverRPCErrors = validateServerRPC(projectConfig.serverRPC, rootPath)
   results.push({
     name: 'Server RPC',
@@ -97,7 +105,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 5. 客户端 RPC 验证
-  console.log('🔍 [5/12] Checking client RPC usage...')
+  console.log('🔍 [5/14] Checking client RPC usage...')
   const clientRPCErrors = validateClientRPC(projectConfig.clientRPC, rootPath)
   results.push({
     name: 'Client RPC',
@@ -111,7 +119,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 6. 目录结构验证
-  console.log('🔍 [6/12] Checking directory structure...')
+  console.log('🔍 [6/14] Checking directory structure...')
   const { directoryErrors, forbiddenErrors } = validateDirectoryStructure(
     projectConfig.directory,
     rootPath
@@ -129,7 +137,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 7. 模块测试文件验证
-  console.log('🔍 [7/12] Checking module test files...')
+  console.log('🔍 [7/14] Checking module test files...')
   const moduleTestErrors = validateModuleTests(projectConfig.moduleTests, rootPath)
   results.push({
     name: 'Module Tests',
@@ -143,7 +151,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 8. 测试质量验证
-  console.log('🔍 [8/12] Checking test quality...')
+  console.log('🔍 [8/14] Checking test quality...')
   const { errors: testQualityErrors, warnings: testQualityWarnings } = validateTestQuality(
     projectConfig.testQuality,
     rootPath
@@ -161,7 +169,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 9. Client 测试覆盖验证
-  console.log('🔍 [9/12] Checking client test coverage...')
+  console.log('🔍 [9/14] Checking client test coverage...')
   const clientTestErrors = validateClientTests(projectConfig.clientTests, rootPath)
   results.push({
     name: 'Client Tests',
@@ -175,7 +183,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 10. API 覆盖率验证
-  console.log('🔍 [10/12] Checking API coverage...')
+  console.log('🔍 [10/14] Checking API coverage...')
   const apiCoverageErrors = validateAPICoverage(projectConfig.moduleTests, rootPath)
   results.push({
     name: 'API Coverage',
@@ -189,7 +197,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 11. Markdown 引用路径验证
-  console.log('🔍 [11/12] Checking markdown references...')
+  console.log('🔍 [11/14] Checking markdown references...')
   const mdRefErrors = validateMdRefs(projectConfig.mdRefs, rootPath)
   results.push({
     name: 'Markdown References',
@@ -203,7 +211,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 12. Console.log 验证
-  console.log('🔍 [12/12] Checking for console.log statements...')
+  console.log('🔍 [12/14] Checking for console.log statements...')
   const consoleLogErrors = validateConsoleLog(projectConfig.consoleLog, rootPath)
   results.push({
     name: 'Console.log',
@@ -214,6 +222,34 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.error(formatConsoleLogErrors(consoleLogErrors))
   } else {
     console.log('  ✅ No console.log statements found\n')
+  }
+
+  // 13. Schema 命名唯一性验证
+  console.log('🔍 [13/14] Checking schema name uniqueness across modules...')
+  const schemaUniquenessErrors = validateSchemaUniqueness(projectConfig.schemaUniqueness, rootPath)
+  results.push({
+    name: 'Schema Uniqueness',
+    passed: schemaUniquenessErrors.length === 0,
+    errors: schemaUniquenessErrors.length,
+  })
+  if (schemaUniquenessErrors.length > 0) {
+    console.error(formatSchemaUniquenessErrors(schemaUniquenessErrors))
+  } else {
+    console.log('  ✅ No cross-module schema name collisions\n')
+  }
+
+  // 14. 模块公共 API 验证
+  console.log('🔍 [14/14] Checking module public API barrels...')
+  const modulePublicApiErrors = validateModulePublicApi(projectConfig.modulePublicApi, rootPath)
+  results.push({
+    name: 'Module Public API',
+    passed: modulePublicApiErrors.length === 0,
+    errors: modulePublicApiErrors.length,
+  })
+  if (modulePublicApiErrors.length > 0) {
+    console.error(formatModulePublicApiErrors(modulePublicApiErrors))
+  } else {
+    console.log('  ✅ All depended-upon modules have index.ts barrels\n')
   }
 
   return results
