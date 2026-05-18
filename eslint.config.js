@@ -37,6 +37,8 @@ import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
 import { noDeepRelativeImports } from './eslint-rules/no-deep-relative-imports.js'
 import { noCrossModuleServiceImport } from './eslint-rules/no-cross-module-service-import.js'
+import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
+import { routeLocation } from './eslint-rules/route-location.js'
 
 const localRules = {
   rules: {
@@ -73,6 +75,8 @@ const localRules = {
     'require-antd-generic-types': requireAntdGenericTypes,
     'no-deep-relative-imports': noDeepRelativeImports,
     'no-cross-module-service-import': noCrossModuleServiceImport,
+    'no-disable-type-safe-client': noDisableTypeSafeClient,
+    'route-location': routeLocation,
   },
 }
 
@@ -140,6 +144,7 @@ export default tseslint.config(
       'local-rules/no-middleware-in-routes': 'error',
       'local-rules/no-new-old-service-naming': 'error',
       'local-rules/no-cross-module-service-import': 'error',
+      'local-rules/route-location': 'error',
       'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
     },
   },
@@ -176,6 +181,7 @@ export default tseslint.config(
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       'local-rules/require-type-safe-test-client': 'error',
+      'local-rules/no-disable-type-safe-client': 'error',
       'local-rules/require-hono-chain-syntax': 'off',
     },
   },

@@ -16,6 +16,8 @@ import type {
   TestQualityConfig,
   ClientTestsConfig,
   MdRefsConfig,
+  SchemaUniquenessConfig,
+  ModulePublicApiConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -339,6 +341,23 @@ export const consoleLogConfig: ConsoleLogConfig = {
 }
 
 // ============================================
+// Schema 命名唯一性验证配置
+// ============================================
+export const schemaUniquenessConfig: SchemaUniquenessConfig = {
+  modulesDir: 'src/shared/modules',
+  checkDirs: ['src/shared/modules'],
+  ignoreDirs: ['node_modules', 'dist'],
+}
+
+// ============================================
+// 模块公共 API 验证配置
+// ============================================
+export const modulePublicApiConfig: ModulePublicApiConfig = {
+  serverDir: 'src/server',
+  checkDirs: ['src/server'],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -353,6 +372,8 @@ export const projectConfig = {
   clientTests: clientTestsConfig,
   mdRefs: mdRefsConfig,
   consoleLog: consoleLogConfig,
+  schemaUniqueness: schemaUniquenessConfig,
+  modulePublicApi: modulePublicApiConfig,
 } as const
 
 export default projectConfig

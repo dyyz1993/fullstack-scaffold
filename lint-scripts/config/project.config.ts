@@ -18,6 +18,7 @@ import type {
   MdRefsConfig,
   SchemaUniquenessConfig,
   ModulePublicApiConfig,
+  ConfigSyncConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -367,6 +368,14 @@ export const modulePublicApiConfig: ModulePublicApiConfig = {
   checkDirs: ['src/server'],
 }
 
+export const configSyncConfig: ConfigSyncConfig = {
+  rootDir: '.',
+  templateDir: 'template',
+  checkPairs: [
+    { root: 'eslint-rules', template: 'template/eslint-rules', label: 'eslint-rules' },
+  ],
+}
+
 // ============================================
 // 统一导出
 // ============================================
@@ -384,6 +393,7 @@ export const projectConfig = {
   consoleLog: consoleLogConfig,
   schemaUniqueness: schemaUniquenessConfig,
   modulePublicApi: modulePublicApiConfig,
+  configSync: configSyncConfig,
 } as const
 
 export default projectConfig
