@@ -77,7 +77,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[]; hasTypeOnly?: boo
       'hasPermission',
       'hasAnyPermission',
       'hasAllPermissions',
-      'type RoleType',
+      'type PermissionRoleType',
       'type RoleInfo',
       'type PermissionInfo',
       'type UserPermissions',

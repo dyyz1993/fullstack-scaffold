@@ -11,7 +11,7 @@ export const OrdersPage: FC = () => {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const setStatusFilter = useState<string>('all')[1]
-  const setDateRange = useState<[Date, Date] | null>(null)[1]
+  const setDateRange = useState<[import('dayjs').Dayjs, import('dayjs').Dayjs] | null>(null)[1]
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
@@ -36,7 +36,11 @@ export const OrdersPage: FC = () => {
   const handleDateRangeChange = (
     dates: [import('dayjs').Dayjs | null, import('dayjs').Dayjs | null] | null
   ) => {
-    setDateRange(dates)
+    if (dates && dates[0] && dates[1]) {
+      setDateRange([dates[0], dates[1]])
+    } else {
+      setDateRange(null)
+    }
   }
 
   const handleSearch = () => {
