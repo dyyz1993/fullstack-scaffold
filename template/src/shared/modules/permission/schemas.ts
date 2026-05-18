@@ -80,7 +80,7 @@ export const PermissionInitSchema = z.object({
   role: RoleEnum,
 })
 
-export type RoleType = z.infer<typeof RoleEnum>
+export type PermissionRoleType = z.infer<typeof RoleEnum>
 export type PermissionType = z.infer<typeof PermissionEnum>
 export type RoleInfo = z.infer<typeof RoleInfoSchema>
 export type PermissionInfo = z.infer<typeof PermissionInfoSchema>

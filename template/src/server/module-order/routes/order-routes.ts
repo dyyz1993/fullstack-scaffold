@@ -10,7 +10,7 @@ import {
   CreateOrderSchema,
   UpdateOrderSchema,
   OrderListSchema,
-  DeleteResultSchema,
+  OrderDeleteResultSchema,
   OrderQuerySchema,
 } from '@shared/modules/order'
 
@@ -109,7 +109,7 @@ const deleteRoute = createRoute({
     params: OrderSchema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(DeleteResultSchema, 'Order deleted'),
+    200: successResponse(OrderDeleteResultSchema, 'Order deleted'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),

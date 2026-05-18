@@ -41,7 +41,7 @@ export const UpdateContentSchema = z.object({
 
 export const ContentListSchema = z.array(ContentSchema)
 
-export const DeleteResultSchema = z.object({
+export const ContentDeleteResultSchema = z.object({
   message: z.string(),
 })
 
@@ -50,4 +50,4 @@ export type ContentStatus = z.infer<typeof ContentStatusSchema>
 export type Content = z.infer<typeof ContentSchema>
 export type CreateContentInput = z.infer<typeof CreateContentSchema>
 export type UpdateContentInput = z.infer<typeof UpdateContentSchema>
-export type DeleteResult = z.infer<typeof DeleteResultSchema>
+export type ContentDeleteResult = z.infer<typeof ContentDeleteResultSchema>

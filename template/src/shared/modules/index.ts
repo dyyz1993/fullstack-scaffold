@@ -63,7 +63,7 @@ export {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
-  type RoleType,
+  type PermissionRoleType,
   type RoleInfo,
   type PermissionInfo,
   type UserPermissions,

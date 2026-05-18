@@ -62,7 +62,7 @@ export const ReplyTicketSchema = z.object({
 
 export const TicketListSchema = z.array(TicketSchema)
 
-export const DeleteResultSchema = z.object({
+export const TicketDeleteResultSchema = z.object({
   message: z.string(),
 })
 
@@ -74,4 +74,4 @@ export type Ticket = z.infer<typeof TicketSchema>
 export type CreateTicketInput = z.infer<typeof CreateTicketSchema>
 export type UpdateTicketInput = z.infer<typeof UpdateTicketSchema>
 export type ReplyTicketInput = z.infer<typeof ReplyTicketSchema>
-export type DeleteResult = z.infer<typeof DeleteResultSchema>
+export type TicketDeleteResult = z.infer<typeof TicketDeleteResultSchema>

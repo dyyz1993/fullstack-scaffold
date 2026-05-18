@@ -23,7 +23,7 @@ import {
 import { useRoleStore } from '../hooks/useRoles'
 import { useConfig, usePermissionCategories } from '../hooks/useConfig'
 import { usePermissions } from '../hooks/usePermissions'
-import type { RoleType, CreateRoleType } from '@shared/modules/role/schemas'
+import type { RoleDataType, CreateRoleType } from '@shared/modules/role/schemas'
 import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
 import { apiClient } from '../services/apiClient'
@@ -41,7 +41,7 @@ export const RolesPage: React.FC = () => {
   const { refreshPermissions } = usePermissions()
   const [modalVisible, setModalVisible] = useState(false)
   const [permissionModalVisible, setPermissionModalVisible] = useState(false)
-  const [editingRole, setEditingRole] = useState<RoleType | null>(null)
+  const [editingRole, setEditingRole] = useState<RoleDataType | null>(null)
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
   const [form] = Form.useForm<RoleFormValues>()
 
@@ -55,7 +55,7 @@ export const RolesPage: React.FC = () => {
     setModalVisible(true)
   }
 
-  const handleEdit = (role: RoleType) => {
+  const handleEdit = (role: RoleDataType) => {
     setEditingRole(role)
     form.setFieldsValue({
       code: role.code,
@@ -74,7 +74,7 @@ export const RolesPage: React.FC = () => {
     }
   }
 
-  const handleManagePermissions = async (role: RoleType) => {
+  const handleManagePermissions = async (role: RoleDataType) => {
     setEditingRole(role)
 
     try {
@@ -187,7 +187,7 @@ export const RolesPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      render: (_: unknown, record: RoleType) => (
+      render: (_: unknown, record: RoleDataType) => (
         <Space>
           {record.code !== 'super_admin' && (
             <Button

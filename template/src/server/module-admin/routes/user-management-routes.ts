@@ -9,7 +9,7 @@ import {
   UserListSchema,
   UpdateUserRequestSchema,
   CreateUserRequestSchema,
-  SuccessSchema,
+  AdminSuccessSchema,
 } from '@shared/modules/admin'
 
 const getUsersRoute = createRoute({
@@ -82,7 +82,7 @@ const deleteUserRoute = createRoute({
     }),
   },
   responses: {
-    200: successResponse(SuccessSchema, 'User deleted'),
+    200: successResponse(AdminSuccessSchema, 'User deleted'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('User not found'),

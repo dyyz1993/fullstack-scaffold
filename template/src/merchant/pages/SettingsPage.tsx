@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC } from 'react'
 import { Form, Input, Button, Card, Typography, Upload, message } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
@@ -12,7 +11,8 @@ export const SettingsPage: FC = () => {
 
   const handleSave = async (values: unknown) => {
     try {
-      await (apiClient as any).api.merchant.settings.$put({ json: values })
+      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      await apiClient.api.merchant.settings.$put({ json: values })
       message.success('Settings saved successfully')
     } catch {
       message.error('Failed to save settings')

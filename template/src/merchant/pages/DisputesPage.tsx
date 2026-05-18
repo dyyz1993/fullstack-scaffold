@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState, useEffect, useCallback } from 'react'
 import { Table, Tag, Button, Space, Typography, Descriptions } from 'antd'
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
@@ -16,7 +15,8 @@ export const DisputesPage: FC = () => {
   const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await (apiClient as any).api.merchant.disputes.$get()
+      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      const response = await apiClient.api.merchant.disputes.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         setDisputes(result.data)
@@ -35,7 +35,8 @@ export const DisputesPage: FC = () => {
 
   const handleResolve = async (disputeId: string) => {
     try {
-      await (apiClient as any).api.merchant.disputes[':id'].resolve.$post({
+      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      await apiClient.api.merchant.disputes[':id'].resolve.$post({
         param: { id: disputeId },
       })
       fetchDisputes()
@@ -46,7 +47,8 @@ export const DisputesPage: FC = () => {
 
   const handleClose = async (disputeId: string) => {
     try {
-      await (apiClient as any).api.merchant.disputes[':id'].close.$post({
+      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      await apiClient.api.merchant.disputes[':id'].close.$post({
         param: { id: disputeId },
       })
       fetchDisputes()

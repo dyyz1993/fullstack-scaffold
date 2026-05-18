@@ -49,7 +49,7 @@ export const ResolveDisputeSchema = z.object({
 
 export const DisputeListSchema = z.array(DisputeSchema)
 
-export const DeleteResultSchema = z.object({
+export const DisputeDeleteResultSchema = z.object({
   message: z.string(),
 })
 
@@ -59,4 +59,4 @@ export type Dispute = z.infer<typeof DisputeSchema>
 export type CreateDisputeInput = z.infer<typeof CreateDisputeSchema>
 export type UpdateDisputeInput = z.infer<typeof UpdateDisputeSchema>
 export type ResolveDisputeInput = z.infer<typeof ResolveDisputeSchema>
-export type DeleteResult = z.infer<typeof DeleteResultSchema>
+export type DisputeDeleteResult = z.infer<typeof DisputeDeleteResultSchema>

@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 import { apiClient } from '../services/apiClient'
-import type { RoleType, CreateRoleType, UpdateRoleType } from '@shared/modules/role/schemas'
+import type { RoleDataType, CreateRoleType, UpdateRoleType } from '@shared/modules/role/schemas'
 
 interface RoleState {
-  roles: RoleType[]
+  roles: RoleDataType[]
   loading: boolean
   error: string | null
   fetchRoles: () => Promise<void>

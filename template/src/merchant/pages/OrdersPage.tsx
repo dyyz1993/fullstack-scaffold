@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState, useEffect, useCallback } from 'react'
 import { Select, Space, DatePicker, Button } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
@@ -17,7 +16,8 @@ export const OrdersPage: FC = () => {
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await (apiClient as any).api.merchant.orders.$get()
+      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      const response = await apiClient.api.merchant.orders.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         setOrders(result.data)
@@ -33,8 +33,9 @@ export const OrdersPage: FC = () => {
     setStatusFilter(value)
   }
 
-   
-  const handleDateRangeChange = (dates: any) => {
+  const handleDateRangeChange = (
+    dates: [import('dayjs').Dayjs | null, import('dayjs').Dayjs | null] | null
+  ) => {
     setDateRange(dates)
   }
 

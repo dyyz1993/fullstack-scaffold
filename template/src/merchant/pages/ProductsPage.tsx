@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FC, useState, useEffect, useCallback } from 'react'
 import { Table, Button, Space, Tag, Typography } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
@@ -18,7 +17,8 @@ export const ProductsPage: FC = () => {
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await (apiClient as any).api.merchant.products.$get()
+      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      const response = await apiClient.api.merchant.products.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         setProducts(result.data.items)

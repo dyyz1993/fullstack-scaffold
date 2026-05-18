@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
 import type { Merchant, MerchantStats } from '@shared/schemas'
@@ -34,7 +33,7 @@ export const useMerchantStore = create<MerchantState>(set => ({
   checkAuth: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await (apiClient as any).api.merchant.me.$get()
+      const response = await apiClient.api.merchant.me.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         set({ merchant: result.data, isAuthenticated: true })
@@ -52,7 +51,7 @@ export const useMerchantStore = create<MerchantState>(set => ({
   login: async (username: string, password: string) => {
     set({ loading: true, error: null })
     try {
-      const response = await (apiClient as any).api.merchant.login.$post({
+      const response = await apiClient.api.merchant.login.$post({
         json: { username, password },
       })
       const result = await response.json()
@@ -80,7 +79,7 @@ export const useMerchantStore = create<MerchantState>(set => ({
   fetchStats: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await (apiClient as any).api.merchant.stats.$get()
+      const response = await apiClient.api.merchant.stats.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
         set({ stats: result.data })

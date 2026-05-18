@@ -11,7 +11,7 @@ import {
   CreateContentSchema,
   UpdateContentSchema,
   ContentListSchema,
-  DeleteResultSchema,
+  ContentDeleteResultSchema,
 } from '@shared/modules/content'
 import { BusinessError } from '@server/utils/app-error'
 
@@ -101,7 +101,7 @@ const deleteRoute = createRoute({
     params: ContentSchema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(DeleteResultSchema, 'Content deleted'),
+    200: successResponse(ContentDeleteResultSchema, 'Content deleted'),
     404: errorResponse('Content not found'),
   },
 })
