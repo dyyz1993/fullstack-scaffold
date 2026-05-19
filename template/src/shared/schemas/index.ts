@@ -267,4 +267,64 @@ export {
   type ProductQuery,
   type ProductListResponse,
 } from '../modules/merchant'
+export {
+  TicketStatusSchema,
+  TicketPrioritySchema,
+  TicketCategorySchema,
+  TicketReplySchema,
+  TicketSchema,
+  CreateTicketSchema,
+  UpdateTicketSchema,
+  ReplyTicketSchema,
+  TicketListSchema,
+  TicketDeleteResultSchema,
+  type TicketStatus,
+  type TicketPriority,
+  type TicketCategory,
+  type TicketReply,
+  type Ticket,
+  type CreateTicketInput,
+  type UpdateTicketInput,
+  type ReplyTicketInput,
+  type TicketDeleteResult,
+} from '../modules/ticket'
+export {
+  ContentCategorySchema,
+  ContentStatusSchema,
+  ContentSchema,
+  CreateContentSchema,
+  UpdateContentSchema,
+  ContentListSchema,
+  ContentDeleteResultSchema,
+  type ContentCategory,
+  type ContentStatus,
+  type Content,
+  type CreateContentInput,
+  type UpdateContentInput,
+  type ContentDeleteResult,
+} from '../modules/content'
+export {
+  CaptchaResponseSchema,
+  VerifyCaptchaRequestSchema,
+  CaptchaVerifyResponseSchema,
+  type CaptchaResponse,
+  type VerifyCaptchaRequest,
+  type CaptchaVerifyResponse,
+} from '../modules/captcha'
+export {
+  ResourceTypeSchema,
+  ActionTypeSchema,
+  AuditLogSchema,
+  type AuditLogType,
+} from '../modules/audit'
+export {
+  RoleSchema,
+  CreateRoleSchema,
+  UpdateRoleSchema,
+  UpdateRolePermissionsSchema,
+  RoleSuccessSchema,
+  type RoleDataType,
+  type CreateRoleType,
+  type UpdateRoleType,
+} from '../modules/role'
 export type { DeveloperProfile as User } from '../modules/auth'

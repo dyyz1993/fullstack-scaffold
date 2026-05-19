@@ -165,6 +165,173 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[]; hasTypeOnly?: boo
       'type TenantIdResponse',
     ],
   },
+  order: {
+    namedExports: [
+      'OrderStatusSchema',
+      'OrderSchema',
+      'CreateOrderSchema',
+      'UpdateOrderSchema',
+      'OrderListSchema',
+      'OrderQuerySchema',
+      'OrderDeleteResultSchema',
+      'ProcessOrderSchema',
+      'CancelOrderSchema',
+      'RemoveCartItemResponseSchema',
+      'ECommerceProductSchema',
+      'ECommerceOrderStatusSchema',
+      'ECommerceOrderSchema',
+      'ECommerceOrderListSchema',
+      'type OrderStatus',
+      'type Order',
+      'type CreateOrderInput',
+      'type UpdateOrderInput',
+      'type OrderDeleteResult',
+      'type ProcessOrderInput',
+      'type CancelOrderInput',
+      'type OrderQueryInput',
+      'type RemoveCartItemResponse',
+      'type ECommerceProduct',
+      'type ECommerceOrderStatus',
+      'type ECommerceOrder',
+    ],
+  },
+  ticket: {
+    namedExports: [
+      'TicketStatusSchema',
+      'TicketPrioritySchema',
+      'TicketCategorySchema',
+      'TicketReplySchema',
+      'TicketSchema',
+      'CreateTicketSchema',
+      'UpdateTicketSchema',
+      'ReplyTicketSchema',
+      'TicketListSchema',
+      'TicketDeleteResultSchema',
+      'type TicketStatus',
+      'type TicketPriority',
+      'type TicketCategory',
+      'type TicketReply',
+      'type Ticket',
+      'type CreateTicketInput',
+      'type UpdateTicketInput',
+      'type ReplyTicketInput',
+      'type TicketDeleteResult',
+    ],
+  },
+  dispute: {
+    namedExports: [
+      'DisputeTypeSchema',
+      'DisputeStatusSchema',
+      'DisputeSchema',
+      'CreateDisputeSchema',
+      'UpdateDisputeSchema',
+      'ResolveDisputeSchema',
+      'DisputeListSchema',
+      'DisputeDeleteResultSchema',
+      'type DisputeType',
+      'type DisputeStatus',
+      'type Dispute',
+      'type CreateDisputeInput',
+      'type UpdateDisputeInput',
+      'type ResolveDisputeInput',
+      'type DisputeDeleteResult',
+    ],
+  },
+  content: {
+    namedExports: [
+      'ContentCategorySchema',
+      'ContentStatusSchema',
+      'ContentSchema',
+      'CreateContentSchema',
+      'UpdateContentSchema',
+      'ContentListSchema',
+      'ContentDeleteResultSchema',
+      'type ContentCategory',
+      'type ContentStatus',
+      'type Content',
+      'type CreateContentInput',
+      'type UpdateContentInput',
+      'type ContentDeleteResult',
+    ],
+  },
+  captcha: {
+    namedExports: [
+      'CaptchaResponseSchema',
+      'VerifyCaptchaRequestSchema',
+      'CaptchaVerifyResponseSchema',
+      'type CaptchaResponse',
+      'type VerifyCaptchaRequest',
+      'type CaptchaVerifyResponse',
+    ],
+  },
+  dashboard: {
+    namedExports: [
+      'DashboardStatSchema',
+      'RevenueDataSchema',
+      'ActivityStatusSchema',
+      'ActivitySchema',
+      'DashboardResponseSchema',
+      'type DashboardStat',
+      'type RevenueData',
+      'type ActivityStatus',
+      'type Activity',
+      'type DashboardResponse',
+    ],
+  },
+  cart: {
+    namedExports: [
+      'CartItemSchema',
+      'CartSummarySchema',
+      'CartResponseSchema',
+      'AddCartItemSchema',
+      'CartItemIdSchema',
+      'type CartItem',
+      'type CartSummary',
+      'type CartResponse',
+      'type AddCartItemInput',
+    ],
+  },
+  community: {
+    namedExports: [
+      'TopicStatusSchema',
+      'TopicTagSchema',
+      'TopicAuthorSchema',
+      'TopicSchema',
+      'TopicsResponseSchema',
+      'ProfileStatsSchema',
+      'ActivityTypeSchema',
+      'ProfileActivitySchema',
+      'ProfileResponseSchema',
+      'type TopicStatus',
+      'type TopicTag',
+      'type TopicAuthor',
+      'type Topic',
+      'type ProfileStats',
+      'type ActivityType',
+      'type ProfileActivity',
+      'type ProfileResponse',
+    ],
+  },
+  audit: {
+    namedExports: [
+      'ResourceTypeSchema',
+      'ActionTypeSchema',
+      'AuditLogSchema',
+      'type AuditLogType',
+    ],
+  },
+  role: {
+    namedExports: [
+      'RoleSchema',
+      'CreateRoleSchema',
+      'UpdateRoleSchema',
+      'UpdateRolePermissionsSchema',
+      'RoleSuccessSchema',
+      'type RoleDataType',
+      'type CreateRoleType',
+      'type UpdateRoleType',
+    ],
+  },
 }
 
 export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
@@ -181,7 +348,15 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     'plugin',
     'merchant',
     'tenant',
+    'order',
+    'ticket',
+    'dispute',
+    'content',
+    'captcha',
   ]
+
+  // Standalone shared modules (no server module, always included if client exists)
+  const standaloneModules = ['dashboard', 'cart', 'community']
 
   for (const moduleName of moduleOrder) {
     if (!resolved.modules.has(moduleName)) continue
@@ -192,6 +367,35 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     if (!exports) continue
 
     lines.push(`export {\n  ${exports.namedExports.join(',\n  ')},\n} from './${exportKey}'`)
+  }
+
+  // Export additional paths from manifests (e.g., 'role', 'audit' from permission module)
+  const additionalExported = new Set<string>()
+  for (const moduleName of moduleOrder) {
+    if (!resolved.modules.has(moduleName)) continue
+
+    const manifest = resolved.modules.get(moduleName)!
+    if (manifest.sharedSchemas?.additionalPaths) {
+      for (const extra of manifest.sharedSchemas.additionalPaths) {
+        if (additionalExported.has(extra)) continue
+        additionalExported.add(extra)
+
+        const exports = MODULE_EXPORTS[extra]
+        if (!exports) continue
+
+        lines.push(`export {\n  ${exports.namedExports.join(',\n  ')},\n} from './${extra}'`)
+      }
+    }
+  }
+
+  // Standalone modules (no server module backing)
+  if (resolved.hasClient) {
+    for (const moduleName of standaloneModules) {
+      const exports = MODULE_EXPORTS[moduleName]
+      if (!exports) continue
+
+      lines.push(`export {\n  ${exports.namedExports.join(',\n  ')},\n} from './${moduleName}'`)
+    }
   }
 
   return lines.join('\n') + '\n'
