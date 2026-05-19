@@ -77,7 +77,7 @@ describe('Auth Routes', () => {
       const res = await registerUser('newdev', 'newdev@example.com', 'password123')
 
       expect(res.status).toBe(201)
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { token: string; profile: { username: string; email: string; role: string; id: string } } }
       expect(data.success).toBe(true)
       expect(data.data.token).toBeDefined()
       expect(typeof data.data.token).toBe('string')
@@ -89,7 +89,7 @@ describe('Auth Routes', () => {
 
     it('should return a valid JWT token', async () => {
       const res = await registerUser('jwtuser', 'jwt@example.com', 'password123')
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { token: string } }
       expect(data.success).toBe(true)
 
       const decoded = jwt.verify(data.data.token, secretKey) as jwt.JwtPayload
@@ -102,7 +102,7 @@ describe('Auth Routes', () => {
 
     it('should set token expiry to 7 days', async () => {
       const res = await registerUser('expiryuser', 'expiry@example.com', 'password123')
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { token: string } }
 
       const decoded = jwt.verify(data.data.token, secretKey) as jwt.JwtPayload
       const expectedExp = decoded.iat! + 7 * 24 * 60 * 60
@@ -165,7 +165,7 @@ describe('Auth Routes', () => {
 
     it('should return profile with createdAt timestamp', async () => {
       const res = await registerUser('tsuser', 'ts@example.com', 'password123')
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { profile: { createdAt: string } } }
       expect(data.success).toBe(true)
       expect(data.data.profile.createdAt).toBeDefined()
       expect(data.data.profile.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
@@ -179,7 +179,7 @@ describe('Auth Routes', () => {
       const res = await loginUser({ email: 'login@example.com', password: 'password123' })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { token: string; profile: { email: string; username: string } } }
       expect(data.success).toBe(true)
       expect(data.data.token).toBeDefined()
       expect(data.data.profile.email).toBe('login@example.com')
@@ -192,7 +192,7 @@ describe('Auth Routes', () => {
       const res = await loginUser({ account: 'acctuser', password: 'password123' })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { profile: { username: string } } }
       expect(data.success).toBe(true)
       expect(data.data.profile.username).toBe('acctuser')
     })
@@ -203,7 +203,7 @@ describe('Auth Routes', () => {
       const res = await loginUser({ account: 'acctemail@example.com', password: 'password123' })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { profile: { email: string } } }
       expect(data.success).toBe(true)
       expect(data.data.profile.email).toBe('acctemail@example.com')
     })
@@ -216,7 +216,7 @@ describe('Auth Routes', () => {
       })
 
       const res = await loginUser({ email: 'jwtlogin@example.com', password: 'password123' })
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { token: string } }
       expect(data.success).toBe(true)
 
       const decoded = jwt.verify(data.data.token, secretKey) as jwt.JwtPayload
@@ -252,7 +252,7 @@ describe('Auth Routes', () => {
       await insertTestDeveloper({ email: 'safe@example.com', username: 'safeuser' })
 
       const res = await loginUser({ email: 'safe@example.com', password: 'password123' })
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { profile: Record<string, unknown> } }
       expect(data.success).toBe(true)
 
       const profile = data.data.profile as Record<string, unknown>
@@ -269,7 +269,7 @@ describe('Auth Routes', () => {
       const loginRes = await loginUser({ email: 'flow@example.com', password: 'password123' })
       expect(loginRes.status).toBe(200)
 
-      const loginData = await loginRes.json()
+      const loginData = (await loginRes.json()) as { success: boolean; data: { profile: { username: string; email: string } } }
       expect(loginData.success).toBe(true)
       expect(loginData.data.profile.username).toBe('flowuser')
       expect(loginData.data.profile.email).toBe('flow@example.com')
@@ -277,7 +277,7 @@ describe('Auth Routes', () => {
 
     it('should register and verify token contains correct claims', async () => {
       const res = await registerUser('verifyflow', 'verifyflow@example.com', 'password123')
-      const data = await res.json()
+      const data = (await res.json()) as { success: boolean; data: { token: string } }
       expect(data.success).toBe(true)
 
       const decoded = jwt.verify(data.data.token, secretKey) as jwt.JwtPayload
@@ -290,8 +290,8 @@ describe('Auth Routes', () => {
       const res1 = await registerUser('user1', 'user1@example.com', 'password123')
       const res2 = await registerUser('user2', 'user2@example.com', 'password123')
 
-      const data1 = await res1.json()
-      const data2 = await res2.json()
+      const data1 = (await res1.json()) as { success: boolean; data: { profile: { id: string }; token: string } }
+      const data2 = (await res2.json()) as { success: boolean; data: { profile: { id: string }; token: string } }
       expect(data1.success).toBe(true)
       expect(data2.success).toBe(true)
       expect(data1.data.profile.id).not.toBe(data2.data.profile.id)
@@ -300,11 +300,11 @@ describe('Auth Routes', () => {
 
     it('should register, login, and get matching profile data', async () => {
       const regRes = await registerUser('matchuser', 'match@example.com', 'password123')
-      const regData = await regRes.json()
+      const regData = (await regRes.json()) as { success: boolean; data: { profile: { id: string; username: string; email: string } } }
       const regProfile = regData.data.profile
 
       const loginRes = await loginUser({ email: 'match@example.com', password: 'password123' })
-      const loginData = await loginRes.json()
+      const loginData = (await loginRes.json()) as { success: boolean; data: { profile: { id: string; username: string; email: string } } }
       const loginProfile = loginData.data.profile
 
       expect(regProfile.id).toBe(loginProfile.id)
