@@ -149,7 +149,7 @@ describe('Admin Stats Service', () => {
 
       const stats = await statsService.getDashboardStats()
 
-      expect(stats.recentSubmissions.length).toBeLessThanOrEqual(5)
+      expect(stats.recentSubmissions!.length).toBeLessThanOrEqual(5)
     })
 
     it('should return full stats with mixed data', async () => {
