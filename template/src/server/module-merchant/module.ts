@@ -26,6 +26,7 @@ const merchantManifest: ModuleManifest = {
   dbSchemas: {
     files: ['merchants', 'products'],
     hasSeed: true,
+    seed: { serviceFile: 'merchant-service', functionName: 'seedMerchantsIfEmpty' },
   },
 }
 

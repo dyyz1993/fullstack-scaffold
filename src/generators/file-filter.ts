@@ -61,21 +61,13 @@ export function getExcludePatterns(
       }
     }
 
-    if (name === 'notifications') {
-      excludes.push('src/cli/modules/notification')
-    }
-
     if (name === 'todos') {
-      excludes.push('src/cli/modules/todo')
       excludes.push('src/server/__tests__/integration/todos-api.test.ts')
     }
 
-    if (name === 'auth') {
-      excludes.push('src/cli/modules/auth')
-    }
-
-    if (name === 'plugin') {
-      excludes.push('src/cli/modules/plugin')
+    // Exclude CLI module dir when the server module is not in the preset
+    if (manifest.cliModule) {
+      excludes.push(`src/cli/modules/${manifest.cliModule.dir}`)
     }
   }
 

@@ -24,6 +24,7 @@ const tenantManifest: ModuleManifest = {
   dbSchemas: {
     files: ['tenants'],
     hasSeed: true,
+    seed: { serviceFile: 'tenant-service', functionName: 'seedTenantsIfEmpty' },
   },
 }
 

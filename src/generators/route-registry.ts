@@ -1,5 +1,10 @@
 import type { ResolvedPreset } from './template-generator'
 
+export interface StandaloneRoute {
+  localName: string
+  mountPath: string
+}
+
 export function generateRouteRegistry(resolved: ResolvedPreset): string {
   const imports: string[] = [
     `import { OpenAPIHono } from '@hono/zod-openapi'`,
@@ -56,6 +61,8 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
         adminRoutes.push(`  .route('/api', ${localName})`)
       }
     }
+    // Note: standalone routes are NOT included in route-registry.
+    // They are imported and mounted directly by server-app.ts generator.
   }
 
   let content = imports.join('\n') + '\n\n'
@@ -88,4 +95,26 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
   content += `export type AdminApiRoutes = typeof adminApiRoutes\n`
 
   return content
+}
+
+/**
+ * Get standalone route info from resolved preset manifests.
+ * Used by server-app.ts generator to mount standalone routes.
+ */
+export function getStandaloneRoutes(resolved: ResolvedPreset): StandaloneRoute[] {
+  const routes: StandaloneRoute[] = []
+  const usedNames = new Set<string>()
+
+  for (const [name, manifest] of resolved.modules) {
+    if (manifest.routes.standalone) {
+      const { exportName, mountPath } = manifest.routes.standalone
+      const localName = usedNames.has(exportName)
+        ? `${name}${exportName.charAt(0).toUpperCase()}${exportName.slice(1)}`
+        : exportName
+      usedNames.add(localName)
+      routes.push({ localName, mountPath })
+    }
+  }
+
+  return routes
 }

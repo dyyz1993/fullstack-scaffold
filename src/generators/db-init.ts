@@ -1,54 +1,5 @@
 import type { ResolvedPreset } from './template-generator'
 
-interface SeedModule {
-  module: string
-  importLine: string
-  call: string
-}
-
-const SEED_MODULES: SeedModule[] = [
-  {
-    module: 'todos',
-    importLine: '',
-    call: "import('../module-todos/services/todo-service').then(m => m.seedTodosIfEmpty())",
-  },
-  {
-    module: 'order',
-    importLine: '',
-    call: "import('../module-order/services/order-service').then(m => m.seedOrdersIfEmpty())",
-  },
-  {
-    module: 'ticket',
-    importLine: '',
-    call: "import('../module-ticket/services/ticket-service').then(m => m.seedTicketsIfEmpty())",
-  },
-  {
-    module: 'dispute',
-    importLine: '',
-    call: "import('../module-dispute/services/dispute-service').then(m => m.seedDisputesIfEmpty())",
-  },
-  {
-    module: 'content',
-    importLine: '',
-    call: "import('../module-content/services/content-service').then(m => m.seedContentsIfEmpty())",
-  },
-  {
-    module: 'tenant',
-    importLine: '',
-    call: "import('../module-tenant/services/tenant-service').then(m => m.seedTenantsIfEmpty())",
-  },
-  {
-    module: 'plugin',
-    importLine: '',
-    call: "import('../module-plugin/services/plugin-seed-service').then(m => m.seedPluginsIfEmpty())",
-  },
-  {
-    module: 'merchant',
-    importLine: '',
-    call: "import('../module-merchant/services/merchant-service').then(m => m.seedMerchantsIfEmpty())",
-  },
-]
-
 const INITIAL_PERMISSIONS = `const initialPermissions = [
   {
     id: 'perm_user_view',
@@ -397,7 +348,17 @@ const INITIAL_ROLE_PERMISSIONS = `const initialRolePermissions = [
 ]`
 
 export function generateDbInit(resolved: ResolvedPreset): string {
-  const activeSeeds = SEED_MODULES.filter(s => resolved.modules.has(s.module))
+  // Collect seed info from manifests dynamically
+  const activeSeeds: { moduleDir: string; serviceFile: string; functionName: string }[] = []
+  for (const [name, manifest] of resolved.modules) {
+    if (manifest.dbSchemas?.hasSeed && manifest.dbSchemas.seed) {
+      activeSeeds.push({
+        moduleDir: `module-${name}`,
+        serviceFile: manifest.dbSchemas.seed.serviceFile,
+        functionName: manifest.dbSchemas.seed.functionName,
+      })
+    }
+  }
 
   if (!resolved.hasPermission) {
     return generateMinimalDbInit(activeSeeds)
@@ -406,8 +367,12 @@ export function generateDbInit(resolved: ResolvedPreset): string {
   return generateFullDbInit(activeSeeds)
 }
 
-function generateMinimalDbInit(activeSeeds: SeedModule[]): string {
-  const seedCalls = activeSeeds.map(s => `    ${s.call},`).join('\n')
+function generateMinimalDbInit(
+  activeSeeds: { moduleDir: string; serviceFile: string; functionName: string }[]
+): string {
+  const seedCalls = activeSeeds
+    .map(s => `    import('../${s.moduleDir}/services/${s.serviceFile}').then(m => m.${s.functionName}()),`)
+    .join('\n')
 
   const seedBlock =
     activeSeeds.length > 0
@@ -434,8 +399,12 @@ export async function initializeDatabase() {
 `
 }
 
-function generateFullDbInit(activeSeeds: SeedModule[]): string {
-  const seedCalls = activeSeeds.map(s => `    ${s.call},`).join('\n')
+function generateFullDbInit(
+  activeSeeds: { moduleDir: string; serviceFile: string; functionName: string }[]
+): string {
+  const seedCalls = activeSeeds
+    .map(s => `    import('../${s.moduleDir}/services/${s.serviceFile}').then(m => m.${s.functionName}()),`)
+    .join('\n')
 
   const seedBlock =
     activeSeeds.length > 0

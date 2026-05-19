@@ -39,6 +39,7 @@ const contentManifest: ModuleManifest = {
   dbSchemas: {
     files: ['contents'],
     hasSeed: true,
+    seed: { serviceFile: 'content-service', functionName: 'seedContentsIfEmpty' },
   },
 }
 

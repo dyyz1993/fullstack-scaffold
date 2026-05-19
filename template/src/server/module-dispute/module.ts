@@ -24,6 +24,7 @@ const disputeManifest: ModuleManifest = {
   dbSchemas: {
     files: ['disputes'],
     hasSeed: true,
+    seed: { serviceFile: 'dispute-service', functionName: 'seedDisputesIfEmpty' },
   },
 }
 

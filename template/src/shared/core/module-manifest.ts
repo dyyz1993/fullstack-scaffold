@@ -76,6 +76,13 @@ export interface ModuleManifest {
     files: string[]
     /** Whether the module has seed data */
     hasSeed: boolean
+    /** Seed function info (required when hasSeed is true) */
+    seed?: {
+      /** Service file name under module-xxx/services/ (e.g., 'todo-service') */
+      serviceFile: string
+      /** Seed function name (e.g., 'seedTodosIfEmpty') */
+      functionName: string
+    }
   }
 
   /** Required npm dependencies (beyond what core provides) */
@@ -99,6 +106,14 @@ export interface ModuleManifest {
 
   /** Whether this module has WebSocket routes */
   hasWebSocket?: boolean
+
+  /** CLI module mapping — links server module to its CLI command module */
+  cliModule?: {
+    /** CLI module directory name under src/cli/modules/ (e.g., 'todo') */
+    dir: string
+    /** Register function name (e.g., 'registerTodoCommands') */
+    registerFunction: string
+  }
 }
 
 /** Type-safe module registry — maps module name to its manifest */

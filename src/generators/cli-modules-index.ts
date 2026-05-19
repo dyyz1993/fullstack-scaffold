@@ -1,26 +1,15 @@
 import type { ResolvedPreset } from './template-generator'
 
 /**
- * CLI module registry: maps server module names to their CLI module counterparts.
- * When a server module is included in a preset, its CLI commands are auto-registered.
+ * CLI module registry: auto-discovers CLI modules from manifest declarations.
+ * When a server module with `cliModule` field is included in a preset,
+ * its CLI commands are auto-registered.
  *
  * To add CLI support for a new module:
  * 1. Create the CLI module at template/src/cli/modules/{dir}/index.ts
  * 2. Export a `register{Name}Commands(site: SiteInstance)` function
- * 3. Add an entry to CLI_MODULE_MAP below
+ * 3. Add `cliModule: { dir: '...', registerFunction: '...' }` to the module's module.ts manifest
  */
-const CLI_MODULE_MAP: Record<string, { dir: string; registerFunction: string }> = {
-  todos: { dir: 'todo', registerFunction: 'registerTodoCommands' },
-  notifications: {
-    dir: 'notification',
-    registerFunction: 'registerNotificationCommands',
-  },
-  auth: { dir: 'auth', registerFunction: 'registerAuthCommands' },
-  plugin: { dir: 'plugin', registerFunction: 'registerPluginCommands' },
-  // Add new modules below:
-  // order: { dir: 'order', registerFunction: 'registerOrderCommands' },
-  // tenant: { dir: 'tenant', registerFunction: 'registerTenantCommands' },
-}
 
 // Config module is always included (manages base URL, status, etc.)
 const ALWAYS_INCLUDED = {
@@ -32,11 +21,12 @@ export function generateCliModulesIndex(resolved: ResolvedPreset): string {
   const modules: string[] = []
   const registrations: string[] = []
 
-  // Auto-register CLI modules based on resolved server modules
-  for (const [serverModule, config] of Object.entries(CLI_MODULE_MAP)) {
-    if (resolved.modules.has(serverModule)) {
-      modules.push(`import { ${config.registerFunction} } from './${config.dir}'`)
-      registrations.push(`${config.registerFunction}(site)`)
+  // Auto-register CLI modules based on manifest cliModule declarations
+  for (const [, manifest] of resolved.modules) {
+    if (manifest.cliModule) {
+      const { dir, registerFunction } = manifest.cliModule
+      modules.push(`import { ${registerFunction} } from './${dir}'`)
+      registrations.push(`${registerFunction}(site)`)
     }
   }
 

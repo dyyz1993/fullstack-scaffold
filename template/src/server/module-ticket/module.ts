@@ -24,6 +24,7 @@ const ticketManifest: ModuleManifest = {
   dbSchemas: {
     files: ['tickets'],
     hasSeed: true,
+    seed: { serviceFile: 'ticket-service', functionName: 'seedTicketsIfEmpty' },
   },
 }
 
