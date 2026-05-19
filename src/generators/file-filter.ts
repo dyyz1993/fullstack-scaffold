@@ -92,6 +92,7 @@ export function getExcludePatterns(
     excludes.push('src/merchant')
     excludes.push('merchant.html')
     excludes.push('src/server/middleware/tenant-isolation.ts')
+    excludes.push('src/server/middleware/__tests__/tenant-isolation.test.ts')
   }
 
   if (!resolved.hasClient) {
@@ -121,12 +122,14 @@ export function getExcludePatterns(
 
   if (!resolved.hasPermission && !resolved.modules.has('auth')) {
     excludes.push('src/server/utils/permission-utils.ts')
+    excludes.push('src/server/utils/__tests__/permission-utils.test.ts')
     excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
     excludes.push('src/server/utils/__tests__/auth.test.ts')
   } else if (!resolved.hasPermission && resolved.modules.has('auth')) {
     excludes.push('src/server/utils/permission-utils.ts')
+    excludes.push('src/server/utils/__tests__/permission-utils.test.ts')
     excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
