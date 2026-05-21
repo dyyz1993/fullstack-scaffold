@@ -61,7 +61,7 @@ describe('CLI Scaffold - core flow', () => {
   beforeEach(() => {
     tempDir = tmpDir()
     projectDir = path.join(tempDir, 'test-project')
-    const result = runCli(['test-project'], tempDir)
+    const result = runCli(['test-project', '--no-install'], tempDir)
     expect(result.status).toBe(0)
   })
 
@@ -146,7 +146,7 @@ describe('CLI Scaffold - file filtering', () => {
   beforeEach(() => {
     tempDir = tmpDir()
     projectDir = path.join(tempDir, 'filter-test')
-    runCli(['filter-test'], tempDir)
+    runCli(['filter-test', '--no-install'], tempDir)
   })
 
   afterEach(() => {
@@ -196,14 +196,14 @@ describe('CLI Scaffold - edge cases', () => {
   })
 
   test('--current-dir flag creates in current directory', () => {
-    const result = runCli(['--current-dir'], tempDir)
+    const result = runCli(['--current-dir', '--no-install'], tempDir)
     expect(result.status).toBe(0)
     expect(fs.existsSync(path.join(tempDir, 'package.json'))).toBe(true)
   })
 
   test('default project name is my-fullstack-app when no name provided', () => {
     const defaultDir = path.join(tempDir, 'my-fullstack-app')
-    const result = runCli([], tempDir)
+    const result = runCli(['--no-install'], tempDir)
     expect(result.status).toBe(0)
     expect(fs.existsSync(defaultDir)).toBe(true)
     const pkgJson = JSON.parse(fs.readFileSync(path.join(defaultDir, 'package.json'), 'utf-8'))
