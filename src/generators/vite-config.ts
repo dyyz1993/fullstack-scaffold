@@ -6,7 +6,6 @@ export function generateViteConfig(resolved: ResolvedPreset, templateDir: string
   const originalPath = join(templateDir, 'vite.config.ts')
   let content = readFileSync(originalPath, 'utf-8')
 
-  // Build list of entries to remove based on missing modules
   const entriesToRemove: string[] = []
   const aliasesToRemove: string[] = []
 
@@ -22,6 +21,12 @@ export function generateViteConfig(resolved: ResolvedPreset, templateDir: string
     entriesToRemove.push('merchant')
     aliasesToRemove.push('@merchant')
   }
+
+  // antd is used by admin, tenant, and merchant pages — must match package-json.ts logic
+  const hasAntdConsumer =
+    resolved.modules.has('admin') ||
+    resolved.modules.has('tenant') ||
+    resolved.modules.has('merchant')
 
   // Remove rollupOptions input entries: "        name: path.resolve(__dirname, 'name.html'),"
   for (const name of entriesToRemove) {
@@ -41,6 +46,16 @@ export function generateViteConfig(resolved: ResolvedPreset, templateDir: string
       'gm'
     )
     content = content.replace(re, '')
+  }
+
+  // Remove antd-related chunks and warnings when no antd consumer exists
+  if (!hasAntdConsumer) {
+    const antdChunkRe = /^(\s*'vendor-antd':\s*\['antd',\s*'@ant-design\/icons'\],\s*\n)/gm
+    content = content.replace(antdChunkRe, '')
+
+    const onwarnRe =
+      /^\s*\/\/ Suppress antd "use client" directive warnings[^\n]*\n\s*if \(warning\.code === 'MODULE_LEVEL_DIRECTIVE'\) return\n/gm
+    content = content.replace(onwarnRe, '')
   }
 
   return content
