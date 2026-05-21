@@ -85,6 +85,11 @@ export default defineConfig({
           }),
         ],
       },
+      onwarn(warning, defaultHandler) {
+        // Suppress antd "use client" directive warnings (React Server Components marker)
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return
+        defaultHandler(warning)
+      },
     },
   },
   resolve: {

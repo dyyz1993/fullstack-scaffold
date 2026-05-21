@@ -14,6 +14,7 @@ import { registerOrderCommands } from './order'
 import { registerPermissionCommands } from './permission'
 import { registerTenantCommands } from './tenant'
 import { registerTicketCommands } from './ticket'
+import { registerMerchantCommands } from './merchant'
 
 export function registerBuiltinCommands(app: Core) {
   const api = app.loader.getAPI()
@@ -38,6 +39,7 @@ export function registerBuiltinCommands(app: Core) {
   registerPermissionCommands(site)
   registerTenantCommands(site)
   registerTicketCommands(site)
+  registerMerchantCommands(site)
 }
 
 export {
@@ -56,4 +58,5 @@ export {
   registerPermissionCommands,
   registerTenantCommands,
   registerTicketCommands,
+  registerMerchantCommands,
 }
