@@ -1,6 +1,0 @@
-{
-  "success": false,
-  "data": null,
-  "message": "fetch failed",
-  "tips": []
-}

@@ -1,7 +1,0 @@
-{
-  "success": true,
-  "data": {
-    "baseUrl": "http://localhost:3017"
-  },
-  "tips": []
-}
