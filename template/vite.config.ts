@@ -9,11 +9,13 @@ let puppeteerRenderer: typeof import('@prerenderer/renderer-puppeteer').default 
 try {
   const prerenderMod = await import('@prerenderer/rollup-plugin')
   prerender = prerenderMod.default
-  const puppeteerMod = await import('@prerenderer/renderer-puppeteer')
-  puppeteerRenderer = puppeteerMod.default
+  const rendererMod = await import('@prerenderer/renderer-puppeteer')
+  puppeteerRenderer = rendererMod.default
   // Verify Chrome is actually available at runtime
-  const { executablePath } = await import('puppeteer')
-  const chromePath = executablePath()
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore — puppeteer is an optional dependency, may not be installed
+  const pupMod = await import('puppeteer')
+  const chromePath: string = await pupMod.executablePath()
   if (!existsSync(chromePath)) {
     prerender = undefined
     puppeteerRenderer = undefined

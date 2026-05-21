@@ -36,10 +36,17 @@ program
   )
   .option('-o, --output-dir <path>', 'Output directory (defaults to project name)')
   .option('--dry-run', 'Show what would be generated without creating files')
+  .option('--no-install', 'Skip automatic dependency installation')
   .action(
     async (
       projectName = 'my-fullstack-app',
-      options: { currentDir?: boolean; preset?: string; outputDir?: string; dryRun?: boolean }
+      options: {
+        currentDir?: boolean
+        preset?: string
+        outputDir?: string
+        dryRun?: boolean
+        install?: boolean
+      }
     ) => {
       console.log('')
       console.log(chalk.cyan.bold('  ╔══════════════════════════════════════════╗'))
@@ -73,6 +80,7 @@ program
           preset,
           outputDir: options.outputDir,
           dryRun: options.dryRun ?? false,
+          install: options.install,
         })
       } catch (error) {
         if (error instanceof ScaffoldError) {

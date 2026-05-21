@@ -26,6 +26,8 @@ const ticketManifest: ModuleManifest = {
     hasSeed: true,
     seed: { serviceFile: 'ticket-service', functionName: 'seedTicketsIfEmpty' },
   },
+
+  cliModule: { dir: 'ticket', registerFunction: 'registerTicketCommands' },
 }
 
 export default ticketManifest

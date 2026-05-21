@@ -28,6 +28,8 @@ const merchantManifest: ModuleManifest = {
     hasSeed: true,
     seed: { serviceFile: 'merchant-service', functionName: 'seedMerchantsIfEmpty' },
   },
+
+  cliModule: { dir: 'merchant', registerFunction: 'registerMerchantCommands' },
 }
 
 export default merchantManifest

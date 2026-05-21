@@ -26,6 +26,8 @@ const tenantManifest: ModuleManifest = {
     hasSeed: true,
     seed: { serviceFile: 'tenant-service', functionName: 'seedTenantsIfEmpty' },
   },
+
+  cliModule: { dir: 'tenant', registerFunction: 'registerTenantCommands' },
 }
 
 export default tenantManifest

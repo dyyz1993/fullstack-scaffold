@@ -65,7 +65,7 @@ describe('E2E: Scaffold → Install → Verify', () => {
 
   test('step 1: scaffolds a new project', { timeout: 60_000 }, () => {
     fs.mkdirSync(tmpDir, { recursive: true })
-    run(`npx tsx "${CLI_ENTRY}" ${projectName}`, tmpDir, 60_000)
+    run(`npx tsx "${CLI_ENTRY}" ${projectName} --no-install`, tmpDir, 60_000)
     expect(fs.existsSync(projectPath)).toBe(true)
     expect(fs.existsSync(path.join(projectPath, 'package.json'))).toBe(true)
     expect(fs.existsSync(path.join(projectPath, 'tsconfig.json'))).toBe(true)
@@ -74,7 +74,13 @@ describe('E2E: Scaffold → Install → Verify', () => {
 
   test('step 2: installs dependencies', { timeout: 300_000 }, () => {
     expect(fs.existsSync(projectPath)).toBe(true)
-    run('npm install', projectPath, 300_000)
+    run('npm install --legacy-peer-deps', projectPath, 300_000)
+    // Apply patches (TypeScript, Hono, etc.)
+    try {
+      run('npx patch-package', projectPath, 60_000)
+    } catch {
+      // patch-package failure is non-blocking
+    }
     expect(fs.existsSync(path.join(projectPath, 'node_modules'))).toBe(true)
   })
 

@@ -313,12 +313,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[]; hasTypeOnly?: boo
     ],
   },
   audit: {
-    namedExports: [
-      'ResourceTypeSchema',
-      'ActionTypeSchema',
-      'AuditLogSchema',
-      'type AuditLogType',
-    ],
+    namedExports: ['ResourceTypeSchema', 'ActionTypeSchema', 'AuditLogSchema', 'type AuditLogType'],
   },
   role: {
     namedExports: [
@@ -355,8 +350,12 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     'captcha',
   ]
 
-  // Standalone shared modules (no server module, always included if client exists)
-  const standaloneModules = ['dashboard', 'cart', 'community']
+  // Standalone shared modules: only include when preset has pages that use them
+  const STANDALONE_SHARED_MODULES: Record<string, string[]> = {
+    cart: ['CartPage.tsx'],
+    community: ['TopicsPage.tsx'],
+    dashboard: ['DashboardPage.tsx'],
+  }
 
   for (const moduleName of moduleOrder) {
     if (!resolved.modules.has(moduleName)) continue
@@ -388,14 +387,18 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     }
   }
 
-  // Standalone modules (no server module backing)
-  if (resolved.hasClient) {
-    for (const moduleName of standaloneModules) {
-      const exports = MODULE_EXPORTS[moduleName]
-      if (!exports) continue
+  // Standalone modules: include only when a module in the preset
+  // declares client pages that use their schemas
+  for (const [moduleName, requiredPages] of Object.entries(STANDALONE_SHARED_MODULES)) {
+    const hasRelevantPage = [...resolved.modules.values()].some(
+      m => m.clientPages?.some(p => requiredPages.includes(p.name + '.tsx')) ?? false
+    )
+    if (!hasRelevantPage) continue
 
-      lines.push(`export {\n  ${exports.namedExports.join(',\n  ')},\n} from './${moduleName}'`)
-    }
+    const exports = MODULE_EXPORTS[moduleName]
+    if (!exports) continue
+
+    lines.push(`export {\n  ${exports.namedExports.join(',\n  ')},\n} from './${moduleName}'`)
   }
 
   return lines.join('\n') + '\n'

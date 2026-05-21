@@ -26,6 +26,8 @@ const disputeManifest: ModuleManifest = {
     hasSeed: true,
     seed: { serviceFile: 'dispute-service', functionName: 'seedDisputesIfEmpty' },
   },
+
+  cliModule: { dir: 'dispute', registerFunction: 'registerDisputeCommands' },
 }
 
 export default disputeManifest

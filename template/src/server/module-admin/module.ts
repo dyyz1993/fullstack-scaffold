@@ -43,6 +43,8 @@ const adminManifest: ModuleManifest = {
   ],
 
   hasSSE: true,
+
+  cliModule: { dir: 'admin', registerFunction: 'registerAdminCommands' },
 }
 
 export default adminManifest

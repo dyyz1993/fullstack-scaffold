@@ -41,6 +41,8 @@ const orderManifest: ModuleManifest = {
     hasSeed: true,
     seed: { serviceFile: 'order-service', functionName: 'seedOrdersIfEmpty' },
   },
+
+  cliModule: { dir: 'order', registerFunction: 'registerOrderCommands' },
 }
 
 export default orderManifest
