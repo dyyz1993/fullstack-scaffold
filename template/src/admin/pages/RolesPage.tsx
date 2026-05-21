@@ -28,12 +28,14 @@ import { PermissionConfigEditor } from '../components/PermissionConfigEditor'
 import { PermissionTree } from '../components/PermissionTree'
 import { apiClient } from '../services/apiClient'
 import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
+import { useLanguage } from '../i18n/useLanguage'
 
 type RoleFormValues = Pick<CreateRoleType, 'code' | 'name' | 'label' | 'description'> & {
   isActive?: boolean | null
 }
 
 export const RolesPage: React.FC = () => {
+  const { t } = useLanguage()
   const { roles, loading, fetchRoles, createRole, updateRole, deleteRole, updateRolePermissions } =
     useRoleStore()
   const { permissions } = useConfig()
@@ -70,7 +72,7 @@ export const RolesPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     const success = await deleteRole(id)
     if (success) {
-      message.success('角色删除成功')
+      message.success(t('roles.deleted'))
     }
   }
 
@@ -103,13 +105,13 @@ export const RolesPage: React.FC = () => {
       if (editingRole) {
         const success = await updateRole(editingRole.id, values)
         if (success) {
-          message.success('角色更新成功')
+          message.success(t('roles.updated'))
           setModalVisible(false)
         }
       } else {
         const success = await createRole(values)
         if (success) {
-          message.success('角色创建成功')
+          message.success(t('roles.created'))
           setModalVisible(false)
         }
       }
@@ -124,10 +126,10 @@ export const RolesPage: React.FC = () => {
     const validation = validatePermissionDependencies(selectedPermissions)
     if (!validation.valid) {
       Modal.error({
-        title: '权限依赖校验失败',
+        title: t('roles.permissionValidationFailed'),
         content: (
           <div>
-            <p>以下权限配置存在问题：</p>
+            <p>{t('roles.permissionValidationErrors')}</p>
             <ul>
               {validation.errors.map((error, index) => (
                 <li key={index}>{error}</li>
@@ -141,7 +143,7 @@ export const RolesPage: React.FC = () => {
 
     const success = await updateRolePermissions(editingRole.id, selectedPermissions)
     if (success) {
-      message.success('权限更新成功')
+      message.success(t('roles.permissionUpdated'))
       setPermissionModalVisible(false)
       await refreshPermissions()
     }
@@ -149,43 +151,47 @@ export const RolesPage: React.FC = () => {
 
   const columns = [
     {
-      title: '角色代码',
+      title: t('roles.roleCode'),
       dataIndex: 'code',
       key: 'code',
     },
     {
-      title: '角色名称',
+      title: t('roles.roleName'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: '显示名称',
+      title: t('roles.displayName'),
       dataIndex: 'label',
       key: 'label',
     },
     {
-      title: '描述',
+      title: t('roles.description'),
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: '系统角色',
+      title: t('roles.isSystem'),
       dataIndex: 'isSystem',
       key: 'isSystem',
       render: (isSystem: boolean) => (
-        <Tag color={isSystem ? 'blue' : 'default'}>{isSystem ? '是' : '否'}</Tag>
+        <Tag color={isSystem ? 'blue' : 'default'}>
+          {isSystem ? t('common.yes') : t('common.no')}
+        </Tag>
       ),
     },
     {
-      title: '状态',
+      title: t('common.status'),
       dataIndex: 'isActive',
       key: 'isActive',
       render: (isActive: boolean) => (
-        <Tag color={isActive ? 'green' : 'red'}>{isActive ? '启用' : '禁用'}</Tag>
+        <Tag color={isActive ? 'green' : 'red'}>
+          {isActive ? t('common.enabled') : t('common.disabled')}
+        </Tag>
       ),
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'action',
       render: (_: unknown, record: RoleDataType) => (
         <Space>
@@ -195,21 +201,21 @@ export const RolesPage: React.FC = () => {
               icon={<KeyOutlined />}
               onClick={() => handleManagePermissions(record)}
             >
-              权限
+              {t('roles.permissions')}
             </Button>
           )}
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
+            {t('common.edit')}
           </Button>
           {!record.isSystem && (
             <Popconfirm
-              title="确定要删除这个角色吗？"
+              title={t('roles.deleteConfirm')}
               onConfirm={() => handleDelete(record.id)}
-              okText="确定"
-              cancelText="取消"
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
             >
               <Button type="link" danger icon={<DeleteOutlined />}>
-                删除
+                {t('common.delete')}
               </Button>
             </Popconfirm>
           )}
@@ -221,67 +227,70 @@ export const RolesPage: React.FC = () => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-        <h1>角色管理</h1>
+        <h1>{t('roles.title')}</h1>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          创建角色
+          {t('roles.createRole')}
         </Button>
       </div>
 
       <Table columns={columns} dataSource={roles} rowKey="id" loading={loading} />
 
       <Modal
-        title={editingRole ? '编辑角色' : '创建角色'}
+        title={editingRole ? t('roles.editRole') : t('roles.createRole')}
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
-        okText="确定"
-        cancelText="取消"
+        okText={t('common.confirm')}
+        cancelText={t('common.cancel')}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="code"
-            label="角色代码"
-            rules={[{ required: true, message: '请输入角色代码' }]}
+            label={t('roles.roleCode')}
+            rules={[{ required: true, message: t('roles.roleCodeRequired') }]}
           >
-            <Input disabled={!!editingRole} placeholder="请输入角色代码，如：manager" />
+            <Input disabled={!!editingRole} placeholder={t('roles.roleCodePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="name"
-            label="角色名称"
-            rules={[{ required: true, message: '请输入角色名称' }]}
+            label={t('roles.roleName')}
+            rules={[{ required: true, message: t('roles.roleNameRequired') }]}
           >
-            <Input placeholder="请输入角色名称" />
+            <Input placeholder={t('roles.roleNamePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="label"
-            label="显示名称"
-            rules={[{ required: true, message: '请输入显示名称' }]}
+            label={t('roles.displayName')}
+            rules={[{ required: true, message: t('roles.displayNameRequired') }]}
           >
-            <Input placeholder="请输入显示名称" />
+            <Input placeholder={t('roles.displayNamePlaceholder')} />
           </Form.Item>
 
-          <Form.Item name="description" label="描述">
-            <Input.TextArea placeholder="请输入角色描述" />
+          <Form.Item name="description" label={t('roles.description')}>
+            <Input.TextArea placeholder={t('roles.descriptionPlaceholder')} />
           </Form.Item>
 
           {editingRole && (
-            <Form.Item name="isActive" label="状态" valuePropName="checked">
-              <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+            <Form.Item name="isActive" label={t('common.status')} valuePropName="checked">
+              <Switch
+                checkedChildren={t('common.enabled')}
+                unCheckedChildren={t('common.disabled')}
+              />
             </Form.Item>
           )}
         </Form>
       </Modal>
 
       <Modal
-        title={`管理角色权限 - ${editingRole?.label || ''}`}
+        title={t('roles.managePermissions', { name: editingRole?.label || '' })}
         open={permissionModalVisible}
         onOk={handlePermissionSubmit}
         onCancel={() => setPermissionModalVisible(false)}
         width={900}
-        okText="保存"
-        cancelText="取消"
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
       >
         <Tabs
           defaultActiveKey="tree"
@@ -291,7 +300,7 @@ export const RolesPage: React.FC = () => {
               label: (
                 <span>
                   <ApartmentOutlined />
-                  树状选择
+                  {t('roles.treeView')}
                 </span>
               ),
               children: (
@@ -308,7 +317,7 @@ export const RolesPage: React.FC = () => {
               label: (
                 <span>
                   <CodeOutlined />
-                  JSON编辑
+                  {t('roles.jsonView')}
                 </span>
               ),
               children: (

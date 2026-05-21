@@ -7,79 +7,81 @@ import {
   RocketOutlined,
 } from '@ant-design/icons'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useLanguage } from '../i18n/useLanguage'
 
 interface SidebarProps {
   collapsed: boolean
   onCollapse: (collapsed: boolean) => void
 }
 
-const MENU_ITEMS = [
-  {
-    key: 'dashboard',
-    icon: <DashboardOutlined />,
-    label: <NavLink to="/dashboard">Dashboard</NavLink>,
-  },
-  {
-    key: 'content',
-    icon: <FileTextOutlined />,
-    label: 'Content Management',
-    children: [
-      {
-        key: 'content-list',
-        label: <NavLink to="/content">Content List</NavLink>,
-      },
-      {
-        key: 'categories',
-        label: <NavLink to="/categories">Categories</NavLink>,
-      },
-    ],
-  },
-  {
-    key: 'users-orders',
-    icon: <TeamOutlined />,
-    label: 'Users & Orders',
-    children: [
-      {
-        key: 'users',
-        label: <NavLink to="/users">Users</NavLink>,
-      },
-      {
-        key: 'orders',
-        label: <NavLink to="/orders">Orders</NavLink>,
-      },
-      {
-        key: 'tickets',
-        label: <NavLink to="/tickets">Tickets</NavLink>,
-      },
-      {
-        key: 'disputes',
-        label: <NavLink to="/disputes">Disputes</NavLink>,
-      },
-    ],
-  },
-  {
-    key: 'system',
-    icon: <SettingOutlined />,
-    label: 'System',
-    children: [
-      {
-        key: 'roles',
-        label: <NavLink to="/roles">Roles & Permissions</NavLink>,
-      },
-      {
-        key: 'system-settings',
-        label: <NavLink to="/settings">Settings</NavLink>,
-      },
-      {
-        key: 'logs',
-        label: <NavLink to="/system-logs">System Logs</NavLink>,
-      },
-    ],
-  },
-]
-
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
+  const { t } = useLanguage()
   const location = useLocation()
+
+  const MENU_ITEMS = [
+    {
+      key: 'dashboard',
+      icon: <DashboardOutlined />,
+      label: <NavLink to="/dashboard">{t('sidebar.dashboard')}</NavLink>,
+    },
+    {
+      key: 'content',
+      icon: <FileTextOutlined />,
+      label: t('sidebar.content'),
+      children: [
+        {
+          key: 'content-list',
+          label: <NavLink to="/content">{t('sidebar.contentList')}</NavLink>,
+        },
+        {
+          key: 'categories',
+          label: <NavLink to="/categories">{t('sidebar.categories')}</NavLink>,
+        },
+      ],
+    },
+    {
+      key: 'users-orders',
+      icon: <TeamOutlined />,
+      label: t('sidebar.usersOrders'),
+      children: [
+        {
+          key: 'users',
+          label: <NavLink to="/users">{t('sidebar.users')}</NavLink>,
+        },
+        {
+          key: 'orders',
+          label: <NavLink to="/orders">{t('sidebar.orders')}</NavLink>,
+        },
+        {
+          key: 'tickets',
+          label: <NavLink to="/tickets">{t('sidebar.tickets')}</NavLink>,
+        },
+        {
+          key: 'disputes',
+          label: <NavLink to="/disputes">{t('sidebar.disputes')}</NavLink>,
+        },
+      ],
+    },
+    {
+      key: 'system',
+      icon: <SettingOutlined />,
+      label: t('sidebar.system'),
+      children: [
+        {
+          key: 'roles',
+          label: <NavLink to="/system/roles">{t('sidebar.roles')}</NavLink>,
+        },
+        {
+          key: 'system-settings',
+          label: <NavLink to="/system/settings">{t('sidebar.settings')}</NavLink>,
+        },
+        {
+          key: 'logs',
+          label: <NavLink to="/system/logs">{t('sidebar.logs')}</NavLink>,
+        },
+      ],
+    },
+  ]
 
   const getSelectedKey = () => {
     const path = location.pathname
@@ -90,9 +92,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
     if (path.startsWith('/orders')) return 'orders'
     if (path.startsWith('/tickets')) return 'tickets'
     if (path.startsWith('/disputes')) return 'disputes'
-    if (path.startsWith('/roles')) return 'roles'
-    if (path.startsWith('/settings') || path === '/settings') return 'system-settings'
-    if (path.startsWith('/system-logs')) return 'logs'
+    if (path.startsWith('/system/roles')) return 'roles'
+    if (path.startsWith('/system/settings')) return 'system-settings'
+    if (path.startsWith('/system/logs')) return 'logs'
     return 'dashboard'
   }
 

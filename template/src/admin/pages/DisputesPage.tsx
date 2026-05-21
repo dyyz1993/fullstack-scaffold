@@ -1,44 +1,48 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Card, Tag, Button, Space, Modal, message, Descriptions } from 'antd'
 import { Eye, AlertTriangle, CheckCircle } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Dispute } from '@shared/modules/dispute'
+import { useLanguage } from '../i18n/useLanguage'
 
-const TYPE_LABELS = {
-  refund: '退款争议',
-  product_quality: '商品质量',
-  service_quality: '服务质量',
-  delivery: '配送问题',
-  other: '其他',
-}
-
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<string, string> = {
   pending: 'orange',
   investigating: 'blue',
   resolved: 'green',
   rejected: 'red',
 }
 
-const STATUS_LABELS = {
-  pending: '待处理',
-  investigating: '调查中',
-  resolved: '已解决',
-  rejected: '已驳回',
-}
-
 export const DisputesPage: React.FC = () => {
+  const { t, formatDate } = useLanguage()
   const [disputes, setDisputes] = useState<Dispute[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
 
-  useEffect(() => {
-    fetchDisputes()
-  }, [])
+  const getTypeLabel = (type: string) => {
+    const map: Record<string, string> = {
+      refund: t('disputes.typeRefund'),
+      product_quality: t('disputes.typeProductQuality'),
+      service_quality: t('disputes.typeServiceQuality'),
+      delivery: t('disputes.typeDelivery'),
+      other: t('disputes.typeOther'),
+    }
+    return map[type] || type
+  }
 
-  const fetchDisputes = async () => {
+  const getStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      pending: t('disputes.statusPending'),
+      investigating: t('disputes.statusInvestigating'),
+      resolved: t('disputes.statusResolved'),
+      rejected: t('disputes.statusRejected'),
+    }
+    return map[status] || status
+  }
+
+  const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
       const response = await apiClient.api.disputes.$get({ query: {} })
@@ -46,22 +50,26 @@ export const DisputesPage: React.FC = () => {
       if (result.success) {
         setDisputes(result.data)
       } else {
-        message.error(result.error || 'Failed to load disputes')
+        message.error(result.error || t('disputes.loadFailed'))
       }
     } catch {
-      message.error('获取争议列表失败')
+      message.error(t('disputes.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    fetchDisputes()
+  }, [fetchDisputes])
 
   const handleResolve = (dispute: Dispute) => {
     Modal.confirm({
-      title: '解决争议',
+      title: t('disputes.resolveDispute'),
       content: (
         <div>
-          <p>确定要解决这个争议吗？</p>
-          <p>金额：¥{dispute.amount.toFixed(2)}</p>
+          <p>{t('disputes.confirmResolve')}</p>
+          <p>¥{dispute.amount.toFixed(2)}</p>
         </div>
       ),
       onOk: async () => {
@@ -75,11 +83,11 @@ export const DisputesPage: React.FC = () => {
           })
           const result = await response.json()
           if (result.success) {
-            message.success('争议已解决')
+            message.success(t('disputes.disputeResolved'))
             fetchDisputes()
           }
         } catch {
-          message.error('解决争议失败')
+          message.error(t('disputes.resolveFailed'))
         }
       },
     })
@@ -92,18 +100,18 @@ export const DisputesPage: React.FC = () => {
 
   const columns = [
     {
-      title: '争议编号',
+      title: t('disputes.disputeNo'),
       dataIndex: 'disputeNo',
       key: 'disputeNo',
       render: (text: string) => <code className="text-sm">{text}</code>,
     },
     {
-      title: '订单号',
+      title: t('disputes.orderNo'),
       dataIndex: 'orderNo',
       key: 'orderNo',
     },
     {
-      title: '客户',
+      title: t('disputes.customer'),
       key: 'customer',
       render: (_: unknown, record: Dispute) => (
         <div>
@@ -113,13 +121,13 @@ export const DisputesPage: React.FC = () => {
       ),
     },
     {
-      title: '类型',
+      title: t('disputes.type'),
       dataIndex: 'type',
       key: 'type',
-      render: (type: keyof typeof TYPE_LABELS) => TYPE_LABELS[type],
+      render: (type: string) => getTypeLabel(type),
     },
     {
-      title: '金额',
+      title: t('disputes.amount'),
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => (
@@ -127,21 +135,19 @@ export const DisputesPage: React.FC = () => {
       ),
     },
     {
-      title: '状态',
+      title: t('common.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status: keyof typeof STATUS_COLORS) => (
-        <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
-      ),
+      render: (status: string) => <Tag color={STATUS_COLORS[status]}>{getStatusLabel(status)}</Tag>,
     },
     {
-      title: '创建时间',
+      title: t('common.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       render: (_: unknown, record: Dispute) => (
         <Space>
@@ -151,7 +157,7 @@ export const DisputesPage: React.FC = () => {
             icon={<Eye className="w-4 h-4" />}
             onClick={() => showDetail(record)}
           >
-            查看
+            {t('common.view')}
           </Button>
           <PermissionGuard permission={Permission.TICKET_CLOSE}>
             {(record.status === 'pending' || record.status === 'investigating') && (
@@ -161,7 +167,7 @@ export const DisputesPage: React.FC = () => {
                 icon={<CheckCircle className="w-4 h-4" />}
                 onClick={() => handleResolve(record)}
               >
-                解决
+                {t('disputes.resolve')}
               </Button>
             )}
           </PermissionGuard>
@@ -174,17 +180,17 @@ export const DisputesPage: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">争议处理</h1>
-          <p className="text-gray-600 mt-1">处理订单争议和客户投诉</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('disputes.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('disputes.subtitle')}</p>
         </div>
-        <Button onClick={fetchDisputes}>刷新</Button>
+        <Button onClick={fetchDisputes}>{t('common.refresh')}</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">总争议</div>
+              <div className="text-sm text-gray-500">{t('disputes.totalDisputes')}</div>
               <div className="text-2xl font-bold">{disputes.length}</div>
             </div>
             <AlertTriangle className="w-8 h-8 text-orange-500" />
@@ -193,7 +199,7 @@ export const DisputesPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">待处理</div>
+              <div className="text-sm text-gray-500">{t('disputes.pending')}</div>
               <div className="text-2xl font-bold text-orange-500">
                 {disputes.filter(d => d.status === 'pending').length}
               </div>
@@ -204,7 +210,7 @@ export const DisputesPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">已解决</div>
+              <div className="text-sm text-gray-500">{t('disputes.resolved')}</div>
               <div className="text-2xl font-bold text-green-500">
                 {disputes.filter(d => d.status === 'resolved').length}
               </div>
@@ -225,7 +231,7 @@ export const DisputesPage: React.FC = () => {
       </Card>
 
       <Modal
-        title="争议详情"
+        title={t('disputes.detail')}
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
         footer={null}
@@ -233,27 +239,35 @@ export const DisputesPage: React.FC = () => {
       >
         {selectedDispute && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="争议编号">
+            <Descriptions.Item label={t('disputes.disputeNo')}>
               <code>{selectedDispute.disputeNo}</code>
             </Descriptions.Item>
-            <Descriptions.Item label="订单号">{selectedDispute.orderNo}</Descriptions.Item>
-            <Descriptions.Item label="客户">
+            <Descriptions.Item label={t('disputes.orderNo')}>
+              {selectedDispute.orderNo}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('disputes.customer')}>
               {selectedDispute.customerName} ({selectedDispute.customerEmail})
             </Descriptions.Item>
-            <Descriptions.Item label="类型">{TYPE_LABELS[selectedDispute.type]}</Descriptions.Item>
-            <Descriptions.Item label="金额">
+            <Descriptions.Item label={t('disputes.type')}>
+              {getTypeLabel(selectedDispute.type)}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('disputes.amount')}>
               <span className="text-lg font-bold text-red-600">
                 ¥{selectedDispute.amount.toFixed(2)}
               </span>
             </Descriptions.Item>
-            <Descriptions.Item label="状态">
+            <Descriptions.Item label={t('common.status')}>
               <Tag color={STATUS_COLORS[selectedDispute.status]}>
-                {STATUS_LABELS[selectedDispute.status]}
+                {getStatusLabel(selectedDispute.status)}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="描述">{selectedDispute.description}</Descriptions.Item>
+            <Descriptions.Item label={t('tickets.description')}>
+              {selectedDispute.description}
+            </Descriptions.Item>
             {selectedDispute.resolution && (
-              <Descriptions.Item label="解决方案">{selectedDispute.resolution}</Descriptions.Item>
+              <Descriptions.Item label={t('disputes.resolution')}>
+                {selectedDispute.resolution}
+              </Descriptions.Item>
             )}
           </Descriptions>
         )}

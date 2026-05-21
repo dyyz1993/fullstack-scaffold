@@ -10,10 +10,15 @@ import { loadPresets } from './generators/template-generator.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const rootDir =
-  __dirname.endsWith(path.join('src')) || __dirname.endsWith(path.join('dist'))
-    ? path.resolve(__dirname, '..')
-    : path.resolve(__dirname, '..', '..')
+// __dirname is:
+//   - dev: .../create-biomimic-app/src
+//   - built: .../create-biomimic-app/dist/cli
+// Both should resolve rootDir to the package root (where package.json + template/ live)
+const rootDir = __dirname.endsWith(path.join('src'))
+  ? path.resolve(__dirname, '..')
+  : __dirname.endsWith(path.join('dist', 'cli'))
+  ? path.resolve(__dirname, '..', '..')
+  : path.resolve(__dirname, '..', '..')
 
 const packageJson = JSON.parse(readFileSync(path.join(rootDir, 'package.json'), 'utf-8'))
 
@@ -27,7 +32,7 @@ program
   .option('-c, --current-dir', 'Create project in current directory')
   .option(
     '-p, --preset <preset>',
-    'Template preset to use (fullstack-admin, todo-app, cli-only, minimal)'
+    'Template preset to use (fullstack-admin, todo-app, ecommerce, xbrowser-marketplace, forum, cli-only, minimal, saas)'
   )
   .option('-o, --output-dir <path>', 'Output directory (defaults to project name)')
   .option('--dry-run', 'Show what would be generated without creating files')
@@ -46,7 +51,7 @@ program
       let preset = options.preset
 
       if (!preset && process.stdin.isTTY) {
-        const templateDir = path.join(__dirname, '../template')
+        const templateDir = path.join(rootDir, 'template')
         const presets = await loadPresets(templateDir)
         preset = await select({
           message: 'Choose a template preset:',
@@ -83,7 +88,7 @@ program
   .command('presets')
   .description('List available template presets')
   .action(async () => {
-    const templateDir = path.join(__dirname, '../template')
+    const templateDir = path.join(rootDir, 'template')
     const presets = await loadPresets(templateDir)
     console.log(chalk.cyan('\nAvailable presets:\n'))
     for (const preset of presets) {

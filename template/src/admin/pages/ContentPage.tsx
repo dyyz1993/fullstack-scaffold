@@ -1,43 +1,47 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Card, Tag, Button, Space, Modal, Form, Input, Select, message } from 'antd'
 import { Plus, Edit, Delete } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Content, CreateContentInput } from '@shared/modules/content'
+import { useLanguage } from '../i18n/useLanguage'
 
-const CATEGORY_LABELS = {
-  article: '文章',
-  announcement: '公告',
-  tutorial: '教程',
-  news: '新闻',
-  policy: '政策',
-}
-
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<string, string> = {
   draft: 'default',
   published: 'success',
   archived: 'warning',
 }
 
-const STATUS_LABELS = {
-  draft: '草稿',
-  published: '已发布',
-  archived: '已归档',
-}
-
 export const ContentPage: React.FC = () => {
+  const { t, formatDate } = useLanguage()
   const [contents, setContents] = useState<Content[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [form] = Form.useForm<CreateContentInput>()
 
-  useEffect(() => {
-    fetchContents()
-  }, [])
+  const getCategoryLabel = (category: string) => {
+    const map: Record<string, string> = {
+      article: t('content.catArticle'),
+      announcement: t('content.catAnnouncement'),
+      tutorial: t('content.catTutorial'),
+      news: t('content.catNews'),
+      policy: t('content.catPolicy'),
+    }
+    return map[category] || category
+  }
 
-  const fetchContents = async () => {
+  const getStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      draft: t('content.statusDraft'),
+      published: t('content.statusPublished'),
+      archived: t('content.statusArchived'),
+    }
+    return map[status] || status
+  }
+
+  const fetchContents = useCallback(async () => {
     setLoading(true)
     try {
       const response = await apiClient.api.contents.$get({ query: {} })
@@ -45,14 +49,18 @@ export const ContentPage: React.FC = () => {
       if (result.success) {
         setContents(result.data)
       } else {
-        message.error('Failed to load content')
+        message.error(t('content.loadFailed'))
       }
     } catch {
-      message.error('获取内容列表失败')
+      message.error(t('content.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    fetchContents()
+  }, [fetchContents])
 
   const handleCreate = () => {
     setEditingContent(null)
@@ -68,8 +76,8 @@ export const ContentPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这个内容吗？',
+      title: t('content.confirmDelete'),
+      content: t('content.confirmDeleteContent'),
       onOk: async () => {
         try {
           const response = await apiClient.api.contents[':id'].$delete({
@@ -77,11 +85,11 @@ export const ContentPage: React.FC = () => {
           })
           const result = await response.json()
           if (result.success) {
-            message.success('内容已删除')
+            message.success(t('content.deleted'))
             fetchContents()
           }
         } catch {
-          message.error('删除失败')
+          message.error(t('content.deleteFailed'))
         }
       },
     })
@@ -98,7 +106,7 @@ export const ContentPage: React.FC = () => {
         })
         const result = await response.json()
         if (result.success) {
-          message.success('内容已更新')
+          message.success(t('content.updated'))
           setModalVisible(false)
           fetchContents()
         }
@@ -108,43 +116,41 @@ export const ContentPage: React.FC = () => {
         })
         const result = await response.json()
         if (result.success) {
-          message.success('内容已创建')
+          message.success(t('content.created'))
           setModalVisible(false)
           fetchContents()
         }
       }
     } catch {
-      message.error('操作失败')
+      message.error(t('common.error'))
     }
   }
 
   const columns = [
     {
-      title: '标题',
+      title: t('content.titleCol'),
       dataIndex: 'title',
       key: 'title',
     },
     {
-      title: '分类',
+      title: t('content.category'),
       dataIndex: 'category',
       key: 'category',
-      render: (category: keyof typeof CATEGORY_LABELS) => <Tag>{CATEGORY_LABELS[category]}</Tag>,
+      render: (category: string) => <Tag>{getCategoryLabel(category)}</Tag>,
     },
     {
-      title: '状态',
+      title: t('common.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status: keyof typeof STATUS_COLORS) => (
-        <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
-      ),
+      render: (status: string) => <Tag color={STATUS_COLORS[status]}>{getStatusLabel(status)}</Tag>,
     },
     {
-      title: '作者',
+      title: t('content.author'),
       dataIndex: 'author',
       key: 'author',
     },
     {
-      title: '浏览/点赞',
+      title: t('content.viewsLikes'),
       key: 'stats',
       render: (_: unknown, record: Content) => (
         <span>
@@ -153,13 +159,13 @@ export const ContentPage: React.FC = () => {
       ),
     },
     {
-      title: '创建时间',
+      title: t('common.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString('zh-CN'),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       render: (_: unknown, record: Content) => (
         <Space>
@@ -170,7 +176,7 @@ export const ContentPage: React.FC = () => {
               icon={<Edit className="w-4 h-4" />}
               onClick={() => handleEdit(record)}
             >
-              编辑
+              {t('common.edit')}
             </Button>
           </PermissionGuard>
           <PermissionGuard permission={Permission.CONTENT_DELETE}>
@@ -181,7 +187,7 @@ export const ContentPage: React.FC = () => {
               icon={<Delete className="w-4 h-4" />}
               onClick={() => handleDelete(record.id)}
             >
-              删除
+              {t('common.delete')}
             </Button>
           </PermissionGuard>
         </Space>
@@ -193,12 +199,12 @@ export const ContentPage: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">内容管理</h1>
-          <p className="text-gray-600 mt-1">管理文章、公告和教程</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('content.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('content.subtitle')}</p>
         </div>
         <PermissionGuard permission={Permission.CONTENT_CREATE}>
           <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={handleCreate}>
-            创建内容
+            {t('content.createContent')}
           </Button>
         </PermissionGuard>
       </div>
@@ -214,38 +220,42 @@ export const ContentPage: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingContent ? '编辑内容' : '创建内容'}
+        title={editingContent ? t('content.editContent') : t('content.createContent')}
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
         width={600}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-            <Input placeholder="请输入标题" />
+          <Form.Item
+            name="title"
+            label={t('content.titleCol')}
+            rules={[{ required: true, message: t('content.titleRequired') }]}
+          >
+            <Input placeholder={t('content.titlePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="category"
-            label="分类"
-            rules={[{ required: true, message: '请选择分类' }]}
+            label={t('content.category')}
+            rules={[{ required: true, message: t('content.categoryRequired') }]}
           >
-            <Select placeholder="请选择分类">
-              <Select.Option value="article">文章</Select.Option>
-              <Select.Option value="announcement">公告</Select.Option>
-              <Select.Option value="tutorial">教程</Select.Option>
-              <Select.Option value="news">新闻</Select.Option>
-              <Select.Option value="policy">政策</Select.Option>
+            <Select placeholder={t('content.categoryPlaceholder')}>
+              <Select.Option value="article">{t('content.catArticle')}</Select.Option>
+              <Select.Option value="announcement">{t('content.catAnnouncement')}</Select.Option>
+              <Select.Option value="tutorial">{t('content.catTutorial')}</Select.Option>
+              <Select.Option value="news">{t('content.catNews')}</Select.Option>
+              <Select.Option value="policy">{t('content.catPolicy')}</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item
             name="content"
-            label="内容"
-            rules={[{ required: true, message: '请输入内容' }]}
+            label={t('content.contentLabel')}
+            rules={[{ required: true, message: t('content.contentRequired') }]}
           >
-            <Input.TextArea rows={6} placeholder="请输入内容" />
+            <Input.TextArea rows={6} placeholder={t('content.contentPlaceholder')} />
           </Form.Item>
-          <Form.Item name="tags" label="标签">
-            <Select mode="tags" placeholder="输入标签后按回车" />
+          <Form.Item name="tags" label={t('content.tags')}>
+            <Select mode="tags" placeholder={t('content.tagsPlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>

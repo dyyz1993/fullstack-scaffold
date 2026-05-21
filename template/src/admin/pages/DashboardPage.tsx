@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
+import { Button, Select, message, theme } from 'antd'
+import { Activity, CheckCircle, Clock, TrendingUp, BellRing } from 'lucide-react'
 import { apiClient } from '../services/apiClient'
+import { useLanguage } from '../i18n/useLanguage'
 import type { SystemStats } from '@shared/modules/admin'
 import type { NotificationType } from '@shared/schemas'
-import { Activity, CheckCircle, Clock, TrendingUp, Bell, BellRing } from 'lucide-react'
-import { Button, Select, message } from 'antd'
 
 export const DashboardPage: React.FC = () => {
+  const { t } = useLanguage()
+  const { token } = theme.useToken()
   const [stats, setStats] = useState<SystemStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [sendingNotification, setSendingNotification] = useState(false)
@@ -18,20 +21,60 @@ export const DashboardPage: React.FC = () => {
         const result = await response.json()
         if (result.success) {
           setStats(result.data)
-        } else {
-          message.error(result.error || 'Failed to load stats')
         }
-      } catch (error) {
-        console.error('Failed to fetch stats:', error)
+      } catch {
+        message.error(t('dashboard.loadFailed'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchStats()
-  }, [])
+  }, [t])
 
-  const handleSendTestNotification = async () => {
+  if (loading) {
+    return (
+      <div className="p-5" style={{ color: token.colorText }}>
+        {t('common.loading')}
+      </div>
+    )
+  }
+
+  const statCards = [
+    {
+      title: t('dashboard.totalTodos'),
+      value: stats?.totalTodos || 0,
+      icon: CheckCircle,
+      color: 'bg-blue-500',
+    },
+    {
+      title: t('dashboard.pending'),
+      value: stats?.pendingTodos || 0,
+      icon: Clock,
+      color: 'bg-yellow-500',
+    },
+    {
+      title: t('dashboard.completed'),
+      value: stats?.completedTodos || 0,
+      icon: TrendingUp,
+      color: 'bg-green-500',
+    },
+    {
+      title: t('dashboard.lastUpdated'),
+      value: stats?.lastUpdated || '-',
+      icon: Activity,
+      color: 'bg-purple-500',
+    },
+  ]
+
+  const notificationTypeOptions: { value: NotificationType; label: string }[] = [
+    { value: 'info', label: t('dashboard.notificationInfo') },
+    { value: 'success', label: t('dashboard.notificationSuccess') },
+    { value: 'warning', label: t('dashboard.notificationWarning') },
+    { value: 'error', label: t('dashboard.notificationError') },
+  ]
+
+  const handleSendTest = async () => {
     setSendingNotification(true)
     try {
       const response = await apiClient.api.admin.notifications.test.$post({
@@ -39,102 +82,78 @@ export const DashboardPage: React.FC = () => {
       })
       const result = await response.json()
       if (result.success) {
-        message.success(`测试通知已发送 (${notificationType})`)
+        message.success(t('dashboard.sent', { type: notificationType }))
       } else {
-        message.error('发送失败')
+        message.error(t('dashboard.sendFailed'))
       }
-    } catch (error) {
-      console.error('Failed to send test notification:', error)
-      message.error('发送失败')
+    } catch {
+      message.error(t('dashboard.sendFailed'))
     } finally {
       setSendingNotification(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    )
-  }
-
-  const statCards = [
-    {
-      title: 'Total Todos',
-      value: stats?.totalTodos || 0,
-      icon: CheckCircle,
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Pending',
-      value: stats?.pendingTodos || 0,
-      icon: Clock,
-      color: 'bg-yellow-500',
-    },
-    {
-      title: 'Completed',
-      value: stats?.completedTodos || 0,
-      icon: TrendingUp,
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Last Updated',
-      value: stats?.lastUpdated || '-',
-      icon: Activity,
-      color: 'bg-purple-500',
-    },
-  ]
-
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-4" style={{ color: token.colorText }}>
+        {t('dashboard.title')}
+      </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         {statCards.map((card, index) => {
           const Icon = card.icon
           return (
-            <div key={index} className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${card.color}`}>
+            <div
+              key={index}
+              className="rounded-lg p-6"
+              style={{
+                backgroundColor: token.colorBgContainer,
+                boxShadow: `0 1px 3px ${token.colorBorderSecondary}`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className={`p-3 rounded-md ${card.color} w-10 h-10 flex items-center justify-center`}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <h3 className="text-sm font-medium text-gray-500">{card.title}</h3>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
+              <h3 className="text-sm font-medium" style={{ color: token.colorTextSecondary }}>
+                {card.title}
+              </h3>
+              <p className="text-2xl font-bold mt-1" style={{ color: token.colorText }}>
+                {card.value}
+              </p>
             </div>
           )
         })}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <BellRing className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-900">测试通知功能</h2>
+      <div
+        className="rounded-lg p-6"
+        style={{
+          backgroundColor: token.colorBgContainer,
+          boxShadow: `0 1px 3px ${token.colorBorderSecondary}`,
+        }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <BellRing className="w-5 h-5" style={{ color: token.colorTextSecondary }} />
+          <h2 className="text-base font-semibold" style={{ color: token.colorText }}>
+            {t('dashboard.testNotification')}
+          </h2>
         </div>
-        <p className="text-sm text-gray-500 mb-4">
-          发送测试通知到所有已连接的客户端。error 和 warning 类型的通知会弹出 antd
-          notification，info 和 success 类型只会出现在铃铛列表中。
+        <p className="text-sm mb-4" style={{ color: token.colorTextSecondary }}>
+          {t('dashboard.testNotificationDesc')}
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex gap-2">
           <Select
             value={notificationType}
             onChange={setNotificationType}
             style={{ width: 120 }}
-            options={[
-              { value: 'info', label: 'ℹ️ Info' },
-              { value: 'success', label: '✅ Success' },
-              { value: 'warning', label: '⚠️ Warning' },
-              { value: 'error', label: '❌ Error' },
-            ]}
+            options={notificationTypeOptions}
           />
-          <Button
-            type="primary"
-            icon={<Bell className="w-4 h-4" />}
-            loading={sendingNotification}
-            onClick={handleSendTestNotification}
-          >
-            发送测试通知
+          <Button type="primary" loading={sendingNotification} onClick={handleSendTest}>
+            {t('dashboard.sendTest')}
           </Button>
         </div>
       </div>

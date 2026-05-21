@@ -1,19 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Table, Card, Tag, Button, Space, Modal, message, Descriptions } from 'antd'
 import { Eye, MessageCircle, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Ticket } from '@shared/modules/ticket'
+import { useLanguage } from '../i18n/useLanguage'
 
-const PRIORITY_COLORS = {
+const PRIORITY_COLORS: Record<string, string> = {
   low: 'default',
   medium: 'blue',
   high: 'orange',
   urgent: 'red',
 }
 
-const STATUS_COLORS = {
+const STATUS_COLORS: Record<string, string> = {
   open: 'blue',
   in_progress: 'processing',
   waiting_customer: 'orange',
@@ -21,32 +22,35 @@ const STATUS_COLORS = {
   closed: 'default',
 }
 
-const PRIORITY_LABELS = {
-  low: '低',
-  medium: '中',
-  high: '高',
-  urgent: '紧急',
-}
-
-const STATUS_LABELS = {
-  open: '待处理',
-  in_progress: '处理中',
-  waiting_customer: '等待客户',
-  resolved: '已解决',
-  closed: '已关闭',
-}
-
 export const TicketsPage: React.FC = () => {
+  const { t, formatDate } = useLanguage()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
 
-  useEffect(() => {
-    fetchTickets()
-  }, [])
+  const getPriorityLabel = (priority: string) => {
+    const map: Record<string, string> = {
+      low: t('tickets.priorityLow'),
+      medium: t('tickets.priorityMedium'),
+      high: t('tickets.priorityHigh'),
+      urgent: t('tickets.priorityUrgent'),
+    }
+    return map[priority] || priority
+  }
 
-  const fetchTickets = async () => {
+  const getStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      open: t('tickets.statusOpen'),
+      in_progress: t('tickets.statusInProgress'),
+      waiting_customer: t('tickets.statusWaitingCustomer'),
+      resolved: t('tickets.statusResolved'),
+      closed: t('tickets.statusClosed'),
+    }
+    return map[status] || status
+  }
+
+  const fetchTickets = useCallback(async () => {
     setLoading(true)
     try {
       const response = await apiClient.api.tickets.$get({ query: {} })
@@ -54,19 +58,23 @@ export const TicketsPage: React.FC = () => {
       if (result.success) {
         setTickets(result.data)
       } else {
-        message.error(result.error || 'Failed to load tickets')
+        message.error(result.error || t('tickets.loadFailed'))
       }
     } catch {
-      message.error('获取工单列表失败')
+      message.error(t('tickets.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    fetchTickets()
+  }, [fetchTickets])
 
   const handleClose = async (ticketId: string) => {
     Modal.confirm({
-      title: '确认关闭',
-      content: '确定要关闭这个工单吗？',
+      title: t('tickets.confirmClose'),
+      content: t('tickets.confirmCloseContent'),
       onOk: async () => {
         try {
           const response = await apiClient.api.tickets[':id'].close.$put({
@@ -74,11 +82,11 @@ export const TicketsPage: React.FC = () => {
           })
           const result = await response.json()
           if (result.success) {
-            message.success('工单已关闭')
+            message.success(t('tickets.ticketClosed'))
             fetchTickets()
           }
         } catch {
-          message.error('关闭工单失败')
+          message.error(t('tickets.closeFailed'))
         }
       },
     })
@@ -91,18 +99,18 @@ export const TicketsPage: React.FC = () => {
 
   const columns = [
     {
-      title: '工单号',
+      title: t('tickets.ticketNo'),
       dataIndex: 'ticketNo',
       key: 'ticketNo',
       render: (text: string) => <code className="text-sm">{text}</code>,
     },
     {
-      title: '主题',
+      title: t('tickets.subject'),
       dataIndex: 'subject',
       key: 'subject',
     },
     {
-      title: '客户',
+      title: t('tickets.customer'),
       key: 'customer',
       render: (_: unknown, record: Ticket) => (
         <div>
@@ -112,29 +120,27 @@ export const TicketsPage: React.FC = () => {
       ),
     },
     {
-      title: '优先级',
+      title: t('tickets.priority'),
       dataIndex: 'priority',
       key: 'priority',
-      render: (priority: keyof typeof PRIORITY_COLORS) => (
-        <Tag color={PRIORITY_COLORS[priority]}>{PRIORITY_LABELS[priority]}</Tag>
+      render: (priority: string) => (
+        <Tag color={PRIORITY_COLORS[priority]}>{getPriorityLabel(priority)}</Tag>
       ),
     },
     {
-      title: '状态',
+      title: t('common.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status: keyof typeof STATUS_COLORS) => (
-        <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
-      ),
+      render: (status: string) => <Tag color={STATUS_COLORS[status]}>{getStatusLabel(status)}</Tag>,
     },
     {
-      title: '创建时间',
+      title: t('common.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       render: (_: unknown, record: Ticket) => (
         <Space>
@@ -144,7 +150,7 @@ export const TicketsPage: React.FC = () => {
             icon={<Eye className="w-4 h-4" />}
             onClick={() => showDetail(record)}
           >
-            查看
+            {t('common.view')}
           </Button>
           <PermissionGuard permission={Permission.TICKET_CLOSE}>
             {record.status !== 'closed' && (
@@ -154,7 +160,7 @@ export const TicketsPage: React.FC = () => {
                 icon={<CheckCircle className="w-4 h-4" />}
                 onClick={() => handleClose(record.id)}
               >
-                关闭
+                {t('common.close')}
               </Button>
             )}
           </PermissionGuard>
@@ -167,17 +173,17 @@ export const TicketsPage: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">客服中心</h1>
-          <p className="text-gray-600 mt-1">处理客户工单和咨询</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('tickets.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('tickets.subtitle')}</p>
         </div>
-        <Button onClick={fetchTickets}>刷新</Button>
+        <Button onClick={fetchTickets}>{t('common.refresh')}</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">总工单</div>
+              <div className="text-sm text-gray-500">{t('tickets.totalTickets')}</div>
               <div className="text-2xl font-bold">{tickets.length}</div>
             </div>
             <MessageCircle className="w-8 h-8 text-blue-500" />
@@ -186,7 +192,7 @@ export const TicketsPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">待处理</div>
+              <div className="text-sm text-gray-500">{t('tickets.pending')}</div>
               <div className="text-2xl font-bold text-blue-500">
                 {tickets.filter(t => t.status === 'open').length}
               </div>
@@ -197,7 +203,7 @@ export const TicketsPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">紧急</div>
+              <div className="text-sm text-gray-500">{t('tickets.urgent')}</div>
               <div className="text-2xl font-bold text-red-500">
                 {tickets.filter(t => t.priority === 'urgent').length}
               </div>
@@ -208,7 +214,7 @@ export const TicketsPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">已解决</div>
+              <div className="text-sm text-gray-500">{t('tickets.resolved')}</div>
               <div className="text-2xl font-bold text-green-500">
                 {tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length}
               </div>
@@ -226,13 +232,13 @@ export const TicketsPage: React.FC = () => {
           loading={loading}
           pagination={{
             pageSize: 10,
-            showTotal: total => `共 ${total} 条`,
+            showTotal: total => t('common.total', { count: total }),
           }}
         />
       </Card>
 
       <Modal
-        title="工单详情"
+        title={t('tickets.detail')}
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
         footer={null}
@@ -241,35 +247,39 @@ export const TicketsPage: React.FC = () => {
         {selectedTicket && (
           <div>
             <Descriptions column={2} bordered className="mb-4">
-              <Descriptions.Item label="工单号">
+              <Descriptions.Item label={t('tickets.ticketNo')}>
                 <code>{selectedTicket.ticketNo}</code>
               </Descriptions.Item>
-              <Descriptions.Item label="状态">
+              <Descriptions.Item label={t('common.status')}>
                 <Tag color={STATUS_COLORS[selectedTicket.status]}>
-                  {STATUS_LABELS[selectedTicket.status]}
+                  {getStatusLabel(selectedTicket.status)}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="客户姓名">{selectedTicket.customerName}</Descriptions.Item>
-              <Descriptions.Item label="客户邮箱">{selectedTicket.customerEmail}</Descriptions.Item>
-              <Descriptions.Item label="优先级">
+              <Descriptions.Item label={t('tickets.customerName')}>
+                {selectedTicket.customerName}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('tickets.customerEmail')}>
+                {selectedTicket.customerEmail}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('tickets.priority')}>
                 <Tag color={PRIORITY_COLORS[selectedTicket.priority]}>
-                  {PRIORITY_LABELS[selectedTicket.priority]}
+                  {getPriorityLabel(selectedTicket.priority)}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="负责人">
-                {selectedTicket.assignedTo || '未分配'}
+              <Descriptions.Item label={t('tickets.assignedTo')}>
+                {selectedTicket.assignedTo || t('tickets.unassigned')}
               </Descriptions.Item>
-              <Descriptions.Item label="主题" span={2}>
+              <Descriptions.Item label={t('tickets.subject')} span={2}>
                 {selectedTicket.subject}
               </Descriptions.Item>
-              <Descriptions.Item label="描述" span={2}>
+              <Descriptions.Item label={t('tickets.description')} span={2}>
                 {selectedTicket.description}
               </Descriptions.Item>
             </Descriptions>
 
             {selectedTicket.replies.length > 0 && (
               <div className="mt-4">
-                <h4 className="font-semibold mb-2">回复记录</h4>
+                <h4 className="font-semibold mb-2">{t('tickets.replies')}</h4>
                 {selectedTicket.replies.map(reply => (
                   <div
                     key={reply.id}
@@ -277,9 +287,7 @@ export const TicketsPage: React.FC = () => {
                   >
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-medium">{reply.author}</span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(reply.createdAt).toLocaleString('zh-CN')}
-                      </span>
+                      <span className="text-sm text-gray-500">{formatDate(reply.createdAt)}</span>
                     </div>
                     <div className="text-gray-700">{reply.content}</div>
                   </div>

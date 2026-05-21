@@ -5,29 +5,34 @@ import { PermissionGuard } from '../components/PermissionGuard'
 import { Permission } from '@shared/modules/permission'
 import { apiClient } from '../services/apiClient'
 import type { Order } from '@shared/modules/order'
-
-const STATUS_COLORS = {
-  pending: 'orange',
-  processing: 'blue',
-  completed: 'green',
-  cancelled: 'red',
-  disputed: 'purple',
-}
-
-const STATUS_LABELS = {
-  pending: '待处理',
-  processing: '处理中',
-  completed: '已完成',
-  cancelled: '已取消',
-  disputed: '争议中',
-}
+import { useLanguage } from '../i18n/useLanguage'
 
 export const OrdersPage: React.FC = () => {
+  const { t, formatDate } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
   const [filterStatus, setFilterStatus] = useState<string | undefined>()
+
+  const STATUS_COLORS: Record<string, string> = {
+    pending: 'orange',
+    processing: 'blue',
+    completed: 'green',
+    cancelled: 'red',
+    disputed: 'purple',
+  }
+
+  const getLabel = (status: string) => {
+    const map: Record<string, string> = {
+      pending: t('orders.pending'),
+      processing: t('orders.processing'),
+      completed: t('orders.completed'),
+      cancelled: t('orders.cancelled'),
+      disputed: t('orders.disputed'),
+    }
+    return map[status] || status
+  }
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
@@ -42,14 +47,14 @@ export const OrdersPage: React.FC = () => {
       if (result.success) {
         setOrders(result.data)
       } else {
-        message.error(result.error || 'Failed to load orders')
+        message.error(result.error || t('orders.loadFailed'))
       }
     } catch {
-      message.error('获取订单列表失败')
+      message.error(t('orders.loadFailed'))
     } finally {
       setLoading(false)
     }
-  }, [filterStatus])
+  }, [filterStatus, t])
 
   useEffect(() => {
     fetchOrders()
@@ -62,18 +67,18 @@ export const OrdersPage: React.FC = () => {
       })
       const result = await response.json()
       if (result.success) {
-        message.success('订单已开始处理')
+        message.success(t('orders.orderProcessed'))
         fetchOrders()
       }
     } catch {
-      message.error('处理订单失败')
+      message.error(t('orders.processFailed'))
     }
   }
 
   const handleCancel = async (orderId: string) => {
     Modal.confirm({
-      title: '确认取消',
-      content: '确定要取消这个订单吗？',
+      title: t('orders.confirmCancel'),
+      content: t('orders.confirmCancelContent'),
       onOk: async () => {
         try {
           const response = await apiClient.api.orders[':id'].cancel.$put({
@@ -81,11 +86,11 @@ export const OrdersPage: React.FC = () => {
           })
           const result = await response.json()
           if (result.success) {
-            message.success('订单已取消')
+            message.success(t('orders.orderCancelled'))
             fetchOrders()
           }
         } catch {
-          message.error('取消订单失败')
+          message.error(t('orders.cancelFailed'))
         }
       },
     })
@@ -98,13 +103,13 @@ export const OrdersPage: React.FC = () => {
 
   const columns = [
     {
-      title: '订单号',
+      title: t('orders.orderNo'),
       dataIndex: 'orderNo',
       key: 'orderNo',
       render: (text: string) => <code className="text-sm">{text}</code>,
     },
     {
-      title: '客户信息',
+      title: t('orders.customer'),
       key: 'customer',
       render: (_: unknown, record: Order) => (
         <div>
@@ -114,12 +119,12 @@ export const OrdersPage: React.FC = () => {
       ),
     },
     {
-      title: '商品',
+      title: t('orders.product'),
       dataIndex: 'productName',
       key: 'productName',
     },
     {
-      title: '金额',
+      title: t('orders.amount'),
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => (
@@ -127,21 +132,19 @@ export const OrdersPage: React.FC = () => {
       ),
     },
     {
-      title: '状态',
+      title: t('orders.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status: keyof typeof STATUS_COLORS) => (
-        <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
-      ),
+      render: (status: string) => <Tag color={STATUS_COLORS[status]}>{getLabel(status)}</Tag>,
     },
     {
-      title: '创建时间',
+      title: t('common.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       render: (_: unknown, record: Order) => (
         <Space>
@@ -151,7 +154,7 @@ export const OrdersPage: React.FC = () => {
             icon={<Eye className="w-4 h-4" />}
             onClick={() => showDetail(record)}
           >
-            查看
+            {t('common.view')}
           </Button>
           <PermissionGuard permission={Permission.ORDER_PROCESS}>
             {record.status === 'pending' && (
@@ -161,7 +164,7 @@ export const OrdersPage: React.FC = () => {
                 icon={<CheckCircle className="w-4 h-4" />}
                 onClick={() => handleProcess(record.id)}
               >
-                处理
+                {t('orders.process')}
               </Button>
             )}
             {(record.status === 'pending' || record.status === 'processing') && (
@@ -172,7 +175,7 @@ export const OrdersPage: React.FC = () => {
                 icon={<XCircle className="w-4 h-4" />}
                 onClick={() => handleCancel(record.id)}
               >
-                取消
+                {t('orders.cancelOrder')}
               </Button>
             )}
           </PermissionGuard>
@@ -185,25 +188,25 @@ export const OrdersPage: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">订单管理</h1>
-          <p className="text-gray-600 mt-1">管理和处理所有订单</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('orders.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('orders.subtitle')}</p>
         </div>
         <Space>
           <Select
-            placeholder="筛选状态"
+            placeholder={t('orders.filterStatus')}
             style={{ width: 150 }}
             allowClear
             value={filterStatus}
             onChange={setFilterStatus}
             options={[
-              { value: 'pending', label: '待处理' },
-              { value: 'processing', label: '处理中' },
-              { value: 'completed', label: '已完成' },
-              { value: 'cancelled', label: '已取消' },
-              { value: 'disputed', label: '争议中' },
+              { value: 'pending', label: t('orders.pending') },
+              { value: 'processing', label: t('orders.processing') },
+              { value: 'completed', label: t('orders.completed') },
+              { value: 'cancelled', label: t('orders.cancelled') },
+              { value: 'disputed', label: t('orders.disputed') },
             ]}
           />
-          <Button onClick={fetchOrders}>刷新</Button>
+          <Button onClick={fetchOrders}>{t('common.refresh')}</Button>
         </Space>
       </div>
 
@@ -211,7 +214,7 @@ export const OrdersPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">总订单</div>
+              <div className="text-sm text-gray-500">{t('orders.totalOrders')}</div>
               <div className="text-2xl font-bold">{orders.length}</div>
             </div>
             <DollarSign className="w-8 h-8 text-blue-500" />
@@ -220,7 +223,7 @@ export const OrdersPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">待处理</div>
+              <div className="text-sm text-gray-500">{t('orders.pending')}</div>
               <div className="text-2xl font-bold text-orange-500">
                 {orders.filter(o => o.status === 'pending').length}
               </div>
@@ -231,7 +234,7 @@ export const OrdersPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">处理中</div>
+              <div className="text-sm text-gray-500">{t('orders.processing')}</div>
               <div className="text-2xl font-bold text-blue-500">
                 {orders.filter(o => o.status === 'processing').length}
               </div>
@@ -242,7 +245,7 @@ export const OrdersPage: React.FC = () => {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-500">已完成</div>
+              <div className="text-sm text-gray-500">{t('orders.completed')}</div>
               <div className="text-2xl font-bold text-green-500">
                 {orders.filter(o => o.status === 'completed').length}
               </div>
@@ -260,13 +263,13 @@ export const OrdersPage: React.FC = () => {
           loading={loading}
           pagination={{
             pageSize: 10,
-            showTotal: total => `共 ${total} 条`,
+            showTotal: total => t('common.total', { count: total }),
           }}
         />
       </Card>
 
       <Modal
-        title="订单详情"
+        title={t('orders.detail')}
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
         footer={null}
@@ -274,27 +277,33 @@ export const OrdersPage: React.FC = () => {
       >
         {selectedOrder && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="订单号">
+            <Descriptions.Item label={t('orders.orderNo')}>
               <code>{selectedOrder.orderNo}</code>
             </Descriptions.Item>
-            <Descriptions.Item label="客户姓名">{selectedOrder.customerName}</Descriptions.Item>
-            <Descriptions.Item label="客户邮箱">{selectedOrder.customerEmail}</Descriptions.Item>
-            <Descriptions.Item label="商品名称">{selectedOrder.productName}</Descriptions.Item>
-            <Descriptions.Item label="订单金额">
+            <Descriptions.Item label={t('orders.customerName')}>
+              {selectedOrder.customerName}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('orders.customerEmail')}>
+              {selectedOrder.customerEmail}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('orders.productName')}>
+              {selectedOrder.productName}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('orders.orderAmount')}>
               <span className="text-lg font-bold text-green-600">
                 ¥{selectedOrder.amount.toFixed(2)}
               </span>
             </Descriptions.Item>
-            <Descriptions.Item label="订单状态">
+            <Descriptions.Item label={t('orders.orderStatus')}>
               <Tag color={STATUS_COLORS[selectedOrder.status]}>
-                {STATUS_LABELS[selectedOrder.status]}
+                {getLabel(selectedOrder.status)}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="创建时间">
-              {new Date(selectedOrder.createdAt).toLocaleString('zh-CN')}
+            <Descriptions.Item label={t('common.createdAt')}>
+              {formatDate(selectedOrder.createdAt)}
             </Descriptions.Item>
-            <Descriptions.Item label="更新时间">
-              {new Date(selectedOrder.updatedAt).toLocaleString('zh-CN')}
+            <Descriptions.Item label={t('orders.updatedAt')}>
+              {formatDate(selectedOrder.updatedAt)}
             </Descriptions.Item>
           </Descriptions>
         )}

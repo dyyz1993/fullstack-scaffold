@@ -1,6 +1,6 @@
 {
   "name": "create-fullstack-scaffold",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "type": "module",
   "bin": {
     "create-fullstack-scaffold": "dist/cli/index.js"
