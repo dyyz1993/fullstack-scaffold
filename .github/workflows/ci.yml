@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, feat/*]
   pull_request:
-    branches: [master, main]
+    branches: [master, main, feat/*]
   schedule:
     - cron: '0 6 * * 1'  # 每周一早上6点UTC运行
   workflow_dispatch:  # 允许手动触发
@@ -211,7 +211,7 @@ jobs:
     needs: [cli-checks, cli-tests]
     strategy:
       matrix:
-        preset: [minimal, todo-app, ecommerce, fullstack-admin]
+        preset: [minimal, todo-app, ecommerce, xbrowser-marketplace, fullstack-admin, forum, saas]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
