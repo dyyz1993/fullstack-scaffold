@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { defineConfig } from 'vite'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
-// Prerender is optional — only needed during production build with puppeteer installed
+// Prerender is optional — only needed during production build with puppeteer + Chrome installed
 let prerender: typeof import('@prerenderer/rollup-plugin').default | undefined
 let puppeteerRenderer: typeof import('@prerenderer/renderer-puppeteer').default | undefined
 try {
@@ -11,8 +11,15 @@ try {
   prerender = prerenderMod.default
   const puppeteerMod = await import('@prerenderer/renderer-puppeteer')
   puppeteerRenderer = puppeteerMod.default
+  // Verify Chrome is actually available at runtime
+  const { executablePath } = await import('puppeteer')
+  const chromePath = executablePath()
+  if (!existsSync(chromePath)) {
+    prerender = undefined
+    puppeteerRenderer = undefined
+  }
 } catch {
-  // puppeteer not available — prerendering disabled
+  // puppeteer/Chrome not available — prerendering disabled
 }
 
 async function getPrerenderRoutes(): Promise<string[]> {
