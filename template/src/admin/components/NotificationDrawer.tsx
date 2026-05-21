@@ -86,12 +86,16 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
         className="p-4 cursor-pointer transition-colors"
         style={{
           borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          backgroundColor: !notif.read ? token.colorInfoBg : undefined,
+          backgroundColor: !notif.read ? token.colorInfoBg ?? 'transparent' : undefined,
         }}
         onClick={() => !notif.read && onMarkAsRead(notif.id)}
-        onMouseEnter={e => (e.currentTarget.style.backgroundColor = token.colorBgTextHover)}
+        onMouseEnter={e =>
+          (e.currentTarget.style.backgroundColor = token.colorBgTextHover ?? 'transparent')
+        }
         onMouseLeave={e =>
-          (e.currentTarget.style.backgroundColor = !notif.read ? token.colorInfoBg : undefined)
+          (e.currentTarget.style.backgroundColor = !notif.read
+            ? token.colorInfoBg ?? 'transparent'
+            : 'transparent')
         }
       >
         <div className="flex items-start gap-3">

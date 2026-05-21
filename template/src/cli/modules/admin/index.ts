@@ -2,6 +2,21 @@ import type { SiteInstance } from '@dyyz1993/xcli-core'
 import { ok, fail } from '@dyyz1993/xcli-core'
 import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
+import type { Role } from '@shared/modules/permission'
+
+const createUserParams = z.object({
+  username: z.string().min(1).describe('Username'),
+  email: z.string().email().describe('Email'),
+  password: z.string().min(6).describe('Password'),
+  role: z.enum(['super_admin', 'customer_service', 'user']).default('user').describe('Role'),
+})
+
+const updateUserParams = z.object({
+  id: z.string().describe('User ID'),
+  username: z.string().optional().describe('New username'),
+  email: z.string().email().optional().describe('New email'),
+  role: z.enum(['super_admin', 'customer_service', 'user']).optional().describe('New role'),
+})
 
 export function registerAdminCommands(site: SiteInstance) {
   site.command('dashboard', {
@@ -84,19 +99,10 @@ export function registerAdminCommands(site: SiteInstance) {
 
   site.command('create-user', {
     description: 'Create a new user',
-    parameters: z.object({
-      username: z.string().min(1).describe('Username'),
-      email: z.string().email().describe('Email'),
-      password: z.string().min(6).describe('Password'),
-      role: z.enum(['super_admin', 'customer_service', 'user']).default('user').describe('Role'),
-    }),
-    handler: async (params: unknown) => {
-      const p = params as {
-        username: string
-        email: string
-        password: string
-        role: 'super_admin' | 'customer_service' | 'user'
-      }
+    parameters: createUserParams,
+    handler: async params => {
+      // @ts-expect-error -- auto-command passes unknown, we parse from zod schema
+      const p: z.infer<typeof createUserParams> = params
       try {
         const client = getClient()
         const res = await client.api.admin.users.$post({
@@ -104,7 +110,9 @@ export function registerAdminCommands(site: SiteInstance) {
             username: p.username,
             email: p.email,
             password: p.password,
-            role: p.role,
+            // Role enum values overlap with z.enum string literals — safe cast for RPC compatibility
+            // eslint-disable-next-line local-rules/no-type-assertion-on-shared-types
+            role: p.role as Role,
           },
         })
         const data = await res.json()
@@ -117,19 +125,10 @@ export function registerAdminCommands(site: SiteInstance) {
 
   site.command('update-user', {
     description: 'Update a user',
-    parameters: z.object({
-      id: z.string().describe('User ID'),
-      username: z.string().optional().describe('New username'),
-      email: z.string().email().optional().describe('New email'),
-      role: z.enum(['super_admin', 'customer_service', 'user']).optional().describe('New role'),
-    }),
-    handler: async (params: unknown) => {
-      const p = params as {
-        id: string
-        username?: string
-        email?: string
-        role?: 'super_admin' | 'customer_service' | 'user'
-      }
+    parameters: updateUserParams,
+    handler: async params => {
+      // @ts-expect-error -- auto-command passes unknown, we parse from zod schema
+      const p: z.infer<typeof updateUserParams> = params
       const { id, ...rest } = p
       const body: Record<string, string | undefined> = {}
       if (rest.username) body.username = rest.username
