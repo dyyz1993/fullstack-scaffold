@@ -131,7 +131,16 @@
     "confirmNewPassword": "确认新密码",
     "confirmNewPasswordPlaceholder": "请确认新密码",
     "saveChanges": "保存更改",
-    "saved": "设置保存成功！"
+    "saved": "设置保存成功！",
+    "email": "邮件设置",
+    "smtpHost": "SMTP 主机",
+    "smtpHostPlaceholder": "例如 smtp.example.com",
+    "smtpPort": "SMTP 端口",
+    "emailFrom": "发件地址",
+    "emailFromPlaceholder": "例如 noreply@example.com",
+    "sessionTimeout": "会话超时",
+    "maxLoginAttempts": "最大登录尝试次数",
+    "minutes": "分钟"
   },
   "roles": {
     "title": "角色管理",

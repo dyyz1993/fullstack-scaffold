@@ -1,8 +1,25 @@
 import path from 'path'
 import { existsSync } from 'fs'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
+// Bundle analysis: npm install -D rollup-plugin-visualizer && npm run build:analyze
+let visualizerPlugin: (() => Plugin) | undefined
+if (process.env.ANALYZE === 'true') {
+  try {
+    // @ts-expect-error — optional dev dependency, installed via: npm install -D rollup-plugin-visualizer
+    const mod = await import('rollup-plugin-visualizer')
+    visualizerPlugin = () =>
+      mod.visualizer({
+        open: true,
+        filename: 'stats.html',
+        gzipSize: true,
+        brotliSize: true,
+      }) as Plugin
+  } catch {
+    // rollup-plugin-visualizer not installed — run: npm install -D rollup-plugin-visualizer
+  }
+}
 // Prerender is optional — only needed during production build with puppeteer + Chrome installed
 let prerender: typeof import('@prerenderer/rollup-plugin').default | undefined
 let puppeteerRenderer: typeof import('@prerenderer/renderer-puppeteer').default | undefined
@@ -85,6 +102,7 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist/client',
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
@@ -93,6 +111,12 @@ export default defineConfig({
         merchant: path.resolve(__dirname, 'merchant.html'),
       },
       output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-antd': ['antd', '@ant-design/icons'],
+          'vendor-hono': ['hono'],
+          'vendor-zustand': ['zustand'],
+        },
         plugins: [
           ...(prerender && puppeteerRenderer
             ? [
@@ -105,6 +129,7 @@ export default defineConfig({
                 }),
               ]
             : []),
+          ...(visualizerPlugin ? [visualizerPlugin()] : []),
         ],
       },
       onwarn(warning, defaultHandler) {

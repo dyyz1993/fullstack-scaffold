@@ -15,6 +15,7 @@
     "dev:forum": "VITE_PRESET=community vite",
     "dev:saas": "VITE_PRESET=saas vite",
     "build": "npm run build:client && npm run build:server",
+    "build:analyze": "ANALYZE=true vite build",
     "build:client": "vite build",
     "build:server": "tsup",
     "build:cli": "tsup --config tsup.config.ts",

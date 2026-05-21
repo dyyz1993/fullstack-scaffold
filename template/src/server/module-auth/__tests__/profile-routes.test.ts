@@ -2,19 +2,36 @@
 import { describe, it, expect } from 'vitest'
 import { profileRoutes } from '../routes/profile-routes'
 
+interface ProfileResponse {
+  success: boolean
+  data: {
+    id: string
+    username: string
+    email: string
+    bio: string
+    joinDate: string
+    stats: { posts: number; followers: number; following: number }
+  }
+  timestamp: string
+}
+
+async function fetchProfile(): Promise<ProfileResponse> {
+  const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
+  return (await res.json()) as ProfileResponse
+}
+
 describe('Profile Routes', () => {
   describe('GET /profile', () => {
     it('should return profile with 200', async () => {
       const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
 
       expect(res.status).toBe(200)
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
       expect(data.success).toBe(true)
     })
 
     it('should return profile with required fields', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
 
       expect(data.success).toBe(true)
       expect(data.data.id).toBeDefined()
@@ -25,16 +42,14 @@ describe('Profile Routes', () => {
     })
 
     it('should return valid email format', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
 
       expect(data.success).toBe(true)
       expect(data.data.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
     })
 
     it('should return stats with numeric values', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
 
       expect(data.success).toBe(true)
       expect(typeof data.data.stats.posts).toBe('number')
@@ -43,18 +58,15 @@ describe('Profile Routes', () => {
     })
 
     it('should return a valid ISO date for joinDate', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
 
       expect(data.success).toBe(true)
       expect(data.data.joinDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
     })
 
     it('should return consistent data across requests', async () => {
-      const res1 = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data1 = (await res1.json()) as Record<string, any>
-      const res2 = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data2 = (await res2.json()) as Record<string, any>
+      const data1 = await fetchProfile()
+      const data2 = await fetchProfile()
 
       expect(data1.success).toBe(true)
       expect(data2.success).toBe(true)
@@ -64,8 +76,7 @@ describe('Profile Routes', () => {
     })
 
     it('should include timestamp in response', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
 
       expect(data.success).toBe(true)
       expect(data.timestamp).toBeDefined()
@@ -73,8 +84,7 @@ describe('Profile Routes', () => {
     })
 
     it('should return bio field', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-      const data = (await res.json()) as Record<string, any>
+      const data = await fetchProfile()
 
       expect(data.success).toBe(true)
       expect(data.data.bio).toBeDefined()

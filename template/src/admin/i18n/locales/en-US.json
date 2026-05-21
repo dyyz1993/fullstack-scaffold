@@ -131,7 +131,16 @@
     "confirmNewPassword": "Confirm New Password",
     "confirmNewPasswordPlaceholder": "Confirm new password",
     "saveChanges": "Save Changes",
-    "saved": "Settings saved successfully!"
+    "saved": "Settings saved successfully!",
+    "email": "Email Settings",
+    "smtpHost": "SMTP Host",
+    "smtpHostPlaceholder": "e.g. smtp.example.com",
+    "smtpPort": "SMTP Port",
+    "emailFrom": "From Address",
+    "emailFromPlaceholder": "e.g. noreply@example.com",
+    "sessionTimeout": "Session Timeout",
+    "maxLoginAttempts": "Max Login Attempts",
+    "minutes": "minutes"
   },
   "roles": {
     "title": "Role Management",

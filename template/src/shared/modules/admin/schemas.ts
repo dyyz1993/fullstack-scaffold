@@ -79,6 +79,20 @@ export const ClearTodosResultSchema = z.object({
   deletedCount: z.number(),
 })
 
+export const SettingsSchema = z.object({
+  siteName: z.string(),
+  siteDescription: z.string(),
+  smtpHost: z.string(),
+  smtpPort: z.number(),
+  emailFrom: z.string(),
+  sessionTimeout: z.number(),
+  maxLoginAttempts: z.number(),
+  emailNotifications: z.boolean(),
+  pushNotifications: z.boolean(),
+})
+
+export const UpdateSettingsSchema = SettingsSchema
+
 export const AdminSuccessSchema = z.object({})
 
 export const DownloadTokenSchema = z.object({
@@ -98,3 +112,5 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>
 export type User = z.infer<typeof UserSchema>
 export type UpdateUserRequest = z.infer<typeof UpdateUserRequestSchema>
 export type ClearTodosResult = z.infer<typeof ClearTodosResultSchema>
+export type Settings = z.infer<typeof SettingsSchema>
+export type UpdateSettings = z.infer<typeof UpdateSettingsSchema>
