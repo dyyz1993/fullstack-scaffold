@@ -109,6 +109,25 @@ export function getExcludePatterns(
 
   excludes.push('src/client/preset-ui-config.ts')
 
+  // Exclude standalone shared modules (cart, community, dashboard) that are not needed
+  // by the current preset. These have no server module manifest of their own, but are
+  // declared as clientPages by other modules (e.g., CartPage is declared by order module).
+  // Only include when a module in the preset declares the relevant client page.
+  const standaloneSharedModules: Record<string, string[]> = {
+    cart: ['CartPage'],
+    community: ['TopicsPage'],
+    dashboard: ['DashboardPage'],
+  }
+  for (const [moduleName, requiredPages] of Object.entries(standaloneSharedModules)) {
+    // Check if any module in the preset declares these client pages
+    const hasRelevantPage = [...resolved.modules.values()].some(
+      m => m.clientPages?.some(p => requiredPages.includes(p.name)) ?? false
+    )
+    if (!hasRelevantPage) {
+      excludes.push(`src/shared/modules/${moduleName}`)
+    }
+  }
+
   // LoginPage/RegisterPage are excluded via the for loop above (auth clientPages)
   // when auth module is not in the preset
 

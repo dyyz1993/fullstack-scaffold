@@ -418,7 +418,13 @@ const ADDITIONAL_PATHS_MAP: Record<string, string[]> = {
   permission: ['role', 'audit'],
 }
 
-const STANDALONE_SHARED_MODULES = new Set(['cart', 'community', 'dashboard'])
+// Standalone shared modules that have no server module manifest but are used by client pages.
+// Include only when the preset actually has pages that import them.
+const STANDALONE_SHARED_MODULES: Record<string, string[]> = {
+  cart: ['CartPage.tsx'],
+  community: ['TopicsPage.tsx'],
+  dashboard: ['DashboardPage.tsx'],
+}
 
 const moduleOrder = [
   'chat',
@@ -512,7 +518,15 @@ export {
 function shouldIncludeModule(moduleName: string, resolved: ResolvedPreset): boolean {
   if (resolved.modules.has(moduleName)) return true
 
-  if (STANDALONE_SHARED_MODULES.has(moduleName)) return true
+  // Standalone shared modules: include only when a module in the preset
+  // declares client pages that use their schemas
+  const standalonePages = STANDALONE_SHARED_MODULES[moduleName]
+  if (standalonePages) {
+    const hasRelevantPage = [...resolved.modules.values()].some(
+      m => m.clientPages?.some(p => standalonePages.includes(p.name + '.tsx')) ?? false
+    )
+    return hasRelevantPage
+  }
 
   for (const [parentModule, additionalPaths] of Object.entries(ADDITIONAL_PATHS_MAP)) {
     if (additionalPaths.includes(moduleName) && resolved.modules.has(parentModule)) {
