@@ -3,8 +3,17 @@ import { existsSync } from 'fs'
 import { defineConfig } from 'vite'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
-import prerender from '@prerenderer/rollup-plugin'
-import puppeteerRenderer from '@prerenderer/renderer-puppeteer'
+// Prerender is optional — only needed during production build with puppeteer installed
+let prerender: typeof import('@prerenderer/rollup-plugin').default | undefined
+let puppeteerRenderer: typeof import('@prerenderer/renderer-puppeteer').default | undefined
+try {
+  const prerenderMod = await import('@prerenderer/rollup-plugin')
+  prerender = prerenderMod.default
+  const puppeteerMod = await import('@prerenderer/renderer-puppeteer')
+  puppeteerRenderer = puppeteerMod.default
+} catch {
+  // puppeteer not available — prerendering disabled
+}
 
 async function getPrerenderRoutes(): Promise<string[]> {
   const staticRoutes = ['/', '/todos', '/notifications', '/websocket', '/content']
@@ -76,13 +85,17 @@ export default defineConfig({
       },
       output: {
         plugins: [
-          prerender({
-            routes,
-            renderer: new puppeteerRenderer({
-              renderAfterDocumentEvent: 'prerender-ready',
-              renderAfterTime: 5000,
-            }),
-          }),
+          ...(prerender && puppeteerRenderer
+            ? [
+                prerender({
+                  routes,
+                  renderer: new puppeteerRenderer({
+                    renderAfterDocumentEvent: 'prerender-ready',
+                    renderAfterTime: 5000,
+                  }),
+                }),
+              ]
+            : []),
         ],
       },
       onwarn(warning, defaultHandler) {
