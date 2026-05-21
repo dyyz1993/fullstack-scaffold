@@ -77,14 +77,16 @@ export function getExcludePatterns(
     excludes.push('auth-inject.html')
   }
 
-  // tenant/merchant HTML entries only needed when tenant module is present (saas preset)
+  // tenant/merchant directories: tenant needs tenant dir, merchant needs merchant dir
   if (!resolved.modules.has('tenant')) {
     excludes.push('src/tenant')
     excludes.push('tenant.html')
-    excludes.push('src/merchant')
-    excludes.push('merchant.html')
     excludes.push('src/server/middleware/tenant-isolation.ts')
     excludes.push('src/server/middleware/__tests__/tenant-isolation.test.ts')
+  }
+  if (!resolved.modules.has('merchant')) {
+    excludes.push('src/merchant')
+    excludes.push('merchant.html')
   }
 
   if (!resolved.hasClient) {
@@ -111,19 +113,26 @@ export function getExcludePatterns(
 
   // Exclude standalone shared modules (cart, community, dashboard) that are not needed
   // by the current preset. These have no server module manifest of their own, but are
-  // declared as clientPages by other modules (e.g., CartPage is declared by order module).
-  // Only include when a module in the preset declares the relevant client page.
-  const standaloneSharedModules: Record<string, string[]> = {
-    cart: ['CartPage'],
-    community: ['TopicsPage'],
-    dashboard: ['DashboardPage'],
+  // declared as clientPages by other modules or imported by server routes.
+  // Include when:
+  // 1. A module in the preset declares the relevant client page, OR
+  // 2. A server module that imports their schemas is present (e.g., content needs community).
+  const standaloneSharedModules: Record<string, { pages?: string[]; serverModules?: string[] }> = {
+    cart: { pages: ['CartPage'] },
+    community: { pages: ['TopicsPage', 'ProfilePage'], serverModules: ['content'] },
+    dashboard: { pages: ['DashboardPage'] },
   }
-  for (const [moduleName, requiredPages] of Object.entries(standaloneSharedModules)) {
-    // Check if any module in the preset declares these client pages
-    const hasRelevantPage = [...resolved.modules.values()].some(
-      m => m.clientPages?.some(p => requiredPages.includes(p.name)) ?? false
-    )
-    if (!hasRelevantPage) {
+  for (const [moduleName, config] of Object.entries(standaloneSharedModules)) {
+    // Check if any module's clientPages includes a relevant page
+    const hasRelevantPage =
+      config.pages &&
+      [...resolved.modules.values()].some(
+        m => m.clientPages?.some(p => config.pages!.includes(p.name)) ?? false
+      )
+    // Check if any required server module is included
+    const hasRelevantServerModule =
+      config.serverModules?.some(sm => resolved.modules.has(sm)) ?? false
+    if (!hasRelevantPage && !hasRelevantServerModule) {
       excludes.push(`src/shared/modules/${moduleName}`)
     }
   }
@@ -152,6 +161,11 @@ export function getExcludePatterns(
 
   if (!resolved.modules.has('captcha')) {
     excludes.push('src/server/utils/__tests__/captcha.test.ts')
+    // CaptchaModal component depends on captcha module (store, API, types)
+    excludes.push('src/admin/components/CaptchaModal.tsx')
+    excludes.push('src/admin/stores/captchaStore.ts')
+    excludes.push('src/admin/stores/__tests__/captchaStore.test.ts')
+    excludes.push('src/admin/stores/__tests__/captchaStoreBranches.test.ts')
   }
 
   return excludes
@@ -183,6 +197,8 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
 
   if (resolved.hasClient && resolved.modules.has('admin')) {
     files.push('src/admin/App.tsx')
+    files.push('src/admin/components/index.ts')
+    files.push('src/admin/services/apiClient.ts')
   }
 
   if (resolved.hasClient && !resolved.modules.has('admin')) {

@@ -26,7 +26,7 @@ export const ContentPage: React.FC = () => {
     form.setFieldsValue({
       title: topic.title,
       excerpt: topic.excerpt,
-      tags: topic.tags.map(t => t.label),
+      tags: topic.tags.map((t: { label: string }) => t.label),
     })
     setIsModalOpen(true)
   }
@@ -188,7 +188,7 @@ export const ContentPage: React.FC = () => {
             <p>{viewingTopic.excerpt}</p>
             {viewingTopic.tags && viewingTopic.tags.length > 0 && (
               <div className="mt-4">
-                {viewingTopic.tags.map((tag, index) => (
+                {viewingTopic.tags.map((tag: { label: string }, index: number) => (
                   <Tag key={index}>{tag.label}</Tag>
                 ))}
               </div>

@@ -350,12 +350,13 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     'captcha',
   ]
 
-  // Standalone shared modules: only include when preset has pages that use them
-  const STANDALONE_SHARED_MODULES: Record<string, string[]> = {
-    cart: ['CartPage.tsx'],
-    community: ['TopicsPage.tsx'],
-    dashboard: ['DashboardPage.tsx'],
-  }
+  // Standalone shared modules: include when preset has pages or server modules that use them
+  const STANDALONE_SHARED_MODULES: Record<string, { pages?: string[]; serverModules?: string[] }> =
+    {
+      cart: { pages: ['CartPage.tsx'] },
+      community: { pages: ['TopicsPage.tsx', 'ProfilePage.tsx'], serverModules: ['content'] },
+      dashboard: { pages: ['DashboardPage.tsx'] },
+    }
 
   for (const moduleName of moduleOrder) {
     if (!resolved.modules.has(moduleName)) continue
@@ -387,13 +388,18 @@ export function generateSharedModulesIndex(resolved: ResolvedPreset): string {
     }
   }
 
-  // Standalone modules: include only when a module in the preset
-  // declares client pages that use their schemas
-  for (const [moduleName, requiredPages] of Object.entries(STANDALONE_SHARED_MODULES)) {
-    const hasRelevantPage = [...resolved.modules.values()].some(
-      m => m.clientPages?.some(p => requiredPages.includes(p.name + '.tsx')) ?? false
-    )
-    if (!hasRelevantPage) continue
+  // Standalone modules: include when preset has pages or server modules that use them
+  for (const [moduleName, config] of Object.entries(STANDALONE_SHARED_MODULES)) {
+    // Check if any module's clientPages includes a relevant page
+    const hasRelevantPage =
+      config.pages &&
+      [...resolved.modules.values()].some(
+        m => m.clientPages?.some(p => config.pages!.includes(p.name + '.tsx')) ?? false
+      )
+    // Check if any required server module is included
+    const hasRelevantServerModule =
+      config.serverModules?.some(sm => resolved.modules.has(sm)) ?? false
+    if (!hasRelevantPage && !hasRelevantServerModule) continue
 
     const exports = MODULE_EXPORTS[moduleName]
     if (!exports) continue

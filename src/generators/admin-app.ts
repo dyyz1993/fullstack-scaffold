@@ -77,3 +77,109 @@ ${protectedRouteElements.join('\n')}
 }
 `
 }
+
+/**
+ * Generates admin/components/index.ts content based on resolved preset.
+ * Conditionally includes CaptchaModal only when captcha module is present.
+ */
+export function generateAdminComponentsIndex(resolved: ResolvedPreset): string | null {
+  if (!resolved.hasAdmin) return null
+
+  const lines = [
+    `export { UserTable } from './UserTable'`,
+    `export { StatsCard } from './StatsCard'`,
+    `export { PageHeader } from './PageHeader'`,
+    `export { UserFormModal } from './UserFormModal'`,
+    `export { ProtectedRoute } from './ProtectedRoute'`,
+  ]
+
+  if (resolved.hasCaptcha) {
+    lines.push(`export { CaptchaModal } from './CaptchaModal'`)
+  }
+
+  lines.push(`export { PermissionGuard, PermissionButton, Can, Cannot } from './PermissionGuard'`)
+
+  return lines.join('\n') + '\n'
+}
+
+/**
+ * Generates admin/services/apiClient.ts content based on resolved preset.
+ * Conditionally imports captchaStore only when captcha module is present.
+ */
+export function generateAdminApiClient(resolved: ResolvedPreset): string | null {
+  if (!resolved.hasAdmin) return null
+
+  const captchaImport = resolved.hasCaptcha
+    ? `import { useCaptchaStore } from '../stores/captchaStore'\n`
+    : ''
+  const captchaFetchSetup = resolved.hasCaptcha
+    ? `  const showCaptcha = useCaptchaStore.getState().show\n\n`
+    : ''
+  const captchaHandler = resolved.hasCaptcha
+    ? `    onShowCaptcha: async config => {
+      return showCaptcha({
+        type: config.type,
+        captchaUrl: config.captchaUrl,
+      })
+    },`
+    : `    onShowCaptcha: async () => true,`
+
+  return `/**
+ * @framework-baseline ab16e97716a7556e
+ * @framework-modify
+ * @reason Conditional captcha support based on preset modules
+ * @impact Captcha module excluded = no captchaStore import
+ */
+
+import { hc } from 'hono/client'
+import { WSClientImpl } from '@shared/core/ws-client'
+import { SSEClientImpl } from '@shared/core/sse-client'
+import { createRequestInterceptor } from './requestInterceptor'
+${captchaImport}import type { AdminApiType } from '@server/index'
+
+const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
+
+const TOKEN_KEY = 'admin-storage'
+
+function clearAuthAndRedirect(): void {
+  localStorage.removeItem(TOKEN_KEY)
+  if (window.location.pathname !== '/admin/login') {
+    window.location.href = '/admin/login'
+  }
+}
+
+function getAuthToken(): string | null {
+  try {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return parsed.state?.token || null
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
+function createCustomFetch() {
+${captchaFetchSetup}  return createRequestInterceptor({
+    onShowLogin: clearAuthAndRedirect,
+${captchaHandler}  })
+}
+
+export const apiClient = hc<AdminApiType>(baseUrl, {
+  fetch: createCustomFetch() as typeof fetch,
+  webSocket: url => new WSClientImpl(url) as unknown as WebSocket,
+  sse: url => {
+    const token = getAuthToken()
+    const headers: Record<string, string> = {}
+    if (token) {
+      headers['Authorization'] = \`Bearer \${token}\`
+    }
+    return new SSEClientImpl(url, headers)
+  },
+})
+
+export { api } from '@shared/core/api-request'
+`
+}

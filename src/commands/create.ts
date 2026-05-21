@@ -14,7 +14,11 @@ import { generateRouteRegistry } from '../generators/route-registry'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
-import { generateAdminApp } from '../generators/admin-app'
+import {
+  generateAdminApp,
+  generateAdminComponentsIndex,
+  generateAdminApiClient,
+} from '../generators/admin-app'
 import { generateDbSchemaBarrel } from '../generators/db-schema-barrel'
 import { generateDbInit } from '../generators/db-init'
 import { generateServerApp } from '../generators/server-app'
@@ -402,6 +406,21 @@ export async function createProject(
       if (adminAppContent) {
         await fs.ensureDir(path.join(targetDir, 'src/admin'))
         await fs.writeFile(path.join(targetDir, 'src/admin/App.tsx'), adminAppContent)
+      }
+      // Generate admin/components/index.ts with conditional CaptchaModal export
+      const adminComponentsIndex = generateAdminComponentsIndex(resolved)
+      if (adminComponentsIndex) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/components'))
+        await fs.writeFile(
+          path.join(targetDir, 'src/admin/components/index.ts'),
+          adminComponentsIndex
+        )
+      }
+      // Generate admin/services/apiClient.ts with conditional captcha support
+      const adminApiClient = generateAdminApiClient(resolved)
+      if (adminApiClient) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/services'))
+        await fs.writeFile(path.join(targetDir, 'src/admin/services/apiClient.ts'), adminApiClient)
       }
     }
 

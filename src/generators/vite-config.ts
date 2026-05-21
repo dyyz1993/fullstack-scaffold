@@ -15,8 +15,12 @@ export function generateViteConfig(resolved: ResolvedPreset, templateDir: string
     aliasesToRemove.push('@admin')
   }
   if (!resolved.modules.has('tenant')) {
-    entriesToRemove.push('tenant', 'merchant')
-    aliasesToRemove.push('@tenant', '@merchant')
+    entriesToRemove.push('tenant')
+    aliasesToRemove.push('@tenant')
+  }
+  if (!resolved.modules.has('merchant')) {
+    entriesToRemove.push('merchant')
+    aliasesToRemove.push('@merchant')
   }
 
   // Remove rollupOptions input entries: "        name: path.resolve(__dirname, 'name.html'),"
