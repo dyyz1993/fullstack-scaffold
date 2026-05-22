@@ -85,3 +85,4 @@ report/
 
 # Stale lock files (project uses npm)
 pnpm-lock.yaml
+test-app/

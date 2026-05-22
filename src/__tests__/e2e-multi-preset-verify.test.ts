@@ -450,10 +450,20 @@ describe.each(PRESETS_TO_VERIFY)(
 
       killPort(port)
 
+      try {
+        const dataDir = path.join(projectDir, 'data')
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
+        run('npx drizzle-kit push --force 2>&1', projectDir, 30_000, {
+          NODE_ENV: 'development',
+        })
+      } catch {
+        // db:push failure is non-blocking, tables may already exist
+      }
+
       const devServer = spawn('npx', ['vite', '--port', String(port), '--strictPort'], {
         cwd: projectDir,
         stdio: 'pipe',
-        env: { ...process.env },
+        env: { ...process.env, NODE_ENV: 'development' },
         detached: true,
       })
 

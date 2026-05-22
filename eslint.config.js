@@ -92,6 +92,7 @@ export default tseslint.config(
       'packages',
       'coverage',
       'testapp',
+      'test-app',
       'test-scaffold-debug',
       'my-app',
       'e2e-debug-app',

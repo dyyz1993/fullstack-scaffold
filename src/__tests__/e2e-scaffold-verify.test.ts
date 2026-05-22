@@ -119,10 +119,20 @@ describe('E2E: Scaffold → Install → Verify', () => {
     const port = 30999
     const serverLogs: string[] = []
 
+    try {
+      const dataDir = path.join(projectPath, 'data')
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
+      run('npx drizzle-kit push --force 2>&1', projectPath, 30_000, {
+        NODE_ENV: 'development',
+      })
+    } catch {
+      // db:push failure is non-blocking
+    }
+
     const devServer = spawn('npx', ['vite', '--port', String(port), '--strictPort'], {
       cwd: projectPath,
       stdio: 'pipe',
-      env: { ...process.env },
+      env: { ...process.env, NODE_ENV: 'development' },
       detached: true,
     })
 
