@@ -2,8 +2,10 @@ import { Card, Table, Tag } from 'antd'
 import { usePermissions } from '../hooks/usePermissions'
 import { usePermissionCategories, useRoleLabels, usePermissionLabels } from '../hooks/useConfig'
 import type { PermissionInfo, Permission } from '@shared/modules/permission'
+import { useLanguage } from '../i18n/useLanguage'
 
 export const PermissionsPage: React.FC = () => {
+  const { t } = useLanguage()
   const { allPermissions, roles, loading } = usePermissions()
   const { categories } = usePermissionCategories()
   const { roleLabels } = useRoleLabels()
@@ -20,13 +22,13 @@ export const PermissionsPage: React.FC = () => {
 
   const columns = [
     {
-      title: '权限',
+      title: t('permissions.permission'),
       dataIndex: 'permission',
       key: 'permission',
       render: (permission: Permission) => permissionLabels[permission] || permission,
     },
     {
-      title: '超级管理员',
+      title: t('permissions.superAdmin'),
       key: 'superAdmin',
       render: (_: unknown, record: PermissionInfo) => {
         const role = roles.find(r => r.role === 'super_admin')
@@ -35,7 +37,7 @@ export const PermissionsPage: React.FC = () => {
       },
     },
     {
-      title: '客服人员',
+      title: t('permissions.customerService'),
       key: 'customerService',
       render: (_: unknown, record: PermissionInfo) => {
         const role = roles.find(r => r.role === 'customer_service')
@@ -44,7 +46,7 @@ export const PermissionsPage: React.FC = () => {
       },
     },
     {
-      title: '普通用户',
+      title: t('permissions.normalUser'),
       key: 'user',
       render: (_: unknown, record: PermissionInfo) => {
         const role = roles.find(r => r.role === 'user')
@@ -56,24 +58,22 @@ export const PermissionsPage: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">权限管理</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('permissions.title')}</h1>
 
-      <Card title="角色列表" className="mb-6">
+      <Card title={t('permissions.roleList')} className="mb-6">
         <div className="grid grid-cols-3 gap-4">
           {roles.map(role => (
             <Card key={role.role} size="small">
-              <div className="text-lg font-semibold mb-2">
-                {roleLabels[role.role] || role.role}
-              </div>
+              <div className="text-lg font-semibold mb-2">{roleLabels[role.role] || role.role}</div>
               <div className="text-sm text-gray-500">
-                权限数量: {role.permissions.length}
+                {t('permissions.permissionCount', { count: role.permissions.length })}
               </div>
             </Card>
           ))}
         </div>
       </Card>
 
-      <Card title="权限矩阵">
+      <Card title={t('permissions.permissionMatrix')}>
         {Object.entries(groupedPermissions).map(([category, permissions]) => (
           <div key={category} className="mb-6">
             <h3 className="text-lg font-semibold mb-3">

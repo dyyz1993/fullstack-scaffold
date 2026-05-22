@@ -63,6 +63,8 @@ const permissionManifest: ModuleManifest = {
       appliesTo: 'all-api',
     },
   ],
+
+  cliModule: { dir: 'permission', registerFunction: 'registerPermissionCommands' },
 }
 
 export default permissionManifest

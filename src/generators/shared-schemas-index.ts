@@ -145,7 +145,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'UpdateUserRequestSchema',
       'CreateUserRequestSchema',
       'ClearTodosResultSchema',
-      'SuccessSchema',
+      'AdminSuccessSchema',
       'DownloadTokenSchema',
       'type SystemStats',
       'type HealthCheck',
@@ -215,13 +215,13 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'CreateContentSchema',
       'UpdateContentSchema',
       'ContentListSchema',
-      'DeleteResultSchema',
+      'ContentDeleteResultSchema',
       'type ContentCategory',
       'type ContentStatus',
       'type Content',
       'type CreateContentInput',
       'type UpdateContentInput',
-      'type DeleteResult',
+      'type ContentDeleteResult',
     ],
   },
   dashboard: {
@@ -238,6 +238,55 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'type DashboardResponse',
     ],
   },
+  merchant: {
+    namedExports: [
+      'MerchantSchema',
+      'MerchantLoginSchema',
+      'MerchantLoginResponseSchema',
+      'MerchantStatsSchema',
+      'ProductSchema',
+      'CreateProductSchema',
+      'UpdateProductSchema',
+      'ProductListSchema',
+      'ProductListResponseSchema',
+      'ProductQuerySchema',
+      'type Merchant',
+      'type MerchantLoginInput',
+      'type MerchantLoginResponse',
+      'type MerchantStats',
+      'type Product',
+      'type CreateProductInput',
+      'type UpdateProductInput',
+      'type ProductListResponse',
+      'type ProductQuery',
+    ],
+  },
+  tenant: {
+    namedExports: [
+      'TenantSchema',
+      'TenantStatusSchema',
+      'TenantPlanSchema',
+      'TenantSettingsSchema',
+      'CreateTenantSchema',
+      'UpdateTenantSchema',
+      'TenantIdSchema',
+      'TenantSlugSchema',
+      'TenantListResponseSchema',
+      'TenantQuerySchema',
+      'TenantIdResponseSchema',
+      'type Tenant',
+      'type TenantStatus',
+      'type TenantPlan',
+      'type TenantSettings',
+      'type CreateTenantInput',
+      'type UpdateTenantInput',
+      'type TenantId',
+      'type TenantSlug',
+      'type TenantListResponse',
+      'type TenantQuery',
+      'type TenantIdResponse',
+    ],
+  },
   dispute: {
     namedExports: [
       'DisputeTypeSchema',
@@ -247,14 +296,14 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'UpdateDisputeSchema',
       'ResolveDisputeSchema',
       'DisputeListSchema',
-      'DeleteResultSchema',
+      'DisputeDeleteResultSchema',
       'type DisputeType',
       'type DisputeStatus',
       'type Dispute',
       'type CreateDisputeInput',
       'type UpdateDisputeInput',
       'type ResolveDisputeInput',
-      'type DeleteResult',
+      'type DisputeDeleteResult',
     ],
   },
   order: {
@@ -265,7 +314,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'UpdateOrderSchema',
       'OrderListSchema',
       'OrderQuerySchema',
-      'DeleteResultSchema',
+      'OrderDeleteResultSchema',
       'ProcessOrderSchema',
       'CancelOrderSchema',
       'RemoveCartItemResponseSchema',
@@ -277,7 +326,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'type Order',
       'type CreateOrderInput',
       'type UpdateOrderInput',
-      'type DeleteResult',
+      'type OrderDeleteResult',
       'type ProcessOrderInput',
       'type CancelOrderInput',
       'type OrderQueryInput',
@@ -306,7 +355,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'RoleLabelsSchema',
       'PermissionLabelsSchema',
       'PermissionInitSchema',
-      'type RoleType',
+      'type PermissionRoleType',
       'type PermissionType',
       'type RoleInfo',
       'type PermissionInfo',
@@ -334,8 +383,8 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'CreateRoleSchema',
       'UpdateRoleSchema',
       'UpdateRolePermissionsSchema',
-      'SuccessSchema',
-      'type RoleType',
+      'RoleSuccessSchema',
+      'type RoleDataType',
       'type CreateRoleType',
       'type UpdateRoleType',
     ],
@@ -351,7 +400,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'UpdateTicketSchema',
       'ReplyTicketSchema',
       'TicketListSchema',
-      'DeleteResultSchema',
+      'TicketDeleteResultSchema',
       'type TicketStatus',
       'type TicketPriority',
       'type TicketCategory',
@@ -360,7 +409,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'type CreateTicketInput',
       'type UpdateTicketInput',
       'type ReplyTicketInput',
-      'type DeleteResult',
+      'type TicketDeleteResult',
     ],
   },
 }
@@ -369,7 +418,15 @@ const ADDITIONAL_PATHS_MAP: Record<string, string[]> = {
   permission: ['role', 'audit'],
 }
 
-const STANDALONE_SHARED_MODULES = new Set(['cart', 'community', 'dashboard'])
+// Standalone shared modules that have no server module manifest but are used by client pages
+// or server routes. Include when:
+// 1. The preset has client pages that import their schemas, OR
+// 2. The preset has server modules whose routes import their schemas.
+const STANDALONE_SHARED_MODULES: Record<string, { pages?: string[]; serverModules?: string[] }> = {
+  cart: { pages: ['CartPage.tsx'] },
+  community: { pages: ['TopicsPage.tsx', 'ProfilePage.tsx'], serverModules: ['content'] },
+  dashboard: { pages: ['DashboardPage.tsx'] },
+}
 
 const moduleOrder = [
   'chat',
@@ -386,9 +443,11 @@ const moduleOrder = [
   'content',
   'dashboard',
   'dispute',
+  'merchant',
   'order',
   'permission',
   'role',
+  'tenant',
   'ticket',
 ]
 
@@ -419,6 +478,8 @@ export {
 
   const moduleLines: string[] = []
   const exportedNames = new Set<string>()
+  const firstSeenModule = new Map<string, string>()
+  const droppedExports: { name: string; moduleName: string; originalModule: string }[] = []
 
   for (const moduleName of moduleOrder) {
     const exports = MODULE_EXPORTS[moduleName]
@@ -428,8 +489,13 @@ export {
     if (!shouldInclude) continue
 
     const uniqueExports = exports.namedExports.filter(name => {
-      if (exportedNames.has(name)) return false
+      if (exportedNames.has(name)) {
+        const originalModule = firstSeenModule.get(name) ?? 'unknown'
+        droppedExports.push({ name, moduleName, originalModule })
+        return false
+      }
       exportedNames.add(name)
+      firstSeenModule.set(name, moduleName)
       return true
     })
 
@@ -442,13 +508,33 @@ export {
     )
   }
 
+  for (const { name, moduleName, originalModule } of droppedExports) {
+    console.warn(
+      `⚠️  Schema collision: "${name}" defined in both ${originalModule} and ${moduleName}. Using ${originalModule}'s version. Rename to avoid ambiguity.`
+    )
+  }
+
   return header + moduleLines.join('\n') + '\n'
 }
 
 function shouldIncludeModule(moduleName: string, resolved: ResolvedPreset): boolean {
   if (resolved.modules.has(moduleName)) return true
 
-  if (STANDALONE_SHARED_MODULES.has(moduleName)) return true
+  // Standalone shared modules: include when a module in the preset
+  // declares client pages that use their schemas OR server modules that import them
+  const standalone = STANDALONE_SHARED_MODULES[moduleName]
+  if (standalone) {
+    // Check if any module's clientPages includes a relevant page
+    const hasRelevantPage =
+      standalone.pages &&
+      [...resolved.modules.values()].some(
+        m => m.clientPages?.some(p => standalone.pages!.includes(p.name + '.tsx')) ?? false
+      )
+    // Check if any required server module is included
+    const hasRelevantServerModule =
+      standalone.serverModules?.some(sm => resolved.modules.has(sm)) ?? false
+    return !!(hasRelevantPage || hasRelevantServerModule)
+  }
 
   for (const [parentModule, additionalPaths] of Object.entries(ADDITIONAL_PATHS_MAP)) {
     if (additionalPaths.includes(moduleName) && resolved.modules.has(parentModule)) {

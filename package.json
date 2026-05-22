@@ -1,13 +1,33 @@
 {
   "name": "create-fullstack-scaffold",
-  "version": "0.4.0",
+  "version": "0.4.25",
   "type": "module",
   "bin": {
     "create-fullstack-scaffold": "dist/cli/index.js"
   },
   "files": [
     "dist/cli",
-    "template"
+    "template/src",
+    "template/drizzle",
+    "template/drizzle.config.ts",
+    "template/patches",
+    "template/eslint-rules",
+    "template/eslint.config.js",
+    "template/lint-scripts",
+    "template/scripts",
+    "template/docs",
+    "template/*.html",
+    "template/*.json",
+    "template/*.ts",
+    "template/*.js",
+    "template/*.md",
+    "template/*.toml",
+    "template/*.yaml",
+    "template/.husky",
+    "template/.gitignore",
+    "template/.npmrc",
+    "template/.env.example",
+    "template/public"
   ],
   "workspaces": [
     "template",
@@ -66,7 +86,7 @@
     "validate:modules": "npx tsx src/server/core/module-loader.ts",
     "check:refs": "node --import tsx/esm lint-scripts/check-refs.ts",
     "create:module": "node --import tsx/esm scripts/create-template.ts",
-    "postinstall": "patch-package",
+    "postinstall": "node -e \"try{require.resolve('patch-package')&&require('child_process').execSync('npx patch-package',{stdio:'pipe'})}catch(e){}\"",
     "prepare": "husky",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -107,6 +127,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.13.1",
     "ws": "^8.18.3",
+    "tsx": "^4.21.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.2"
   },
@@ -150,7 +171,6 @@
     "tailwindcss": "^4.2.1",
     "ts-import": "^5.0.0-beta.1",
     "tsup": "^8.5.0",
-    "tsx": "^4.21.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.25.0",
     "vite": "^6.2.3",

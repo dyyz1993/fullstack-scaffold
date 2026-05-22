@@ -39,7 +39,10 @@ const orderManifest: ModuleManifest = {
   dbSchemas: {
     files: ['orders'],
     hasSeed: true,
+    seed: { serviceFile: 'order-service', functionName: 'seedOrdersIfEmpty' },
   },
+
+  cliModule: { dir: 'order', registerFunction: 'registerOrderCommands' },
 }
 
 export default orderManifest

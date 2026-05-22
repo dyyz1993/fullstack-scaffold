@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, Star, Download, Trash2, Search, RefreshCw } from 
 import type { ColumnsType } from 'antd/es/table'
 import { apiClient, api } from '../services/apiClient'
 import type { Plugin } from '@shared/modules/plugins'
+import { useLanguage } from '../i18n/useLanguage'
 
 type PluginStatus = 'pending' | 'approved' | 'rejected'
 
@@ -23,6 +24,7 @@ const STATUS_OPTIONS = [
 ]
 
 export const PluginManagementPage: React.FC = () => {
+  const { formatDate } = useLanguage()
   const [plugins, setPlugins] = useState<Plugin[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -201,7 +203,7 @@ export const PluginManagementPage: React.FC = () => {
       title: '更新时间',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
-      render: (ts: number) => new Date(ts).toLocaleString('zh-CN'),
+      render: (ts: number) => formatDate(new Date(ts).toISOString()),
       sorter: (a: Plugin, b: Plugin) => a.updatedAt - b.updatedAt,
       defaultSortOrder: 'descend',
     },

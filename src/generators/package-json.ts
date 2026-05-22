@@ -80,8 +80,13 @@ export function filterPackageJson(
     }
   }
 
-  // Remove admin panel packages if no admin module
-  if (!resolved.modules.has('admin')) {
+  // Remove admin panel packages if no admin/tenant/merchant module uses them
+  // (antd is used by admin, tenant, and merchant pages)
+  const hasAntdConsumer =
+    resolved.modules.has('admin') ||
+    resolved.modules.has('tenant') ||
+    resolved.modules.has('merchant')
+  if (!hasAntdConsumer) {
     for (const pkg of ADMIN_PANEL_PACKAGES) {
       packagesToRemove.add(pkg)
     }

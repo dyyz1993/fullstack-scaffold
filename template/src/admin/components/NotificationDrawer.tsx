@@ -1,6 +1,7 @@
 import { Bell, CheckCheck, Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react'
-import { Badge, Button, Drawer, Empty, Spin, Tabs } from 'antd'
+import { Badge, Button, Drawer, Empty, Spin, Tabs, theme } from 'antd'
 import type { AppNotification, NotificationType } from '@shared/schemas'
+import { useLanguage } from '../i18n/useLanguage'
 
 interface NotificationDrawerProps {
   open: boolean
@@ -14,31 +15,39 @@ interface NotificationDrawerProps {
 
 const typeConfig: Record<
   NotificationType,
-  { color: string; bgColor: string; icon: React.ReactNode }
+  {
+    colorToken: 'colorInfo' | 'colorWarning' | 'colorError' | 'colorSuccess'
+    bgToken: 'colorInfoBg' | 'colorWarningBg' | 'colorErrorBg' | 'colorSuccessBg'
+    icon: React.ReactNode
+  }
 > = {
   info: {
-    color: '#1890ff',
-    bgColor: '#e6f7ff',
+    colorToken: 'colorInfo',
+    bgToken: 'colorInfoBg',
     icon: <Info className="w-4 h-4" />,
   },
   warning: {
-    color: '#faad14',
-    bgColor: '#fffbe6',
+    colorToken: 'colorWarning',
+    bgToken: 'colorWarningBg',
     icon: <AlertTriangle className="w-4 h-4" />,
   },
   error: {
-    color: '#ff4d4f',
-    bgColor: '#fff2f0',
+    colorToken: 'colorError',
+    bgToken: 'colorErrorBg',
     icon: <XCircle className="w-4 h-4" />,
   },
   success: {
-    color: '#52c41a',
-    bgColor: '#f6ffed',
+    colorToken: 'colorSuccess',
+    bgToken: 'colorSuccessBg',
     icon: <CheckCircle className="w-4 h-4" />,
   },
 }
 
-function formatTime(dateString: string): string {
+function formatTime(
+  dateString: string,
+  locale: string,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string {
   const date = new Date(dateString)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
@@ -47,11 +56,11 @@ function formatTime(dateString: string): string {
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
 
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${minutes}分钟前`
-  if (hours < 24) return `${hours}小时前`
-  if (days < 7) return `${days}天前`
-  return date.toLocaleDateString('zh-CN')
+  if (minutes < 1) return t('notification.justNow')
+  if (minutes < 60) return t('notification.minutesAgo', { count: minutes })
+  if (hours < 24) return t('notification.hoursAgo', { count: hours })
+  if (days < 7) return t('notification.daysAgo', { count: days })
+  return date.toLocaleDateString(locale)
 }
 
 export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
@@ -63,31 +72,57 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   onMarkAllAsRead,
   loading,
 }) => {
+  const { t, currentLanguage } = useLanguage()
+  const { token } = theme.useToken()
+
   const renderNotificationItem = (notif: AppNotification) => {
     const config = typeConfig[notif.type]
+    const bgColor = token[config.bgToken]
+    const fgColor = token[config.colorToken]
 
     return (
       <div
         key={notif.id}
-        className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-          !notif.read ? 'bg-blue-50/50' : ''
-        }`}
+        className="p-4 cursor-pointer transition-colors"
+        style={{
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          backgroundColor: !notif.read ? token.colorInfoBg ?? 'transparent' : undefined,
+        }}
         onClick={() => !notif.read && onMarkAsRead(notif.id)}
+        onMouseEnter={e =>
+          (e.currentTarget.style.backgroundColor = token.colorBgTextHover ?? 'transparent')
+        }
+        onMouseLeave={e =>
+          (e.currentTarget.style.backgroundColor = !notif.read
+            ? token.colorInfoBg ?? 'transparent'
+            : 'transparent')
+        }
       >
         <div className="flex items-start gap-3">
           <div
             className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: config.bgColor, color: config.color }}
+            style={{ backgroundColor: bgColor, color: fgColor }}
           >
             {config.icon}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900 truncate">{notif.title}</span>
-              {!notif.read && <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />}
+              <span className="font-medium truncate" style={{ color: token.colorText }}>
+                {notif.title}
+              </span>
+              {!notif.read && (
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: token.colorPrimary }}
+                />
+              )}
             </div>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{notif.message}</p>
-            <span className="text-xs text-gray-400 mt-1 block">{formatTime(notif.createdAt)}</span>
+            <p className="text-sm mt-1 line-clamp-2" style={{ color: token.colorTextSecondary }}>
+              {notif.message}
+            </p>
+            <span className="text-xs mt-1 block" style={{ color: token.colorTextTertiary }}>
+              {formatTime(notif.createdAt, currentLanguage, t)}
+            </span>
           </div>
         </div>
       </div>
@@ -100,7 +135,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   const tabItems = [
     {
       key: 'all',
-      label: `全部 (${notifications.length})`,
+      label: `${t('notification.all')} (${notifications.length})`,
       children: (
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
           {loading ? (
@@ -108,7 +143,11 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               <Spin />
             </div>
           ) : notifications.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无通知" className="py-12" />
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={t('notification.noNotifications')}
+              className="py-12"
+            />
           ) : (
             notifications.map(renderNotificationItem)
           )}
@@ -117,13 +156,13 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     },
     {
       key: 'unread',
-      label: `未读 (${unreadNotifications.length})`,
+      label: `${t('notification.unread')} (${unreadNotifications.length})`,
       children: (
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
           {unreadNotifications.length === 0 ? (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="暂无未读通知"
+              description={t('notification.noUnread')}
               className="py-12"
             />
           ) : (
@@ -134,13 +173,13 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     },
     {
       key: 'read',
-      label: `已读 (${readNotifications.length})`,
+      label: `${t('notification.read')} (${readNotifications.length})`,
       children: (
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
           {readNotifications.length === 0 ? (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="暂无已读通知"
+              description={t('notification.noRead')}
               className="py-12"
             />
           ) : (
@@ -155,7 +194,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     <Drawer
       title={
         <div className="flex items-center justify-between">
-          <span>通知中心</span>
+          <span>{t('notification.center')}</span>
           {unreadCount > 0 && (
             <Button
               type="link"
@@ -164,7 +203,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               onClick={onMarkAllAsRead}
               className="text-xs"
             >
-              全部已读
+              {t('notification.markAllRead')}
             </Button>
           )}
         </div>
@@ -174,7 +213,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
       open={open}
       width={400}
       styles={{
-        header: { borderBottom: '1px solid #f0f0f0' },
+        header: { borderBottom: `1px solid ${token.colorBorderSecondary}` },
         body: { padding: 0 },
       }}
     >
@@ -187,12 +226,18 @@ export const NotificationBell: React.FC<{
   unreadCount: number
   onClick: () => void
 }> = ({ unreadCount, onClick }) => {
+  const { token } = theme.useToken()
+
   return (
     <button
-      className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+      data-testid="notification-bell"
+      className="p-2 rounded-lg transition-colors relative"
+      style={{ color: token.colorTextSecondary }}
       onClick={onClick}
+      onMouseEnter={e => (e.currentTarget.style.backgroundColor = token.colorBgTextHover)}
+      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
-      <Bell className="w-5 h-5 text-gray-600" />
+      <Bell className="w-5 h-5" />
       {unreadCount > 0 && (
         <Badge
           count={unreadCount > 99 ? '99+' : unreadCount}

@@ -17,6 +17,10 @@ const adminManifest: ModuleManifest = {
         importPath: './routes/admin-routes',
         exportName: 'adminRoutes',
       },
+      {
+        importPath: './routes/dashboard-routes',
+        exportName: 'dashboardRoutes',
+      },
     ],
   },
 
@@ -39,6 +43,8 @@ const adminManifest: ModuleManifest = {
   ],
 
   hasSSE: true,
+
+  cliModule: { dir: 'admin', registerFunction: 'registerAdminCommands' },
 }
 
 export default adminManifest

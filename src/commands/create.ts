@@ -14,7 +14,11 @@ import { generateRouteRegistry } from '../generators/route-registry'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
-import { generateAdminApp } from '../generators/admin-app'
+import {
+  generateAdminApp,
+  generateAdminComponentsIndex,
+  generateAdminApiClient,
+} from '../generators/admin-app'
 import { generateDbSchemaBarrel } from '../generators/db-schema-barrel'
 import { generateDbInit } from '../generators/db-init'
 import { generateServerApp } from '../generators/server-app'
@@ -179,6 +183,7 @@ export interface CreateOptions {
   preset?: string
   outputDir?: string
   dryRun?: boolean
+  install?: boolean
 }
 
 export async function createProject(options: CreateOptions): Promise<void>
@@ -197,18 +202,21 @@ export async function createProject(
   let presetId: string | undefined
   let outputDir: string | undefined
   let dryRun: boolean
+  let install: boolean
 
   if (typeof projectNameOrOptions === 'string') {
     projectName = projectNameOrOptions
     currentDir = useCurrentDir
     presetId = preset
     dryRun = false
+    install = true
   } else {
     projectName = projectNameOrOptions.projectName
     currentDir = projectNameOrOptions.currentDir
     presetId = projectNameOrOptions.preset
     outputDir = projectNameOrOptions.outputDir
     dryRun = projectNameOrOptions.dryRun ?? false
+    install = projectNameOrOptions.install ?? true
   }
 
   if (!currentDir) {
@@ -399,6 +407,21 @@ export async function createProject(
         await fs.ensureDir(path.join(targetDir, 'src/admin'))
         await fs.writeFile(path.join(targetDir, 'src/admin/App.tsx'), adminAppContent)
       }
+      // Generate admin/components/index.ts with conditional CaptchaModal export
+      const adminComponentsIndex = generateAdminComponentsIndex(resolved)
+      if (adminComponentsIndex) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/components'))
+        await fs.writeFile(
+          path.join(targetDir, 'src/admin/components/index.ts'),
+          adminComponentsIndex
+        )
+      }
+      // Generate admin/services/apiClient.ts with conditional captcha support
+      const adminApiClient = generateAdminApiClient(resolved)
+      if (adminApiClient) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/services'))
+        await fs.writeFile(path.join(targetDir, 'src/admin/services/apiClient.ts'), adminApiClient)
+      }
     }
 
     const serverAppContent = generateServerApp(resolved)
@@ -470,6 +493,41 @@ export async function createProject(
     await updateReadme(targetDir, projectName)
     readmeSpinner.succeed(chalk.green('README.md configured'))
 
+    let installSucceeded = false
+    if (install && !dryRun) {
+      const installSpinner = ora('Installing dependencies...').start()
+      try {
+        const { execSync } = await import('node:child_process')
+        execSync('npm install --legacy-peer-deps', {
+          cwd: targetDir,
+          stdio: 'pipe',
+          timeout: 300000,
+        })
+        installSpinner.succeed(chalk.green('Dependencies installed'))
+        installSucceeded = true
+      } catch {
+        installSpinner.warn(
+          chalk.yellow('Dependency installation failed (you can run npm install manually)')
+        )
+      }
+    }
+
+    if (installSucceeded) {
+      const patchesDir = path.join(targetDir, 'patches')
+      if (await fs.pathExists(patchesDir)) {
+        try {
+          const { execSync } = await import('node:child_process')
+          execSync('npx patch-package', {
+            cwd: targetDir,
+            stdio: 'pipe',
+            timeout: 60000,
+          })
+        } catch {
+          // patch-package may fail if patches don't apply, not critical
+        }
+      }
+    }
+
     console.log('')
     console.log(chalk.green('  ✓ Project created successfully!'))
     console.log(chalk.gray(`   Preset: ${selectedPreset.name}`))
@@ -479,7 +537,9 @@ export async function createProject(
     if (!currentDir && !outputDir) {
       console.log(chalk.white(`    cd ${projectName}`))
     }
-    console.log(chalk.white('    npm install'))
+    if (!install || !installSucceeded) {
+      console.log(chalk.white('    npm install'))
+    }
 
     if (resolved.hasClient) {
       console.log(chalk.white('    npm run dev'))

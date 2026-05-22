@@ -22,6 +22,8 @@ const chatManifest: ModuleManifest = {
   clientStores: ['chatWSStore'],
 
   hasWebSocket: true,
+
+  cliModule: { dir: 'chat', registerFunction: 'registerChatCommands' },
 }
 
 export default chatManifest

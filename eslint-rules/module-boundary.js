@@ -6,7 +6,7 @@
  * ESLint 规则：模块边界约束
  *
  * 规则：
- * 1. client、cli、admin 三个模块之间不能存在直接引用关系
+ * 1. client、cli、admin、merchant、tenant 模块之间不能存在直接引用关系
  * 2. 模块间共享代码必须通过 shared 目录
  * 3. 违规引用将报错并提示使用 shared 中转
  */
@@ -15,7 +15,7 @@ export const moduleBoundary = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Enforce boundary between client, cli and admin modules',
+      description: 'Enforce boundary between client, cli, admin, merchant and tenant modules',
       recommended: true,
     },
     messages: {
@@ -35,12 +35,16 @@ export const moduleBoundary = {
       client: '/client/',
       cli: '/cli/',
       admin: '/admin/',
+      merchant: '/merchant/',
+      tenant: '/tenant/',
     }
 
     const moduleNames = {
       client: 'client',
       cli: 'cli',
       admin: 'admin',
+      merchant: 'merchant',
+      tenant: 'tenant',
     }
 
     function getCurrentModule(filePath) {

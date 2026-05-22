@@ -7,22 +7,21 @@ import { useAdminStore } from '../stores/adminStore'
 import { useAdminNotifications } from '../hooks/useAdminNotifications'
 import { NotificationDrawer, NotificationBell } from '../components/NotificationDrawer'
 import { AccountSwitcher } from '../components/AccountSwitcher'
-import { useEffect, useState } from 'react'
+import { ThemeToggle } from '../components/ThemeToggle'
+import { LanguageSwitcher } from '../components/LanguageSwitcher'
+import { useLanguage } from '../i18n/useLanguage'
+import { useEffect, useState, useMemo } from 'react'
 
 interface HeaderProps {
   collapsed: boolean
   onToggle: () => void
 }
 
-const ROLE_OPTIONS = [
-  { label: 'Super Admin', value: 'super_admin' },
-  { label: 'Moderator', value: 'moderator' },
-  { label: 'Operator', value: 'operator' },
-]
-
 export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
   const navigate = useNavigate()
   const { user, logout } = useAdminStore()
+  const { t } = useLanguage()
+  const { token } = theme.useToken()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { status, notifications, unreadCount, connect, markAsRead, markAllAsRead } =
     useAdminNotifications()
@@ -38,34 +37,41 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
     navigate('/login')
   }
 
+  const ROLE_OPTIONS = useMemo(
+    () => [
+      { label: t('header.superAdmin'), value: 'super_admin' },
+      { label: t('header.moderator'), value: 'moderator' },
+      { label: t('header.operator'), value: 'operator' },
+    ],
+    [t]
+  )
+
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
-      label: 'Profile',
+      label: t('header.profile'),
       icon: <User className="w-4 h-4" />,
     },
     {
       key: 'settings',
-      label: 'Settings',
+      label: t('header.settings'),
       icon: <Settings className="w-4 h-4" />,
       onClick: () => navigate('/settings'),
     },
     { type: 'divider' },
     {
       key: 'logout',
-      label: 'Logout',
+      label: t('header.logout'),
       icon: <LogOut className="w-4 h-4" />,
       danger: true,
       onClick: handleLogout,
     },
   ]
 
-  const { token } = theme.useToken()
-
   return (
     <>
       <AntLayout.Header
-        className="flex items-center justify-between px-6 bg-white border-b border-gray-200"
+        className="flex items-center justify-between px-6"
         style={{
           paddingInline: 24,
           height: 64,
@@ -78,14 +84,21 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
         <div className="flex items-center gap-4">
           <button
             onClick={onToggle}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border-none bg-transparent"
+            className="p-2 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+            style={{ color: token.colorText }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = token.colorFillQuaternary
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
             data-testid="toggle-sidebar-button"
           >
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </button>
 
           <Breadcrumb
-            items={[{ title: 'Home' }, { title: 'Dashboard' }]}
+            items={[{ title: t('header.home') }, { title: t('header.dashboard') }]}
             style={{ fontSize: 14 }}
           />
         </div>
@@ -99,10 +112,21 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
             data-testid="role-switcher"
           />
 
+          <LanguageSwitcher />
+          <ThemeToggle />
           <NotificationBell unreadCount={unreadCount} onClick={() => setDrawerOpen(true)} />
           <AccountSwitcher />
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-            <button className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer border-none bg-transparent">
+            <button
+              className="flex items-center gap-2 p-1.5 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+              style={{ color: token.colorText }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = token.colorFillQuaternary
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
+            >
               <Avatar
                 size={32}
                 src={user?.avatar}

@@ -61,21 +61,13 @@ export function getExcludePatterns(
       }
     }
 
-    if (name === 'notifications') {
-      excludes.push('src/cli/modules/notification')
-    }
-
     if (name === 'todos') {
-      excludes.push('src/cli/modules/todo')
       excludes.push('src/server/__tests__/integration/todos-api.test.ts')
     }
 
-    if (name === 'auth') {
-      excludes.push('src/cli/modules/auth')
-    }
-
-    if (name === 'plugin') {
-      excludes.push('src/cli/modules/plugin')
+    // Exclude CLI module dir when the server module is not in the preset
+    if (manifest.cliModule) {
+      excludes.push(`src/cli/modules/${manifest.cliModule.dir}`)
     }
   }
 
@@ -83,6 +75,18 @@ export function getExcludePatterns(
     excludes.push('src/admin')
     excludes.push('admin.html')
     excludes.push('auth-inject.html')
+  }
+
+  // tenant/merchant directories: tenant needs tenant dir, merchant needs merchant dir
+  if (!resolved.modules.has('tenant')) {
+    excludes.push('src/tenant')
+    excludes.push('tenant.html')
+    excludes.push('src/server/middleware/tenant-isolation.ts')
+    excludes.push('src/server/middleware/__tests__/tenant-isolation.test.ts')
+  }
+  if (!resolved.modules.has('merchant')) {
+    excludes.push('src/merchant')
+    excludes.push('merchant.html')
   }
 
   if (!resolved.hasClient) {
@@ -107,17 +111,45 @@ export function getExcludePatterns(
 
   excludes.push('src/client/preset-ui-config.ts')
 
+  // Exclude standalone shared modules (cart, community, dashboard) that are not needed
+  // by the current preset. These have no server module manifest of their own, but are
+  // declared as clientPages by other modules or imported by server routes.
+  // Include when:
+  // 1. A module in the preset declares the relevant client page, OR
+  // 2. A server module that imports their schemas is present (e.g., content needs community).
+  const standaloneSharedModules: Record<string, { pages?: string[]; serverModules?: string[] }> = {
+    cart: { pages: ['CartPage'] },
+    community: { pages: ['TopicsPage', 'ProfilePage'], serverModules: ['content'] },
+    dashboard: { pages: ['DashboardPage'] },
+  }
+  for (const [moduleName, config] of Object.entries(standaloneSharedModules)) {
+    // Check if any module's clientPages includes a relevant page
+    const hasRelevantPage =
+      config.pages &&
+      [...resolved.modules.values()].some(
+        m => m.clientPages?.some(p => config.pages!.includes(p.name)) ?? false
+      )
+    // Check if any required server module is included
+    const hasRelevantServerModule =
+      config.serverModules?.some(sm => resolved.modules.has(sm)) ?? false
+    if (!hasRelevantPage && !hasRelevantServerModule) {
+      excludes.push(`src/shared/modules/${moduleName}`)
+    }
+  }
+
   // LoginPage/RegisterPage are excluded via the for loop above (auth clientPages)
   // when auth module is not in the preset
 
   if (!resolved.hasPermission && !resolved.modules.has('auth')) {
     excludes.push('src/server/utils/permission-utils.ts')
+    excludes.push('src/server/utils/__tests__/permission-utils.test.ts')
     excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
     excludes.push('src/server/utils/__tests__/auth.test.ts')
   } else if (!resolved.hasPermission && resolved.modules.has('auth')) {
     excludes.push('src/server/utils/permission-utils.ts')
+    excludes.push('src/server/utils/__tests__/permission-utils.test.ts')
     excludes.push('src/server/middleware/__tests__/auth-simple.test.ts')
     excludes.push('src/server/middleware/__tests__/auth.test.ts')
     excludes.push('src/server/middleware/__tests__/error-response-format.test.ts')
@@ -129,6 +161,11 @@ export function getExcludePatterns(
 
   if (!resolved.modules.has('captcha')) {
     excludes.push('src/server/utils/__tests__/captcha.test.ts')
+    // CaptchaModal component depends on captcha module (store, API, types)
+    excludes.push('src/admin/components/CaptchaModal.tsx')
+    excludes.push('src/admin/stores/captchaStore.ts')
+    excludes.push('src/admin/stores/__tests__/captchaStore.test.ts')
+    excludes.push('src/admin/stores/__tests__/captchaStoreBranches.test.ts')
   }
 
   return excludes
@@ -160,9 +197,16 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
 
   if (resolved.hasClient && resolved.modules.has('admin')) {
     files.push('src/admin/App.tsx')
+    files.push('src/admin/components/index.ts')
+    files.push('src/admin/services/apiClient.ts')
   }
 
   if (resolved.hasClient && !resolved.modules.has('admin')) {
+    files.push('vite.config.ts')
+  }
+
+  if (resolved.hasClient && resolved.modules.has('admin')) {
+    // admin preset needs generated vite.config.ts to filter tenant/merchant entries
     files.push('vite.config.ts')
   }
 
@@ -175,10 +219,8 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     files.push('src/server/utils/auth.ts')
   }
 
-  const seedModules = ['order', 'ticket', 'dispute', 'content']
-  if (seedModules.some(m => !resolved.modules.has(m)) || !resolved.hasPermission) {
-    files.push('src/server/db/init.ts')
-  }
+  // Always generate init.ts — every preset has different seed combinations
+  files.push('src/server/db/init.ts')
 
   return files
 }

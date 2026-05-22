@@ -1,7 +1,7 @@
 {
   "name": "biomimic-todo-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "bin": {
     "biomimic": "./dist/cli/index.js"
@@ -15,6 +15,7 @@
     "dev:forum": "VITE_PRESET=community vite",
     "dev:saas": "VITE_PRESET=saas vite",
     "build": "npm run build:client && npm run build:server",
+    "build:analyze": "ANALYZE=true vite build",
     "build:client": "vite build",
     "build:server": "tsup",
     "build:cli": "tsup --config tsup.config.ts",
@@ -73,9 +74,11 @@
     "@hono/node-server": "^1.14.4",
     "@hono/zod-openapi": "1.2.2",
     "@hono/zod-validator": "0.7.6",
+    "@ant-design/icons": "^5.6.1",
     "@libsql/client": "^0.17.0",
     "antd": "^5.24.0",
     "bcryptjs": "^3.0.3",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.45.1",
     "hono": "4.12.16",
@@ -89,6 +92,8 @@
     "react-router-dom": "^7.13.1",
     "ws": "^8.18.3",
     "zod": "^4.4.3",
+    "i18next": "^24.2.3",
+    "react-i18next": "^15.5.3",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
@@ -97,7 +102,7 @@
     "@commitlint/config-conventional": "^20.4.3",
     "@eslint/js": "^9.39.4",
     "@hono/vite-dev-server": "^0.23.0",
-    "@playwright/test": "^1.50.0",
+    "@playwright/test": "^1.60.0",
     "@prerenderer/renderer-jsdom": "^1.1.9",
     "@prerenderer/renderer-puppeteer": "^1.2.4",
     "@prerenderer/rollup-plugin": "^0.3.12",
@@ -128,7 +133,7 @@
     "lint-staged": "^15.5.0",
     "minimatch": "^10.2.4",
     "patch-package": "^8.0.0",
-    "playwright": "^1.50.0",
+    "playwright": "^1.60.0",
     "postcss": "^8.5.6",
     "prettier": "^3.5.3",
     "tailwindcss": "^4.2.1",

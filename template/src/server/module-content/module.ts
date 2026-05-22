@@ -39,7 +39,10 @@ const contentManifest: ModuleManifest = {
   dbSchemas: {
     files: ['contents'],
     hasSeed: true,
+    seed: { serviceFile: 'content-service', functionName: 'seedContentsIfEmpty' },
   },
+
+  cliModule: { dir: 'content', registerFunction: 'registerContentCommands' },
 }
 
 export default contentManifest

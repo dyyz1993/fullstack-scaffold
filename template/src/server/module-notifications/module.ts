@@ -27,6 +27,8 @@ const notificationManifest: ModuleManifest = {
   },
 
   hasSSE: true,
+
+  cliModule: { dir: 'notification', registerFunction: 'registerNotificationCommands' },
 }
 
 export default notificationManifest

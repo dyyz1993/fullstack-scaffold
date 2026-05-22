@@ -40,7 +40,7 @@ export const OrderQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 })
 
-export const DeleteResultSchema = z.object({
+export const OrderDeleteResultSchema = z.object({
   message: z.string(),
 })
 
@@ -57,7 +57,7 @@ export type OrderStatus = z.infer<typeof OrderStatusSchema>
 export type Order = z.infer<typeof OrderSchema>
 export type CreateOrderInput = z.infer<typeof CreateOrderSchema>
 export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>
-export type DeleteResult = z.infer<typeof DeleteResultSchema>
+export type OrderDeleteResult = z.infer<typeof OrderDeleteResultSchema>
 export type ProcessOrderInput = z.infer<typeof ProcessOrderSchema>
 export type CancelOrderInput = z.infer<typeof CancelOrderSchema>
 export type OrderQueryInput = z.infer<typeof OrderQuerySchema>

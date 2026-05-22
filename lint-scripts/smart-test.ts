@@ -39,6 +39,7 @@ function findTestFiles(): string[] {
             if (item.includes('.test.') || item.includes('.spec.')) {
               if (item.endsWith('.ts') || item.endsWith('.tsx')) {
                 if (fullPath.includes('e2e-scaffold-verify')) continue
+                if (fullPath.includes('tests/e2e/')) continue
                 testFiles.push(relative(PROJECT_ROOT, fullPath))
               }
             }

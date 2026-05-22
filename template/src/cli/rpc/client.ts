@@ -1,5 +1,5 @@
 import { hc } from 'hono/client'
-import type { ClientApiType, AppType } from '@server/index'
+import type { AppType } from '@server/index'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 
@@ -16,7 +16,7 @@ export interface CliFetchExtendOptions {
 }
 
 export function createRPCClient(baseUrl: string) {
-  return hc<ClientApiType>(baseUrl, {
+  return hc<AppType>(baseUrl, {
     webSocket: url => new WSClientImpl(url) as unknown as WebSocket,
     sse: url => new SSEClientImpl(url),
   })

@@ -10,10 +10,27 @@ import {
   Sparkles,
   TrendingUp,
   Zap,
+  Eye,
+  ExternalLink,
+  Star,
+  Shield,
 } from 'lucide-react'
 import { usePluginStore } from '@client/stores/pluginStore'
 import { LoadingSpinner, EmptyState } from '@client/components'
-import { StatusBadge } from '@client/components'
+import { StatusBadge, type ColorScheme } from '@client/components'
+
+const getStatusColor = (status: string): ColorScheme => {
+  switch (status?.toLowerCase()) {
+    case 'approved':
+      return 'green'
+    case 'pending':
+      return 'yellow'
+    case 'rejected':
+      return 'red'
+    default:
+      return 'gray'
+  }
+}
 
 export const PluginsPage: React.FC = () => {
   const plugins = usePluginStore(state => state.plugins)
@@ -141,37 +158,112 @@ export const PluginsPage: React.FC = () => {
                     <Link
                       key={plugin.id}
                       to={`/plugins/${plugin.slug}`}
-                      className="group relative p-5 bg-white rounded-2xl border border-gray-100 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-300 block overflow-hidden"
+                      className="group relative bg-white rounded-2xl border border-gray-100 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-500/5 transition-all duration-300 block overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 to-fuchsia-500/0 group-hover:from-violet-500/[0.02] group-hover:to-fuchsia-500/[0.04] transition-all duration-300" />
                       <div className="relative">
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-lg font-bold text-violet-600 shrink-0">
-                              {plugin.name.charAt(0).toUpperCase()}
+                        {/* Screenshot thumbnail */}
+                        <div className="relative">
+                          {plugin.screenshotUrl ? (
+                            <img
+                              src={plugin.screenshotUrl}
+                              alt={plugin.name}
+                              className="w-full h-32 object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-20 bg-gradient-to-br from-violet-100 to-fuchsia-100" />
+                          )}
+                          {plugin.featured && (
+                            <div className="absolute top-2 right-2">
+                              <div className="p-1.5 bg-amber-400 rounded-full shadow-lg">
+                                <Star className="w-3.5 h-3.5 text-white fill-white" />
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-violet-700 transition-colors">
-                                {plugin.name}
-                              </h3>
-                              <p className="text-xs text-gray-400">by {plugin.authorName}</p>
-                            </div>
-                          </div>
-                          <StatusBadge label={`v${plugin.version}`} colorScheme="purple" />
+                          )}
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">
-                          {plugin.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 text-xs text-gray-400">
+
+                        <div className="p-5">
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center text-lg font-bold text-violet-600 shrink-0">
+                                {plugin.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-violet-700 transition-colors">
+                                  {plugin.name}
+                                </h3>
+                                <p className="text-xs text-gray-400">by {plugin.authorName}</p>
+                              </div>
+                            </div>
+                            <StatusBadge label={`v${plugin.version}`} colorScheme="purple" />
+                          </div>
+
+                          {/* Status and License */}
+                          <div className="flex items-center gap-2 mb-3">
+                            <StatusBadge
+                              label={plugin.status || 'Unknown'}
+                              icon={Shield}
+                              colorScheme={getStatusColor(plugin.status || '')}
+                            />
+                            {plugin.license && (
+                              <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                                {plugin.license}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">
+                            {plugin.description}
+                          </p>
+
+                          {/* Download + View counts */}
+                          <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
                             <span className="flex items-center gap-1">
                               <Download className="w-3.5 h-3.5" />
                               {plugin.downloadCount}
                             </span>
+                            {plugin.viewCount !== undefined && (
+                              <span className="flex items-center gap-1">
+                                <Eye className="w-3.5 h-3.5" />
+                                {plugin.viewCount}
+                              </span>
+                            )}
                           </div>
+
+                          {/* External links */}
+                          {(plugin.repositoryUrl || plugin.homepageUrl) && (
+                            <div className="flex items-center gap-1.5 mb-3">
+                              {plugin.repositoryUrl && (
+                                <a
+                                  href={plugin.repositoryUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-violet-600 transition-colors"
+                                  title="Repository"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                              )}
+                              {plugin.homepageUrl && (
+                                <a
+                                  href={plugin.homepageUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-violet-600 transition-colors"
+                                  title="Homepage"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Tags - show all */}
                           {plugin.tags && plugin.tags.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              {plugin.tags.slice(0, 2).map(tag => (
+                            <div className="flex flex-wrap items-center gap-1">
+                              {plugin.tags.map(tag => (
                                 <span
                                   key={tag}
                                   className="inline-flex items-center px-2 py-0.5 bg-gray-50 text-gray-500 rounded-md text-xs"

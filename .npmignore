@@ -1,0 +1,23 @@
+# Template junk that should NOT be in npm package
+template/node_modules/
+template/dist/
+template/logs/
+template/coverage/
+template/playwright-artifacts/
+template/playwright-report/
+template/test-results/
+template/uploads/
+template/data/
+*.db
+*.sqlite
+
+# Root dev files
+node_modules/
+src/
+*.ts
+!dist/
+tsconfig.json
+tsup*.config.ts
+vitest*.config.ts
+eslint.config.js
+.DS_Store

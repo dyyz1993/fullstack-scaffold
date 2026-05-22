@@ -22,7 +22,11 @@ export interface ModuleManifest {
     isPublic?: boolean
     requiredPermission?: string
   }[]
-  dbSchemas?: { files: string[]; hasSeed: boolean }
+  dbSchemas?: {
+    files: string[]
+    hasSeed: boolean
+    seed?: { serviceFile: string; functionName: string }
+  }
   dependencies?: Record<string, string>
   clientStores?: string[]
   providesMiddleware?: {
@@ -32,6 +36,7 @@ export interface ModuleManifest {
   }[]
   hasSSE?: boolean
   hasWebSocket?: boolean
+  cliModule?: { dir: string; registerFunction: string }
 }
 
 export interface TemplatePreset {

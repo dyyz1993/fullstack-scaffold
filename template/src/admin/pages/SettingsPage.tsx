@@ -1,73 +1,122 @@
-import { Card, Form, Input, Button, Switch, Divider, message } from 'antd'
-
-interface SettingsFormValues {
-  siteName?: string
-  siteDescription?: string
-  currentPassword?: string
-  newPassword?: string
-  confirmPassword?: string
-}
+import { useState, useEffect, useCallback } from 'react'
+import { Card, Form, Input, Button, Switch, Divider, message, InputNumber } from 'antd'
+import { apiClient, api } from '../services/apiClient'
+import { useLanguage } from '../i18n/useLanguage'
+import type { Settings } from '@shared/modules/admin'
 
 export const SettingsPage: React.FC = () => {
-  const [form] = Form.useForm<SettingsFormValues>()
+  const { t } = useLanguage()
+  const [form] = Form.useForm<Settings>()
+  const [loading, setLoading] = useState(false)
 
-  const handleSave = () => {
-    message.success('Settings saved successfully!')
+  const fetchSettings = useCallback(async () => {
+    try {
+      const data = await api(apiClient.api.admin.settings.$get())
+        .withLoading(t('common.loading'))
+        .json()
+      form.setFieldsValue(data)
+    } catch {
+      // handled by api-request
+    }
+  }, [form, t])
+
+  useEffect(() => {
+    fetchSettings()
+  }, [fetchSettings])
+
+  const handleSave = async (values: Settings) => {
+    setLoading(true)
+    try {
+      await api(
+        apiClient.api.admin.settings.$put({
+          json: values,
+        })
+      )
+        .withLoading(t('common.loading'))
+        .json()
+      message.success(t('settings.saved'))
+    } catch {
+      // handled by api-request
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('settings.title')}</h1>
 
-      <Card title="General Settings" className="mb-6">
-        <Form form={form} layout="vertical">
-          <Form.Item label="Site Name" name="siteName">
-            <Input placeholder="Enter site name" />
+      <Form form={form} layout="vertical" onFinish={handleSave}>
+        <Card title={t('settings.general')} className="mb-6">
+          <Form.Item label={t('settings.siteName')} name="siteName" rules={[{ required: true }]}>
+            <Input placeholder={t('settings.siteNamePlaceholder')} />
           </Form.Item>
-          <Form.Item label="Site Description" name="siteDescription">
-            <Input.TextArea rows={4} placeholder="Enter site description" />
+          <Form.Item label={t('settings.siteDescription')} name="siteDescription">
+            <Input.TextArea rows={4} placeholder={t('settings.siteDescriptionPlaceholder')} />
           </Form.Item>
-        </Form>
-      </Card>
+        </Card>
 
-      <Card title="Notification Settings" className="mb-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Email Notifications</p>
-              <p className="text-sm text-gray-500">
-                Receive email notifications for important updates
-              </p>
+        <Card title={t('settings.email')} className="mb-6">
+          <Form.Item label={t('settings.smtpHost')} name="smtpHost" rules={[{ required: true }]}>
+            <Input placeholder={t('settings.smtpHostPlaceholder')} />
+          </Form.Item>
+          <Form.Item label={t('settings.smtpPort')} name="smtpPort" rules={[{ required: true }]}>
+            <InputNumber min={1} max={65535} className="w-full" />
+          </Form.Item>
+          <Form.Item
+            label={t('settings.emailFrom')}
+            name="emailFrom"
+            rules={[{ required: true, type: 'email' }]}
+          >
+            <Input placeholder={t('settings.emailFromPlaceholder')} />
+          </Form.Item>
+        </Card>
+
+        <Card title={t('settings.notification')} className="mb-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">{t('settings.emailNotifications')}</p>
+                <p className="text-sm text-gray-500">{t('settings.emailNotificationsDesc')}</p>
+              </div>
+              <Form.Item name="emailNotifications" valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
             </div>
-            <Switch defaultChecked />
-          </div>
-          <Divider />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Push Notifications</p>
-              <p className="text-sm text-gray-500">Receive push notifications in browser</p>
+            <Divider />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">{t('settings.pushNotifications')}</p>
+                <p className="text-sm text-gray-500">{t('settings.pushNotificationsDesc')}</p>
+              </div>
+              <Form.Item name="pushNotifications" valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
             </div>
-            <Switch />
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      <Card title="Security Settings">
-        <Form form={form} layout="vertical">
-          <Form.Item label="Current Password" name="currentPassword">
-            <Input.Password placeholder="Enter current password" />
+        <Card title={t('settings.security')} className="mb-6">
+          <Form.Item
+            label={t('settings.sessionTimeout')}
+            name="sessionTimeout"
+            rules={[{ required: true }]}
+          >
+            <InputNumber min={5} max={1440} addonAfter={t('settings.minutes')} className="w-full" />
           </Form.Item>
-          <Form.Item label="New Password" name="newPassword">
-            <Input.Password placeholder="Enter new password" />
+          <Form.Item
+            label={t('settings.maxLoginAttempts')}
+            name="maxLoginAttempts"
+            rules={[{ required: true }]}
+          >
+            <InputNumber min={1} max={20} className="w-full" />
           </Form.Item>
-          <Form.Item label="Confirm New Password" name="confirmPassword">
-            <Input.Password placeholder="Confirm new password" />
-          </Form.Item>
-          <Button type="primary" onClick={handleSave}>
-            Save Changes
-          </Button>
-        </Form>
-      </Card>
+        </Card>
+
+        <Button type="primary" htmlType="submit" loading={loading} size="large">
+          {t('settings.saveChanges')}
+        </Button>
+      </Form>
     </div>
   )
 }

@@ -1,10 +1,11 @@
 import type { ResolvedPreset } from './template-generator'
+import { getStandaloneRoutes } from './route-registry'
 
 export function generateServerApp(resolved: ResolvedPreset): string {
   const useRealtime = resolved.hasSSE || resolved.hasWebSocket
   const useAuditLog = resolved.hasPermission
   const useCaptcha = resolved.hasCaptcha
-  const useFileRoutes = resolved.modules.has('file')
+  const standaloneRoutes = getStandaloneRoutes(resolved)
 
   const imports: string[] = [
     `import { OpenAPIHono } from '@hono/zod-openapi'`,
@@ -33,8 +34,22 @@ export function generateServerApp(resolved: ResolvedPreset): string {
     `import { adminApiRoutes, clientApiRoutes } from './route-registry'`
   )
 
-  if (useFileRoutes) {
-    imports.push(`import { fileRoutes } from './module-file/routes/file-routes'`)
+  // Import standalone routes from their source modules (already imported via route-registry)
+  // But standalone routes are NOT part of the aggregated clientApiRoutes/adminApiRoutes,
+  // so we import them directly for mounting at their custom paths.
+  const standaloneImportSet = new Set<string>()
+  for (const [name, manifest] of resolved.modules) {
+    if (manifest.routes.standalone) {
+      const { importPath, exportName } = manifest.routes.standalone
+      const moduleDir = `module-${name}`
+      const relPath = importPath.replace(/^\.\//, '')
+      // Check if this import is already in the route-registry (which re-exports aren't — we import directly)
+      const stmt = `import { ${exportName} } from './${moduleDir}/${relPath}'`
+      if (!standaloneImportSet.has(stmt)) {
+        standaloneImportSet.add(stmt)
+        imports.push(stmt)
+      }
+    }
   }
 
   const middlewareChain: string[] = [
@@ -57,8 +72,9 @@ export function generateServerApp(resolved: ResolvedPreset): string {
 
   const routes: string[] = [`.route('/', clientApiRoutes)`, `.route('/', adminApiRoutes)`]
 
-  if (useFileRoutes) {
-    routes.push(`.route('/files', fileRoutes)`)
+  // Dynamically mount standalone routes at their custom paths
+  for (const sr of standaloneRoutes) {
+    routes.push(`.route('${sr.mountPath}', ${sr.localName})`)
   }
 
   const indent = '    '

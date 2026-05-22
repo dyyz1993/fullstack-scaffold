@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RolesPage } from '../RolesPage'
-import type { RoleType } from '@shared/modules/role/schemas'
+import type { RoleDataType } from '@shared/modules/role/schemas'
 
-const mockRoles: RoleType[] = [
+const mockRoles: RoleDataType[] = [
   {
     id: '1',
     code: 'super_admin',

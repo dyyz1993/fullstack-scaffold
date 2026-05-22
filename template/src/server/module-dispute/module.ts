@@ -24,7 +24,10 @@ const disputeManifest: ModuleManifest = {
   dbSchemas: {
     files: ['disputes'],
     hasSeed: true,
+    seed: { serviceFile: 'dispute-service', functionName: 'seedDisputesIfEmpty' },
   },
+
+  cliModule: { dir: 'dispute', registerFunction: 'registerDisputeCommands' },
 }
 
 export default disputeManifest

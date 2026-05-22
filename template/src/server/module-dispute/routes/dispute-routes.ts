@@ -17,7 +17,7 @@ import {
   UpdateDisputeSchema,
   DisputeListSchema,
   ResolveDisputeSchema,
-  DeleteResultSchema,
+  DisputeDeleteResultSchema,
 } from '@shared/modules/dispute'
 import { NotFoundError, BusinessError } from '@server/utils/app-error'
 
@@ -92,7 +92,7 @@ const deleteRoute = createRoute({
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_DELETE] })],
   request: idRequest,
   responses: {
-    200: successResponse(DeleteResultSchema, 'Delete dispute'),
+    200: successResponse(DisputeDeleteResultSchema, 'Delete dispute'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Dispute not found'),

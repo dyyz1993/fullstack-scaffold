@@ -269,3 +269,47 @@ export interface ConsoleLogError {
   message: string
   content: string
 }
+
+// ============================================
+// Schema 命名唯一性验证配置
+// ============================================
+export interface SchemaUniquenessConfig {
+  modulesDir: string
+  checkDirs: string[]
+  ignoreDirs: string[]
+}
+
+export interface SchemaUniquenessError {
+  exportName: string
+  modules: string[]
+  suggestion: string
+}
+
+// ============================================
+// 模块公共 API 验证配置
+// ============================================
+export interface ModulePublicApiConfig {
+  serverDir: string
+  checkDirs: string[]
+}
+
+export interface ModulePublicApiError {
+  module: string
+  dependedBy: string[]
+  suggestion: string
+}
+
+// ============================================
+// Root/Template 配置同步验证配置
+// ============================================
+export interface ConfigSyncConfig {
+  rootDir: string
+  templateDir: string
+  checkPairs: Array<{ root: string; template: string; label: string }>
+}
+
+export interface ConfigSyncError {
+  file: string
+  diffType: 'missing_in_template' | 'content_differs'
+  label: string
+}

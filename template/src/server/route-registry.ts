@@ -22,6 +22,8 @@ import { dashboardRoutes } from './module-admin/routes/dashboard-routes'
 import { cartRoutes } from './module-order/routes/cart-routes'
 import { ordersMockRoutes } from './module-order/routes/orders-mock-routes'
 import { topicsRoutes } from './module-content/routes/topics-routes'
+import { apiRoutes as tenantRoutes } from './module-tenant/routes/tenant-routes'
+import { apiRoutes as merchantRoutes } from './module-merchant/routes/merchant-routes'
 
 const apiRateLimit = rateLimitMiddleware({
   windowMs: 60_000,
@@ -41,6 +43,7 @@ export const clientApiRoutes = new OpenAPIHono()
   .route('/api', cartRoutes)
   .route('/api', ordersMockRoutes)
   .route('/api', topicsRoutes)
+  .route('/api', merchantRoutes)
 
 // 管理后台路由 - 普通用户使用的 API + 管理功能
 export const adminApiRoutes = new OpenAPIHono()
@@ -56,6 +59,7 @@ export const adminApiRoutes = new OpenAPIHono()
   .route('/api', adminRoutes)
   .route('/api', pluginAdminRoutes)
   .route('/api', dashboardRoutes)
+  .route('/api', tenantRoutes)
 
 // 导出类型
 export type ClientApiRoutes = typeof clientApiRoutes

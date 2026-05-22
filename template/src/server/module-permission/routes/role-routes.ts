@@ -11,7 +11,7 @@ import {
   CreateRoleSchema,
   UpdateRoleSchema,
   UpdateRolePermissionsSchema,
-  SuccessSchema,
+  RoleSuccessSchema,
 } from '@shared/modules/role/schemas'
 import { validatePermissionDependencies } from '@shared/modules/permission/permission-dependencies'
 
@@ -112,7 +112,7 @@ const deleteRoleRoute = createRoute({
     }),
   },
   responses: {
-    200: successResponse(SuccessSchema, 'Role deleted'),
+    200: successResponse(RoleSuccessSchema, 'Role deleted'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     400: errorResponse('Cannot delete system role'),
@@ -138,7 +138,7 @@ const updateRolePermissionsRoute = createRoute({
     },
   },
   responses: {
-    200: successResponse(SuccessSchema, 'Role permissions updated'),
+    200: successResponse(RoleSuccessSchema, 'Role permissions updated'),
     400: errorResponse('Permission dependency validation failed'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),

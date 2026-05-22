@@ -10,7 +10,7 @@ import {
   CreateTicketSchema,
   UpdateTicketSchema,
   TicketListSchema,
-  DeleteResultSchema,
+  TicketDeleteResultSchema,
   ReplyTicketSchema,
 } from '@shared/modules/ticket'
 
@@ -112,7 +112,7 @@ const deleteRoute = createRoute({
     params: TicketSchema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(DeleteResultSchema, 'Ticket deleted'),
+    200: successResponse(TicketDeleteResultSchema, 'Ticket deleted'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),

@@ -225,6 +225,10 @@ export class NotFoundError extends AppError {
   static ticket(id?: string): NotFoundError {
     return new NotFoundError('Ticket', id)
   }
+
+  static tenant(id?: string): NotFoundError {
+    return new NotFoundError('Tenant', id)
+  }
 }
 
 /**
@@ -271,7 +275,9 @@ export class BusinessError extends AppError {
   static invalidState(currentState: string, expectedStates: string[]): BusinessError {
     return new BusinessError(`Invalid state transition`, ErrorCode.INVALID_STATE, [
       {
-        message: `Current state '${currentState}' is not valid. Expected one of: ${expectedStates.join(', ')}`,
+        message: `Current state '${currentState}' is not valid. Expected one of: ${expectedStates.join(
+          ', '
+        )}`,
       },
     ])
   }
@@ -285,10 +291,7 @@ export class BusinessError extends AppError {
  * 限流错误 (429)
  */
 export class RateLimitError extends AppError {
-  constructor(
-    message = 'Too many requests',
-    public readonly retryAfter?: number
-  ) {
+  constructor(message = 'Too many requests', public readonly retryAfter?: number) {
     super({
       code: ErrorCode.RATE_LIMIT,
       message,
