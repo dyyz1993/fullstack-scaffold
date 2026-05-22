@@ -27,10 +27,10 @@ export const useTodoStore = create<TodoState>(set => ({
   fetchTodos: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await apiClient.api.todos.$get()
+      const response = await apiClient.api.todos.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
-        set({ todos: result.data, loading: false })
+        set({ todos: result.data.todos, loading: false })
       } else {
         set({ error: result.error, loading: false })
       }

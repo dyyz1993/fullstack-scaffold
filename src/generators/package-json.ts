@@ -11,7 +11,7 @@ const MODULE_PACKAGES: Record<string, string[]> = {
 }
 
 /** Packages needed by the admin panel UI */
-const ADMIN_PANEL_PACKAGES = ['antd']
+const ADMIN_PANEL_PACKAGES = ['antd', '@ant-design/icons']
 
 /** Packages needed by the CLI app (xcli-core based) */
 const CLI_PACKAGES = ['commander'] // legacy, removed from template

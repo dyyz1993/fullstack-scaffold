@@ -45,7 +45,7 @@ export const OrdersPage: React.FC = () => {
       })
       const result = await response.json()
       if (result.success) {
-        setOrders(result.data)
+        setOrders(result.data.orders)
       } else {
         message.error(result.error || t('orders.loadFailed'))
       }

@@ -47,7 +47,7 @@ export const ContentPage: React.FC = () => {
       const response = await apiClient.api.contents.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
-        setContents(result.data)
+        setContents(result.data.contents)
       } else {
         message.error(t('content.loadFailed'))
       }

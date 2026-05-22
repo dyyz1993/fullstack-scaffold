@@ -48,7 +48,7 @@ export const DisputesPage: React.FC = () => {
       const response = await apiClient.api.disputes.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
-        setDisputes(result.data)
+        setDisputes(result.data.disputes)
       } else {
         message.error(result.error || t('disputes.loadFailed'))
       }

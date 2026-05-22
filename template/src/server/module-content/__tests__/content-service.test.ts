@@ -15,7 +15,8 @@ describe('Content Service', () => {
   describe('getContents', () => {
     it('should return all contents', async () => {
       const result = await service.getContents()
-      expect(Array.isArray(result)).toBe(true)
+      expect(result.contents).toBeDefined()
+      expect(typeof result.total).toBe('number')
     })
   })
 

@@ -33,11 +33,18 @@ export const UpdateOrderSchema = z.object({
 
 export const OrderListSchema = z.array(OrderSchema)
 
+export const OrderListResponseSchema = z.object({
+  orders: z.array(OrderSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+})
+
 export const OrderQuerySchema = z.object({
   status: OrderStatusSchema.nullish(),
   customerName: z.string().nullish(),
+  page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  offset: z.coerce.number().int().min(0).default(0),
 })
 
 export const OrderDeleteResultSchema = z.object({
@@ -60,6 +67,7 @@ export type UpdateOrderInput = z.infer<typeof UpdateOrderSchema>
 export type OrderDeleteResult = z.infer<typeof OrderDeleteResultSchema>
 export type ProcessOrderInput = z.infer<typeof ProcessOrderSchema>
 export type CancelOrderInput = z.infer<typeof CancelOrderSchema>
+export type OrderListResponse = z.infer<typeof OrderListResponseSchema>
 export type OrderQueryInput = z.infer<typeof OrderQuerySchema>
 
 export const RemoveCartItemResponseSchema = z.object({ removedId: z.string() })

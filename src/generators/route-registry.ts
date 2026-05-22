@@ -68,8 +68,9 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
   let content = imports.join('\n') + '\n\n'
 
   content += `const apiRateLimit = rateLimitMiddleware({\n`
-  content += `  windowMs: 60 * 1000,\n`
+  content += `  windowMs: 60_000,\n`
   content += `  max: 100,\n`
+  content += `  message: 'Too many requests, please try again later',\n`
   content += `})\n\n`
 
   if (clientRoutes.length > 0) {

@@ -22,7 +22,7 @@ describe('Order Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(Array.isArray(data.data)).toBe(true)
+        expect(Array.isArray(data.data.orders)).toBe(true)
       }
     })
 
@@ -37,8 +37,8 @@ describe('Order Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(Array.isArray(data.data)).toBe(true)
-        data.data.forEach((order: { status: string }) => {
+        expect(Array.isArray(data.data.orders)).toBe(true)
+        data.data.orders.forEach((order: { status: string }) => {
           expect(order.status).toBe('completed')
         })
       }
@@ -55,8 +55,8 @@ describe('Order Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(Array.isArray(data.data)).toBe(true)
-        data.data.forEach((order: { customerName: string }) => {
+        expect(Array.isArray(data.data.orders)).toBe(true)
+        data.data.orders.forEach((order: { customerName: string }) => {
           expect(order.customerName).toContain('张三')
         })
       }
@@ -83,8 +83,8 @@ describe('Order Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(Array.isArray(data.data)).toBe(true)
-        data.data.forEach((order: { status: string; customerName: string }) => {
+        expect(Array.isArray(data.data.orders)).toBe(true)
+        data.data.orders.forEach((order: { status: string; customerName: string }) => {
           expect(order.status).toBe('pending')
           expect(order.customerName).toContain('Filter Test')
         })
@@ -112,7 +112,7 @@ describe('Order Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(data.data).toHaveLength(0)
+        expect(data.data.orders).toHaveLength(0)
       }
     })
   })

@@ -62,6 +62,18 @@ export const ReplyTicketSchema = z.object({
 
 export const TicketListSchema = z.array(TicketSchema)
 
+export const TicketListResponseSchema = z.object({
+  tickets: z.array(TicketSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+})
+
+export const TicketListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+})
+
 export const TicketDeleteResultSchema = z.object({
   message: z.string(),
 })
@@ -74,4 +86,6 @@ export type Ticket = z.infer<typeof TicketSchema>
 export type CreateTicketInput = z.infer<typeof CreateTicketSchema>
 export type UpdateTicketInput = z.infer<typeof UpdateTicketSchema>
 export type ReplyTicketInput = z.infer<typeof ReplyTicketSchema>
+export type TicketListResponse = z.infer<typeof TicketListResponseSchema>
+export type TicketListQuery = z.infer<typeof TicketListQuerySchema>
 export type TicketDeleteResult = z.infer<typeof TicketDeleteResultSchema>

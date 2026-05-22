@@ -8,14 +8,14 @@ export function registerDisputeCommands(site: SiteInstance) {
     description: 'List all disputes',
     parameters: z.object({
       limit: z.coerce.number().default(20).describe('Limit results'),
-      offset: z.coerce.number().default(0).describe('Offset'),
+      page: z.coerce.number().default(1).describe('Page number'),
     }),
     handler: async (params: unknown) => {
-      const p = params as { limit: number; offset: number }
+      const p = params as { limit: number; page: number }
       try {
         const client = getClient()
         const res = await client.api.disputes.$get({
-          query: { limit: String(p.limit), offset: String(p.offset) },
+          query: { limit: String(p.limit), page: String(p.page) },
         })
         const data = await res.json()
         return ok(data)

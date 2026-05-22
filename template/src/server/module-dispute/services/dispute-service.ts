@@ -91,8 +91,13 @@ function mapDisputeRow(row: DisputeTable): Dispute {
 export async function getDisputes(filters?: {
   status?: DisputeStatus
   type?: DisputeType
-}): Promise<Dispute[]> {
+  page?: number
+  limit?: number
+}): Promise<{ disputes: Dispute[]; total: number; page: number; limit: number }> {
   const db = await getDb()
+  const page = filters?.page ?? 1
+  const limit = filters?.limit ?? 20
+  const offset = (page - 1) * limit
   const conditions = []
 
   if (filters?.status) {
@@ -102,7 +107,7 @@ export async function getDisputes(filters?: {
     conditions.push(eq(disputes.type, filters.type))
   }
 
-  const rows =
+  const allRows =
     conditions.length > 0
       ? await db
           .select()
@@ -111,7 +116,14 @@ export async function getDisputes(filters?: {
           .orderBy(desc(disputes.createdAt))
       : await db.select().from(disputes).orderBy(desc(disputes.createdAt))
 
-  return rows.map(mapDisputeRow)
+  const rows = allRows.slice(offset, offset + limit)
+
+  return {
+    disputes: rows.map(mapDisputeRow),
+    total: allRows.length,
+    page,
+    limit,
+  }
 }
 
 export async function getDisputeById(id: string): Promise<Dispute | null> {

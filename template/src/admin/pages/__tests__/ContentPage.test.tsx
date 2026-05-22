@@ -76,7 +76,11 @@ describe('ContentPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockContentsGet.mockResolvedValue({
-      json: () => Promise.resolve({ success: true, data: mockContents }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          data: { contents: mockContents, total: mockContents.length, page: 1, limit: 20 },
+        }),
     })
     mockContentPost.mockResolvedValue({
       json: () => Promise.resolve({ success: true, data: { id: '3' } }),

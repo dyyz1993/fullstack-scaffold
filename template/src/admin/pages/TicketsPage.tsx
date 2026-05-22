@@ -56,7 +56,7 @@ export const TicketsPage: React.FC = () => {
       const response = await apiClient.api.tickets.$get({ query: {} })
       const result = await response.json()
       if (result.success) {
-        setTickets(result.data)
+        setTickets(result.data.tickets)
       } else {
         message.error(result.error || t('tickets.loadFailed'))
       }

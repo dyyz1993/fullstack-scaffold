@@ -11,7 +11,7 @@ export const SettingsPage: FC = () => {
 
   const handleSave = async (values: unknown) => {
     try {
-      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      // @ts-expect-error Hono RPC type depth exceeds TypeScript recursion limit in fullstack-admin preset with 15+ modules
       await apiClient.api.merchant.settings.$put({ json: values })
       message.success('Settings saved successfully')
     } catch {

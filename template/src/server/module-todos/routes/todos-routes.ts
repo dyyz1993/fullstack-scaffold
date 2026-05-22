@@ -11,20 +11,23 @@ import {
   TodoWithAttachmentsSchema,
   UploadFileSchema,
   AttachmentIdResponseSchema,
+  TodoListResponseSchema,
+  TodoListQuerySchema,
 } from '@shared/schemas'
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
 import { getAuthUser } from '@server/utils/auth'
 import { NotFoundError, ValidationError } from '@server/utils/app-error'
 import { authMiddleware } from '@server/middleware/auth'
 
-const TodoListSchema = z.array(TodoSchema)
-
 const listRoute = createRoute({
   method: 'get',
   path: '/todos',
   tags: ['todos'],
+  request: {
+    query: TodoListQuerySchema,
+  },
   responses: {
-    200: successResponse(TodoListSchema, 'List all todos'),
+    200: successResponse(TodoListResponseSchema, 'List all todos'),
     500: errorResponse('Internal server error'),
   },
 })
@@ -166,8 +169,9 @@ const deleteAttachmentRoute = createRoute({
 
 export const apiRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const todos = await todoService.listTodos()
-    return c.json(success(todos), 200)
+    const { page, limit } = c.req.valid('query')
+    const result = await todoService.listTodos({ page, limit })
+    return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')

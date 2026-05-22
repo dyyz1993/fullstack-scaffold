@@ -6,6 +6,44 @@
 import { afterEach, vi } from 'vitest'
 import '@testing-library/jest-dom'
 import { EventSource } from 'eventsource'
+import zhCN from './src/admin/i18n/locales/zh-CN.json'
+
+function resolveTranslation(obj: Record<string, unknown>, key: string): string {
+  const keys = key.split('.')
+  let current: unknown = obj
+  for (const k of keys) {
+    if (current && typeof current === 'object' && k in (current as Record<string, unknown>)) {
+      current = (current as Record<string, unknown>)[k]
+    } else {
+      return key
+    }
+  }
+  return typeof current === 'string' ? current : key
+}
+
+const stableT = (key: string, params?: Record<string, unknown>) => {
+  let val = resolveTranslation(zhCN, key)
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      val = val.replace(`{{${k}}}`, String(v))
+    }
+  }
+  return val
+}
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: stableT,
+    i18n: {
+      language: 'zh-CN',
+      changeLanguage: () => {},
+    },
+  }),
+  initReactI18next: {
+    type: '3rdParty',
+    init: () => {},
+  },
+}))
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => children,

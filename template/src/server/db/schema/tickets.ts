@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, integer, text, index } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const ticketStatuses = [
@@ -24,37 +24,50 @@ export type TicketCategory = (typeof ticketCategories)[number]
 
 export const ticketReplyAuthorRoles = ['customer', 'admin', 'system'] as const
 
-export const tickets = sqliteTable('tickets', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  ticketNo: text('ticket_no').notNull(),
-  customerName: text('customer_name').notNull(),
-  customerEmail: text('customer_email').notNull(),
-  subject: text('subject').notNull(),
-  description: text('description').notNull(),
-  status: text('status', { enum: ticketStatuses }).notNull().default('open'),
-  priority: text('priority', { enum: ticketPriorities }).notNull().default('medium'),
-  category: text('category', { enum: ticketCategories }).notNull(),
-  assignedTo: text('assigned_to'),
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
-})
+export const tickets = sqliteTable(
+  'tickets',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    ticketNo: text('ticket_no').notNull(),
+    customerName: text('customer_name').notNull(),
+    customerEmail: text('customer_email').notNull(),
+    subject: text('subject').notNull(),
+    description: text('description').notNull(),
+    status: text('status', { enum: ticketStatuses }).notNull().default('open'),
+    priority: text('priority', { enum: ticketPriorities }).notNull().default('medium'),
+    category: text('category', { enum: ticketCategories }).notNull(),
+    assignedTo: text('assigned_to'),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  table => ({
+    statusIdx: index('tickets_status_idx').on(table.status),
+    createdAtIdx: index('tickets_created_at_idx').on(table.createdAt),
+  })
+)
 
-export const ticketReplies = sqliteTable('ticket_replies', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  ticketId: integer('ticket_id')
-    .notNull()
-    .references(() => tickets.id, { onDelete: 'cascade' }),
-  content: text('content').notNull(),
-  author: text('author').notNull(),
-  isCustomer: integer('is_customer', { mode: 'boolean' }).notNull().default(false),
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
-})
+export const ticketReplies = sqliteTable(
+  'ticket_replies',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    ticketId: integer('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    author: text('author').notNull(),
+    isCustomer: integer('is_customer', { mode: 'boolean' }).notNull().default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  table => ({
+    ticketIdIdx: index('ticket_replies_ticket_id_idx').on(table.ticketId),
+  })
+)
 
 export type TicketTable = typeof tickets.$inferSelect
 export type NewTicket = typeof tickets.$inferInsert

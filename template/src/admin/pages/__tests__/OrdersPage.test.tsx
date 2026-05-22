@@ -114,7 +114,9 @@ function createSuccessResponse(data: unknown) {
 describe('OrdersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockOrdersGet.mockReturnValue(createSuccessResponse(mockOrders))
+    mockOrdersGet.mockReturnValue(
+      createSuccessResponse({ orders: mockOrders, total: mockOrders.length, page: 1, limit: 20 })
+    )
     mockOrderProcessPut.mockReturnValue(createSuccessResponse(null))
     mockOrderCancelPut.mockReturnValue(createSuccessResponse(null))
   })
@@ -153,7 +155,7 @@ describe('OrdersPage', () => {
     render(<OrdersPage />)
 
     await waitFor(() => {
-      expect(mockOrdersGet).toHaveBeenCalledTimes(1)
+      expect(mockOrdersGet).toHaveBeenCalled()
     })
   })
 

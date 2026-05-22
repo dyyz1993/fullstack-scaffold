@@ -92,7 +92,7 @@ export async function merchantLogin(
   }
 
   // Generate token (simplified for demo - use JWT in production)
-  const token = `merchant-token-${merchant.id}-${Date.now()}`
+  const token = `mt_${crypto.randomUUID().replace(/-/g, '')}`
 
   log.info({ merchantId: merchant.id }, 'Merchant logged in')
 
@@ -254,7 +254,7 @@ const seedMerchants = [
     phone: '13800138000',
     email: 'merchant@example.com',
     address: '123 Main St',
-    password: 'password123',
+    password: 'Demo@2024!',
   },
   {
     userId: 'merchant-2',
@@ -266,7 +266,7 @@ const seedMerchants = [
     phone: null,
     email: null,
     address: null,
-    password: 'password123',
+    password: 'Demo@2024!',
   },
 ]
 

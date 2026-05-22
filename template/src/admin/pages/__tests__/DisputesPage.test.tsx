@@ -117,7 +117,14 @@ function createSuccessResponse(data: unknown) {
 describe('DisputesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockDisputesGet.mockReturnValue(createSuccessResponse(mockDisputes))
+    mockDisputesGet.mockReturnValue(
+      createSuccessResponse({
+        disputes: mockDisputes,
+        total: mockDisputes.length,
+        page: 1,
+        limit: 20,
+      })
+    )
     mockDisputeResolvePut.mockReturnValue(createSuccessResponse(null))
   })
 

@@ -22,7 +22,8 @@ describe('Content Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(Array.isArray(data.data)).toBe(true)
+        expect(data.data.contents).toBeDefined()
+        expect(typeof data.data.total).toBe('number')
       }
     })
   })

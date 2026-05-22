@@ -15,18 +15,20 @@ import type {
   CreateUserRequest,
 } from '@shared/modules/admin'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let todosTable: any = null
+type TodosTableType = typeof import('@server/db/schema')['todos']
+
+let todosTable: TodosTableType | null = null
 let todosTableLoaded = false
 
-async function getTodosTable() {
+async function getTodosTable(): Promise<TodosTableType | null> {
   if (todosTableLoaded) return todosTable
   try {
-    const schema = (await import('@server/db/schema')) as Record<string, unknown>
+    const schema = await import('@server/db/schema')
     todosTable = schema.todos ?? null
     todosTableLoaded = true
     return todosTable
-  } catch {
+  } catch (error) {
+    console.error('[AdminService] getTodosTable failed:', error)
     todosTableLoaded = true
     return null
   }
@@ -93,7 +95,8 @@ export async function checkDatabaseHealth(): Promise<HealthCheck> {
       database: 'connected',
       timestamp: new Date().toISOString(),
     }
-  } catch {
+  } catch (error) {
+    console.error('[AdminService] getSystemStats failed:', error)
     return {
       database: 'disconnected',
       timestamp: new Date().toISOString(),
@@ -180,7 +183,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     }
   }
   if (!token) {
-    token = `test-token-${user.id}-${Date.now()}`
+    token = `tk_${crypto.randomUUID().replace(/-/g, '')}`
     mockTokens.set(token, user.id)
   }
 

@@ -167,7 +167,8 @@ export const notificationRoutes = new OpenAPIHono()
         const response = await adapter.handleSSERequest()
         return response
       }
-    } catch {
+    } catch (error) {
+      console.error('[NotificationRoutes] handleSSERequest failed:', error)
       return createFallbackSSEResponse()
     }
 

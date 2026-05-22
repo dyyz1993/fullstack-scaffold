@@ -34,6 +34,10 @@ vi.mock('antd', async () => {
   }
 })
 
+function getSubmitButton() {
+  return screen.getByRole('button', { name: /注\s*册/ })
+}
+
 describe('RegisterPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -42,19 +46,18 @@ describe('RegisterPage', () => {
   it('renders registration form', () => {
     render(<RegisterPage />)
 
-    expect(screen.getByText('Admin Registration')).toBeInTheDocument()
-    expect(screen.getByText('Register')).toBeInTheDocument()
+    expect(screen.getByText('管理员注册')).toBeInTheDocument()
+    expect(getSubmitButton()).toBeInTheDocument()
   })
 
   it('validates required fields', async () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
-      expect(screen.getByText('Please input username!')).toBeInTheDocument()
+      expect(screen.getByText('请输入用户名！')).toBeInTheDocument()
     })
   })
 
@@ -62,16 +65,15 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
 
-    await user.type(screen.getByPlaceholderText('Username'), 'testuser')
-    await user.type(screen.getByPlaceholderText('Email'), 'invalid-email')
-    await user.type(screen.getByPlaceholderText('Password'), 'password123')
-    await user.type(screen.getByPlaceholderText('Confirm Password'), 'password123')
+    await user.type(screen.getByPlaceholderText('用户名'), 'testuser')
+    await user.type(screen.getByPlaceholderText('邮箱'), 'invalid-email')
+    await user.type(screen.getByPlaceholderText('密码'), 'password123')
+    await user.type(screen.getByPlaceholderText('确认密码'), 'password123')
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
-      expect(screen.getByText('Please input valid email!')).toBeInTheDocument()
+      expect(screen.getByText('请输入有效的邮箱！')).toBeInTheDocument()
     })
   })
 
@@ -79,15 +81,14 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
 
-    await user.type(screen.getByPlaceholderText('Username'), 'testuser')
-    await user.type(screen.getByPlaceholderText('Email'), 'test@example.com')
-    await user.type(screen.getByPlaceholderText('Password'), '12345')
+    await user.type(screen.getByPlaceholderText('用户名'), 'testuser')
+    await user.type(screen.getByPlaceholderText('邮箱'), 'test@example.com')
+    await user.type(screen.getByPlaceholderText('密码'), '12345')
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
-      expect(screen.getByText('Password must be at least 6 characters!')).toBeInTheDocument()
+      expect(screen.getByText('密码至少6个字符！')).toBeInTheDocument()
     })
   })
 
@@ -95,16 +96,15 @@ describe('RegisterPage', () => {
     const user = userEvent.setup()
     render(<RegisterPage />)
 
-    await user.type(screen.getByPlaceholderText('Username'), 'testuser')
-    await user.type(screen.getByPlaceholderText('Email'), 'test@example.com')
-    await user.type(screen.getByPlaceholderText('Password'), 'password123')
-    await user.type(screen.getByPlaceholderText('Confirm Password'), 'different')
+    await user.type(screen.getByPlaceholderText('用户名'), 'testuser')
+    await user.type(screen.getByPlaceholderText('邮箱'), 'test@example.com')
+    await user.type(screen.getByPlaceholderText('密码'), 'password123')
+    await user.type(screen.getByPlaceholderText('确认密码'), 'different')
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
-      expect(screen.getByText('Passwords do not match!')).toBeInTheDocument()
+      expect(screen.getByText('两次密码不一致！')).toBeInTheDocument()
     })
   })
 
@@ -118,13 +118,12 @@ describe('RegisterPage', () => {
 
     render(<RegisterPage />)
 
-    await user.type(screen.getByPlaceholderText('Username'), 'testuser')
-    await user.type(screen.getByPlaceholderText('Email'), 'test@example.com')
-    await user.type(screen.getByPlaceholderText('Password'), 'password123')
-    await user.type(screen.getByPlaceholderText('Confirm Password'), 'password123')
+    await user.type(screen.getByPlaceholderText('用户名'), 'testuser')
+    await user.type(screen.getByPlaceholderText('邮箱'), 'test@example.com')
+    await user.type(screen.getByPlaceholderText('密码'), 'password123')
+    await user.type(screen.getByPlaceholderText('确认密码'), 'password123')
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalled()
@@ -143,13 +142,12 @@ describe('RegisterPage', () => {
 
     render(<RegisterPage />)
 
-    await user.type(screen.getByPlaceholderText('Username'), 'testuser')
-    await user.type(screen.getByPlaceholderText('Email'), 'test@example.com')
-    await user.type(screen.getByPlaceholderText('Password'), 'password123')
-    await user.type(screen.getByPlaceholderText('Confirm Password'), 'password123')
+    await user.type(screen.getByPlaceholderText('用户名'), 'testuser')
+    await user.type(screen.getByPlaceholderText('邮箱'), 'test@example.com')
+    await user.type(screen.getByPlaceholderText('密码'), 'password123')
+    await user.type(screen.getByPlaceholderText('确认密码'), 'password123')
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
       expect(message.error).toHaveBeenCalled()
@@ -164,13 +162,12 @@ describe('RegisterPage', () => {
 
     render(<RegisterPage />)
 
-    await user.type(screen.getByPlaceholderText('Username'), 'testuser')
-    await user.type(screen.getByPlaceholderText('Email'), 'test@example.com')
-    await user.type(screen.getByPlaceholderText('Password'), 'password123')
-    await user.type(screen.getByPlaceholderText('Confirm Password'), 'password123')
+    await user.type(screen.getByPlaceholderText('用户名'), 'testuser')
+    await user.type(screen.getByPlaceholderText('邮箱'), 'test@example.com')
+    await user.type(screen.getByPlaceholderText('密码'), 'password123')
+    await user.type(screen.getByPlaceholderText('确认密码'), 'password123')
 
-    const submitButton = screen.getByRole('button', { name: /register/i })
-    await user.click(submitButton)
+    await user.click(getSubmitButton())
 
     await waitFor(() => {
       expect(message.error).toHaveBeenCalled()

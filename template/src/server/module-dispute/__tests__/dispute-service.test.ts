@@ -17,7 +17,8 @@ describe('Dispute Service', () => {
   describe('getDisputes', () => {
     it('should return all disputes', async () => {
       const result = await service.getDisputes()
-      expect(Array.isArray(result)).toBe(true)
+      expect(result.disputes).toBeDefined()
+      expect(typeof result.total).toBe('number')
     })
   })
 

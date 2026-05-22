@@ -218,7 +218,8 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
         const response = await adapter.handleSSERequest()
         return response
       }
-    } catch {
+    } catch (error) {
+      console.error('[AdminNotificationRoutes] SSE adapter import failed:', error)
       return createFallbackSSEResponse()
     }
 

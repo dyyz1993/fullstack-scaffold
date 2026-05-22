@@ -21,7 +21,8 @@ describe('Order Service', () => {
   describe('getOrders', () => {
     it('should return all orders when no filters provided', async () => {
       const result = await service.getOrders()
-      expect(Array.isArray(result)).toBe(true)
+      expect(result.orders).toBeDefined()
+      expect(typeof result.total).toBe('number')
     })
 
     it('should filter orders by status', async () => {
@@ -37,8 +38,8 @@ describe('Order Service', () => {
       await service.updateOrder(created.id, { status: 'processing' })
 
       const result = await service.getOrders({ status: 'processing' })
-      expect(Array.isArray(result)).toBe(true)
-      result.forEach(order => {
+      expect(Array.isArray(result.orders)).toBe(true)
+      result.orders.forEach(order => {
         expect(order.status).toBe('processing')
       })
     })

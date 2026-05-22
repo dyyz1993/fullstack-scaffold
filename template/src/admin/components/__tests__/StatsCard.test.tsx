@@ -27,7 +27,7 @@ describe('StatsCard', () => {
     render(<StatsCard title="Users" value={100} trend={{ value: 12, isUp: true }} />)
 
     expect(screen.getByText('12%')).toBeInTheDocument()
-    expect(screen.getByText('vs last month')).toBeInTheDocument()
+    expect(screen.getByText('较上月')).toBeInTheDocument()
   })
 
   it('should render downward trend', () => {
@@ -39,6 +39,6 @@ describe('StatsCard', () => {
   it('should not render trend section when trend is undefined', () => {
     render(<StatsCard title="Users" value={100} />)
 
-    expect(screen.queryByText('vs last month')).not.toBeInTheDocument()
+    expect(screen.queryByText('较上月')).not.toBeInTheDocument()
   })
 })

@@ -15,7 +15,7 @@ export const DisputesPage: FC = () => {
   const fetchDisputes = useCallback(async () => {
     setLoading(true)
     try {
-      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      // @ts-expect-error Hono RPC type depth exceeds TypeScript recursion limit in fullstack-admin preset with 15+ modules
       const response = await apiClient.api.merchant.disputes.$get()
       const result = await response.json()
       if (result.success === true && result.data) {
@@ -35,7 +35,7 @@ export const DisputesPage: FC = () => {
 
   const handleResolve = async (disputeId: string) => {
     try {
-      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      // @ts-expect-error Hono RPC type depth exceeds TypeScript recursion limit in fullstack-admin preset with 15+ modules
       await apiClient.api.merchant.disputes[':id'].resolve.$post({
         param: { id: disputeId },
       })
@@ -47,7 +47,7 @@ export const DisputesPage: FC = () => {
 
   const handleClose = async (disputeId: string) => {
     try {
-      // @ts-expect-error - Hono type depth limit in full template with 15+ modules; resolves in generated projects
+      // @ts-expect-error Hono RPC type depth exceeds TypeScript recursion limit in fullstack-admin preset with 15+ modules
       await apiClient.api.merchant.disputes[':id'].close.$post({
         param: { id: disputeId },
       })
