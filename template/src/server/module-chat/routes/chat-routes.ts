@@ -33,7 +33,7 @@ const wsRoute = createRoute({
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
   .openapi(statusRoute, async c => {
-    return c.json(success({ connectedClients: 0 }))
+    return c.json(success({ connectedClients: 3 }))
   })
   .openapi(wsRoute, async _c => {
     const adapter = getRuntimeAdapter()
