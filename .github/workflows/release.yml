@@ -107,6 +107,7 @@ jobs:
             ssh shanbox "rm -rf /tmp/gen-$preset && mkdir -p /tmp/gen-$preset && cd /tmp/gen-$preset && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js $dir --preset $preset --no-install && rm -rf /root/$dir && mv /tmp/gen-$preset/$dir /root/$dir"
             ssh shanbox "[ -f /root/env-backup/$dir.env ] && cp /root/env-backup/$dir.env /root/$dir/.env || true"
             ssh shanbox "cd /root/$dir && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2"
+            ssh shanbox "cd /root/$dir && npm run db:push 2>&1 | tail -2 || true"
             ssh shanbox "cd /root/$dir && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port $port > /root/$dir/vite.log 2>&1 &"
             sleep 3
           }

@@ -43,6 +43,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-todo && mkdir -p /tmp/gen-todo && cd /tmp/gen-todo && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js todo-app --preset todo-app --no-install && rm -rf /root/todo-app && mv /tmp/gen-todo/todo-app /root/todo-app'
           ssh shanbox '[ -f /root/env-backup/todo-app.env ] && cp /root/env-backup/todo-app.env /root/todo-app/.env || true'
           ssh shanbox 'cd /root/todo-app && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/todo-app && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/todo-app && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3011 > /root/todo-app/vite.log 2>&1 &'
 
       - name: Deploy minimal
@@ -52,6 +53,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-minimal && mkdir -p /tmp/gen-minimal && cd /tmp/gen-minimal && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js minimal --preset minimal --no-install && rm -rf /root/minimal && mv /tmp/gen-minimal/minimal /root/minimal'
           ssh shanbox '[ -f /root/env-backup/minimal.env ] && cp /root/env-backup/minimal.env /root/minimal/.env || true'
           ssh shanbox 'cd /root/minimal && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/minimal && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/minimal && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3013 > /root/minimal/vite.log 2>&1 &'
 
       - name: Deploy ecommerce
@@ -61,6 +63,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-ecom && mkdir -p /tmp/gen-ecom && cd /tmp/gen-ecom && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js shop --preset ecommerce --no-install && rm -rf /root/shop && mv /tmp/gen-ecom/shop /root/shop'
           ssh shanbox '[ -f /root/env-backup/shop.env ] && cp /root/env-backup/shop.env /root/shop/.env || true'
           ssh shanbox 'cd /root/shop && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/shop && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/shop && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3014 > /root/shop/vite.log 2>&1 &'
 
       - name: Deploy xbrowser-marketplace
@@ -70,6 +73,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-plugin && mkdir -p /tmp/gen-plugin && cd /tmp/gen-plugin && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js plugin --preset xbrowser-marketplace --no-install && rm -rf /root/plugin && mv /tmp/gen-plugin/plugin /root/plugin'
           ssh shanbox '[ -f /root/env-backup/plugin.env ] && cp /root/env-backup/plugin.env /root/plugin/.env || true'
           ssh shanbox 'cd /root/plugin && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/plugin && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/plugin && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3015 > /root/plugin/vite.log 2>&1 &'
 
       - name: Deploy fullstack-admin
@@ -79,6 +83,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-fa && mkdir -p /tmp/gen-fa && cd /tmp/gen-fa && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js fullstack-admin --preset fullstack-admin --no-install && rm -rf /root/fullstack-admin && mv /tmp/gen-fa/fullstack-admin /root/fullstack-admin'
           ssh shanbox '[ -f /root/env-backup/fullstack-admin.env ] && cp /root/env-backup/fullstack-admin.env /root/fullstack-admin/.env || true'
           ssh shanbox 'cd /root/fullstack-admin && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/fullstack-admin && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/fullstack-admin && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3016 > /root/fullstack-admin/vite.log 2>&1 &'
 
       - name: Deploy forum
@@ -88,6 +93,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-forum && mkdir -p /tmp/gen-forum && cd /tmp/gen-forum && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js forum --preset forum --no-install && rm -rf /root/forum && mv /tmp/gen-forum/forum /root/forum'
           ssh shanbox '[ -f /root/env-backup/forum.env ] && cp /root/env-backup/forum.env /root/forum/.env || true'
           ssh shanbox 'cd /root/forum && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/forum && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/forum && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3018 > /root/forum/vite.log 2>&1 &'
 
       - name: Deploy saas
@@ -97,6 +103,7 @@ jobs:
           ssh shanbox 'rm -rf /tmp/gen-saas && mkdir -p /tmp/gen-saas && cd /tmp/gen-saas && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js saas --preset saas --no-install && rm -rf /root/saas && mv /tmp/gen-saas/saas /root/saas'
           ssh shanbox '[ -f /root/env-backup/saas.env ] && cp /root/env-backup/saas.env /root/saas/.env || true'
           ssh shanbox 'cd /root/saas && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2'
+          ssh shanbox 'cd /root/saas && npm run db:push 2>&1 | tail -2 || true'
           ssh shanbox 'cd /root/saas && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3020 > /root/saas/vite.log 2>&1 &'
 
       - name: Wait for services to start
