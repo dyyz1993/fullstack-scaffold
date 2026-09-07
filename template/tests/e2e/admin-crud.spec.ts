@@ -21,7 +21,7 @@ test.describe('Admin CRUD Operations', () => {
   test('should display dashboard with stats', async ({ page }) => {
     await page.goto(`${getBaseUrl()}/admin/dashboard`)
     await page.waitForTimeout(3000)
-    await expect(page.getByText('Total Todos')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('总待办')).toBeVisible({ timeout: 15000 })
   })
 
   test('should display orders page', async ({ page }) => {

@@ -35,12 +35,13 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
     await loginAs(page)
     await page.waitForSelector('h1', { timeout: 10000 })
 
-    await expect(page.locator('h1').last()).toContainText('Dashboard')
+    // 页面文案为 zh-CN（admin/i18n/locales/zh-CN.json dashboard.*）
+    await expect(page.locator('h1').last()).toContainText('仪表盘')
 
-    await expect(page.getByText('Total Todos')).toBeVisible()
-    await expect(page.getByText('Pending')).toBeVisible()
-    await expect(page.getByText('Completed')).toBeVisible()
-    await expect(page.getByText('Last Updated')).toBeVisible()
+    await expect(page.getByText('总待办')).toBeVisible()
+    await expect(page.getByText('待处理')).toBeVisible()
+    await expect(page.getByText('已完成')).toBeVisible()
+    await expect(page.getByText('最后更新')).toBeVisible()
 
     const statsCards = page.locator('h3')
     await expect(statsCards).toHaveCount(4)
