@@ -151,11 +151,14 @@ export function generateRpcSurface(
   })
 
   const entries: string[] = []
+  // 对象字面量键位：合法标识符直接写，否则引号字符串
   const key = (seg: string) => (/^[a-zA-Z][a-zA-Z0-9]*$/.test(seg) ? seg : `'${seg}'`)
+  // 属性访问位：非标识符段必须用方括号（client.'x-y' 是语法错误）
+  const access = (seg: string) => (/^[a-zA-Z][a-zA-Z0-9]*$/.test(seg) ? `.${seg}` : `['${seg}']`)
   for (const [seg, owners] of segmentOwners) {
     // 同段多来源：与运行时挂载顺序一致（先注册者优先）
     owners.sort((a, b) => a.idx - b.idx)
-    const refs = owners.map(o => `${o.localName}Client${o.idx}.${key(seg)}`)
+    const refs = owners.map(o => `${o.localName}Client${o.idx}${access(seg)}`)
     entries.push(
       refs.length === 1
         ? `      ${key(seg)}: ${refs[0]},`
