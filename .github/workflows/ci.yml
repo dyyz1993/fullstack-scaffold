@@ -343,8 +343,9 @@ jobs:
 
   feishu-notify:
     name: Feishu Notification
-    # 通知是尽力而为：webhook 网络/密钥问题不应拖垮整个 CI run 的结论
-    continue-on-error: true
+    # 通知是尽力而为：网络/密钥问题不应拖垮 CI 结论。
+    # 注意：continue-on-error 不支持 uses:（可复用工作流调用）——b118fda 曾因此
+    # 令整个 workflow 解析失败（0 秒红）。改为自包含 curl（普通 job 可容忍失败）。
     if: always() && github.actor != 'dependabot[bot]'
     needs:
       [
@@ -360,13 +361,17 @@ jobs:
         e2e-tests,
         constraint-verify,
       ]
-    uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
-    with:
-      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}","e2e-tests":"${{ needs.e2e-tests.result }}","constraint-verify":"${{ needs.constraint-verify.result }}"}'
-      sha: ${{ github.sha }}
-      ref: ${{ github.ref_name }}
-      actor: ${{ github.actor }}
-      repo: ${{ github.repository }}
-      run-id: ${{ github.run_id }}
-    secrets:
-      FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Feishu notification
+        continue-on-error: true
+        run: |
+          PAYLOAD=$(cat <<EOF
+          {"msg_type":"text","content":{"text":"CI ${{ github.event_name }} @ ${{ github.ref_name }}\n${{ github.actor }}: ${{ github.event.head_commit.message }}\nrun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\ncli-checks: ${{ needs.cli-checks.result }} | cli-tests: ${{ needs.cli-tests.result }}\ntemplate: ${{ needs.template-checks.result }}/${{ needs.template-build.result }}/${{ needs.template-e2e.result }}\nsecurity: ${{ needs.security-audit.result }} | presets: ${{ needs.preset-build-matrix.result }}\nconstraint-verify: ${{ needs.constraint-verify.result }} | e2e: ${{ needs.e2e-tests.result }}"}}
+          EOF
+          )
+          curl -s -m 15 -X POST "$FEISHU_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "$PAYLOAD" || echo "feishu notify failed (non-blocking)"
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
