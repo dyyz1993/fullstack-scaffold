@@ -38,6 +38,34 @@ function extractToken(authHeader: string | undefined): string | null {
   return authHeader.slice(7)
 }
 
+// dev tokens：与模板完整版 auth.ts 语义一致（开发/测试便利后门，production 默认禁用）
+function isDevTokensEnabled(): boolean {
+  if (process.env.ENABLE_DEV_TOKENS === 'true') return true
+  if (process.env.ENABLE_DEV_TOKENS === 'false') return false
+  if (process.env.NODE_ENV === 'production') return false
+  return true
+}
+
+function verifyDevToken(token: string): AuthUser | null {
+  if (token === 'admin-token' || token === 'super-admin-token') {
+    return {
+      id: 'super-admin-1',
+      username: 'superadmin',
+      email: 'superadmin@example.com',
+      role: 'admin',
+    }
+  }
+  if (token === 'user-token') {
+    return {
+      id: 'user-1',
+      username: 'Demo User',
+      email: 'demo@example.com',
+      role: 'user',
+    }
+  }
+  return null
+}
+
 export function authMiddleware(_options: AuthMiddlewareOptions = {}): MiddlewareHandler {
   const log = createModuleLoggerSync('auth')
 
@@ -47,6 +75,16 @@ export function authMiddleware(_options: AuthMiddlewareOptions = {}): Middleware
     if (!token) {
       log.warn({ path: c.req.path, method: c.req.method }, 'Missing auth token')
       return c.json({ success: false, error: 'Authentication required', status: 401 }, 401)
+    }
+
+    if (isDevTokensEnabled()) {
+      const devUser = verifyDevToken(token)
+      if (devUser) {
+        c.set('authUser', devUser)
+        log.warn('DEV TOKEN USED - This should not appear in production!')
+        await next()
+        return
+      }
     }
 
     try {

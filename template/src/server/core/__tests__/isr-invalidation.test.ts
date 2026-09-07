@@ -15,9 +15,17 @@ import {
 } from '@server/core/isr-invalidation'
 import { createISRCache } from '@server/core/isr-cache'
 
-// Side-effect: 注册 ISR 路由到全局 registry（purgeAllPages 遍历它）
+// Side-effect: 注册 ISR 路由到全局 registry（purgeAllPages 遍历它）。
+// content 模块在部分 preset 中不存在 —— 可选导入，缺省时跳过
 import '@server/module-todos/isr'
-import '@server/module-content/isr'
+const contentIsrModule = '@server/module-content/isr'
+let hasContentModule = false
+try {
+  await import(/* @vite-ignore */ contentIsrModule)
+  hasContentModule = true
+} catch {
+  // preset 无 content 模块
+}
 
 describe('isr-invalidation', () => {
   it('returns null cache when not set', () => {
@@ -69,8 +77,11 @@ describe('isr-invalidation', () => {
 
       expect((await cache.lookup('/')).status).toBe('miss')
       expect((await cache.lookup('/todos')).status).toBe('miss')
-      expect((await cache.lookup('/content')).status).toBe('miss')
-      expect((await cache.lookup('/content/123')).status).toBe('miss')
+      if (hasContentModule) {
+        // content 相关页仅在 preset 含 content 模块时被注册、才可被清理
+        expect((await cache.lookup('/content')).status).toBe('miss')
+        expect((await cache.lookup('/content/123')).status).toBe('miss')
+      }
     })
   })
 })
