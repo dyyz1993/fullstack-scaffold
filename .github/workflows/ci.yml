@@ -282,13 +282,55 @@ jobs:
           path: test-results/
           retention-days: 30
 
+  constraint-verify:
+    name: Generated App Constraint Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build CLI
+        run: npm run build:cli
+      - name: Scaffold generated app (todo-app preset)
+        run: node dist/cli/index.js chain-app --preset todo-app -o /tmp/gen
+      - name: No TS compiler patch & typecheck passes
+        run: |
+          if ls /tmp/gen/patches/ | grep -qi '^typescript'; then
+            echo "::error::TS compiler patch found in generated app"; exit 1
+          fi
+          cd /tmp/gen && npx tsc --noEmit
+      - name: Generated rpc-surface lints clean
+        run: cd /tmp/gen && npx eslint src/server/rpc-surface.ts --max-warnings=0
+      - name: Banned mega-type pattern is rejected by generated app lint
+        run: |
+          cat > /tmp/gen/src/server/bad-pattern.ts <<'EOF'
+          import { OpenAPIHono } from '@hono/zod-openapi'
+
+          export const mergedRoutes = new OpenAPIHono()
+            .route('/api', moduleA)
+            .route('/api', moduleB)
+
+          export type MergedApiType = typeof mergedRoutes
+          EOF
+          cd /tmp/gen
+          if npx eslint src/server/bad-pattern.ts --no-warn-ignored; then
+            echo "::error::violation fixture was NOT caught by generated app lint"
+            exit 1
+          else
+            echo "violation correctly blocked by local-rules/no-merged-api-type-export"
+          fi
+
   feishu-notify:
     name: Feishu Notification
     if: always() && github.actor != 'dependabot[bot]'
-    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules, preset-build-matrix, e2e-tests]
+    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules, preset-build-matrix, e2e-tests, constraint-verify]
     uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
     with:
-      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}","e2e-tests":"${{ needs.e2e-tests.result }}"}'
+      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}","e2e-tests":"${{ needs.e2e-tests.result }}","constraint-verify":"${{ needs.constraint-verify.result }}"}'
       sha: ${{ github.sha }}
       ref: ${{ github.ref_name }}
       actor: ${{ github.actor }}
