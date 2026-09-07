@@ -13,6 +13,10 @@ export function getExcludePatterns(
 ): string[] {
   const excludes: string[] = []
 
+  // TS2589 哨兵只属于框架仓库：它 import 全部模块，进小 preset 会编译失败。
+  // 生成的 app 由 rpc-surface.ts 本身提供等价的按模块实例化覆盖。
+  excludes.push('src/server/rpc-type-canary.ts')
+
   for (const [name, manifest] of allManifests) {
     if (resolved.modules.has(name)) continue
 

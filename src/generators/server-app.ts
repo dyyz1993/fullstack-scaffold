@@ -96,7 +96,10 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
       }
     })
-    .post('/api/__test__/cleanup', async c => {
+  // 测试辅助端点：仅开发/测试环境注册（Cloudflare 构建时 NODE_ENV 被替换为
+  // "production"，此端点不会出现在生产 bundle 中）
+  if (process.env.NODE_ENV !== 'production') {
+    app.post('/api/__test__/cleanup', async c => {
       try {
         const { cleanupTestDatabase } = await import('./db/test-setup')
         await cleanupTestDatabase()
@@ -106,6 +109,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ success: false as const, message: 'Failed to cleanup database' }, 500)
       }
     })
+  }
 
   autoRegisterRealtime(app as unknown as Parameters<typeof autoRegisterRealtime>[0])
 

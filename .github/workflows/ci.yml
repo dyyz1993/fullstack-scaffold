@@ -6,8 +6,8 @@ on:
   pull_request:
     branches: [master, main, feat/*]
   schedule:
-    - cron: '0 6 * * 1'  # 每周一早上6点UTC运行
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 6 * * 1' # 每周一早上6点UTC运行
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   cli-checks:
@@ -51,7 +51,7 @@ jobs:
         run: npx vitest run src/__tests__/e2e-scaffold-verify.test.ts --testTimeout=300000
         timeout-minutes: 15
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: '--max-old-space-size=6144'
 
   template-checks:
     name: Template Quality (${{ matrix.os }})
@@ -68,10 +68,19 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
       - name: Install dependencies
         run: npm ci
-      - name: Type check
-        run: cd template && npx tsc --noEmit
+      - name: Type check (TS2589 early-warning budget)
+        run: |
+          start=$(date +%s)
+          cd template && npx tsc --noEmit
+          end=$(date +%s)
+          dur=$((end - start))
+          echo "tsc duration: ${dur}s (budget 120s)"
+          if [ "$dur" -gt 120 ]; then
+            echo "::error::template tsc took ${dur}s (budget 120s). Type-inference weight likely regressed (merged mega-types?). See eslint rule no-merged-api-type-export and template/src/server/rpc-type-canary.ts."
+            exit 1
+          fi
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: '--max-old-space-size=6144'
       - name: Lint
         run: npx turbo lint --filter=biomimic-todo-app
       - name: Unit tests
@@ -227,7 +236,7 @@ jobs:
       - name: Type check scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npx tsc --noEmit
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: '--max-old-space-size=6144'
       - name: Build scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npm run build
 
@@ -327,7 +336,20 @@ jobs:
   feishu-notify:
     name: Feishu Notification
     if: always() && github.actor != 'dependabot[bot]'
-    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules, preset-build-matrix, e2e-tests, constraint-verify]
+    needs:
+      [
+        cli-checks,
+        cli-tests,
+        template-checks,
+        template-build,
+        template-e2e,
+        template-e2e-cross-browser,
+        security-audit,
+        template-modules,
+        preset-build-matrix,
+        e2e-tests,
+        constraint-verify,
+      ]
     uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
     with:
       jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}","e2e-tests":"${{ needs.e2e-tests.result }}","constraint-verify":"${{ needs.constraint-verify.result }}"}'
