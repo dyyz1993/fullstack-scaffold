@@ -343,6 +343,8 @@ jobs:
 
   feishu-notify:
     name: Feishu Notification
+    # 通知是尽力而为：webhook 网络/密钥问题不应拖垮整个 CI run 的结论
+    continue-on-error: true
     if: always() && github.actor != 'dependabot[bot]'
     needs:
       [
