@@ -1,8 +1,12 @@
 /**
+ * @framework-baseline 1a361bf1bb0e5343
+ */
+
+/**
  * SSR Entry Point — used by ISR pipeline to render real React components.
  *
  * This module:
- * 1. Pre-populates Zustand stores with ISR-fetched data
+ * 1. Pre-populates Zustand stores with ISR-fetched data (via generated entry-stores)
  * 2. Renders the app to HTML string via renderToString
  * 3. Restores stores after render
  */
@@ -13,13 +17,12 @@ import { StaticRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
 import { AppRoutes } from './AppRoutes'
-import { useTodoStore } from './stores/todoStore'
-import type { Todo } from '@shared/schemas'
-
-export interface SSRData {
-  todos?: Todo[]
-  [key: string]: unknown
-}
+import {
+  snapshotEntryStores,
+  seedEntryStores,
+  restoreEntryStores,
+  type SSRData,
+} from './stores/entry-stores'
 
 interface SSRRenderResult {
   html: string
@@ -35,13 +38,10 @@ interface SSRRenderResult {
  */
 export function renderSSR(pathname: string, data: SSRData): SSRRenderResult {
   // 1. Snapshot current store state (for cleanup)
-  const prevTodos = useTodoStore.getState().todos
-  const prevLoading = useTodoStore.getState().loading
+  const snapshot = snapshotEntryStores()
 
-  // 2. Pre-populate stores with ISR data
-  if (data.todos) {
-    useTodoStore.setState({ todos: data.todos, loading: false })
-  }
+  // 2. Pre-populate stores with ISR data (no-op when preset has no seedable stores)
+  seedEntryStores(data)
 
   // 3. Set default preset
   const preset = 'todo'
@@ -70,6 +70,6 @@ export function renderSSR(pathname: string, data: SSRData): SSRRenderResult {
     return { html, helmet: { title: titleStr, meta: metaStr } }
   } finally {
     // 6. Restore store state
-    useTodoStore.setState({ todos: prevTodos, loading: prevLoading })
+    restoreEntryStores(snapshot)
   }
 }

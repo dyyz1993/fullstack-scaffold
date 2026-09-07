@@ -13,6 +13,7 @@ import { getExcludePatterns, getGeneratedFiles } from '../generators/file-filter
 import { generateRouteRegistry } from '../generators/route-registry'
 import { generateRpcSurface } from '../generators/rpc-surface'
 import { generateIsrModules } from '../generators/isr-modules'
+import { generateEntryStores } from '../generators/entry-stores'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
@@ -381,6 +382,17 @@ export async function createProject(
       fs.existsSync(path.join(targetDir, 'src/server', `module-${moduleName}`, relPath))
     )
     await fs.writeFile(path.join(targetDir, 'src/server/isr-modules.ts'), isrModulesContent)
+
+    if (resolved.hasClient) {
+      const entryStoresContent = generateEntryStores(resolved, (_moduleName, relPath) =>
+        fs.existsSync(path.join(targetDir, 'src/client/stores', relPath))
+      )
+      await fs.ensureDir(path.join(targetDir, 'src/client/stores'))
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/stores/entry-stores.ts'),
+        entryStoresContent
+      )
+    }
 
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/db/schema/index.ts'), dbSchemaContent)

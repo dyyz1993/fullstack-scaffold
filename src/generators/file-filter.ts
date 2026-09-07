@@ -180,6 +180,7 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     'src/server/route-registry.ts',
     'src/server/rpc-surface.ts',
     'src/server/isr-modules.ts',
+    'src/client/stores/entry-stores.ts',
     'src/server/db/schema/index.ts',
     'src/shared/modules/index.ts',
     'src/shared/schemas/index.ts',
