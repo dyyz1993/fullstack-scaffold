@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 export default defineConfig({
   test: {
     globals: true,
-    include: ['src/__tests__/**/*.test.ts'],
+    include: ['src/__tests__/**/*.test.ts', 'eslint-rules/__tests__/**/*.test.ts'],
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

@@ -36,10 +36,8 @@ import {
   validateModulePublicApi,
   formatModulePublicApiErrors,
 } from './validators/module-public-api.validator.js'
-import {
-  validateConfigSync,
-  formatConfigSyncErrors,
-} from './validators/config-sync.validator.js'
+import { validateConfigSync, formatConfigSyncErrors } from './validators/config-sync.validator.js'
+import { validateNoTsPatch, formatNoTsPatchErrors } from './validators/no-ts-patch.validator.js'
 import projectConfig from './config/project.config.js'
 
 interface ValidatorResult {
@@ -257,7 +255,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 15. Root/Template 配置同步验证
-  console.log('🔍 [15/15] Checking root/template config sync...')
+  console.log('🔍 [15/16] Checking root/template config sync...')
   const configSyncErrors = validateConfigSync(projectConfig.configSync, rootPath)
   results.push({
     name: 'Config Sync',
@@ -268,6 +266,20 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.error(formatConfigSyncErrors(configSyncErrors))
   } else {
     console.log('  ✅ Root and template configs are in sync\n')
+  }
+
+  // 16. TypeScript 编译器补丁禁止验证
+  console.log('🔍 [16/16] Checking for TypeScript compiler patches...')
+  const noTsPatchErrors = validateNoTsPatch(rootPath)
+  results.push({
+    name: 'No TS Patch',
+    passed: noTsPatchErrors.length === 0,
+    errors: noTsPatchErrors.length,
+  })
+  if (noTsPatchErrors.length > 0) {
+    console.error(formatNoTsPatchErrors(noTsPatchErrors))
+  } else {
+    console.log('  ✅ No TypeScript compiler patches found\n')
   }
 
   return results

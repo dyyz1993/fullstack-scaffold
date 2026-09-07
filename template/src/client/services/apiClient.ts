@@ -5,16 +5,20 @@
  * @impact 影响所有客户端 API 请求，需要用户登录后才能访问受保护的接口
  */
 
-import { hc } from 'hono/client'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
-import type { ClientApiType } from '@server/index'
+import { createApiFacade } from '@server/rpc-surface'
 
-const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
+const isBrowser = typeof window !== 'undefined'
+
+const baseUrl = isBrowser
+  ? import.meta.env.API_BASE_URL || window.location.origin
+  : 'http://localhost:3010'
 
 const TOKEN_KEY = 'auth-token'
 
 function getAuthToken(): string | null {
+  if (!isBrowser) return null
   try {
     const stored = localStorage.getItem(TOKEN_KEY)
     if (stored) {
@@ -31,6 +35,10 @@ function getAuthToken(): string | null {
 }
 
 const authenticatedFetch = (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+  if (!isBrowser) {
+    return fetch(url, init)
+  }
+
   const token = getAuthToken()
   const headers = new Headers(init?.headers)
 
@@ -54,7 +62,7 @@ const authenticatedFetch = (url: string | URL | Request, init?: RequestInit): Pr
     })
 }
 
-export const apiClient = hc<ClientApiType>(baseUrl, {
+export const apiClient = createApiFacade(baseUrl, {
   fetch: authenticatedFetch as typeof fetch,
   webSocket: url => {
     const token = getAuthToken()

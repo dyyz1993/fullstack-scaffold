@@ -11,6 +11,7 @@ import {
 } from '../generators/template-generator'
 import { getExcludePatterns, getGeneratedFiles } from '../generators/file-filter'
 import { generateRouteRegistry } from '../generators/route-registry'
+import { generateRpcSurface } from '../generators/rpc-surface'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
@@ -367,6 +368,13 @@ export async function createProject(
 
     const routeRegistryContent = generateRouteRegistry(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/route-registry.ts'), routeRegistryContent)
+
+    // 按模块拆分的 RPC 门面（读取已复制的模块路由文件，提取窄类型与路径段）
+    const rpcSurfaceContent = generateRpcSurface(resolved, relPath => {
+      const full = path.join(targetDir, 'src/server', `${relPath}.ts`)
+      return fs.existsSync(full) ? fs.readFileSync(full, 'utf-8') : null
+    })
+    await fs.writeFile(path.join(targetDir, 'src/server/rpc-surface.ts'), rpcSurfaceContent)
 
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/db/schema/index.ts'), dbSchemaContent)

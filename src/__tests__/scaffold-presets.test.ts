@@ -142,10 +142,15 @@ describe('Scaffold Presets', () => {
       expect(content).not.toMatch(/admin/)
     })
 
-    it('should have client App.tsx with config-driven routing', () => {
-      const content = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
-      expect(content).toMatch(/PresetProvider/)
-      expect(content).toMatch(/getPresetUIConfig/)
+    it('should have config-driven routing (PresetProvider moved to AppRoutes)', () => {
+      const appContent = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
+      expect(appContent).toMatch(/AppRoutes/)
+      const routesContent = fs.readFileSync(
+        path.join(projectDir, 'src/client/AppRoutes.tsx'),
+        'utf-8'
+      )
+      expect(routesContent).toMatch(/PresetProvider/)
+      expect(routesContent).toMatch(/getPresetUIConfig/)
     })
 
     it('should not have excluded client stores', () => {
@@ -224,10 +229,15 @@ describe('Scaffold Presets', () => {
       expect(clientRoutes?.length).toBeGreaterThanOrEqual(4)
     })
 
-    it('should have client App.tsx with config-driven routing', () => {
-      const content = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
-      expect(content).toMatch(/PresetProvider/)
-      expect(content).toMatch(/getPresetUIConfig/)
+    it('should have config-driven routing (PresetProvider moved to AppRoutes)', () => {
+      const appContent = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
+      expect(appContent).toMatch(/AppRoutes/)
+      const routesContent = fs.readFileSync(
+        path.join(projectDir, 'src/client/AppRoutes.tsx'),
+        'utf-8'
+      )
+      expect(routesContent).toMatch(/PresetProvider/)
+      expect(routesContent).toMatch(/getPresetUIConfig/)
     })
 
     it('should have all client stores', () => {

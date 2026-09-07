@@ -92,8 +92,7 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
     content += `export const adminApiRoutes = new OpenAPIHono()\n\n`
   }
 
-  content += `export type ClientApiRoutes = typeof clientApiRoutes\n`
-  content += `export type AdminApiRoutes = typeof adminApiRoutes\n`
+  content += `// 类型出口已移除：巨型 merge 类型是 TS2589 根源，客户端改用 rpc-surface.ts 门面\n`
 
   return content
 }

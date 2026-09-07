@@ -39,6 +39,7 @@ import { noDeepRelativeImports } from './eslint-rules/no-deep-relative-imports.j
 import { noCrossModuleServiceImport } from './eslint-rules/no-cross-module-service-import.js'
 import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
 import { routeLocation } from './eslint-rules/route-location.js'
+import { noMergedApiTypeExport } from './eslint-rules/no-merged-api-type-export.js'
 
 const localRules = {
   rules: {
@@ -77,6 +78,7 @@ const localRules = {
     'no-cross-module-service-import': noCrossModuleServiceImport,
     'no-disable-type-safe-client': noDisableTypeSafeClient,
     'route-location': routeLocation,
+    'no-merged-api-type-export': noMergedApiTypeExport,
   },
 }
 
@@ -147,6 +149,7 @@ export default tseslint.config(
       'local-rules/no-cross-module-service-import': 'error',
       'local-rules/route-location': 'error',
       'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
+      'local-rules/no-merged-api-type-export': 'error',
     },
   },
   {

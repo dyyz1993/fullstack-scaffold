@@ -34,8 +34,9 @@ describe('code generators', () => {
       expect(content).toContain('import { apiRoutes }')
       expect(content).toContain("from './module-todos/routes/todos-routes'")
       expect(content).toContain(".route('/api', apiRoutes)")
-      expect(content).toContain('export type ClientApiRoutes')
-      expect(content).toContain('export type AdminApiRoutes')
+      expect(content).not.toContain('export type ClientApiRoutes')
+      expect(content).not.toContain('export type AdminApiRoutes')
+      expect(content).toContain('rpc-surface')
       expect(content).toContain('// No admin modules selected')
     })
 
@@ -60,12 +61,13 @@ describe('code generators', () => {
       expect(content).toContain('adminApiRoutes')
     })
 
-    it('exports type aliases', () => {
+    it('does not export merged type aliases (TS2589 guard)', () => {
       const resolved = getPreset('minimal', allManifests, presets)
       const content = generateRouteRegistry(resolved)
 
-      expect(content).toContain('export type ClientApiRoutes = typeof clientApiRoutes')
-      expect(content).toContain('export type AdminApiRoutes = typeof adminApiRoutes')
+      expect(content).not.toContain('export type ClientApiRoutes = typeof clientApiRoutes')
+      expect(content).not.toContain('export type AdminApiRoutes = typeof adminApiRoutes')
+      expect(content).toContain('rpc-surface')
     })
 
     it('includes rate limit middleware', () => {

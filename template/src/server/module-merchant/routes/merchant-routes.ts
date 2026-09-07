@@ -136,3 +136,6 @@ export const apiRoutes = new OpenAPIHono()
     const product = await merchantService.createProduct(merchant.id, input)
     return c.json(success(product), 201)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type MerchantApiType = typeof apiRoutes

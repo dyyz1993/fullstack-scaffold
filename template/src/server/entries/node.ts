@@ -168,8 +168,6 @@ app.onError((err, c) => {
 })
 
 export default app
-export type AppType = typeof app
-
 export async function createServer() {
   const server = serve({
     fetch: app.fetch,

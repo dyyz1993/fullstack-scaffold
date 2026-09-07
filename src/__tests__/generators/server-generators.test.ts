@@ -77,14 +77,14 @@ describe('server-generators', () => {
       expect(content).toContain('loggerMiddleware')
     })
 
-    it('should always export AppType, ClientApiType, AdminApiType', async () => {
+    it('should NOT export merged mega types (TS2589 guard)', async () => {
       const preset = presets.find(p => p.id === 'minimal')
       const resolved = resolvePreset(preset, allManifests)
       const content = generateServerApp(resolved)
 
-      expect(content).toContain('export type AppType')
-      expect(content).toContain('export type ClientApiType')
-      expect(content).toContain('export type AdminApiType')
+      expect(content).not.toContain('export type AppType')
+      expect(content).not.toContain('export type ClientApiType')
+      expect(content).not.toContain('export type AdminApiType')
     })
   })
 

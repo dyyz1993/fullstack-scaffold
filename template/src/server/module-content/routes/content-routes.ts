@@ -177,3 +177,6 @@ export const contentRoutes = new OpenAPIHono()
     if (!result) throw new BusinessError('Content cannot be archived (must be in published state)')
     return c.json(success(result), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type ContentsApiType = typeof contentRoutes

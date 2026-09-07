@@ -60,7 +60,3 @@ export const adminApiRoutes = new OpenAPIHono()
   .route('/api', pluginAdminRoutes)
   .route('/api', dashboardRoutes)
   .route('/api', tenantRoutes)
-
-// 导出类型
-export type ClientApiRoutes = typeof clientApiRoutes
-export type AdminApiRoutes = typeof adminApiRoutes

@@ -1,4 +1,8 @@
 /**
+ * @framework-baseline ae78703ba6753ec3
+ */
+
+/**
  * @fileoverview Prevent cross-module service internal imports
  * @author create-biomimic-app
  */

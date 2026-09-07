@@ -131,11 +131,10 @@ export function generateAdminApiClient(resolved: ResolvedPreset): string | null 
  * @impact Captcha module excluded = no captchaStore import
  */
 
-import { hc } from 'hono/client'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { createRequestInterceptor } from './requestInterceptor'
-${captchaImport}import type { AdminApiType } from '@server/index'
+${captchaImport}import { createApiFacade } from '@server/rpc-surface'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
@@ -167,7 +166,7 @@ ${captchaFetchSetup}  return createRequestInterceptor({
 ${captchaHandler}  })
 }
 
-export const apiClient = hc<AdminApiType>(baseUrl, {
+export const apiClient = createApiFacade(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url) as unknown as WebSocket,
   sse: url => {

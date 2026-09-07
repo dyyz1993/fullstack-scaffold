@@ -100,6 +100,3 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
   return app
 }
-export type AdminApiType = typeof adminApiRoutes
-export type ClientApiType = typeof clientApiRoutes
-export type AppType = ReturnType<typeof createApp>

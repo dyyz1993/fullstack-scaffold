@@ -174,6 +174,7 @@ export function getExcludePatterns(
 export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
   const files: string[] = [
     'src/server/route-registry.ts',
+    'src/server/rpc-surface.ts',
     'src/server/db/schema/index.ts',
     'src/shared/modules/index.ts',
     'src/shared/schemas/index.ts',

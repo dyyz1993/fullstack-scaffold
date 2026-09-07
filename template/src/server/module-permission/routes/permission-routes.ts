@@ -182,3 +182,6 @@ export const permissionRoutes = new OpenAPIHono()
       200
     )
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type PermissionsApiType = typeof permissionRoutes

@@ -6,7 +6,17 @@
 import { afterEach, vi } from 'vitest'
 import '@testing-library/jest-dom'
 import { EventSource } from 'eventsource'
-import zhCN from './src/admin/i18n/locales/zh-CN.json'
+import { createRequire } from 'node:module'
+
+// admin i18n 语言包仅存在于含 admin 模块的 preset（如 fullstack-admin）；
+// 不含 admin 的 preset（如 todo-app/minimal）没有该文件，缺省回退到 key 本身。
+const require = createRequire(import.meta.url)
+let zhCN: Record<string, unknown> = {}
+try {
+  zhCN = (require('./src/admin/i18n/locales/zh-CN.json') as Record<string, unknown>) ?? {}
+} catch {
+  zhCN = {}
+}
 
 function resolveTranslation(obj: Record<string, unknown>, key: string): string {
   const keys = key.split('.')
