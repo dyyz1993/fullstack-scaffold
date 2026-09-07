@@ -47,6 +47,8 @@ jobs:
       - run: npm ci
       - name: Run CLI unit tests
         run: npx vitest run --reporter=verbose --config vitest.config.ts
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
       - name: Scaffold E2E verify
         run: npx vitest run src/__tests__/e2e-scaffold-verify.test.ts --testTimeout=300000
         timeout-minutes: 15
@@ -116,6 +118,8 @@ jobs:
 
   template-e2e:
     name: Template E2E Tests
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "1"
     runs-on: ubuntu-latest
     needs: template-checks
     steps:
@@ -151,6 +155,8 @@ jobs:
 
   template-e2e-cross-browser:
     name: Template E2E Cross-Browser
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "1"
     runs-on: ubuntu-latest
     needs: template-checks
     continue-on-error: true
@@ -216,6 +222,8 @@ jobs:
 
   preset-build-matrix:
     name: Preset Build (${{ matrix.preset }})
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "1"
     runs-on: ubuntu-latest
     needs: [cli-checks, cli-tests]
     strategy:

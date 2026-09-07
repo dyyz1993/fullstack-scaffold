@@ -525,6 +525,7 @@ export async function createProject(
       try {
         const { execSync } = await import('node:child_process')
         execSync('npm install --legacy-peer-deps', {
+          env: { ...process.env, PUPPETEER_SKIP_DOWNLOAD: '1' },
           cwd: targetDir,
           stdio: 'pipe',
           timeout: 300000,

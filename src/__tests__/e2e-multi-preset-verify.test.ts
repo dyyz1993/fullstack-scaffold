@@ -205,7 +205,7 @@ function run(cmd: string, cwd: string, timeout = 120_000, env?: Record<string, s
     timeout,
     stdio: 'pipe',
     maxBuffer: 50 * 1024 * 1024,
-    env: { ...process.env, ...env },
+    env: { ...process.env, PUPPETEER_SKIP_DOWNLOAD: '1', ...env },
   })
 }
 

@@ -15,7 +15,11 @@ import type {
   CreateUserRequest,
 } from '@shared/modules/admin'
 
-type TodosTableType = typeof import('@server/db/schema')['todos']
+// preset 不含 todos 模块时 barrel 无 todos 键：类型退化为 any 以保证编译
+// （运行时 getTodosTable 返回 null，所有调用方都有早退守卫，不会触达表）
+type SchemaModule = typeof import('@server/db/schema')
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TodosTableType = SchemaModule extends { todos: infer T } ? T : any
 
 let todosTable: TodosTableType | null = null
 let todosTableLoaded = false
@@ -24,7 +28,7 @@ async function getTodosTable(): Promise<TodosTableType | null> {
   if (todosTableLoaded) return todosTable
   try {
     const schema = await import('@server/db/schema')
-    todosTable = schema.todos ?? null
+    todosTable = (schema as { todos?: TodosTableType }).todos ?? null
     todosTableLoaded = true
     return todosTable
   } catch (error) {

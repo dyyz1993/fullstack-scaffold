@@ -17,7 +17,7 @@ function run(cmd: string, cwd: string, timeout = 120_000, env?: Record<string, s
     timeout,
     stdio: 'pipe',
     maxBuffer: 50 * 1024 * 1024,
-    env: { ...process.env, ...env },
+    env: { ...process.env, PUPPETEER_SKIP_DOWNLOAD: '1', ...env },
   })
 }
 
@@ -161,7 +161,8 @@ describe('E2E: Scaffold → Install → Verify', () => {
       // 6c. Public API: GET /api/todos (no auth required)
       const todos = JSON.parse(curlGet('/api/todos'))
       expect(todos.success).toBe(true)
-      expect(Array.isArray(todos.data)).toBe(true)
+      // 列表 API 返回分页对象 { todos, total, page, limit }（TodoListResponseSchema）
+      expect(Array.isArray(todos.data?.todos ?? todos.data)).toBe(true)
 
       // 6d. Public API: GET /api/notifications
       const notifications = JSON.parse(curlGet('/api/notifications'))
