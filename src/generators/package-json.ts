@@ -45,6 +45,7 @@ const CLIENT_DEV_PACKAGES = [
   'playwright',
   '@prerenderer/renderer-jsdom',
   '@prerenderer/renderer-puppeteer',
+  'puppeteer',
   '@prerenderer/rollup-plugin',
   'eventsource',
 ]
