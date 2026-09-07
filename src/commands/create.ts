@@ -12,6 +12,7 @@ import {
 import { getExcludePatterns, getGeneratedFiles } from '../generators/file-filter'
 import { generateRouteRegistry } from '../generators/route-registry'
 import { generateRpcSurface } from '../generators/rpc-surface'
+import { generateIsrModules } from '../generators/isr-modules'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
@@ -375,6 +376,11 @@ export async function createProject(
       return fs.existsSync(full) ? fs.readFileSync(full, 'utf-8') : null
     })
     await fs.writeFile(path.join(targetDir, 'src/server/rpc-surface.ts'), rpcSurfaceContent)
+
+    const isrModulesContent = generateIsrModules(resolved, (moduleName, relPath) =>
+      fs.existsSync(path.join(targetDir, 'src/server', `module-${moduleName}`, relPath))
+    )
+    await fs.writeFile(path.join(targetDir, 'src/server/isr-modules.ts'), isrModulesContent)
 
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/db/schema/index.ts'), dbSchemaContent)

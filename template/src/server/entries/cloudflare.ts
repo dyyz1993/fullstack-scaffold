@@ -17,9 +17,10 @@ import { isrRegistry, type ISRRouterContext } from '@server/core/isr-registry'
 import { renderISRPage } from '@server/core/isr-renderer'
 import { renderSSR } from '@client/entry-server'
 
-// Import module ISR registrations (side-effect: registers routes)
-import '@server/module-todos/isr'
-import '@server/module-content/isr'
+// Import module ISR registrations (side-effect: registers routes).
+// 由 CLI 按 preset 生成的汇总文件（src/server/isr-modules.ts），
+// 避免 content 等模块被裁剪后悬空导入导致 CF 构建/tsc 失败。
+import '@server/isr-modules'
 
 export interface CloudflareBindings extends AppBindings {
   DB: D1Database
