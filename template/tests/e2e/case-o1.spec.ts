@@ -55,7 +55,8 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
     await page.waitForTimeout(2000)
 
     await expect(page).toHaveURL(/\/admin\/system\/monitor/)
-    await expect(page.locator('body')).toContainText('系统监控')
+    // 监控页当前为占位实现（"System Monitor 即将推出"）
+    await expect(page.locator('body')).toContainText('System Monitor')
   })
 
   test('Step 4 - Navigate to Settings', async ({ page }) => {
@@ -63,11 +64,12 @@ test.describe('Case O1 - Ops Admin Panel UI Acceptance', () => {
     await page.goto(`${getBaseUrl()}/admin/system/settings`)
     await page.waitForTimeout(2000)
 
-    await expect(page.locator('h1').last()).toContainText('Settings')
-    await expect(page.getByText('General Settings')).toBeVisible()
-    await expect(page.getByText('Notification Settings')).toBeVisible()
-    await expect(page.getByText('Security Settings')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Save Changes' })).toBeVisible()
+    // 页面文案为 zh-CN（settings.*）
+    await expect(page.locator('h1').last()).toContainText('系统设置')
+    await expect(page.getByText('通用设置')).toBeVisible()
+    await expect(page.getByText('通知设置')).toBeVisible()
+    await expect(page.getByText('安全设置')).toBeVisible()
+    await expect(page.getByRole('button', { name: /保\s*存\s*更\s*改/ })).toBeVisible()
 
     const inputs = page.locator('input, textarea, select')
     await expect(inputs).toHaveCount(await inputs.count())

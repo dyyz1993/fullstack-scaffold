@@ -361,8 +361,13 @@ test.describe('Todo App', () => {
       // Wait for network to be idle
       await page.waitForLoadState('networkidle')
 
-      // Verify only pending todos are shown
-      await expect(page.locator('[data-testid="todo-item"]')).toHaveCount(1)
+      // 语义断言：不依赖种子数量分布——每个可见项的状态都必须是 pending
+      const items = page.locator('[data-testid="todo-item"]')
+      const count = await items.count()
+      expect(count).toBeGreaterThan(0)
+      for (let i = 0; i < count; i++) {
+        await expect(items.nth(i).locator('[data-testid="todo-status"]')).toHaveValue('pending')
+      }
     })
 
     test('should filter to show only completed todos', async ({ page }) => {
