@@ -88,10 +88,10 @@ describe('E2E: Scaffold → Install → Verify', () => {
     run('npx tsc --noEmit', projectPath, 300_000, { NODE_OPTIONS: '--max-old-space-size=6144' })
   })
 
-  test('step 4: unit tests pass', { timeout: 300_000 }, () => {
+  test('step 4: unit tests pass', { timeout: 660_000 }, () => {
     let output: string
     try {
-      output = run('npx vitest run 2>&1', projectPath, 300_000)
+      output = run('npx vitest run 2>&1', projectPath, 600_000) // mac 慢机整套子套件可超 300s
     } catch (e: unknown) {
       const err = e as { stdout?: string | Buffer; stderr?: string | Buffer }
       output = (err.stdout as string) ?? (err.stderr as string) ?? String(e)

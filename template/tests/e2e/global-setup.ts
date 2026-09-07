@@ -1,4 +1,5 @@
 import { FullConfig } from '@playwright/test'
+import { execSync } from 'node:child_process'
 import { createServer } from 'net'
 import { spawn } from 'child_process'
 
@@ -47,6 +48,14 @@ export default async function globalSetup(_config: FullConfig) {
 
   process.env.PLAYWRIGHT_TEST_BASE_URL = baseUrl
   process.env.TEST_PORT = String(port)
+
+  // 起服务前确保表结构存在（本地与 CI 通用；幂等）
+  process.stdout.write('\n📦 Ensuring database schema (drizzle-kit push)...\n')
+  try {
+    execSync('npx drizzle-kit push --force', { stdio: 'inherit', timeout: 60_000 })
+  } catch (e) {
+    process.stderr.write(`drizzle-kit push failed (tables may already exist): ${e}\n`)
+  }
 
   process.stdout.write(`\n🚀 Starting dev server on port ${port}...\n`)
 

@@ -414,10 +414,10 @@ describe.each(PRESETS_TO_VERIFY)(
       })
     })
 
-    test('step 5: unit tests pass', { timeout: 300_000 }, () => {
+    test('step 5: unit tests pass', { timeout: 660_000 }, () => {
       let output: string
       try {
-        output = run('npx vitest run 2>&1', projectDir, 300_000)
+        output = run('npx vitest run 2>&1', projectDir, 600_000) // mac 慢机整套子套件可超 300s
       } catch (e: unknown) {
         const err = e as { stdout?: string | Buffer; stderr?: string | Buffer }
         output = (err.stdout as string) ?? (err.stderr as string) ?? String(e)
