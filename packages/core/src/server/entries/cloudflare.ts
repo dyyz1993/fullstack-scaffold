@@ -16,7 +16,7 @@ import { RealtimeDurableObject } from '@server/core'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getCloudflareRuntimeAdapter } from '@server/core/runtime-cloudflare'
 import { createISRCache, isISRRoute } from '@server/core/isr-cache'
-import { renderPage } from '@server/core/ssr-renderer'
+import { renderPage, setIndexTemplate } from '@server/core/ssr-renderer'
 import { setISRCache } from '@server/core/isr-invalidation'
 
 export interface CloudflareBindings extends AppBindings {
@@ -35,6 +35,8 @@ const app = createApp<CloudflareBindings>()
 
 const isrCache = createISRCache()
 setISRCache(isrCache)
+
+let cachedTemplate: string | null = null
 
 const wrappedApp = app
   .use('*', async (c, next) => {
@@ -67,6 +69,20 @@ const wrappedApp = app
 export default {
   fetch: async (request: Request, env: CloudflareBindings, ctx: ExecutionContext) => {
     ;(globalThis as unknown as { DB: D1Database }).DB = env.DB
+
+    if (!cachedTemplate && env.ASSETS) {
+      try {
+        const indexResponse = await env.ASSETS.fetch(new URL('/index.html', request.url).href)
+        if (indexResponse.ok) {
+          cachedTemplate = await indexResponse.text()
+          setIndexTemplate(cachedTemplate)
+        } else {
+          console.warn('ISR template load: index.html returned', indexResponse.status)
+        }
+      } catch (e) {
+        console.warn('ISR template load failed:', e instanceof Error ? e.message : e)
+      }
+    }
 
     const url = new URL(request.url)
     const pathname = url.pathname
@@ -102,19 +118,23 @@ export default {
       }
 
       if (result.status === 'stale' && result.html) {
-        ctx.waitUntil(regeneratePage(pathname, env))
+        ctx.waitUntil(regeneratePage(pathname, env, request))
         return new Response(result.html, {
           headers: { 'Content-Type': 'text/html;charset=UTF-8', 'X-ISR-Status': 'stale' },
         })
       }
 
-      const rendered = await renderPage(pathname)
+      const html = await renderISRPage(pathname, env, request)
 
-      ctx.waitUntil(isrCache.store(pathname, rendered.html))
+      ctx.waitUntil(isrCache.store(pathname, html))
 
-      return new Response(rendered.html, {
-        status: rendered.status,
-        headers: { ...rendered.headers, 'X-ISR-Status': 'miss' },
+      return new Response(html, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html;charset=UTF-8',
+          'X-ISR-Status': 'miss',
+          'X-ISR-Rendered': 'true',
+        },
       })
     }
 
@@ -129,15 +149,88 @@ export default {
   },
 }
 
-async function regeneratePage(pathname: string, _env: CloudflareBindings): Promise<void> {
+async function regeneratePage(
+  pathname: string,
+  env: CloudflareBindings,
+  request: Request
+): Promise<void> {
   try {
-    const rendered = await renderPage(pathname)
-    await isrCache.store(pathname, rendered.html)
+    const html = await renderISRPage(pathname, env, request)
+    await isrCache.store(pathname, html)
   } catch (error) {
     console.error('ISR regeneration failed:', error)
   }
 }
 
-export { isrCache }
+const ROUTE_META: Record<string, { title: string; description: string }> = {
+  '/': { title: 'Todo List - Biomimic App', description: 'A full-stack application template' },
+  '/todos': {
+    title: 'Todo List - Biomimic App',
+    description: 'Manage your todos with real-time updates',
+  },
+  '/content': {
+    title: '内容中心 - Biomimic App',
+    description: 'Content management with categories and search',
+  },
+  '/notifications': {
+    title: 'Notifications - Biomimic App',
+    description: 'Real-time notifications via Server-Sent Events',
+  },
+  '/websocket': {
+    title: 'WebSocket Demo - Biomimic App',
+    description: 'Type-safe WebSocket communication demo',
+  },
+}
+
+async function renderISRPage(
+  pathname: string,
+  env: CloudflareBindings,
+  request: Request
+): Promise<string> {
+  const meta = ROUTE_META[pathname] || {
+    title: pathname.startsWith('/content/') ? '内容详情 - Biomimic App' : 'Biomimic App',
+    description: 'View content details',
+  }
+
+  let template = cachedTemplate
+
+  if (!template && env.ASSETS) {
+    try {
+      const indexUrl = new URL('/index.html', request.url).href
+      const resp = await env.ASSETS.fetch(indexUrl)
+      if (resp.ok) {
+        template = await resp.text()
+        cachedTemplate = template
+      }
+    } catch {
+      // fallback below
+    }
+  }
+
+  const ssrScript = `<script>window.__SSR_DATA__={};window.__SSR_PATH__=${JSON.stringify(pathname)};</script>`
+
+  if (template) {
+    let html = template
+    html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)}</title>`)
+    html = html.replace(
+      '</head>',
+      `    <meta name="description" content="${escapeHtml(meta.description)}" />\n    <meta property="og:title" content="${escapeHtml(meta.title)}" />\n    <meta property="og:description" content="${escapeHtml(meta.description)}" />\n    <meta name="generator" content="ISR" />\n  </head>`
+    )
+    html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrScript}`)
+    return html
+  }
+
+  return renderPage(pathname).then(r => r.html)
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+export { isrCache, cachedTemplate }
 export { RealtimeDurableObject, getDb }
 export type AppType = typeof wrappedApp

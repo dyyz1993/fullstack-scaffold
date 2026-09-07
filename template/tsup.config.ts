@@ -48,6 +48,12 @@ const serverBuildConfigs: Options[] = [
       'zod',
       'drizzle-orm',
       'drizzle-orm/d1',
+      'react',
+      'react-dom',
+      'react-dom/server',
+      'react-router-dom',
+      'react-helmet-async',
+      'zustand',
     ],
     external: [
       'pino',
@@ -72,6 +78,33 @@ const serverBuildConfigs: Options[] = [
     ],
     define: {
       'process.env.NODE_ENV': '"production"',
+      'import.meta.env.VITE_PRESET': '"todo"',
+    },
+    esbuildOptions(options) {
+      // Strip CSS imports for SSR (CSS is handled by client build)
+      options.loader = {
+        ...options.loader,
+        '.css': 'empty',
+        '.svg': 'empty',
+        '.png': 'empty',
+        '.jpg': 'empty',
+        '.jpeg': 'empty',
+        '.gif': 'empty',
+        '.woff': 'empty',
+        '.woff2': 'empty',
+        '.ttf': 'empty',
+        '.eot': 'empty',
+      }
+      // Path aliases for client/shared modules
+      options.alias = {
+        '@shared': resolve(root, 'src/shared'),
+        '@client': resolve(root, 'src/client'),
+        '@server': resolve(root, 'src/server'),
+        '@admin': resolve(root, 'src/admin'),
+        // Use browser variant of react-dom/server for Cloudflare Workers
+        // (Node variant requires 'util' builtin which is unavailable in Workers)
+        'react-dom/server': 'react-dom/server.browser',
+      }
     },
   },
 ]

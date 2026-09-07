@@ -110,7 +110,7 @@ class MemoryCacheStore implements ISRCacheStore {
 
 class CloudflareCacheStore implements ISRCacheStore {
   private cache: Cache | null = null
-  private origin = 'https://isr.local'
+  private origin = 'https://isr-v3.local'
 
   private async getCache(): Promise<Cache> {
     if (!this.cache) {

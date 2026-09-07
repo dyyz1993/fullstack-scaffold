@@ -15,6 +15,10 @@ import {
 } from '@server/core/isr-invalidation'
 import { createISRCache } from '@server/core/isr-cache'
 
+// Side-effect: 注册 ISR 路由到全局 registry（purgeAllPages 遍历它）
+import '@server/module-todos/isr'
+import '@server/module-content/isr'
+
 describe('isr-invalidation', () => {
   it('returns null cache when not set', () => {
     expect(getISRCache()).toBeNull()
