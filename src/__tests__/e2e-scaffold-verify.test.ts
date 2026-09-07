@@ -63,7 +63,7 @@ describe('E2E: Scaffold → Install → Verify', () => {
     }
   })
 
-  test('step 1: scaffolds a new project', { timeout: 60_000 }, () => {
+  test('step 1: scaffolds a new project', { timeout: 180_000 }, () => {
     fs.mkdirSync(tmpDir, { recursive: true })
     run(`npx tsx "${CLI_ENTRY}" ${projectName} --no-install`, tmpDir, 60_000)
     expect(fs.existsSync(projectPath)).toBe(true)

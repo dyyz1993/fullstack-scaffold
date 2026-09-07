@@ -308,7 +308,7 @@ describe.each(PRESETS_TO_VERIFY)(
       presetProjects.set(preset.id, projectDir)
     })
 
-    test('step 1: scaffolds project with preset', { timeout: 60_000 }, () => {
+    test('step 1: scaffolds project with preset', { timeout: 180_000 }, () => {
       run(
         `npx tsx "${CLI_ENTRY}" test-app --preset ${preset.id} --no-install`,
         path.dirname(projectDir),

@@ -41,7 +41,7 @@ function runCli(
     const stdout = execSync(`"${TSX_BIN}" "${CLI_ENTRY}" ${args.join(' ')}`, {
       cwd: cwd ?? os.tmpdir(),
       encoding: 'utf-8',
-      timeout: 60_000,
+      timeout: 180_000, // 并发 I/O 下脚手架偶发超 60s（copy ~2000 文件）
       stdio: ['pipe', 'pipe', 'pipe'],
     })
     return { stdout, stderr: '', status: 0 }

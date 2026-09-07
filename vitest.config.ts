@@ -16,7 +16,7 @@ export default defineConfig({
       'e2e-debug-app/**',
     ],
     testTimeout: 60000,
-    hookTimeout: 60000,
+    hookTimeout: 300000, // beforeAll 脚手架在并发 I/O 下偶发超 60s
     env: {
       NODE_ENV: 'test',
     },
