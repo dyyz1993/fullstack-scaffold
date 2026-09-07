@@ -36,6 +36,9 @@ jobs:
       - name: Build for Cloudflare
         working-directory: /tmp/demo-app
         run: npm run build:cloudflare
+      - name: Generate migrations
+        working-directory: /tmp/demo-app
+        run: npm run db:generate
       - name: Apply D1 migrations
         working-directory: /tmp/demo-app
         run: |
