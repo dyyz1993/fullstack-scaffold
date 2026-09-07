@@ -81,7 +81,7 @@ export function authMiddleware(_options: AuthMiddlewareOptions = {}): Middleware
       const devUser = verifyDevToken(token)
       if (devUser) {
         c.set('authUser', devUser)
-        log.warn('DEV TOKEN USED - This should not appear in production!')
+        log.warn({ module: 'auth' }, 'DEV TOKEN USED - This should not appear in production!')
         await next()
         return
       }
