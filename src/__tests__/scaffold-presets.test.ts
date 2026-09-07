@@ -88,6 +88,17 @@ describe('Scaffold Presets', () => {
       expect(fs.existsSync(path.join(projectDir, 'tsconfig.json'))).toBe(true)
     })
 
+    it('should ship agent workspace hooks (.zcode) and sync script', () => {
+      // 工作区钩子随模板生成：ZCode 打开即生效；hooks:sync 支持同步到全局
+      expect(fs.existsSync(path.join(projectDir, '.zcode/config.json'))).toBe(true)
+      expect(fs.existsSync(path.join(projectDir, '.zcode/hooks/no-no-verify.mjs'))).toBe(true)
+      const cfg = JSON.parse(fs.readFileSync(path.join(projectDir, '.zcode/config.json'), 'utf-8'))
+      expect(cfg.hooks.enabled).toBe(true)
+      const pkg = readPackageJson(projectDir)
+      const scripts = pkg.scripts as Record<string, string> | undefined
+      expect(scripts?.['hooks:sync']).toBeDefined()
+    })
+
     it('should have only module-todos directory', () => {
       for (const mod of includedModules) {
         expect(

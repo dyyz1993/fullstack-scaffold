@@ -67,7 +67,9 @@
     "ai:context": "node --import tsx/esm lint-scripts/ai-context-generator.ts",
     "postinstall": "node -e \"process.exit(require('fs').existsSync('node_modules/hono')?0:1)\" && patch-package || true",
     "prepare": "husky",
-    "typecheck:full": "tsc --noEmit && eslint . --max-warnings=0"
+    "typecheck:full": "tsc --noEmit && eslint . --max-warnings=0",
+    "hooks:sync": "node scripts/sync-agent-hooks.mjs",
+    "hooks:check": "node scripts/sync-agent-hooks.mjs --check"
   },
   "dependencies": {
     "@dyyz1993/xcli-core": "^0.7.4",

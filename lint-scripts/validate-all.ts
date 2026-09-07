@@ -38,6 +38,7 @@ import {
 } from './validators/module-public-api.validator.js'
 import { validateConfigSync, formatConfigSyncErrors } from './validators/config-sync.validator.js'
 import { validateNoTsPatch, formatNoTsPatchErrors } from './validators/no-ts-patch.validator.js'
+import { validateAgentHooks, formatAgentHooksErrors } from './validators/agent-hooks.validator.js'
 import projectConfig from './config/project.config.js'
 
 interface ValidatorResult {
@@ -269,7 +270,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 16. TypeScript 编译器补丁禁止验证
-  console.log('🔍 [16/16] Checking for TypeScript compiler patches...')
+  console.log('🔍 [16/17] Checking for TypeScript compiler patches...')
   const noTsPatchErrors = validateNoTsPatch(rootPath)
   results.push({
     name: 'No TS Patch',
@@ -280,6 +281,20 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.error(formatNoTsPatchErrors(noTsPatchErrors))
   } else {
     console.log('  ✅ No TypeScript compiler patches found\n')
+  }
+
+  // 17. Agent hooks 同步验证
+  console.log('🔍 [17/17] Checking agent hooks sync...')
+  const agentHooksErrors = validateAgentHooks(rootPath)
+  results.push({
+    name: 'Agent Hooks Sync',
+    passed: agentHooksErrors.length === 0,
+    errors: agentHooksErrors.length,
+  })
+  if (agentHooksErrors.length > 0) {
+    console.error(formatAgentHooksErrors(agentHooksErrors))
+  } else {
+    console.log('  ✅ Agent hooks mirror in sync\n')
   }
 
   return results

@@ -588,6 +588,25 @@ export async function createProject(
     }
     console.log('')
     console.log(chalk.gray('  Happy coding! 🐟'))
+
+    // agent 钩子环境提示：工作区 .zcode/ 已随模板生成（ZCode 打开即生效）；
+    // 全局级钩子按需用 hooks:sync 同步（幂等，支持 ZCode / Codex）
+    const home = process.env.HOME || ''
+    const agents: string[] = []
+    if (home) {
+      if (await fs.pathExists(path.join(home, '.zcode'))) agents.push('ZCode')
+      if (await fs.pathExists(path.join(home, '.codex'))) agents.push('Codex')
+      if (await fs.pathExists(path.join(home, '.claude'))) agents.push('Claude Code')
+      if (await fs.pathExists(path.join(home, '.cursor'))) agents.push('Cursor')
+    }
+    if (agents.length > 0) {
+      console.log('')
+      console.log(chalk.cyan(`  🪝 Agent hooks (检测到 ${agents.join(' / ')}):`))
+      console.log(
+        chalk.gray('    工作区钩子已生成（.zcode/，禁止 --no-verify 提交），ZCode 自动生效')
+      )
+      console.log(chalk.gray('    同步到全局（Codex 等）：npm run hooks:sync -- --global'))
+    }
     console.log('')
   } catch (error) {
     if (error instanceof ScaffoldError) throw error

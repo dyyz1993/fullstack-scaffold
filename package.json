@@ -104,7 +104,9 @@
     "turbo:test": "turbo test",
     "turbo:lint": "turbo lint",
     "turbo:typecheck": "turbo typecheck",
-    "turbo:all": "turbo lint typecheck test build"
+    "turbo:all": "turbo lint typecheck test build",
+    "hooks:sync": "node scripts/sync-agent-hooks.mjs",
+    "hooks:check": "node scripts/sync-agent-hooks.mjs --check"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.15",
