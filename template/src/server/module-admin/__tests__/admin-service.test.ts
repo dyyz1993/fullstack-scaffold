@@ -15,6 +15,8 @@ describe('Admin Service', () => {
   beforeEach(async () => {
     const rawClient = await getRawClient()
     if (rawClient && 'execute' in rawClient) {
+      // 附件先清（避免外键/顺序依赖），再清主表——用例自持状态
+      await rawClient.execute('DELETE FROM todo_attachments').catch(() => {})
       await rawClient.execute('DELETE FROM todos')
     }
   })

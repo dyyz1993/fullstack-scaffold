@@ -30,10 +30,7 @@
     "template/public"
   ],
   "workspaces": [
-    "template",
-    "packages/core",
-    "packages/infrastructure",
-    "packages/domain-plugin"
+    "template"
   ],
   "publishConfig": {
     "access": "public"
