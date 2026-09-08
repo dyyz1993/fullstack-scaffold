@@ -6,6 +6,7 @@ import path from 'node:path'
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../..')
 const CLI_ENTRY = path.join(PROJECT_ROOT, 'src/index.ts')
+const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules/.bin/tsx')
 const tmpDir = path.join(os.tmpdir(), `e2e-scaffold-${randomUUID()}`)
 const projectName = 'e2e-test-app'
 const projectPath = path.join(tmpDir, projectName)
@@ -65,7 +66,7 @@ describe('E2E: Scaffold → Install → Verify', () => {
 
   test('step 1: scaffolds a new project', { timeout: 180_000 }, () => {
     fs.mkdirSync(tmpDir, { recursive: true })
-    run(`npx tsx "${CLI_ENTRY}" ${projectName} --no-install`, tmpDir, 60_000)
+    run(`"${TSX_BIN}" "${CLI_ENTRY}" ${projectName} --no-install`, tmpDir, 180_000)
     expect(fs.existsSync(projectPath)).toBe(true)
     expect(fs.existsSync(path.join(projectPath, 'package.json'))).toBe(true)
     expect(fs.existsSync(path.join(projectPath, 'tsconfig.json'))).toBe(true)

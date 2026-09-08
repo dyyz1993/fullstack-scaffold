@@ -6,6 +6,7 @@ import path from 'node:path'
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../..')
 const CLI_ENTRY = path.join(PROJECT_ROOT, 'src/index.ts')
+const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules/.bin/tsx')
 
 interface PresetConfig {
   id: string
@@ -310,7 +311,7 @@ describe.each(PRESETS_TO_VERIFY)(
 
     test('step 1: scaffolds project with preset', { timeout: 180_000 }, () => {
       run(
-        `npx tsx "${CLI_ENTRY}" test-app --preset ${preset.id} --no-install`,
+        `"${TSX_BIN}" "${CLI_ENTRY}" test-app --preset ${preset.id} --no-install`,
         path.dirname(projectDir),
         60_000
       )
