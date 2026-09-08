@@ -71,6 +71,8 @@ function syncZCodeGlobal(agents, apply) {
   const installedUpToDate = existsSync(target) && readFileSync(target, 'utf8') === readFileSync(CANONICAL, 'utf8')
 
   if (MODE === 'check') {
+    // 未安装（如 CI runner / 新同事）不是漂移；只有"存在但过期"才是
+    if (!existsSync(target)) return { status: 'missing', detail: '本机未安装全局钩子（可选：npm run hooks:sync -- --global）' }
     if (!installedUpToDate) return { status: 'drift', detail: '全局脚本与规范源不一致，运行 npm run hooks:sync -- --global' }
     return { status: 'ok', detail: '已安装且为最新' }
   }
@@ -107,8 +109,11 @@ function syncCodexGlobal(agents, apply) {
   const hasBlock = toml.includes('scaffold agent-hooks')
 
   if (MODE === 'check') {
+    if (!hasBlock && !existsSync(target)) {
+      return { status: 'missing', detail: '本机未检测到 Codex 钩子（可选：npm run hooks:sync -- --global）' }
+    }
     const upToDate = hasBlock && existsSync(target) && readFileSync(target, 'utf8') === readFileSync(CANONICAL, 'utf8')
-    if (!upToDate) return { status: 'drift', detail: 'Codex 全局钩子缺失或过期，运行 npm run hooks:sync -- --global' }
+    if (!upToDate) return { status: 'drift', detail: 'Codex 全局钩子过期，运行 npm run hooks:sync -- --global' }
     return { status: 'ok', detail: '已安装且为最新' }
   }
   if (MODE === 'global' && apply) {
