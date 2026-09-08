@@ -67,8 +67,15 @@ export async function listTodos(options?: {
   const limit = options?.limit ?? 20
   const offset = (page - 1) * limit
 
-  const allRows = await db.select().from(todos).orderBy(desc(todos.createdAt))
-  const rows = allRows.slice(offset, offset + limit)
+  // SQL 分页（全表扫 + 内存 slice 在数据量增长后是性能反模式）
+  const rows = await db
+    .select()
+    .from(todos)
+    .orderBy(desc(todos.createdAt))
+    .limit(limit)
+    .offset(offset)
+  // db 为 LibSQL|D1 联合类型：select(config) 会重载坍缩，$count 两驱动同签名
+  const total = await db.$count(todos)
 
   return {
     todos: rows.map((row: TodoTable) => ({
@@ -79,7 +86,7 @@ export async function listTodos(options?: {
       createdAt: toISOString(row.createdAt),
       updatedAt: toISOString(row.updatedAt),
     })),
-    total: allRows.length,
+    total,
     page,
     limit,
   }

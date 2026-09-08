@@ -7,7 +7,9 @@ import './index.css'
 
 const preset = import.meta.env.VITE_PRESET || 'todo'
 
-if (preset !== 'saas') {
+// Demo 登录令牌：仅供开发服务器开箱体验（e2e 也依赖）；生产构建
+// （import.meta.env.DEV === false）不注入，用户走正常注册/登录
+if (preset !== 'saas' && import.meta.env.DEV) {
   try {
     const raw = localStorage.getItem('auth-token')
     const parsed = raw ? JSON.parse(raw) : null
