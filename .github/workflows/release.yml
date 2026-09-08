@@ -23,7 +23,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      # 钉住根 vitest 配置（裸 npm test 会把 template workspace 套件也扫进来，
+      # 一个 flaky UI 用例就能挡住发版门）；--retry 吸收偶发超时
+      - run: npx vitest run --config vitest.config.ts --retry 2
       - name: Verify version matches tag
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
