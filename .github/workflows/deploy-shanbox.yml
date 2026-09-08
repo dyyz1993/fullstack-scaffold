@@ -28,6 +28,8 @@ jobs:
           npm uninstall -g create-fullstack-scaffold 2>/dev/null; rm -rf ~/.npm/_npx/; npm install -g create-fullstack-scaffold@${{ inputs.version }} 2>&1 | tail -3
           node -p "require('/usr/lib/node_modules/create-fullstack-scaffold/package.json').version"
 
+      - name: Mark deploying (watchdog mutual exclusion)
+        run: touch /root/.deploying
       - name: Kill existing processes
         run: |
           for port in 3011 3013 3014 3015 3016 3018 3020; do pid=$(ss -tlnp | grep ":$port " | grep -oP "pid=\K[0-9]+" | head -1); [ -n "$pid" ] && kill $pid 2>/dev/null; done; echo "All killed"
@@ -124,3 +126,6 @@ jobs:
           echo ""
           echo "=== Deploy Complete ==="
 
+      - name: Clear deploying marker
+        if: always()
+        run: rm -f /root/.deploying
