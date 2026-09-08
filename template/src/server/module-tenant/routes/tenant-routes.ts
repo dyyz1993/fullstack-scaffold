@@ -165,7 +165,8 @@ export const apiRoutes = new OpenAPIHono()
     if (!tenant) throw new NotFoundError('Tenant context')
     return c.json(success(tenant), 200)
   })
-  .doc('/docs', {
+  // todos 模块已占用 /docs；tenant 的 OpenAPI 文档挂独立路径避免 shadow
+  .doc('/tenant/docs', {
     openapi: '3.0.0',
     info: {
       version: '1.0.0',

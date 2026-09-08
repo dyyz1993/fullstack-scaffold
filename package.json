@@ -1,6 +1,6 @@
 {
   "name": "create-fullstack-scaffold",
-  "version": "0.4.25",
+  "version": "0.5.0",
   "type": "module",
   "bin": {
     "create-fullstack-scaffold": "dist/cli/index.js"
@@ -30,10 +30,7 @@
     "template/public"
   ],
   "workspaces": [
-    "template",
-    "packages/core",
-    "packages/infrastructure",
-    "packages/domain-plugin"
+    "template"
   ],
   "publishConfig": {
     "access": "public"

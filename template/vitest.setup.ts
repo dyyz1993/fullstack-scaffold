@@ -4,8 +4,23 @@
  */
 
 import { afterEach, vi } from 'vitest'
-import '@testing-library/jest-dom'
-import { EventSource } from 'eventsource'
+// jest-dom 仅客户端组件测试需要；无 client 的 preset 未安装
+const jestDomPkg = '@testing-library/jest-dom'
+try {
+  await import(/* @vite-ignore */ jestDomPkg)
+} catch {
+  // preset 无该依赖
+}
+// eventsource 仅客户端测试需要；无 client 的 preset 未安装该依赖。
+// createRequire 放在块内避免与下方同名工具冲突
+let EventSourceCtor: unknown = class {} as unknown
+try {
+  const { createRequire: cr } = await import('node:module')
+  const req = cr(import.meta.url)
+  EventSourceCtor = req('eventsource').EventSource
+} catch {
+  // preset 无该依赖
+}
 import { createRequire } from 'node:module'
 
 // admin i18n 语言包仅存在于含 admin 模块的 preset（如 fullstack-admin）；
@@ -56,8 +71,8 @@ vi.mock('react-i18next', () => ({
 }))
 
 vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => children,
-  HelmetProvider: ({ children }: { children: React.ReactNode }) => children,
+  Helmet: ({ children }: { children?: unknown }) => children,
+  HelmetProvider: ({ children }: { children?: unknown }) => children,
 }))
 
 afterEach(() => {})
@@ -111,7 +126,7 @@ console.warn = (...args: unknown[]) => {
 }
 
 // EventSource can be used in both environments
-global.EventSource = EventSource as unknown as typeof globalThis.EventSource
+global.EventSource = EventSourceCtor as unknown as typeof globalThis.EventSource
 
 if (typeof globalThis.WebSocket === 'undefined') {
   class MockWebSocket {

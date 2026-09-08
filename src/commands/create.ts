@@ -378,6 +378,33 @@ export async function createProject(
     })
     await fs.writeFile(path.join(targetDir, 'src/server/rpc-surface.ts'), rpcSurfaceContent)
 
+    // 按 preset 修正客户端默认值（模板全量版硬编码 'todo'，小 preset 查不到配置）
+    for (const [rel, from, to] of [
+      ['src/client/App.tsx', "presetId = 'todo'", `presetId = '${selectedPreset.id}'`],
+      [
+        'src/client/entry-server.tsx',
+        "const preset = 'todo'",
+        `const preset = '${selectedPreset.id}'`,
+      ],
+    ] as const) {
+      const p = path.join(targetDir, rel)
+      if (await fs.pathExists(p)) {
+        let content = await fs.readFile(p, 'utf-8')
+        content = content.split(from).join(to)
+        await fs.writeFile(p, content)
+      }
+    }
+
+    // 无 client 的 preset：剥掉 shared barrel 的 hooks 再导出（hooks 目录已被过滤）
+    if (!resolved.hasClient) {
+      const barrelPath = path.join(targetDir, 'src/shared/index.ts')
+      if (await fs.pathExists(barrelPath)) {
+        let barrel = await fs.readFile(barrelPath, 'utf-8')
+        barrel = barrel.replaceAll("export * from './hooks'\n", '')
+        await fs.writeFile(barrelPath, barrel)
+      }
+    }
+
     const isrModulesContent = generateIsrModules(resolved, (moduleName, relPath) =>
       fs.existsSync(path.join(targetDir, 'src/server', `module-${moduleName}`, relPath))
     )

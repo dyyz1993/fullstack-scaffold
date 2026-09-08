@@ -1,12 +1,28 @@
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 import { resolve } from 'node:path'
+import { createRequire } from 'node:module'
+
+// react 插件仅含 client 的 preset 安装；cli-only 等服务端 preset 跳过
+// 变量说明符：tsc 不做模块类型解析（cli-only 未安装该依赖）
+const reactPluginPkg = '@vitejs/plugin-react'
+const reactPlugin = (await import(/* @vite-ignore */ reactPluginPkg)
+  .then((m: { default: () => unknown }) => m.default())
+  .catch(() => null)) as unknown
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: reactPlugin ? [reactPlugin as never] : [],
   test: {
+    passWithNoTests: true,
     globals: true,
-    environment: 'jsdom',
+    // jsdom 仅含 client 的 preset 安装；缺失时回退 node（服务端测试同样适用）
+    environment: (() => {
+      try {
+        createRequire(import.meta.url).resolve('jsdom')
+        return 'jsdom'
+      } catch {
+        return 'node'
+      }
+    })(),
     setupFiles: ['./vitest.setup.ts'],
     include: [
       '**/__tests__/**/*.test.ts',

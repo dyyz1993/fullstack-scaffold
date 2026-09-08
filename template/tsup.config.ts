@@ -1,10 +1,14 @@
 import { defineConfig, type Options } from 'tsup'
 import { existsSync } from 'fs'
 import { join, resolve } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 const root = process.cwd()
 
-const serverBuildConfigs: Options[] = [
+// 按入口文件存在性过滤（cli-only 等无 client preset 会排除 cloudflare 入口）
+const rawServerBuildConfigs: Options[] = [
   {
     entry: ['src/server/entries/node.ts'],
     outDir: 'dist/server',
@@ -108,6 +112,16 @@ const serverBuildConfigs: Options[] = [
     },
   },
 ]
+
+// 按入口文件存在性过滤（cli-only 等无 client 的 preset 会排除 cloudflare 入口文件）
+const serverBuildConfigs: Options[] = rawServerBuildConfigs.filter(c => {
+  const raw = c.entry
+  const entries = Array.isArray(raw) ? raw : raw ? [raw] : []
+  return (
+    entries.length === 0 ||
+    entries.every(e => typeof e === 'string' && existsSync(resolve(__dirname, e)))
+  )
+})
 
 // Only build CLI if CLI module is included in preset
 const cliEntryPath = join(process.cwd(), 'src/cli/index.ts')

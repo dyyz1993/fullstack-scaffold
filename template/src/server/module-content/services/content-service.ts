@@ -110,20 +110,21 @@ export async function getContents(filters?: {
     )
   }
 
-  const allRows =
-    conditions.length > 0
-      ? await db
-          .select()
-          .from(contents)
-          .where(and(...conditions))
-          .orderBy(desc(contents.createdAt))
-      : await db.select().from(contents).orderBy(desc(contents.createdAt))
+  const baseQuery = conditions.length > 0 ? and(...conditions) : undefined
 
-  const rows = allRows.slice(offset, offset + limit)
+  // SQL 分页（避免全表扫 + 内存 slice）
+  const rows = await db
+    .select()
+    .from(contents)
+    .where(baseQuery)
+    .orderBy(desc(contents.createdAt))
+    .limit(limit)
+    .offset(offset)
+  const total = await db.$count(contents, baseQuery)
 
   return {
     contents: rows.map(mapContentRow),
-    total: allRows.length,
+    total,
     page,
     limit,
   }

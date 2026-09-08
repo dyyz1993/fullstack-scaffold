@@ -13,6 +13,17 @@ export function getExcludePatterns(
 ): string[] {
   const excludes: string[] = []
 
+  // 无 client 的 preset（cli-only）：排除仅服务客户端的框架件，
+  // 否则 tsc/build 因 react、@client/entry-server、playwright 等悬空引用失败
+  if (!resolved.hasClient) {
+    excludes.push(
+      'playwright.config.ts',
+      'src/shared/hooks',
+      'src/server/entries/cloudflare.ts',
+      'tests/e2e'
+    )
+  }
+
   // TS2589 哨兵只属于框架仓库：它 import 全部模块，进小 preset 会编译失败。
   // 生成的 app 由 rpc-surface.ts 本身提供等价的按模块实例化覆盖。
   excludes.push('src/server/rpc-type-canary.ts')
