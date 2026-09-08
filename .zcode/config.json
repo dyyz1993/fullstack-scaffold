@@ -10,8 +10,8 @@
               "type": "command",
               "command": "node \"${ZCODE_PROJECT_DIR}/.zcode/hooks/no-no-verify.mjs\"",
               "enabled": true,
-              "timeoutMs": 5000,
-              "statusMessage": "检查 --no-verify 提交"
+              "statusMessage": "检查 --no-verify 提交",
+              "timeout": 5
             }
           ]
         }

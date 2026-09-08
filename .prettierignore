@@ -23,3 +23,7 @@ data/
 
 # Skill templates (contain {Name} placeholders, not valid TS)
 .claude/skills/*/templates/
+
+# agent hooks 镜像文件：prettier 单侧重排会造成 root↔template 漂移（validator #17 会拦）
+.zcode/
+template/.zcode/

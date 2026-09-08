@@ -185,9 +185,7 @@
       "eslint --fix",
       "eslint --max-warnings=0 --no-warn-ignored"
     ],
-    "*.{json,md,css}": [
-      "prettier --write"
-    ]
+    "*.{json,md,css}": "prettier --write"
   },
   "engines": {
     "node": ">=18.0.0"
