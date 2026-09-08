@@ -56,6 +56,18 @@ export const AttachmentIdResponseSchema = z.object({
   id: z.number(),
 })
 
+export const TodoListResponseSchema = z.object({
+  todos: z.array(TodoSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+})
+
+export const TodoListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+})
+
 export type TodoStatus = z.infer<typeof TodoStatusSchema>
 export type Todo = z.infer<typeof TodoSchema>
 export type CreateTodoInput = z.infer<typeof CreateTodoSchema>
@@ -63,3 +75,5 @@ export type UpdateTodoInput = z.infer<typeof UpdateTodoSchema>
 export type TodoIdResponse = z.infer<typeof TodoIdResponseSchema>
 export type TodoAttachment = z.infer<typeof TodoAttachmentSchema>
 export type TodoWithAttachments = z.infer<typeof TodoWithAttachmentsSchema>
+export type TodoListResponse = z.infer<typeof TodoListResponseSchema>
+export type TodoListQuery = z.infer<typeof TodoListQuerySchema>

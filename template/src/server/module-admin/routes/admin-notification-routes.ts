@@ -1,7 +1,7 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { authMiddleware, type AuthUser } from '@server/middleware/auth'
-import * as notificationService from '@server/module-notifications/services/notification-service'
+import * as notificationService from '@server/module-notifications'
 import { realtime } from '@server/core'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { logger } from '@server/utils/logger'
@@ -15,7 +15,7 @@ import {
   TestNotificationRequestSchema,
   AppSSEProtocolSchema,
 } from '@shared/modules/notifications'
-import { SuccessSchema } from '@shared/modules/admin'
+import { AdminSuccessSchema } from '@shared/modules/admin'
 
 function createFallbackSSEResponse(): Response {
   const stream = new ReadableStream({
@@ -83,7 +83,7 @@ const markNotificationReadRoute = createRoute({
     }),
   },
   responses: {
-    200: successResponse(SuccessSchema, 'Notification marked as read'),
+    200: successResponse(AdminSuccessSchema, 'Notification marked as read'),
     401: errorResponse('Unauthorized'),
     404: errorResponse('Notification not found'),
   },
@@ -218,7 +218,8 @@ export const adminNotificationRoutes = new OpenAPIHono<{ Variables: { authUser: 
         const response = await adapter.handleSSERequest()
         return response
       }
-    } catch {
+    } catch (error) {
+      console.error('[AdminNotificationRoutes] SSE adapter import failed:', error)
       return createFallbackSSEResponse()
     }
 

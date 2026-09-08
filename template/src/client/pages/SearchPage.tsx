@@ -28,7 +28,7 @@ export const SearchPage: React.FC = () => {
     if (searchQuery) {
       searchPlugins(searchQuery, 1)
     }
-  }, [selectedCategory]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCategory, searchQuery, searchPlugins])
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()

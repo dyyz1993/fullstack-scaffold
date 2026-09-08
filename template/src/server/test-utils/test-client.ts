@@ -6,8 +6,7 @@
  * @impact 测试客户端现在支持自定义 headers，用于认证测试
  */
 
-import { hc } from 'hono/client'
-import type { AppType } from '@server/index'
+import { createApiFacade, type ApiFacade } from '@server/rpc-surface'
 import { createApp } from '@server/app'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { setRuntimeAdapter } from '@server/core/runtime'
@@ -16,12 +15,11 @@ import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
 setRuntimeAdapter(getNodeRuntimeAdapter())
 
 /**
- * 测试客户端类型
- *
- * 注意：TypeScript 在推导 Hono Client 类型时可能触发 TS2589，
- * 该警告不影响运行时行为，测试客户端可正常工作。
+ * 测试客户端类型 —— 按模块拆分的门面（见 rpc-surface.ts）。
+ * 旧的 `ReturnType<typeof hc<AppType>>>` 会深度实例化整个 merge 链并触发
+ * TS2589，已被 eslint 规则 no-merged-api-type-export 禁止。
  */
-export type TestClient = ReturnType<typeof hc<AppType>>
+export type TestClient = ApiFacade
 
 export interface TestClientOptions {
   webSocket?: (url: string | URL) => WebSocket
@@ -44,13 +42,13 @@ export function createTestClient(baseUrl?: string, options?: TestClientOptions) 
     : (url: string | URL) => new SSEClientImpl(url, defaultHeaders)
 
   if (baseUrl) {
-    return hc<AppType>(baseUrl, {
+    return createApiFacade(baseUrl, {
       headers: defaultHeaders,
       webSocket: options?.webSocket ? (url: string | URL) => options.webSocket!(url) : undefined,
       sse: sseFactory as (url: string) => unknown,
     })
   }
-  return hc<AppType>('http://localhost', {
+  return createApiFacade('http://localhost', {
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
       const request = new Request(input, init)
       Object.entries(defaultHeaders).forEach(([key, value]) => {

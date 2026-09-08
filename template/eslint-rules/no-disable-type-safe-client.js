@@ -26,8 +26,13 @@ export const noDisableTypeSafeClient = {
     const isMiddlewareTest =
       filename.includes('/middleware/__tests__') || filename.includes('/middleware/')
 
+    const isFileUploadTest =
+      filename.includes('file-upload') ||
+      filename.includes('file-routes.test')
+
     const isRouteTestFile =
       !isMiddlewareTest &&
+      !isFileUploadTest &&
       (filename.includes('-rpc.test.') ||
         filename.includes('-route.test.') ||
         (filename.includes('__tests__') && filename.includes('.test.')))

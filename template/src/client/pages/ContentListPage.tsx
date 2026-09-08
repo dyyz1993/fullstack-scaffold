@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import type { Content, ContentCategory } from '@shared/modules/content'
+import type { Content, ContentCategory, ContentStatus } from '@shared/modules/content'
 import { apiClient } from '@client/services/apiClient'
 
 const CATEGORIES: { value: ContentCategory | ''; label: string }[] = [
@@ -64,6 +64,15 @@ export const ContentListPage: React.FC = () => {
       month: 'long',
       day: 'numeric',
     })
+  }
+
+  const statusConfig = (status: ContentStatus) => {
+    const configs = {
+      draft: { color: 'bg-yellow-100 text-yellow-700', label: '草稿' },
+      published: { color: 'bg-green-100 text-green-700', label: '已发布' },
+      archived: { color: 'bg-gray-100 text-gray-700', label: '已归档' },
+    }
+    return configs[status]
   }
 
   return (
@@ -137,16 +146,39 @@ export const ContentListPage: React.FC = () => {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
                         {categoryLabel(content.category)}
+                      </span>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded ${
+                          statusConfig(content.status).color
+                        }`}
+                      >
+                        {statusConfig(content.status).label}
                       </span>
                       <span className="text-sm text-gray-500">{content.author}</span>
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">{content.title}</h2>
                     <p className="text-gray-600 line-clamp-2">{content.content.slice(0, 150)}...</p>
-                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
-                      {content.publishedAt && <span>{formatDate(content.publishedAt)}</span>}
+                    {content.tags && content.tags.length > 0 && (
+                      <div className="flex gap-1.5 flex-wrap mt-3">
+                        {content.tags.map(tag => (
+                          <span
+                            key={tag}
+                            className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-400 flex-wrap">
+                      {content.createdAt && <span>创建于 {formatDate(content.createdAt)}</span>}
+                      {content.updatedAt && content.updatedAt !== content.createdAt && (
+                        <span>更新于 {formatDate(content.updatedAt)}</span>
+                      )}
+                      {content.publishedAt && <span>发布于 {formatDate(content.publishedAt)}</span>}
                       <span>👁 {content.viewCount}</span>
                       <span>❤ {content.likeCount}</span>
                     </div>

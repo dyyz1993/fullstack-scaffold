@@ -12,7 +12,7 @@ export function registerTodoCommands(site: SiteInstance) {
     handler: async () => {
       try {
         const client = getClient()
-        const res = await client.api.todos.$get()
+        const res = await client.api.todos.$get({ query: {} })
         const data = await res.json()
         return ok(data)
       } catch (err) {

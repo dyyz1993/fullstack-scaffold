@@ -272,6 +272,47 @@ export async function setupTestDatabase(): Promise<void> {
       FOREIGN KEY (category_id) REFERENCES plugin_categories(id) ON DELETE CASCADE,
       UNIQUE(plugin_id, category_id)
     );
+
+    CREATE TABLE IF NOT EXISTS tenants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'trial',
+      plan TEXT NOT NULL DEFAULT 'free',
+      max_users INTEGER NOT NULL DEFAULT 5,
+      settings TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      price INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      stock INTEGER NOT NULL DEFAULT 0,
+      image_url TEXT,
+      merchant_id INTEGER NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS merchants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      user_id TEXT NOT NULL,
+      tenant_id INTEGER NOT NULL,
+      business_name TEXT NOT NULL,
+      business_type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      description TEXT,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      password TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `
 
   const statements = migrationSQL.split(';').filter(s => s.trim())
@@ -699,6 +740,199 @@ async function seedTestData(client: Client): Promise<void> {
       // Ignore duplicate errors
     }
   }
+
+  // Seed tenants for testing
+  const tenants = [
+    {
+      id: 1,
+      name: 'Demo Corp',
+      slug: 'demo',
+      status: 'active',
+      plan: 'pro',
+      max_users: 50,
+      settings: JSON.stringify({ theme: 'dark', language: 'en' }),
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      updated_at: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: 2,
+      name: 'Test Inc',
+      slug: 'test',
+      status: 'trial',
+      plan: 'free',
+      max_users: 5,
+      settings: null,
+      created_at: new Date(Date.now() - 172800000).toISOString(),
+      updated_at: new Date(Date.now() - 172800000).toISOString(),
+    },
+    {
+      id: 3,
+      name: 'Suspended Corp',
+      slug: 'suspended',
+      status: 'suspended',
+      plan: 'starter',
+      max_users: 10,
+      settings: JSON.stringify({ theme: 'light', language: 'zh' }),
+      created_at: new Date(Date.now() - 259200000).toISOString(),
+      updated_at: new Date(Date.now() - 259200000).toISOString(),
+    },
+  ]
+
+  for (const tenant of tenants) {
+    try {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO tenants (id, name, slug, status, plan, max_users, settings, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          tenant.id,
+          tenant.name,
+          tenant.slug,
+          tenant.status,
+          tenant.plan,
+          tenant.max_users,
+          tenant.settings,
+          tenant.created_at,
+          tenant.updated_at,
+        ],
+      })
+    } catch {
+      // Ignore duplicate errors
+    }
+  }
+
+  // Seed products for testing
+  const products = [
+    {
+      id: 'prod-1',
+      name: '高级无线耳机',
+      description: '降噪蓝牙耳机，支持30小时续航',
+      price: 29900, // 299.00元
+      status: 'active',
+      stock: 100,
+      image_url: 'https://example.com/headphones.jpg',
+      merchant_id: 1, // merchant-1.id
+    },
+    {
+      id: 'prod-2',
+      name: '智能手表 Pro',
+      description: '健康监测、运动追踪，IP68防水',
+      price: 19900, // 199.00元
+      status: 'active',
+      stock: 50,
+      image_url: 'https://example.com/smartwatch.jpg',
+      merchant_id: 1, // merchant-1.id
+    },
+    {
+      id: 'prod-3',
+      name: '机械键盘',
+      description: 'RGB背光，Cherry轴体，87键布局',
+      price: 89900, // 899.00元
+      status: 'active',
+      stock: 30,
+      image_url: 'https://example.com/keyboard.jpg',
+      merchant_id: 2, // merchant-2.id
+    },
+    {
+      id: 'prod-4',
+      name: '4K显示器',
+      description: 'IPS面板，144Hz刷新率，HDR支持',
+      price: 249900, // 2499.00元
+      status: 'inactive',
+      stock: 0,
+      image_url: 'https://example.com/monitor.jpg',
+      merchant_id: 2, // merchant-2.id
+    },
+    {
+      id: 'prod-5',
+      name: '无线鼠标',
+      description: '人体工学设计，可编程按键',
+      price: 19900, // 199.00元
+      status: 'active',
+      stock: 200,
+      image_url: 'https://example.com/mouse.jpg',
+      merchant_id: 1, // merchant-1.id
+    },
+  ]
+
+  for (const product of products) {
+    try {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO products (id, name, description, price, status, stock, image_url, merchant_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          product.id,
+          product.name,
+          product.description,
+          product.price,
+          product.status,
+          product.stock,
+          product.image_url,
+          product.merchant_id,
+          Date.now(),
+          Date.now(),
+        ],
+      })
+    } catch {
+      // Ignore duplicate errors
+    }
+  }
+
+  // Seed merchants for testing
+  const merchants = [
+    {
+      id: 1,
+      userId: 'merchant-1',
+      tenantId: 1,
+      businessName: '示例商店',
+      businessType: 'retail',
+      status: 'active',
+      description: '一个示例零售商店',
+      phone: '13800138000',
+      email: 'merchant@example.com',
+      address: '北京市朝阳区',
+      password: 'password123',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    },
+    {
+      id: 2,
+      userId: 'merchant-2',
+      tenantId: 1,
+      businessName: '科技商店',
+      businessType: 'retail',
+      status: 'active',
+      description: null,
+      phone: null,
+      email: null,
+      address: null,
+      password: 'password123',
+      createdAt: '2024-01-02T00:00:00.000Z',
+      updatedAt: '2024-01-02T00:00:00.000Z',
+    },
+  ]
+
+  for (const merchant of merchants) {
+    try {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO merchants (id, user_id, tenant_id, business_name, business_type, status, description, phone, email, address, password, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          merchant.id,
+          merchant.userId,
+          merchant.tenantId,
+          merchant.businessName,
+          merchant.businessType,
+          merchant.status,
+          merchant.description,
+          merchant.phone,
+          merchant.email,
+          merchant.address,
+          merchant.password,
+          merchant.createdAt,
+          merchant.updatedAt,
+        ],
+      })
+    } catch {
+      // Ignore duplicate errors
+    }
+  }
 }
 
 export async function cleanupTestDatabase(): Promise<void> {
@@ -734,5 +968,8 @@ export async function cleanupTestDatabase(): Promise<void> {
     } catch {
       // Plugin tables may not exist in all test environments
     }
+    await client.execute('DELETE FROM tenants')
+    await client.execute('DELETE FROM merchants')
+    await client.execute('DELETE FROM products')
   }
 }

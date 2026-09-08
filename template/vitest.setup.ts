@@ -6,6 +6,54 @@
 import { afterEach, vi } from 'vitest'
 import '@testing-library/jest-dom'
 import { EventSource } from 'eventsource'
+import { createRequire } from 'node:module'
+
+// admin i18n 语言包仅存在于含 admin 模块的 preset（如 fullstack-admin）；
+// 不含 admin 的 preset（如 todo-app/minimal）没有该文件，缺省回退到 key 本身。
+const require = createRequire(import.meta.url)
+let zhCN: Record<string, unknown> = {}
+try {
+  zhCN = (require('./src/admin/i18n/locales/zh-CN.json') as Record<string, unknown>) ?? {}
+} catch {
+  zhCN = {}
+}
+
+function resolveTranslation(obj: Record<string, unknown>, key: string): string {
+  const keys = key.split('.')
+  let current: unknown = obj
+  for (const k of keys) {
+    if (current && typeof current === 'object' && k in (current as Record<string, unknown>)) {
+      current = (current as Record<string, unknown>)[k]
+    } else {
+      return key
+    }
+  }
+  return typeof current === 'string' ? current : key
+}
+
+const stableT = (key: string, params?: Record<string, unknown>) => {
+  let val = resolveTranslation(zhCN, key)
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      val = val.replace(`{{${k}}}`, String(v))
+    }
+  }
+  return val
+}
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: stableT,
+    i18n: {
+      language: 'zh-CN',
+      changeLanguage: () => {},
+    },
+  }),
+  initReactI18next: {
+    type: '3rdParty',
+    init: () => {},
+  },
+}))
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => children,

@@ -15,8 +15,8 @@ const listPublicRoute = createRoute({
     query: z.object({
       category: ContentCategorySchema.optional(),
       search: z.string().optional(),
+      page: z.coerce.number().int().positive().default(1),
       limit: z.coerce.number().int().positive().max(50).default(20),
-      offset: z.coerce.number().int().min(0).default(0),
     }),
   },
   responses: {
@@ -39,14 +39,15 @@ const getPublicRoute = createRoute({
 
 export const publicContentRoutes = new OpenAPIHono()
   .openapi(listPublicRoute, async c => {
-    const { category, search, limit, offset } = c.req.valid('query')
+    const { category, search, page, limit } = c.req.valid('query')
     const result = await contentService.getContents({
       status: 'published',
       category,
       search,
+      page,
+      limit,
     })
-    const items = result.slice(offset, offset + limit)
-    return c.json(success(items), 200)
+    return c.json(success(result), 200)
   })
   .openapi(getPublicRoute, async c => {
     const { id } = c.req.valid('param')
@@ -56,3 +57,6 @@ export const publicContentRoutes = new OpenAPIHono()
     }
     return c.json(success(result), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type PublicContentApiType = typeof publicContentRoutes

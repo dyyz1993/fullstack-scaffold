@@ -35,6 +35,8 @@ const authManifest: ModuleManifest = {
     files: ['developers'],
     hasSeed: false,
   },
+
+  cliModule: { dir: 'auth', registerFunction: 'registerAuthCommands' },
 }
 
 export default authManifest

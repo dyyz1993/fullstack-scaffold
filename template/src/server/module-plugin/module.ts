@@ -46,7 +46,10 @@ const pluginManifest: ModuleManifest = {
   dbSchemas: {
     files: ['plugins'],
     hasSeed: true,
+    seed: { serviceFile: 'plugin-seed-service', functionName: 'seedPluginsIfEmpty' },
   },
+
+  cliModule: { dir: 'plugin', registerFunction: 'registerPluginCommands' },
 }
 
 export default pluginManifest

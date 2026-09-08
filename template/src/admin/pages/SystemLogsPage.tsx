@@ -12,10 +12,12 @@ import {
   type ResourceType,
   type ActionType,
 } from '@shared/constants'
+import { useLanguage } from '../i18n/useLanguage'
 
 const { Option } = Select
 
 export const SystemLogsPage: React.FC = () => {
+  const { t, formatDate } = useLanguage()
   const { logs, loading, fetchLogs } = useAuditLogStore()
   const [selectedLog, setSelectedLog] = useState<AuditLogType | null>(null)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
@@ -62,20 +64,20 @@ export const SystemLogsPage: React.FC = () => {
 
   const columns = [
     {
-      title: '时间',
+      title: t('systemLogs.time'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 180,
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: '用户ID',
+      title: t('systemLogs.userId'),
       dataIndex: 'userId',
       key: 'userId',
       width: 120,
     },
     {
-      title: '操作',
+      title: t('systemLogs.action'),
       dataIndex: 'action',
       key: 'action',
       width: 100,
@@ -84,33 +86,33 @@ export const SystemLogsPage: React.FC = () => {
       ),
     },
     {
-      title: '资源类型',
+      title: t('systemLogs.resourceType'),
       dataIndex: 'resourceType',
       key: 'resourceType',
       width: 120,
       render: (type: ResourceType) => RESOURCE_LABELS[type] || type,
     },
     {
-      title: '资源ID',
+      title: t('systemLogs.resourceId'),
       dataIndex: 'resourceId',
       key: 'resourceId',
       width: 150,
       render: (id: string | null) => id || '-',
     },
     {
-      title: 'IP地址',
+      title: t('systemLogs.ipAddress'),
       dataIndex: 'ipAddress',
       key: 'ipAddress',
       width: 140,
       render: (ip: string | null) => ip || '-',
     },
     {
-      title: '操作',
-      key: 'action',
+      title: t('common.actions'),
+      key: 'actionCol',
       width: 100,
       render: (_: unknown, record: AuditLogType) => (
         <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewDetail(record)}>
-          详情
+          {t('common.detail')}
         </Button>
       ),
     },
@@ -119,22 +121,22 @@ export const SystemLogsPage: React.FC = () => {
   return (
     <div style={{ padding: '24px' }}>
       <Card
-        title="系统日志"
+        title={t('systemLogs.title')}
         extra={
           <Button icon={<ReloadOutlined />} onClick={() => fetchLogs()}>
-            刷新
+            {t('common.refresh')}
           </Button>
         }
       >
         <Space style={{ marginBottom: '16px' }} wrap>
           <Input
-            placeholder="用户ID"
+            placeholder={t('systemLogs.userId')}
             value={filters.userId}
             onChange={e => setFilters({ ...filters, userId: e.target.value })}
             style={{ width: 150 }}
           />
           <Select
-            placeholder="操作类型"
+            placeholder={t('systemLogs.actionType')}
             value={filters.action || undefined}
             onChange={value => setFilters({ ...filters, action: (value || '') as ActionType | '' })}
             style={{ width: 120 }}
@@ -147,7 +149,7 @@ export const SystemLogsPage: React.FC = () => {
             ))}
           </Select>
           <Select
-            placeholder="资源类型"
+            placeholder={t('systemLogs.resourceType')}
             value={filters.resourceType || undefined}
             onChange={value =>
               setFilters({ ...filters, resourceType: (value || '') as ResourceType | '' })
@@ -162,9 +164,9 @@ export const SystemLogsPage: React.FC = () => {
             ))}
           </Select>
           <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-            搜索
+            {t('common.search')}
           </Button>
-          <Button onClick={handleReset}>重置</Button>
+          <Button onClick={handleReset}>{t('common.reset')}</Button>
         </Space>
 
         <Table
@@ -175,13 +177,13 @@ export const SystemLogsPage: React.FC = () => {
           pagination={{
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: total => t('common.totalRecords', { count: total }),
           }}
         />
       </Card>
 
       <Modal
-        title="日志详情"
+        title={t('systemLogs.detail')}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}
@@ -189,31 +191,39 @@ export const SystemLogsPage: React.FC = () => {
       >
         {selectedLog && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="日志ID">{selectedLog.id}</Descriptions.Item>
-            <Descriptions.Item label="用户ID">{selectedLog.userId}</Descriptions.Item>
-            <Descriptions.Item label="操作">
+            <Descriptions.Item label={t('systemLogs.logId')}>{selectedLog.id}</Descriptions.Item>
+            <Descriptions.Item label={t('systemLogs.userId')}>
+              {selectedLog.userId}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('systemLogs.action')}>
               <Tag color={ACTION_COLORS[selectedLog.action] || 'default'}>
                 {ACTION_LABELS[selectedLog.action] || selectedLog.action}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="资源类型">
+            <Descriptions.Item label={t('systemLogs.resourceType')}>
               {RESOURCE_LABELS[selectedLog.resourceType] || selectedLog.resourceType}
             </Descriptions.Item>
-            <Descriptions.Item label="资源ID">{selectedLog.resourceId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="IP地址">{selectedLog.ipAddress || '-'}</Descriptions.Item>
-            <Descriptions.Item label="User Agent">{selectedLog.userAgent || '-'}</Descriptions.Item>
-            <Descriptions.Item label="时间">
-              {new Date(selectedLog.createdAt).toLocaleString('zh-CN')}
+            <Descriptions.Item label={t('systemLogs.resourceId')}>
+              {selectedLog.resourceId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('systemLogs.ipAddress')}>
+              {selectedLog.ipAddress || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('systemLogs.userAgent')}>
+              {selectedLog.userAgent || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('systemLogs.time')}>
+              {formatDate(selectedLog.createdAt)}
             </Descriptions.Item>
             {selectedLog.oldValue && (
-              <Descriptions.Item label="旧值">
+              <Descriptions.Item label={t('systemLogs.oldValue')}>
                 <pre style={{ margin: 0, maxHeight: '200px', overflow: 'auto' }}>
                   {safeFormatJson(selectedLog.oldValue)}
                 </pre>
               </Descriptions.Item>
             )}
             {selectedLog.newValue && (
-              <Descriptions.Item label="新值">
+              <Descriptions.Item label={t('systemLogs.newValue')}>
                 <pre style={{ margin: 0, maxHeight: '200px', overflow: 'auto' }}>
                   {safeFormatJson(selectedLog.newValue)}
                 </pre>

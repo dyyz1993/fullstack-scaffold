@@ -67,3 +67,70 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-shanbox:
+    name: Deploy to Shanbox
+    runs-on: ubuntu-latest
+    needs: release
+    environment: shanbox
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SHANBOX_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 2200 192.168.0.29 >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Wait for NPM propagation
+        run: sleep 30
+
+      - name: Install CLI on shanbox
+        run: |
+          ssh shanbox 'npm uninstall -g create-fullstack-scaffold 2>/dev/null; rm -rf ~/.npm/_npx/; npm install -g create-fullstack-scaffold@${{ steps.version.outputs.version }} 2>&1 | tail -3'
+          ssh shanbox 'node -e "console.log(require(\"/usr/lib/node_modules/create-fullstack-scaffold/package.json\").version)"'
+
+      - name: Kill existing processes
+        run: |
+          ssh shanbox 'for port in 3011 3013 3014 3015 3016 3018 3020; do pid=$(ss -tlnp | grep ":$port " | grep -oP "pid=\K[0-9]+" | head -1); [ -n "$pid" ] && kill $pid 2>/dev/null; done; echo "All killed"'
+
+      - name: Deploy all presets
+        run: |
+          # Deploy function: backup .env, generate, restore .env, install, start
+          deploy_preset() {
+            local preset=$1 dir=$2 port=$3
+            echo "=== Deploying $preset → $dir:$port ==="
+            ssh shanbox "mkdir -p /root/env-backup && [ -f /root/$dir/.env ] && cp /root/$dir/.env /root/env-backup/$dir.env || true"
+            ssh shanbox "rm -rf /tmp/gen-$preset && mkdir -p /tmp/gen-$preset && cd /tmp/gen-$preset && node /usr/lib/node_modules/create-fullstack-scaffold/dist/cli/index.js $dir --preset $preset --no-install && rm -rf /root/$dir && mv /tmp/gen-$preset/$dir /root/$dir"
+            ssh shanbox "[ -f /root/env-backup/$dir.env ] && cp /root/env-backup/$dir.env /root/$dir/.env || true"
+            ssh shanbox "cd /root/$dir && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2"
+            ssh shanbox "cd /root/$dir && npm run db:push 2>&1 | tail -2 || true"
+            ssh shanbox "cd /root/$dir && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port $port > /root/$dir/vite.log 2>&1 &"
+            sleep 3
+          }
+
+          deploy_preset todo-app todo-app 3011
+          deploy_preset minimal minimal 3013
+          deploy_preset ecommerce shop 3014
+          deploy_preset xbrowser-marketplace plugin 3015
+          deploy_preset fullstack-admin fullstack-admin 3016
+          deploy_preset forum forum 3018
+          deploy_preset saas saas 3020
+
+      - name: Wait for services
+        run: sleep 15
+
+      - name: Health check
+        run: |
+          echo "=== HTTPS Health Check ==="
+          for sub in todo minimal shop plugin fullstack-admin forum saas; do
+            code=$(ssh shanbox "curl -sk -o /dev/null -w '%{http_code}' https://\${sub}.shanbox.19930810.xyz:8443/")
+            echo "$sub: $code"
+          done
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519

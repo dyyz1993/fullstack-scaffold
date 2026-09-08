@@ -24,14 +24,68 @@ vi.mock('@admin/services/apiClient', () => ({
 }))
 
 vi.mock('antd', async () => {
-  const actual = await vi.importActual('antd')
+  const React = await import('react')
   return {
-    ...actual,
+    Button: ({
+      children,
+      onClick,
+      loading,
+      ...rest
+    }: {
+      children: React.ReactNode
+      onClick?: () => void
+      loading?: boolean
+      [key: string]: unknown
+    }) => React.createElement('button', { onClick, 'data-loading': loading, ...rest }, children),
+    Select: ({
+      value,
+      onChange,
+      options,
+      ...rest
+    }: {
+      value: string
+      onChange?: (v: string) => void
+      options?: { value: string; label: string }[]
+      [key: string]: unknown
+    }) =>
+      React.createElement(
+        'select',
+        {
+          value,
+          onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange?.(e.target.value),
+          'data-testid': 'notification-type-select',
+          ...rest,
+        },
+        options?.map((o: { value: string; label: string }) =>
+          React.createElement('option', { key: o.value, value: o.value }, o.label)
+        )
+      ),
     message: {
       success: vi.fn(),
       error: vi.fn(),
     },
+    theme: {
+      useToken: () => ({
+        token: {
+          colorText: '#000',
+          colorTextSecondary: '#666',
+          colorBgContainer: '#fff',
+          colorBorderSecondary: '#eee',
+        },
+      }),
+    },
   }
+})
+
+vi.mock('lucide-react', async () => {
+  const React = await import('react')
+  const icons = ['Activity', 'CheckCircle', 'Clock', 'TrendingUp', 'BellRing']
+  const mock: Record<string, React.FC<{ className?: string; style?: unknown }>> = {}
+  for (const name of icons) {
+    mock[name] = (props: { className?: string; style?: unknown }) =>
+      React.createElement('span', { 'data-testid': `icon-${name}`, ...props })
+  }
+  return mock
 })
 
 describe('DashboardPage', () => {
@@ -55,7 +109,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeInTheDocument()
+      expect(screen.getByText('仪表盘')).toBeInTheDocument()
     })
   })
 
@@ -63,20 +117,20 @@ describe('DashboardPage', () => {
     mockStatsGet.mockReturnValue(new Promise(() => {}))
     render(<DashboardPage />)
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument()
+    expect(screen.getByText('加载中...')).toBeInTheDocument()
   })
 
   it('displays stats cards after data loads', async () => {
     render(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Total Todos')).toBeInTheDocument()
+      expect(screen.getByText('总待办')).toBeInTheDocument()
       expect(screen.getByText('42')).toBeInTheDocument()
-      expect(screen.getByText('Pending')).toBeInTheDocument()
+      expect(screen.getByText('待处理')).toBeInTheDocument()
       expect(screen.getByText('10')).toBeInTheDocument()
-      expect(screen.getByText('Completed')).toBeInTheDocument()
+      expect(screen.getByText('已完成')).toBeInTheDocument()
       expect(screen.getByText('32')).toBeInTheDocument()
-      expect(screen.getByText('Last Updated')).toBeInTheDocument()
+      expect(screen.getByText('最后更新')).toBeInTheDocument()
       expect(screen.getByText('2025-01-01')).toBeInTheDocument()
     })
   })

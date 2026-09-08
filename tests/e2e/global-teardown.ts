@@ -1,13 +1,4 @@
-import { spawn } from 'child_process'
-
-declare global {
-  var __DEV_SERVER__: ReturnType<typeof spawn> | undefined
-}
-
+// Preset E2E tests use external URLs (Shanbox), no local server to teardown
 export default async function globalTeardown() {
-  if (globalThis.__DEV_SERVER__) {
-    process.stdout.write('\n🛑 Stopping dev server...\n')
-    globalThis.__DEV_SERVER__.kill()
-    process.stdout.write('✅ Dev server stopped\n')
-  }
+  // No-op: preset tests use external shanbox URLs
 }

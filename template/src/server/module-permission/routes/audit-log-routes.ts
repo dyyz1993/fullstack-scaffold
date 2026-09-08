@@ -74,3 +74,6 @@ export const auditLogRoutes = new OpenAPIHono()
 
     return c.json(success(log), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type AuditLogsApiType = typeof auditLogRoutes

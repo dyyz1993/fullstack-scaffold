@@ -13,6 +13,7 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import { apiClient, api } from '../services/apiClient'
 import type { AdminDashboardStats, AdminPlugin } from '@shared/modules/plugins'
+import { useLanguage } from '../i18n/useLanguage'
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   pending: { color: 'orange', label: '待审核' },
@@ -21,6 +22,7 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
 }
 
 export const PluginDashboardPage: React.FC = () => {
+  const { formatDate } = useLanguage()
   const [stats, setStats] = useState<AdminDashboardStats | null>(null)
   const [recentSubmissions, setRecentSubmissions] = useState<AdminPlugin[]>([])
   const [loading, setLoading] = useState(true)
@@ -175,7 +177,7 @@ export const PluginDashboardPage: React.FC = () => {
       title: '提交时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (ts: number) => new Date(ts).toLocaleString('zh-CN'),
+      render: (ts: number) => formatDate(new Date(ts).toISOString()),
     },
     {
       title: '操作',

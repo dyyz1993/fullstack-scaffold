@@ -36,6 +36,10 @@ import { moduleBoundary } from './eslint-rules/module-boundary.js'
 import { limitTypeComplexity } from './eslint-rules/limit-type-complexity.js'
 import { requireAntdGenericTypes } from './eslint-rules/require-antd-generic-types.js'
 import { noDeepRelativeImports } from './eslint-rules/no-deep-relative-imports.js'
+import { noCrossModuleServiceImport } from './eslint-rules/no-cross-module-service-import.js'
+import { noDisableTypeSafeClient } from './eslint-rules/no-disable-type-safe-client.js'
+import { routeLocation } from './eslint-rules/route-location.js'
+import { noMergedApiTypeExport } from './eslint-rules/no-merged-api-type-export.js'
 
 const localRules = {
   rules: {
@@ -71,6 +75,10 @@ const localRules = {
     'limit-type-complexity': limitTypeComplexity,
     'require-antd-generic-types': requireAntdGenericTypes,
     'no-deep-relative-imports': noDeepRelativeImports,
+    'no-cross-module-service-import': noCrossModuleServiceImport,
+    'no-disable-type-safe-client': noDisableTypeSafeClient,
+    'route-location': routeLocation,
+    'no-merged-api-type-export': noMergedApiTypeExport,
   },
 }
 
@@ -86,12 +94,14 @@ export default tseslint.config(
       'packages',
       'coverage',
       'testapp',
+      'test-app',
       'test-scaffold-debug',
       'my-app',
       'e2e-debug-app',
       'my-test-app',
       'demo-app',
       '*.config.ts',
+      '.claude',
     ],
   },
   {
@@ -136,7 +146,10 @@ export default tseslint.config(
       'local-rules/flat-routes-services': 'error',
       'local-rules/no-middleware-in-routes': 'error',
       'local-rules/no-new-old-service-naming': 'error',
+      'local-rules/no-cross-module-service-import': 'error',
+      'local-rules/route-location': 'error',
       'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
+      'local-rules/no-merged-api-type-export': 'error',
     },
   },
   {
@@ -172,6 +185,7 @@ export default tseslint.config(
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       'local-rules/require-type-safe-test-client': 'error',
+      'local-rules/no-disable-type-safe-client': 'error',
       'local-rules/require-hono-chain-syntax': 'off',
     },
   },

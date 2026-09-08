@@ -2,13 +2,16 @@
  * @framework-baseline cabb57f8f865d571
  *
  * SSR renderer for ISR. Generates HTML shells with SEO meta tags.
- * Phase 1: Shell rendering with meta tags (no React renderToString).
- * Phase 2 (future): Full renderToString with data-driven content.
+ * Uses built index.html as template, injecting ISR meta and SSR data.
  *
  * @framework-modify
- * @reason 修复 RouteConfig.pattern 类型从 string 改为 RegExp，修复 TypeScript 类型错误
- * @impact 不影响运行时行为，仅修复类型定义
+ * @reason 修复生产环境 JS 资源引用，从构建产物 index.html 读取正确 asset hash
+ * @impact ISR 页面在生产环境正确加载 React 客户端代码
  */
+
+export function setIndexTemplate(html: string): void {
+  cachedTemplate = html
+}
 
 export interface RouteMeta {
   title: string
@@ -27,6 +30,35 @@ export interface RenderResult {
   html: string
   status: number
   headers: Record<string, string>
+}
+
+let cachedTemplate: string | null = null
+
+function getIndexTemplate(): string {
+  if (cachedTemplate) return cachedTemplate
+
+  try {
+    const fs = require('node:fs')
+    const path = require('node:path')
+
+    const candidates = [
+      path.join(process.cwd(), 'dist/client/index.html'),
+      path.join(process.cwd(), 'template/dist/client/index.html'),
+    ]
+
+    for (const p of candidates) {
+      try {
+        cachedTemplate = fs.readFileSync(p, 'utf-8')
+        return cachedTemplate
+      } catch {
+        // try next
+      }
+    }
+  } catch {
+    // Not in Node environment (e.g. CF Workers)
+  }
+
+  return ''
 }
 
 const STATIC_ROUTES: RouteConfig[] = [
@@ -184,6 +216,26 @@ interface ShellOptions {
 function renderShell(options: ShellOptions): string {
   const dataJson = JSON.stringify(options.data)
   const escapedJson = dataJson.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const ssrScript = `<script>window.__SSR_DATA__ = ${escapedJson};window.__SSR_PATH__ = ${JSON.stringify(options.pathname)};</script>`
+
+  const template = getIndexTemplate()
+
+  if (template) {
+    let html = template
+    html = html.replace(/<title>.*?<\/title>/, `<title>${escapeHtml(options.title)}</title>`)
+
+    const metaTags = `    <meta name="description" content="${escapeHtml(options.description)}" />\n    <meta property="og:title" content="${escapeHtml(options.title)}" />\n    <meta property="og:description" content="${escapeHtml(options.description)}" />\n    <meta property="og:type" content="${escapeHtml(options.ogType)}" />\n    <meta property="og:url" content="${escapeHtml(options.pathname)}" />\n    <meta name="generator" content="ISR" />`
+
+    if (html.includes('<meta name="description"')) {
+      html = html.replace(/<meta name="description".*?\/>/, metaTags)
+    } else {
+      html = html.replace('</head>', `  ${metaTags}\n  </head>`)
+    }
+
+    html = html.replace('<div id="root"></div>', `<div id="root"></div>\n    ${ssrScript}`)
+
+    return html
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -201,26 +253,33 @@ function renderShell(options: ShellOptions): string {
   </head>
   <body>
     <div id="root"></div>
-    <script>window.__SSR_DATA__ = ${escapedJson};window.__SSR_PATH__ = ${JSON.stringify(options.pathname)};</script>
-    <script type="module" src="/src/client/main.tsx"></script>
+    ${ssrScript}
   </body>
 </html>`
 }
 
 function renderFallback(): RenderResult {
+  const template = getIndexTemplate()
+  if (template) {
+    return {
+      html: template,
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html;charset=UTF-8',
+      },
+    }
+  }
+
   return {
     html: `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Biomimic App</title>
-    <meta name="description" content="Biomimic App - A full-stack application template" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/client/main.tsx"></script>
   </body>
 </html>`,
     status: 200,

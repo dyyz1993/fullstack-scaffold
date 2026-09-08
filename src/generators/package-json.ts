@@ -11,7 +11,7 @@ const MODULE_PACKAGES: Record<string, string[]> = {
 }
 
 /** Packages needed by the admin panel UI */
-const ADMIN_PANEL_PACKAGES = ['antd']
+const ADMIN_PANEL_PACKAGES = ['antd', '@ant-design/icons']
 
 /** Packages needed by the CLI app (xcli-core based) */
 const CLI_PACKAGES = ['commander'] // legacy, removed from template
@@ -45,6 +45,7 @@ const CLIENT_DEV_PACKAGES = [
   'playwright',
   '@prerenderer/renderer-jsdom',
   '@prerenderer/renderer-puppeteer',
+  'puppeteer',
   '@prerenderer/rollup-plugin',
   'eventsource',
 ]
@@ -80,8 +81,13 @@ export function filterPackageJson(
     }
   }
 
-  // Remove admin panel packages if no admin module
-  if (!resolved.modules.has('admin')) {
+  // Remove admin panel packages if no admin/tenant/merchant module uses them
+  // (antd is used by admin, tenant, and merchant pages)
+  const hasAntdConsumer =
+    resolved.modules.has('admin') ||
+    resolved.modules.has('tenant') ||
+    resolved.modules.has('merchant')
+  if (!hasAntdConsumer) {
     for (const pkg of ADMIN_PANEL_PACKAGES) {
       packagesToRemove.add(pkg)
     }

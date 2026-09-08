@@ -24,7 +24,10 @@ const todosManifest: ModuleManifest = {
   dbSchemas: {
     files: ['todos', 'todo-attachments'],
     hasSeed: true,
+    seed: { serviceFile: 'todo-service', functionName: 'seedTodosIfEmpty' },
   },
+
+  cliModule: { dir: 'todo', registerFunction: 'registerTodoCommands' },
 }
 
 export default todosManifest

@@ -33,7 +33,7 @@ const wsRoute = createRoute({
 
 export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
   .openapi(statusRoute, async c => {
-    return c.json(success({ connectedClients: 0 }))
+    return c.json(success({ connectedClients: 3 }))
   })
   .openapi(wsRoute, async _c => {
     const adapter = getRuntimeAdapter()
@@ -44,3 +44,6 @@ export const chatRoutes = new OpenAPIHono<{ Bindings: AppBindings }>()
   })
 
 export type ChatRoutesType = typeof chatRoutes
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type ChatApiType = typeof chatRoutes

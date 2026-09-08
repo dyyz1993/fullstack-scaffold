@@ -4,75 +4,94 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
 import { Role } from '@shared/modules/permission'
 import type { LoginRequest } from '@shared/modules/admin'
+import { useLanguage } from '../i18n/useLanguage'
 
 interface QuickLoginAccount extends LoginRequest {
   username: string
   password: string
   role: Role
-  label: string
+  labelKey: string
   color: string
 }
 
-const QUICK_LOGIN_ACCOUNTS: QuickLoginAccount[] = [
-  {
-    username: 'superadmin',
-    password: '123456',
-    role: Role.SUPER_ADMIN,
-    label: '超级管理员',
-    color: 'red',
-  },
-  {
-    username: 'customerservice',
-    password: '123456',
-    role: Role.CUSTOMER_SERVICE,
-    label: '客服人员',
-    color: 'blue',
-  },
-  { username: 'user1', password: '123456', role: Role.USER, label: '普通用户', color: 'green' },
-]
-
 export const LoginPage: React.FC = () => {
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [form] = Form.useForm<LoginRequest>()
   const { login, loading } = useAdminStore()
 
+  const QUICK_LOGIN_ACCOUNTS: QuickLoginAccount[] = [
+    {
+      username: 'superadmin',
+      password: '123456',
+      role: Role.SUPER_ADMIN,
+      labelKey: 'login.superAdmin',
+      color: 'red',
+    },
+    {
+      username: 'customerservice',
+      password: '123456',
+      role: Role.CUSTOMER_SERVICE,
+      labelKey: 'login.customerService',
+      color: 'blue',
+    },
+    {
+      username: 'user1',
+      password: '123456',
+      role: Role.USER,
+      labelKey: 'login.normalUser',
+      color: 'green',
+    },
+  ]
+
   const handleSubmit = async (values: LoginRequest) => {
     try {
       await login(values.username, values.password)
-      message.success('登录成功！')
+      message.success(t('login.success'))
       navigate('/dashboard')
     } catch (error) {
-      message.error((error as Error).message || '登录失败！')
+      message.error((error as Error).message || t('login.failed'))
     }
   }
 
   const handleQuickLogin = async (account: QuickLoginAccount) => {
     try {
       await login(account.username, account.password)
-      message.success(`已以${account.label}身份登录！`)
+      message.success(t('login.quickLoginAs', { role: t(account.labelKey) }))
       navigate('/dashboard')
     } catch (error) {
-      message.error((error as Error).message || '登录失败！')
+      message.error((error as Error).message || t('login.failed'))
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md" title="管理后台登录">
+      <Card className="w-full max-w-md" title={t('login.title')}>
         <Spin spinning={loading}>
-          <Form form={form} onFinish={handleSubmit} layout="vertical" data-testid="admin-login-form">
-            <Form.Item name="username" rules={[{ required: true, message: '请输入用户名！' }]}>
+          <Form
+            form={form}
+            onFinish={handleSubmit}
+            layout="vertical"
+            data-testid="admin-login-form"
+          >
+            <Form.Item
+              name="username"
+              rules={[{ required: true, message: t('login.usernameRequired') }]}
+            >
               <Input
                 prefix={<UserOutlined />}
-                placeholder="用户名"
+                placeholder={t('login.username')}
                 size="large"
                 data-testid="admin-login-username"
               />
             </Form.Item>
-            <Form.Item name="password" rules={[{ required: true, message: '请输入密码！' }]}>
+            <Form.Item
+              name="password"
+              rules={[{ required: true, message: t('login.passwordRequired') }]}
+            >
               <Input.Password
                 prefix={<LockOutlined />}
-                placeholder="密码"
+                placeholder={t('login.password')}
                 size="large"
                 data-testid="admin-login-password"
               />
@@ -86,19 +105,19 @@ export const LoginPage: React.FC = () => {
                 loading={loading}
                 data-testid="admin-login-submit"
               >
-                登录
+                {t('login.submit')}
               </Button>
             </Form.Item>
             <div className="text-center">
-              <span className="text-gray-500">还没有账号？ </span>
+              <span className="text-gray-500">{t('login.noAccount')}</span>
               <Link to="/register" className="text-blue-500 hover:underline">
-                注册
+                {t('login.register')}
               </Link>
             </div>
           </Form>
         </Spin>
 
-        <Divider>快速登录</Divider>
+        <Divider>{t('login.quickLogin')}</Divider>
 
         <div className="space-y-2">
           {QUICK_LOGIN_ACCOUNTS.map(account => (
@@ -110,7 +129,7 @@ export const LoginPage: React.FC = () => {
               loading={loading}
               className="flex items-center justify-between"
             >
-              <span>{account.label}</span>
+              <span>{t(account.labelKey)}</span>
               <span className="text-gray-400 text-sm">{account.username}</span>
             </Button>
           ))}

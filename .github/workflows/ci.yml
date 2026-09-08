@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, main, feat/*]
   pull_request:
-    branches: [master]
-  workflow_dispatch:
+    branches: [master, main, feat/*]
   schedule:
-    - cron: '0 3 * * 1'
+    - cron: '0 6 * * 1' # 每周一早上6点UTC运行
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   cli-checks:
@@ -27,6 +27,10 @@ jobs:
         run: npm run typecheck
       - name: Lint CLI
         run: npx eslint src/ --max-warnings=0
+      - name: Run all validators
+        run: npm run validate:all
+      - name: Check framework modifications
+        run: npm run framework:check
 
   cli-tests:
     name: CLI Tests & Scaffold Verify (${{ matrix.os }})
@@ -43,11 +47,13 @@ jobs:
       - run: npm ci
       - name: Run CLI unit tests
         run: npx vitest run --reporter=verbose --config vitest.config.ts
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
       - name: Scaffold E2E verify
         run: npx vitest run src/__tests__/e2e-scaffold-verify.test.ts --testTimeout=300000
         timeout-minutes: 15
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: '--max-old-space-size=6144'
 
   template-checks:
     name: Template Quality (${{ matrix.os }})
@@ -64,10 +70,19 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
       - name: Install dependencies
         run: npm ci
-      - name: Type check
-        run: cd template && npx tsc --noEmit
+      - name: Type check (TS2589 early-warning budget)
+        run: |
+          start=$(date +%s)
+          cd template && npx tsc --noEmit
+          end=$(date +%s)
+          dur=$((end - start))
+          echo "tsc duration: ${dur}s (budget 120s)"
+          if [ "$dur" -gt 120 ]; then
+            echo "::error::template tsc took ${dur}s (budget 120s). Type-inference weight likely regressed (merged mega-types?). See eslint rule no-merged-api-type-export and template/src/server/rpc-type-canary.ts."
+            exit 1
+          fi
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: '--max-old-space-size=6144'
       - name: Lint
         run: npx turbo lint --filter=biomimic-todo-app
       - name: Unit tests
@@ -103,6 +118,8 @@ jobs:
 
   template-e2e:
     name: Template E2E Tests
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "1"
     runs-on: ubuntu-latest
     needs: template-checks
     steps:
@@ -138,6 +155,8 @@ jobs:
 
   template-e2e-cross-browser:
     name: Template E2E Cross-Browser
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "1"
     runs-on: ubuntu-latest
     needs: template-checks
     continue-on-error: true
@@ -203,11 +222,13 @@ jobs:
 
   preset-build-matrix:
     name: Preset Build (${{ matrix.preset }})
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "1"
     runs-on: ubuntu-latest
     needs: [cli-checks, cli-tests]
     strategy:
       matrix:
-        preset: [minimal, todo-app, ecommerce, fullstack-admin]
+        preset: [minimal, todo-app, ecommerce, xbrowser-marketplace, fullstack-admin, forum, saas]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -223,21 +244,137 @@ jobs:
       - name: Type check scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npx tsc --noEmit
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
+          NODE_OPTIONS: '--max-old-space-size=6144'
       - name: Build scaffolded project
         run: cd /tmp/preset-build-${{ matrix.preset }} && npm run build
 
+  e2e-tests:
+    name: E2E Tests (Shanbox)
+    runs-on: ubuntu-latest
+    # 打的是外部 VPS（shanbox）上的部署：服务器进程状态不在本仓库控制内，
+    # 宕机不应污染代码健康信号（并发压测三路同挂于此、代码层全绿验证过）
+    continue-on-error: true
+    needs: [cli-checks, cli-tests]
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npx playwright test tests/e2e/*-preset.spec.ts --project=chromium --reporter=list --timeout=60000
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: '0'
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            playwright-artifacts/
+            test-results/
+          retention-days: 7
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: test-results/
+          retention-days: 30
+
+  constraint-verify:
+    name: Generated App Constraint Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build CLI
+        run: npm run build:cli
+      - name: Scaffold generated app (todo-app preset)
+        run: node dist/cli/index.js chain-app --preset todo-app -o /tmp/gen
+      - name: No TS compiler patch & typecheck passes
+        run: |
+          if ls /tmp/gen/patches/ | grep -qi '^typescript'; then
+            echo "::error::TS compiler patch found in generated app"; exit 1
+          fi
+          cd /tmp/gen && npx tsc --noEmit
+      - name: Generated rpc-surface lints clean
+        run: cd /tmp/gen && npx eslint src/server/rpc-surface.ts --max-warnings=0
+      - name: Banned mega-type pattern is rejected by generated app lint
+        run: |
+          cat > /tmp/gen/src/server/bad-pattern.ts <<'EOF'
+          import { OpenAPIHono } from '@hono/zod-openapi'
+
+          export const mergedRoutes = new OpenAPIHono()
+            .route('/api', moduleA)
+            .route('/api', moduleB)
+
+          export type MergedApiType = typeof mergedRoutes
+          EOF
+          cd /tmp/gen
+          if npx eslint src/server/bad-pattern.ts --no-warn-ignored; then
+            echo "::error::violation fixture was NOT caught by generated app lint"
+            exit 1
+          else
+            echo "violation correctly blocked by local-rules/no-merged-api-type-export"
+          fi
+
   feishu-notify:
     name: Feishu Notification
+    # 通知是尽力而为：网络/密钥问题不应拖垮 CI 结论。
+    # 注意：continue-on-error 不支持 uses:（可复用工作流调用）——b118fda 曾因此
+    # 令整个 workflow 解析失败（0 秒红）。改为自包含 curl（普通 job 可容忍失败）。
     if: always() && github.actor != 'dependabot[bot]'
-    needs: [cli-checks, cli-tests, template-checks, template-build, template-e2e, template-e2e-cross-browser, security-audit, template-modules, preset-build-matrix]
-    uses: dyyz1993/ci-tools/.github/workflows/feishu-notify.yml@main
-    with:
-      jobs: '{"cli-checks":"${{ needs.cli-checks.result }}","cli-tests":"${{ needs.cli-tests.result }}","template-checks":"${{ needs.template-checks.result }}","template-build":"${{ needs.template-build.result }}","template-e2e":"${{ needs.template-e2e.result }}","template-e2e-cross-browser":"${{ needs.template-e2e-cross-browser.result }}","security-audit":"${{ needs.security-audit.result }}","template-modules":"${{ needs.template-modules.result }}","preset-build-matrix":"${{ needs.preset-build-matrix.result }}"}'
-      sha: ${{ github.sha }}
-      ref: ${{ github.ref_name }}
-      actor: ${{ github.actor }}
-      repo: ${{ github.repository }}
-      run-id: ${{ github.run_id }}
-    secrets:
-      FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+    needs:
+      [
+        cli-checks,
+        cli-tests,
+        template-checks,
+        template-build,
+        template-e2e,
+        template-e2e-cross-browser,
+        security-audit,
+        template-modules,
+        preset-build-matrix,
+        e2e-tests,
+        constraint-verify,
+      ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Feishu notification
+        continue-on-error: true
+        run: |
+          PAYLOAD=$(cat <<EOF
+          {"msg_type":"text","content":{"text":"CI ${{ github.event_name }} @ ${{ github.ref_name }}\n${{ github.actor }}: ${{ github.event.head_commit.message }}\nrun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\ncli-checks: ${{ needs.cli-checks.result }} | cli-tests: ${{ needs.cli-tests.result }}\ntemplate: ${{ needs.template-checks.result }}/${{ needs.template-build.result }}/${{ needs.template-e2e.result }}\nsecurity: ${{ needs.security-audit.result }} | presets: ${{ needs.preset-build-matrix.result }}\nconstraint-verify: ${{ needs.constraint-verify.result }} | e2e: ${{ needs.e2e-tests.result }}"}}
+          EOF
+          )
+          curl -s -m 15 -X POST "$FEISHU_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "$PAYLOAD" || echo "feishu notify failed (non-blocking)"
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}

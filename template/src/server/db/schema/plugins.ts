@@ -1,38 +1,47 @@
-import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const pluginStatus = ['pending', 'approved', 'rejected'] as const
 export type PluginStatus = (typeof pluginStatus)[number]
 
-export const plugins = sqliteTable('plugins', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
-  description: text('description').notNull().default(''),
-  readme: text('readme'),
-  authorId: text('author_id').notNull(),
-  authorName: text('author_name').notNull(),
-  repositoryUrl: text('repository_url'),
-  homepageUrl: text('homepage_url'),
-  npmPackage: text('npm_package'),
-  license: text('license'),
-  version: text('version').notNull().default('0.0.1'),
-  status: text('status', { enum: pluginStatus }).notNull().default('pending'),
-  downloadCount: integer('download_count').notNull().default(0),
-  viewCount: integer('view_count').notNull().default(0),
-  featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
-  screenshotUrl: text('screenshot_url'),
-  siteUrls: text('site_urls'),
-  tags: text('tags'),
-  commands: text('commands'),
-  rejectReason: text('reject_reason'),
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
-})
+export const plugins = sqliteTable(
+  'plugins',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
+    description: text('description').notNull().default(''),
+    readme: text('readme'),
+    authorId: text('author_id').notNull(),
+    authorName: text('author_name').notNull(),
+    repositoryUrl: text('repository_url'),
+    homepageUrl: text('homepage_url'),
+    npmPackage: text('npm_package'),
+    license: text('license'),
+    version: text('version').notNull().default('0.0.1'),
+    status: text('status', { enum: pluginStatus }).notNull().default('pending'),
+    downloadCount: integer('download_count').notNull().default(0),
+    viewCount: integer('view_count').notNull().default(0),
+    featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
+    screenshotUrl: text('screenshot_url'),
+    siteUrls: text('site_urls'),
+    tags: text('tags'),
+    commands: text('commands'),
+    rejectReason: text('reject_reason'),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  table => ({
+    statusIdx: index('plugins_status_idx').on(table.status),
+    slugIdx: index('plugins_slug_idx').on(table.slug),
+    authorIdIdx: index('plugins_author_id_idx').on(table.authorId),
+    createdAtIdx: index('plugins_created_at_idx').on(table.createdAt),
+  })
+)
 
 export const pluginVersions = sqliteTable(
   'plugin_versions',
@@ -53,6 +62,7 @@ export const pluginVersions = sqliteTable(
   },
   table => ({
     pluginVersionUnique: uniqueIndex('plugin_version_unique').on(table.pluginId, table.version),
+    pluginIdIdx: index('plugin_versions_plugin_id_idx').on(table.pluginId),
   })
 )
 
@@ -77,14 +87,20 @@ export const pluginReviews = sqliteTable(
   })
 )
 
-export const pluginCategories = sqliteTable('plugin_categories', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  slug: text('slug').notNull().unique(),
-  description: text('description'),
-  icon: text('icon'),
-  sortOrder: integer('sort_order').notNull().default(0),
-})
+export const pluginCategories = sqliteTable(
+  'plugin_categories',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull().unique(),
+    slug: text('slug').notNull().unique(),
+    description: text('description'),
+    icon: text('icon'),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  table => ({
+    slugIdx: index('plugin_categories_slug_idx').on(table.slug),
+  })
+)
 
 export const pluginCategoryMappings = sqliteTable(
   'plugin_category_mappings',
@@ -101,6 +117,8 @@ export const pluginCategoryMappings = sqliteTable(
       table.pluginId,
       table.categoryId
     ),
+    categoryIdIdx: index('plugin_category_mappings_category_id_idx').on(table.categoryId),
+    pluginIdIdx: index('plugin_category_mappings_plugin_id_idx').on(table.pluginId),
   })
 )
 

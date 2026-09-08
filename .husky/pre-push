@@ -1,10 +1,4 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔍 Pre-push verification..."
-
-echo "  → TypeScript type check..."
-npm run typecheck
 
 echo "  → Smart tests for changed files..."
 npm run test:smart:staged

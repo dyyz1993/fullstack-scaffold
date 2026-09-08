@@ -50,8 +50,13 @@ export async function seedOrdersIfEmpty(): Promise<void> {
 export async function getOrders(filters?: {
   status?: OrderStatus
   customerName?: string
-}): Promise<Order[]> {
+  page?: number
+  limit?: number
+}): Promise<{ orders: Order[]; total: number; page: number; limit: number }> {
   const db = await getDb()
+  const page = filters?.page ?? 1
+  const limit = filters?.limit ?? 20
+  const offset = (page - 1) * limit
   const conditions = []
 
   if (filters?.status) {
@@ -66,7 +71,7 @@ export async function getOrders(filters?: {
     )
   }
 
-  const rows =
+  const allRows =
     conditions.length > 0
       ? await db
           .select()
@@ -75,17 +80,24 @@ export async function getOrders(filters?: {
           .orderBy(desc(orders.createdAt))
       : await db.select().from(orders).orderBy(desc(orders.createdAt))
 
-  return rows.map((row: OrderTable) => ({
-    id: `order-${row.id}`,
-    orderNo: row.orderNo,
-    customerName: row.customerName,
-    customerEmail: row.customerEmail,
-    productName: row.productName,
-    amount: row.amount,
-    status: row.status,
-    createdAt: toISOString(row.createdAt),
-    updatedAt: toISOString(row.updatedAt),
-  }))
+  const rows = allRows.slice(offset, offset + limit)
+
+  return {
+    orders: rows.map((row: OrderTable) => ({
+      id: `order-${row.id}`,
+      orderNo: row.orderNo,
+      customerName: row.customerName,
+      customerEmail: row.customerEmail,
+      productName: row.productName,
+      amount: row.amount,
+      status: row.status,
+      createdAt: toISOString(row.createdAt),
+      updatedAt: toISOString(row.updatedAt),
+    })),
+    total: allRows.length,
+    page,
+    limit,
+  }
 }
 
 export async function getOrderById(id: string): Promise<Order | null> {

@@ -42,7 +42,11 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
       }
     })
-    .post('/api/__test__/cleanup', async c => {
+
+  // 测试辅助端点：仅开发/测试环境注册。生产（含 Cloudflare 构建——tsup 将
+  // process.env.NODE_ENV 静态替换为 "production"）不暴露这个清库端点。
+  if (process.env.NODE_ENV !== 'production') {
+    app.post('/api/__test__/cleanup', async c => {
       try {
         const { cleanupTestDatabase } = await import('./db/test-setup')
         await cleanupTestDatabase()
@@ -52,6 +56,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ success: false as const, message: 'Failed to cleanup database' }, 500)
       }
     })
+  }
 
   autoRegisterRealtime(app as unknown as Parameters<typeof autoRegisterRealtime>[0])
 
@@ -100,6 +105,3 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
   return app
 }
-export type AdminApiType = typeof adminApiRoutes
-export type ClientApiType = typeof clientApiRoutes
-export type AppType = ReturnType<typeof createApp>

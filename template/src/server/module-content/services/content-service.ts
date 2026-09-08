@@ -42,7 +42,7 @@ export async function seedContentsIfEmpty(): Promise<void> {
       JSON.stringify(['最佳实践', '经验']),
     ]
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 25; i++) {
       const category = randomElement(CATEGORIES)
       const status = randomElement(STATUSES)
       const createdAt = new Date(randomDate(new Date('2024-01-01'), new Date()))
@@ -88,8 +88,13 @@ export async function getContents(filters?: {
   category?: ContentCategory
   status?: ContentStatus
   search?: string
-}): Promise<Content[]> {
+  page?: number
+  limit?: number
+}): Promise<{ contents: Content[]; total: number; page: number; limit: number }> {
   const db = await getDb()
+  const page = filters?.page ?? 1
+  const limit = filters?.limit ?? 20
+  const offset = (page - 1) * limit
   const conditions = []
 
   if (filters?.category) {
@@ -105,7 +110,7 @@ export async function getContents(filters?: {
     )
   }
 
-  const rows =
+  const allRows =
     conditions.length > 0
       ? await db
           .select()
@@ -114,7 +119,14 @@ export async function getContents(filters?: {
           .orderBy(desc(contents.createdAt))
       : await db.select().from(contents).orderBy(desc(contents.createdAt))
 
-  return rows.map(mapContentRow)
+  const rows = allRows.slice(offset, offset + limit)
+
+  return {
+    contents: rows.map(mapContentRow),
+    total: allRows.length,
+    page,
+    limit,
+  }
 }
 
 export async function getContentById(id: string): Promise<Content | null> {

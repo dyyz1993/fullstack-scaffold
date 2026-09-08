@@ -69,6 +69,20 @@ my-test-app/
 .pi/
 uploads/**/
 !settings.json.trae
-.codenomad/
 .turbo
 .opencode/
+
+# Runtime/coverage output
+report/
+.report-tmp/
+
+# Session/tool state
+.sessions/
+.workspaces/
+.wrangler/
+.ui-tester/
+.codenomad/
+
+# Stale lock files (project uses npm)
+pnpm-lock.yaml
+test-app/

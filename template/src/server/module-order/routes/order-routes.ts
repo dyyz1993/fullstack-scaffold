@@ -9,8 +9,8 @@ import {
   OrderSchema,
   CreateOrderSchema,
   UpdateOrderSchema,
-  OrderListSchema,
-  DeleteResultSchema,
+  OrderListResponseSchema,
+  OrderDeleteResultSchema,
   OrderQuerySchema,
 } from '@shared/modules/order'
 
@@ -24,7 +24,7 @@ const listRoute = createRoute({
     query: OrderQuerySchema,
   },
   responses: {
-    200: successResponse(OrderListSchema, 'List all orders'),
+    200: successResponse(OrderListResponseSchema, 'List all orders'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
@@ -109,7 +109,7 @@ const deleteRoute = createRoute({
     params: OrderSchema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(DeleteResultSchema, 'Order deleted'),
+    200: successResponse(OrderDeleteResultSchema, 'Order deleted'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Order not found'),
@@ -157,12 +157,14 @@ const cancelRoute = createRoute({
 
 export const orderRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const { status, customerName, limit, offset } = c.req.valid('query')
+    const { status, customerName, page, limit } = c.req.valid('query')
     const result = await orderService.getOrders({
       status: status ?? undefined,
       customerName: customerName ?? undefined,
+      page,
+      limit,
     })
-    return c.json(success(result.slice(offset, offset + limit)), 200)
+    return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
@@ -200,3 +202,6 @@ export const orderRoutes = new OpenAPIHono()
     if (!result) throw new NotFoundError('Order', id)
     return c.json(success(result), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type OrdersApiType = typeof orderRoutes

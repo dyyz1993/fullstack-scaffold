@@ -59,7 +59,11 @@ describe('Navigation', () => {
   })
 
   it('should render nav items', () => {
-    renderWithRouter(<Navigation />)
+    renderWithRouter(
+      <Navigation
+        items={[{ label: '${firstLabel}', icon: 'CheckSquare', path: '${firstPage.route}' }]}
+      />
+    )
     expect(screen.getByText('${firstLabel}')).toBeInTheDocument()
   })
 })

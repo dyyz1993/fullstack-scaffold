@@ -1,6 +1,7 @@
 import { Card, Statistic } from 'antd'
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons'
 import type { ReactNode } from 'react'
+import { useLanguage } from '../i18n/useLanguage'
 
 interface StatsCardProps {
   title: string
@@ -22,6 +23,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   trend,
   loading,
 }) => {
+  const { t } = useLanguage()
   return (
     <Card loading={loading}>
       <Statistic
@@ -36,7 +38,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           <span style={{ color: trend.isUp ? '#3f8600' : '#cf1322' }}>
             {trend.isUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {Math.abs(trend.value)}%
           </span>
-          <span className="text-gray-400 ml-2">vs last month</span>
+          <span className="text-gray-400 ml-2">{t('common.vsLastMonth')}</span>
         </div>
       )}
     </Card>

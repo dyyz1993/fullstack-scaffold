@@ -45,7 +45,7 @@ export async function seedTodosIfEmpty(): Promise<void> {
   const existing = await db.select().from(todos)
   if (existing.length === 0) {
     const STATUS = ['pending', 'in_progress', 'completed'] as const
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 25; i++) {
       const createdAt = new Date(randomDate(new Date('2024-01-01'), new Date()))
       await db.insert(todos).values({
         title: TODO_TITLES[i % TODO_TITLES.length],
@@ -58,17 +58,31 @@ export async function seedTodosIfEmpty(): Promise<void> {
   }
 }
 
-export async function listTodos(): Promise<Todo[]> {
+export async function listTodos(options?: {
+  page?: number
+  limit?: number
+}): Promise<{ todos: Todo[]; total: number; page: number; limit: number }> {
   const db = await getDb()
-  const rows = await db.select().from(todos).orderBy(desc(todos.createdAt))
-  return rows.map((row: TodoTable) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description ?? undefined,
-    status: row.status,
-    createdAt: toISOString(row.createdAt),
-    updatedAt: toISOString(row.updatedAt),
-  }))
+  const page = options?.page ?? 1
+  const limit = options?.limit ?? 20
+  const offset = (page - 1) * limit
+
+  const allRows = await db.select().from(todos).orderBy(desc(todos.createdAt))
+  const rows = allRows.slice(offset, offset + limit)
+
+  return {
+    todos: rows.map((row: TodoTable) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description ?? undefined,
+      status: row.status,
+      createdAt: toISOString(row.createdAt),
+      updatedAt: toISOString(row.updatedAt),
+    })),
+    total: allRows.length,
+    page,
+    limit,
+  }
 }
 
 export async function getTodo(id: number): Promise<Todo | null> {

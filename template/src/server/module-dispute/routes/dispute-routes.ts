@@ -1,4 +1,4 @@
-import { createRoute, z } from '@hono/zod-openapi'
+import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as disputeService from '../services/dispute-service'
 import {
@@ -15,9 +15,10 @@ import {
   DisputeSchema,
   CreateDisputeSchema,
   UpdateDisputeSchema,
-  DisputeListSchema,
+  DisputeListResponseSchema,
+  DisputeListQuerySchema,
   ResolveDisputeSchema,
-  DeleteResultSchema,
+  DisputeDeleteResultSchema,
 } from '@shared/modules/dispute'
 import { NotFoundError, BusinessError } from '@server/utils/app-error'
 
@@ -28,13 +29,10 @@ const listRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_VIEW] })],
   request: {
-    query: z.object({
-      limit: z.coerce.number().int().positive().max(100).default(20),
-      offset: z.coerce.number().int().min(0).default(0),
-    }),
+    query: DisputeListQuerySchema,
   },
   responses: {
-    200: successResponse(DisputeListSchema, 'List all disputes'),
+    200: successResponse(DisputeListResponseSchema, 'List all disputes'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
   },
@@ -92,7 +90,7 @@ const deleteRoute = createRoute({
   middleware: [authMiddleware({ requiredPermissions: [Permission.DISPUTE_DELETE] })],
   request: idRequest,
   responses: {
-    200: successResponse(DeleteResultSchema, 'Delete dispute'),
+    200: successResponse(DisputeDeleteResultSchema, 'Delete dispute'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Dispute not found'),
@@ -117,9 +115,9 @@ const resolveRoute = createRoute({
 
 export const disputeRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const { limit, offset } = c.req.valid('query')
-    const result = await disputeService.getDisputes()
-    return c.json(success(result.slice(offset, offset + limit)), 200)
+    const { page, limit } = c.req.valid('query')
+    const result = await disputeService.getDisputes({ page, limit })
+    return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
@@ -152,3 +150,6 @@ export const disputeRoutes = new OpenAPIHono()
     if (!result) throw new BusinessError('Cannot resolve dispute in current state')
     return c.json(success(result), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type DisputesApiType = typeof disputeRoutes

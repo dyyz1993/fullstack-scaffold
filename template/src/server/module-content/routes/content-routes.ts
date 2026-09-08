@@ -5,13 +5,13 @@ import { successResponse, errorResponse, success, created } from '@server/utils/
 import { NotFoundError } from '@server/utils/app-error'
 import { authMiddleware } from '@server/middleware/auth'
 import { Permission } from '@shared/modules/permission'
-import { z } from '@hono/zod-openapi'
 import {
   ContentSchema,
   CreateContentSchema,
   UpdateContentSchema,
-  ContentListSchema,
-  DeleteResultSchema,
+  ContentListResponseSchema,
+  ContentListQuerySchema,
+  ContentDeleteResultSchema,
 } from '@shared/modules/content'
 import { BusinessError } from '@server/utils/app-error'
 
@@ -22,13 +22,10 @@ const listRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.CONTENT_VIEW] })],
   request: {
-    query: z.object({
-      limit: z.coerce.number().int().positive().max(100).default(20),
-      offset: z.coerce.number().int().min(0).default(0),
-    }),
+    query: ContentListQuerySchema,
   },
   responses: {
-    200: successResponse(ContentListSchema, 'List all contents'),
+    200: successResponse(ContentListResponseSchema, 'List all contents'),
   },
 })
 
@@ -101,7 +98,7 @@ const deleteRoute = createRoute({
     params: ContentSchema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(DeleteResultSchema, 'Content deleted'),
+    200: successResponse(ContentDeleteResultSchema, 'Content deleted'),
     404: errorResponse('Content not found'),
   },
 })
@@ -140,9 +137,9 @@ const archiveRoute = createRoute({
 
 export const contentRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const { limit, offset } = c.req.valid('query')
-    const result = await contentService.getContents()
-    return c.json(success(result.slice(offset, offset + limit)), 200)
+    const { page, limit } = c.req.valid('query')
+    const result = await contentService.getContents({ page, limit })
+    return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
@@ -180,3 +177,6 @@ export const contentRoutes = new OpenAPIHono()
     if (!result) throw new BusinessError('Content cannot be archived (must be in published state)')
     return c.json(success(result), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type ContentsApiType = typeof contentRoutes

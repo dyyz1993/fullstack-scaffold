@@ -2,16 +2,12 @@
  * @framework-baseline a124c5bce28416ca
  *
  * @framework-modify
- * @reason 自动生成的基准更新
- * @impact 无功能影响
- */
-
-/**
- * ISR cache invalidation utilities.
- * Call these from service layer when content changes.
+ * @reason 模块化改造：purgeAllPages 改为遍历注册表
+ * @impact 不再硬编码路由列表
  */
 
 import type { ISRCache } from './isr-cache'
+import { isrRegistry } from './isr-registry'
 
 let _cache: ISRCache | null = null
 
@@ -36,10 +32,8 @@ export async function purgeContentPages(): Promise<void> {
 
 export async function purgeAllPages(): Promise<void> {
   if (!_cache) return
-  await _cache.purge('/')
-  await _cache.purge('/todos')
-  await _cache.purge('/content')
-  await _cache.purge('/notifications')
-  await _cache.purge('/websocket')
+  for (const path of isrRegistry.getExactPaths()) {
+    await _cache.purge(path)
+  }
   await _cache.purgePattern('isr:/content/*')
 }

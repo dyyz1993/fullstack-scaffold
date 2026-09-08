@@ -1,34 +1,5 @@
 import type { ResolvedPreset } from './template-generator'
 
-interface SeedModule {
-  module: string
-  importLine: string
-  call: string
-}
-
-const SEED_MODULES: SeedModule[] = [
-  {
-    module: 'order',
-    importLine: "import { seedOrdersIfEmpty } from '../module-order/services/order-service'",
-    call: 'seedOrdersIfEmpty()',
-  },
-  {
-    module: 'ticket',
-    importLine: "import { seedTicketsIfEmpty } from '../module-ticket/services/ticket-service'",
-    call: 'seedTicketsIfEmpty()',
-  },
-  {
-    module: 'dispute',
-    importLine: "import { seedDisputesIfEmpty } from '../module-dispute/services/dispute-service'",
-    call: 'seedDisputesIfEmpty()',
-  },
-  {
-    module: 'content',
-    importLine: "import { seedContentsIfEmpty } from '../module-content/services/content-service'",
-    call: 'seedContentsIfEmpty()',
-  },
-]
-
 const INITIAL_PERMISSIONS = `const initialPermissions = [
   {
     id: 'perm_user_view',
@@ -377,16 +348,42 @@ const INITIAL_ROLE_PERMISSIONS = `const initialRolePermissions = [
 ]`
 
 export function generateDbInit(resolved: ResolvedPreset): string {
-  const activeSeeds = SEED_MODULES.filter(s => resolved.modules.has(s.module))
+  // Collect seed info from manifests dynamically
+  const activeSeeds: { moduleDir: string; serviceFile: string; functionName: string }[] = []
+  for (const [name, manifest] of resolved.modules) {
+    if (manifest.dbSchemas?.hasSeed && manifest.dbSchemas.seed) {
+      activeSeeds.push({
+        moduleDir: `module-${name}`,
+        serviceFile: manifest.dbSchemas.seed.serviceFile,
+        functionName: manifest.dbSchemas.seed.functionName,
+      })
+    }
+  }
 
   if (!resolved.hasPermission) {
-    return generateMinimalDbInit()
+    return generateMinimalDbInit(activeSeeds)
   }
 
   return generateFullDbInit(activeSeeds)
 }
 
-function generateMinimalDbInit(): string {
+function generateMinimalDbInit(
+  activeSeeds: { moduleDir: string; serviceFile: string; functionName: string }[]
+): string {
+  const seedCalls = activeSeeds
+    .map(s => `    import('../${s.moduleDir}/services/${s.serviceFile}').then(m => m.${s.functionName}()),`)
+    .join('\n')
+
+  const seedBlock =
+    activeSeeds.length > 0
+      ? `
+  log.info({}, 'Seeding module data...')
+  await Promise.all([
+${seedCalls}
+  ])
+  log.info({}, 'Module data seeding complete!')`
+      : ''
+
   return `import { getDb } from './driver'
 import { logger } from '../utils/logger'
 
@@ -396,14 +393,18 @@ export async function initializeDatabase() {
   await getDb()
 
   log.info({}, 'Initializing database...')
-  log.info({}, 'Database initialization complete!')
+
+  log.info({}, 'Database initialization complete!')${seedBlock}
 }
 `
 }
 
-function generateFullDbInit(activeSeeds: SeedModule[]): string {
-  const seedImports = activeSeeds.map(s => s.importLine).join('\n')
-  const seedCalls = activeSeeds.map(s => `    ${s.call}(),`).join('\n')
+function generateFullDbInit(
+  activeSeeds: { moduleDir: string; serviceFile: string; functionName: string }[]
+): string {
+  const seedCalls = activeSeeds
+    .map(s => `    import('../${s.moduleDir}/services/${s.serviceFile}').then(m => m.${s.functionName}()),`)
+    .join('\n')
 
   const seedBlock =
     activeSeeds.length > 0
@@ -418,7 +419,6 @@ ${seedCalls}
   return `import { getDb } from './driver'
 import { permissions, roles, rolePermissions } from './schema'
 import { logger } from '../utils/logger'
-${seedImports}
 
 const log = logger.db()
 

@@ -120,7 +120,9 @@ function createSuccessResponse(data: unknown) {
 describe('TicketsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockTicketsGet.mockReturnValue(createSuccessResponse(mockTickets))
+    mockTicketsGet.mockReturnValue(
+      createSuccessResponse({ tickets: mockTickets, total: mockTickets.length, page: 1, limit: 20 })
+    )
     mockTicketClosePut.mockReturnValue(createSuccessResponse(null))
   })
 

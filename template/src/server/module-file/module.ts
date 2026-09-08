@@ -23,6 +23,8 @@ const fileManifest: ModuleManifest = {
   sharedSchemas: {
     path: 'files',
   },
+
+  cliModule: { dir: 'file', registerFunction: 'registerFileCommands' },
 }
 
 export default fileManifest

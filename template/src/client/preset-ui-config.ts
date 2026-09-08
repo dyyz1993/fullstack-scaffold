@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from 'react'
 
-export type PresetType = 'todo' | 'plugin' | 'ecommerce' | 'community' | 'saas'
+export type PresetType = 'todo' | 'plugin' | 'ecommerce' | 'community' | 'forum' | 'saas'
 
 export type AppType = 'client' | 'admin'
 export type LayoutType = 'top-nav' | 'minimal'
@@ -481,10 +481,87 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
       },
     ],
   },
+
+  // forum is an alias for community — same config, different preset ID
+  forum: {
+    id: 'community',
+    name: 'Community',
+    appType: 'client',
+    layout: 'top-nav',
+    theme: COMMUNITY_THEME,
+    navigation: {
+      visible: true,
+      showLogo: true,
+      showSearch: false,
+      showCart: false,
+      authStyle: 'avatar',
+      navItems: 'desktop',
+    },
+    desktopNav: [
+      { label: 'Topics', icon: 'Hash', path: '/topics' },
+      { label: 'Popular', icon: 'TrendingUp', path: '/popular' },
+      { label: 'Notifications', icon: 'Bell', path: '/notifications' },
+      { label: 'Profile', icon: 'User', path: '/profile' },
+    ],
+    mobileTabs: [
+      { label: 'Topics', icon: 'Hash', path: '/topics' },
+      { label: 'Popular', icon: 'TrendingUp', path: '/popular' },
+      { label: 'Notifications', icon: 'Bell', path: '/notifications' },
+      { label: 'Me', icon: 'User', path: '/profile' },
+    ],
+    defaultRoute: '/topics',
+    routes: [
+      {
+        path: '/topics',
+        component: lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage }))),
+        label: 'Topics',
+      },
+      {
+        path: '/popular',
+        component: lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage }))),
+        label: 'Popular',
+      },
+      {
+        path: '/notifications',
+        component: lazy(() =>
+          import('./pages/NotificationPage').then(m => ({ default: m.NotificationPage }))
+        ),
+        label: 'Notifications',
+      },
+      {
+        path: '/profile',
+        component: lazy(() =>
+          import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage }))
+        ),
+        label: 'Profile',
+      },
+      {
+        path: '/login',
+        component: lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage }))),
+        label: 'Login',
+      },
+      {
+        path: '/register',
+        component: lazy(() =>
+          import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage }))
+        ),
+        label: 'Register',
+      },
+    ],
+  },
+}
+
+// Preset ID aliases: deployed preset IDs may differ from internal config keys
+const PRESET_ALIASES: Record<string, PresetType> = {
+  forum: 'community',
+  'xbrowser-marketplace': 'plugin',
+  'fullstack-admin': 'saas',
+  'todo-app': 'todo',
 }
 
 export function getPresetUIConfig(id: string): PresetUIConfig {
-  return PRESET_UI_CONFIGS[id as PresetType] ?? PRESET_UI_CONFIGS.todo
+  const resolvedId = PRESET_ALIASES[id] ?? (id as PresetType)
+  return PRESET_UI_CONFIGS[resolvedId] ?? PRESET_UI_CONFIGS.todo
 }
 
 export function getPresetUIConfigs(): Record<PresetType, PresetUIConfig> {

@@ -33,6 +33,17 @@ src/
 │   ├── hooks/       # Custom hooks
 │   ├── pages/      # Page components
 │   └── App.tsx
+├── merchant/        # Merchant dashboard (Ant Design)
+│   ├── components/  # Merchant components
+│   ├── stores/      # Merchant state (merchantStore)
+│   ├── pages/       # Merchant pages
+│   ├── layouts/     # Merchant layouts
+│   └── App.tsx
+├── admin/           # Admin dashboard (Ant Design)
+│   ├── components/  # Admin components
+│   ├── stores/      # Admin state
+│   ├── pages/       # Admin pages
+│   └── App.tsx
 ├── server/          # Hono backend
 │   ├── module-todos/     # Todo module
 │   ├── module-chat/      # WebSocket chat module
@@ -173,12 +184,12 @@ Each module under `src/server/module-*/` has a `module.ts` manifest declaring:
 
 #### Module Categories
 
-| Category      | Modules                          |
-| ------------- | -------------------------------- |
-| core          | todos                            |
-| communication | chat, notifications              |
-| business      | order, ticket, dispute, content  |
-| system        | permission, admin, captcha, file |
+| Category      | Modules                                   |
+| ------------- | ----------------------------------------- |
+| core          | todos                                     |
+| communication | chat, notifications                       |
+| business      | order, ticket, dispute, content, merchant |
+| system        | permission, admin, captcha, file          |
 
 #### Dependency Graph
 
@@ -194,6 +205,7 @@ order ──→ permission
 ticket ──→ permission
 dispute ──→ permission
 content ──→ permission
+merchant ──→ auth + permission
 ```
 
 #### Validation

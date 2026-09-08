@@ -11,10 +11,17 @@ import {
 } from '../generators/template-generator'
 import { getExcludePatterns, getGeneratedFiles } from '../generators/file-filter'
 import { generateRouteRegistry } from '../generators/route-registry'
+import { generateRpcSurface } from '../generators/rpc-surface'
+import { generateIsrModules } from '../generators/isr-modules'
+import { generateEntryStores } from '../generators/entry-stores'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
-import { generateAdminApp } from '../generators/admin-app'
+import {
+  generateAdminApp,
+  generateAdminComponentsIndex,
+  generateAdminApiClient,
+} from '../generators/admin-app'
 import { generateDbSchemaBarrel } from '../generators/db-schema-barrel'
 import { generateDbInit } from '../generators/db-init'
 import { generateServerApp } from '../generators/server-app'
@@ -179,6 +186,7 @@ export interface CreateOptions {
   preset?: string
   outputDir?: string
   dryRun?: boolean
+  install?: boolean
 }
 
 export async function createProject(options: CreateOptions): Promise<void>
@@ -197,18 +205,21 @@ export async function createProject(
   let presetId: string | undefined
   let outputDir: string | undefined
   let dryRun: boolean
+  let install: boolean
 
   if (typeof projectNameOrOptions === 'string') {
     projectName = projectNameOrOptions
     currentDir = useCurrentDir
     presetId = preset
     dryRun = false
+    install = true
   } else {
     projectName = projectNameOrOptions.projectName
     currentDir = projectNameOrOptions.currentDir
     presetId = projectNameOrOptions.preset
     outputDir = projectNameOrOptions.outputDir
     dryRun = projectNameOrOptions.dryRun ?? false
+    install = projectNameOrOptions.install ?? true
   }
 
   if (!currentDir) {
@@ -360,6 +371,29 @@ export async function createProject(
     const routeRegistryContent = generateRouteRegistry(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/route-registry.ts'), routeRegistryContent)
 
+    // 按模块拆分的 RPC 门面（读取已复制的模块路由文件，提取窄类型与路径段）
+    const rpcSurfaceContent = generateRpcSurface(resolved, relPath => {
+      const full = path.join(targetDir, 'src/server', `${relPath}.ts`)
+      return fs.existsSync(full) ? fs.readFileSync(full, 'utf-8') : null
+    })
+    await fs.writeFile(path.join(targetDir, 'src/server/rpc-surface.ts'), rpcSurfaceContent)
+
+    const isrModulesContent = generateIsrModules(resolved, (moduleName, relPath) =>
+      fs.existsSync(path.join(targetDir, 'src/server', `module-${moduleName}`, relPath))
+    )
+    await fs.writeFile(path.join(targetDir, 'src/server/isr-modules.ts'), isrModulesContent)
+
+    if (resolved.hasClient) {
+      const entryStoresContent = generateEntryStores(resolved, (_moduleName, relPath) =>
+        fs.existsSync(path.join(targetDir, 'src/client/stores', relPath))
+      )
+      await fs.ensureDir(path.join(targetDir, 'src/client/stores'))
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/stores/entry-stores.ts'),
+        entryStoresContent
+      )
+    }
+
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
     await fs.writeFile(path.join(targetDir, 'src/server/db/schema/index.ts'), dbSchemaContent)
 
@@ -398,6 +432,21 @@ export async function createProject(
       if (adminAppContent) {
         await fs.ensureDir(path.join(targetDir, 'src/admin'))
         await fs.writeFile(path.join(targetDir, 'src/admin/App.tsx'), adminAppContent)
+      }
+      // Generate admin/components/index.ts with conditional CaptchaModal export
+      const adminComponentsIndex = generateAdminComponentsIndex(resolved)
+      if (adminComponentsIndex) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/components'))
+        await fs.writeFile(
+          path.join(targetDir, 'src/admin/components/index.ts'),
+          adminComponentsIndex
+        )
+      }
+      // Generate admin/services/apiClient.ts with conditional captcha support
+      const adminApiClient = generateAdminApiClient(resolved)
+      if (adminApiClient) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/services'))
+        await fs.writeFile(path.join(targetDir, 'src/admin/services/apiClient.ts'), adminApiClient)
       }
     }
 
@@ -470,6 +519,42 @@ export async function createProject(
     await updateReadme(targetDir, projectName)
     readmeSpinner.succeed(chalk.green('README.md configured'))
 
+    let installSucceeded = false
+    if (install && !dryRun) {
+      const installSpinner = ora('Installing dependencies...').start()
+      try {
+        const { execSync } = await import('node:child_process')
+        execSync('npm install --legacy-peer-deps', {
+          env: { ...process.env, PUPPETEER_SKIP_DOWNLOAD: '1' },
+          cwd: targetDir,
+          stdio: 'pipe',
+          timeout: 300000,
+        })
+        installSpinner.succeed(chalk.green('Dependencies installed'))
+        installSucceeded = true
+      } catch {
+        installSpinner.warn(
+          chalk.yellow('Dependency installation failed (you can run npm install manually)')
+        )
+      }
+    }
+
+    if (installSucceeded) {
+      const patchesDir = path.join(targetDir, 'patches')
+      if (await fs.pathExists(patchesDir)) {
+        try {
+          const { execSync } = await import('node:child_process')
+          execSync('npx patch-package', {
+            cwd: targetDir,
+            stdio: 'pipe',
+            timeout: 60000,
+          })
+        } catch {
+          // patch-package may fail if patches don't apply, not critical
+        }
+      }
+    }
+
     console.log('')
     console.log(chalk.green('  ✓ Project created successfully!'))
     console.log(chalk.gray(`   Preset: ${selectedPreset.name}`))
@@ -479,7 +564,9 @@ export async function createProject(
     if (!currentDir && !outputDir) {
       console.log(chalk.white(`    cd ${projectName}`))
     }
-    console.log(chalk.white('    npm install'))
+    if (!install || !installSucceeded) {
+      console.log(chalk.white('    npm install'))
+    }
 
     if (resolved.hasClient) {
       console.log(chalk.white('    npm run dev'))
@@ -501,6 +588,25 @@ export async function createProject(
     }
     console.log('')
     console.log(chalk.gray('  Happy coding! 🐟'))
+
+    // agent 钩子环境提示：工作区 .zcode/ 已随模板生成（ZCode 打开即生效）；
+    // 全局级钩子按需用 hooks:sync 同步（幂等，支持 ZCode / Codex）
+    const home = process.env.HOME || ''
+    const agents: string[] = []
+    if (home) {
+      if (await fs.pathExists(path.join(home, '.zcode'))) agents.push('ZCode')
+      if (await fs.pathExists(path.join(home, '.codex'))) agents.push('Codex')
+      if (await fs.pathExists(path.join(home, '.claude'))) agents.push('Claude Code')
+      if (await fs.pathExists(path.join(home, '.cursor'))) agents.push('Cursor')
+    }
+    if (agents.length > 0) {
+      console.log('')
+      console.log(chalk.cyan(`  🪝 Agent hooks (检测到 ${agents.join(' / ')}):`))
+      console.log(
+        chalk.gray('    工作区钩子已生成（.zcode/，禁止 --no-verify 提交），ZCode 自动生效')
+      )
+      console.log(chalk.gray('    同步到全局（Codex 等）：npm run hooks:sync -- --global'))
+    }
     console.log('')
   } catch (error) {
     if (error instanceof ScaffoldError) throw error

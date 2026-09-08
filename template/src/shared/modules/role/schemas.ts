@@ -39,8 +39,8 @@ export const UpdateRolePermissionsSchema = z.object({
   permissionIds: z.array(z.string()),
 })
 
-export const SuccessSchema = z.object({})
+export const RoleSuccessSchema = z.object({})
 
-export type RoleType = z.infer<typeof RoleSchema>
+export type RoleDataType = z.infer<typeof RoleSchema>
 export type CreateRoleType = z.infer<typeof CreateRoleSchema>
 export type UpdateRoleType = z.infer<typeof UpdateRoleSchema>

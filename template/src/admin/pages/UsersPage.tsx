@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Table,
   Card,
@@ -25,28 +25,32 @@ import { useRoleLabels } from '../hooks/useConfig'
 import { Permission, Role } from '@shared/modules/permission'
 import { PermissionGuard } from '../components/PermissionGuard'
 import type { User, CreateUserRequest } from '@shared/modules/admin'
+import { useLanguage } from '../i18n/useLanguage'
 
 type UserFormData = CreateUserRequest & { password?: string }
 
 export const UsersPage: React.FC = () => {
+  const { t, formatDate } = useLanguage()
   const [users, setUsers] = useState<User[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [form] = Form.useForm<UserFormData>()
   const { roleLabels } = useRoleLabels()
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      const data = await api(apiClient.api.admin.users.$get()).withLoading('加载用户列表...').json()
+      const data = await api(apiClient.api.admin.users.$get())
+        .withLoading(t('users.loading'))
+        .json()
       setUsers(data)
     } catch {
-      // 错误已由 api-request 自动处理
+      // handled by api-request
     }
-  }
+  }, [t])
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
   const handleCreate = () => {
     setEditingUser(null)
@@ -74,9 +78,9 @@ export const UsersPage: React.FC = () => {
             json: values,
           })
         )
-          .withLoading('更新中...')
+          .withLoading(t('users.updating'))
           .json()
-        message.success('用户更新成功')
+        message.success(t('users.updated'))
         setModalVisible(false)
         fetchUsers()
       } else {
@@ -91,14 +95,14 @@ export const UsersPage: React.FC = () => {
             },
           })
         )
-          .withLoading('创建中...')
+          .withLoading(t('users.creating'))
           .json()
-        message.success('用户创建成功')
+        message.success(t('users.created'))
         setModalVisible(false)
         fetchUsers()
       }
     } catch {
-      // 错误已由 api-request 自动处理
+      // handled by api-request
     }
   }
 
@@ -113,10 +117,10 @@ export const UsersPage: React.FC = () => {
       )
         .withLoading()
         .json()
-      message.success(newStatus === 'locked' ? '用户已锁定' : '用户已解锁')
+      message.success(newStatus === 'locked' ? t('users.userLocked') : t('users.userUnlocked'))
       fetchUsers()
     } catch {
-      // 错误已由 api-request 自动处理
+      // handled by api-request
     }
   }
 
@@ -127,63 +131,63 @@ export const UsersPage: React.FC = () => {
           param: { id: userId },
         })
       )
-        .withLoading('删除中...')
+        .withLoading(t('users.deleting'))
         .json()
-      message.success('用户已删除')
+      message.success(t('users.deleted'))
       fetchUsers()
     } catch {
-      // 错误已由 api-request 自动处理
+      // handled by api-request
     }
   }
 
   const getStatusTag = (status: string) => {
-    const statusConfig: Record<string, { color: string; text: string }> = {
-      active: { color: 'green', text: '正常' },
-      inactive: { color: 'orange', text: '未激活' },
-      locked: { color: 'red', text: '已锁定' },
+    const statusConfig: Record<string, { color: string; textKey: string }> = {
+      active: { color: 'green', textKey: 'users.active' },
+      inactive: { color: 'orange', textKey: 'users.inactive' },
+      locked: { color: 'red', textKey: 'users.locked' },
     }
     const config = statusConfig[status]
     if (!config) return <Tag>{status}</Tag>
-    return <Tag color={config.color}>{config.text}</Tag>
+    return <Tag color={config.color}>{t(config.textKey)}</Tag>
   }
 
   const columns: ColumnsType<User> = [
     {
-      title: '用户名',
+      title: t('users.username'),
       dataIndex: 'username',
       key: 'username',
     },
     {
-      title: '邮箱',
+      title: t('users.email'),
       dataIndex: 'email',
       key: 'email',
     },
     {
-      title: '角色',
+      title: t('users.role'),
       dataIndex: 'role',
       key: 'role',
       render: (role: Role) => <Tag color="blue">{roleLabels[role] || role}</Tag>,
     },
     {
-      title: '状态',
+      title: t('users.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => getStatusTag(status),
     },
     {
-      title: '创建时间',
+      title: t('common.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => formatDate(date),
     },
     {
-      title: '操作',
+      title: t('common.actions'),
       key: 'actions',
       render: (_: unknown, record: User) => (
         <Space>
           <PermissionGuard permission={Permission.USER_EDIT}>
             <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-              编辑
+              {t('common.edit')}
             </Button>
           </PermissionGuard>
           <PermissionGuard permission={Permission.USER_EDIT}>
@@ -193,18 +197,18 @@ export const UsersPage: React.FC = () => {
               onClick={() => handleToggleLock(record)}
               danger={record.status !== 'locked'}
             >
-              {record.status === 'locked' ? '解锁' : '锁定'}
+              {record.status === 'locked' ? t('users.unlock') : t('users.lock')}
             </Button>
           </PermissionGuard>
           <PermissionGuard permission={Permission.USER_DELETE}>
             <Popconfirm
-              title="确定要删除此用户吗？"
+              title={t('users.deleteConfirm')}
               onConfirm={() => handleDelete(record.id)}
-              okText="确定"
-              cancelText="取消"
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
             >
               <Button type="link" icon={<DeleteOutlined />} danger>
-                删除
+                {t('common.delete')}
               </Button>
             </Popconfirm>
           </PermissionGuard>
@@ -216,11 +220,11 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="p-6">
       <Card
-        title="用户管理"
+        title={t('users.title')}
         extra={
           <PermissionGuard permission={Permission.USER_CREATE}>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              创建用户
+              {t('users.createUser')}
             </Button>
           </PermissionGuard>
         }
@@ -229,7 +233,7 @@ export const UsersPage: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingUser ? '编辑用户' : '创建用户'}
+        title={editingUser ? t('users.editUser') : t('users.createUser')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => form.submit()}
@@ -238,42 +242,52 @@ export const UsersPage: React.FC = () => {
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="username"
-            label="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
+            label={t('users.username')}
+            rules={[{ required: true, message: t('users.usernameRequired') }]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input placeholder={t('users.usernamePlaceholder')} />
           </Form.Item>
           <Form.Item
             name="email"
-            label="邮箱"
+            label={t('users.email')}
             rules={[
-              { required: true, message: '请输入邮箱' },
-              { type: 'email', message: '请输入有效的邮箱地址' },
+              { required: true, message: t('users.emailRequired') },
+              { type: 'email', message: t('users.emailInvalid') },
             ]}
           >
-            <Input placeholder="请输入邮箱" />
+            <Input placeholder={t('users.emailPlaceholder')} />
           </Form.Item>
           {!editingUser && (
             <Form.Item
               name="password"
-              label="密码"
-              rules={[{ required: true, message: '请输入密码' }]}
+              label={t('users.password')}
+              rules={[{ required: true, message: t('users.passwordRequired') }]}
             >
-              <Input.Password placeholder="请输入密码" />
+              <Input.Password placeholder={t('users.passwordPlaceholder')} />
             </Form.Item>
           )}
-          <Form.Item name="role" label="角色" rules={[{ required: true, message: '请选择角色' }]}>
-            <Select placeholder="请选择角色">
-              <Select.Option value={Role.SUPER_ADMIN}>超级管理员</Select.Option>
-              <Select.Option value={Role.CUSTOMER_SERVICE}>客服人员</Select.Option>
-              <Select.Option value={Role.USER}>普通用户</Select.Option>
+          <Form.Item
+            name="role"
+            label={t('users.role')}
+            rules={[{ required: true, message: t('users.roleRequired') }]}
+          >
+            <Select placeholder={t('users.rolePlaceholder')}>
+              <Select.Option value={Role.SUPER_ADMIN}>{t('users.superAdmin')}</Select.Option>
+              <Select.Option value={Role.CUSTOMER_SERVICE}>
+                {t('users.customerService')}
+              </Select.Option>
+              <Select.Option value={Role.USER}>{t('users.normalUser')}</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
-            <Select placeholder="请选择状态">
-              <Select.Option value="active">正常</Select.Option>
-              <Select.Option value="inactive">未激活</Select.Option>
-              <Select.Option value="locked">已锁定</Select.Option>
+          <Form.Item
+            name="status"
+            label={t('users.status')}
+            rules={[{ required: true, message: t('users.statusRequired') }]}
+          >
+            <Select placeholder={t('users.statusPlaceholder')}>
+              <Select.Option value="active">{t('users.active')}</Select.Option>
+              <Select.Option value="inactive">{t('users.inactive')}</Select.Option>
+              <Select.Option value="locked">{t('users.locked')}</Select.Option>
             </Select>
           </Form.Item>
         </Form>

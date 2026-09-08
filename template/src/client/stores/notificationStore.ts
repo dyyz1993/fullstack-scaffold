@@ -154,20 +154,20 @@ export const useNotificationStore = create<NotificationState>(set => ({
 
       conn.onStatusChange(status => {
         if (import.meta.env.DEV) {
-          console.log('[SSE] Status changed:', status)
+          console.debug('[SSE] Status changed:', status)
         }
         set({ sseConnected: status === 'open' })
       })
 
       conn.on('connected', payload => {
         if (import.meta.env.DEV) {
-          console.log('[SSE] Connected:', payload)
+          console.debug('[SSE] Connected:', payload)
         }
       })
 
       conn.on('notification', notification => {
         if (import.meta.env.DEV) {
-          console.log('[SSE] Received notification:', notification)
+          console.debug('[SSE] Received notification:', notification)
         }
         set(state => {
           if (state.notifications.some(n => n.id === notification.id)) {
@@ -186,7 +186,7 @@ export const useNotificationStore = create<NotificationState>(set => ({
 
       sseClient = conn
       if (import.meta.env.DEV) {
-        console.log('[SSE] Client initialized')
+        console.debug('[SSE] Client initialized')
       }
     } catch (error) {
       console.error('[SSE] Failed to connect:', error)

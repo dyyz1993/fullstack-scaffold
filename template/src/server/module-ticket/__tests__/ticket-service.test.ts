@@ -17,7 +17,8 @@ describe('Ticket Service', () => {
   describe('getTickets', () => {
     it('should return all tickets', async () => {
       const result = await service.getTickets()
-      expect(Array.isArray(result)).toBe(true)
+      expect(result.tickets).toBeDefined()
+      expect(typeof result.total).toBe('number')
     })
 
     it('should filter tickets by status', async () => {
@@ -33,8 +34,8 @@ describe('Ticket Service', () => {
       createdTicketIds.push(created.id)
 
       const result = await service.getTickets({ status: 'open' })
-      expect(Array.isArray(result)).toBe(true)
-      result.forEach(ticket => {
+      expect(Array.isArray(result.tickets)).toBe(true)
+      result.tickets.forEach(ticket => {
         expect(ticket.status).toBe('open')
       })
     })

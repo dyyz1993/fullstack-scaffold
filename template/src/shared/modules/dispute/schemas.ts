@@ -49,7 +49,19 @@ export const ResolveDisputeSchema = z.object({
 
 export const DisputeListSchema = z.array(DisputeSchema)
 
-export const DeleteResultSchema = z.object({
+export const DisputeListResponseSchema = z.object({
+  disputes: z.array(DisputeSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+})
+
+export const DisputeListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+})
+
+export const DisputeDeleteResultSchema = z.object({
   message: z.string(),
 })
 
@@ -59,4 +71,6 @@ export type Dispute = z.infer<typeof DisputeSchema>
 export type CreateDisputeInput = z.infer<typeof CreateDisputeSchema>
 export type UpdateDisputeInput = z.infer<typeof UpdateDisputeSchema>
 export type ResolveDisputeInput = z.infer<typeof ResolveDisputeSchema>
-export type DeleteResult = z.infer<typeof DeleteResultSchema>
+export type DisputeListResponse = z.infer<typeof DisputeListResponseSchema>
+export type DisputeListQuery = z.infer<typeof DisputeListQuerySchema>
+export type DisputeDeleteResult = z.infer<typeof DisputeDeleteResultSchema>

@@ -30,6 +30,8 @@ const captchaManifest: ModuleManifest = {
       appliesTo: 'admin-api',
     },
   ],
+
+  cliModule: { dir: 'captcha', registerFunction: 'registerCaptchaCommands' },
 }
 
 export default captchaManifest

@@ -1,5 +1,10 @@
 import type { ResolvedPreset } from './template-generator'
 
+export interface StandaloneRoute {
+  localName: string
+  mountPath: string
+}
+
 export function generateRouteRegistry(resolved: ResolvedPreset): string {
   const imports: string[] = [
     `import { OpenAPIHono } from '@hono/zod-openapi'`,
@@ -11,6 +16,8 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
 
   const moduleEntries = [...resolved.modules.entries()]
 
+  const usedNames = new Set<string>()
+
   for (const [name, manifest] of moduleEntries) {
     const moduleDir = `module-${name}`
 
@@ -20,29 +27,50 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
         : [manifest.routes.client]
       for (const route of clientRouteList) {
         const { importPath, exportName } = route
-        imports.push(
-          `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
-        )
-        clientRoutes.push(`  .route('/api', ${exportName})`)
+        const localName = usedNames.has(exportName)
+          ? `${name}${exportName.charAt(0).toUpperCase()}${exportName.slice(1)}`
+          : exportName
+        usedNames.add(localName)
+        const importStmt =
+          localName === exportName
+            ? `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
+            : `import { ${exportName} as ${localName} } from './${moduleDir}/${importPath.replace(
+                /^\.\//,
+                ''
+              )}'`
+        imports.push(importStmt)
+        clientRoutes.push(`  .route('/api', ${localName})`)
       }
     }
 
     if (manifest.routes.admin) {
       for (const route of manifest.routes.admin) {
         const { importPath, exportName } = route
-        imports.push(
-          `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
-        )
-        adminRoutes.push(`  .route('/api', ${exportName})`)
+        const localName = usedNames.has(exportName)
+          ? `${name}${exportName.charAt(0).toUpperCase()}${exportName.slice(1)}`
+          : exportName
+        usedNames.add(localName)
+        const importStmt =
+          localName === exportName
+            ? `import { ${exportName} } from './${moduleDir}/${importPath.replace(/^\.\//, '')}'`
+            : `import { ${exportName} as ${localName} } from './${moduleDir}/${importPath.replace(
+                /^\.\//,
+                ''
+              )}'`
+        imports.push(importStmt)
+        adminRoutes.push(`  .route('/api', ${localName})`)
       }
     }
+    // Note: standalone routes are NOT included in route-registry.
+    // They are imported and mounted directly by server-app.ts generator.
   }
 
   let content = imports.join('\n') + '\n\n'
 
   content += `const apiRateLimit = rateLimitMiddleware({\n`
-  content += `  windowMs: 60 * 1000,\n`
+  content += `  windowMs: 60_000,\n`
   content += `  max: 100,\n`
+  content += `  message: 'Too many requests, please try again later',\n`
   content += `})\n\n`
 
   if (clientRoutes.length > 0) {
@@ -64,8 +92,29 @@ export function generateRouteRegistry(resolved: ResolvedPreset): string {
     content += `export const adminApiRoutes = new OpenAPIHono()\n\n`
   }
 
-  content += `export type ClientApiRoutes = typeof clientApiRoutes\n`
-  content += `export type AdminApiRoutes = typeof adminApiRoutes\n`
+  content += `// 类型出口已移除：巨型 merge 类型是 TS2589 根源，客户端改用 rpc-surface.ts 门面\n`
 
   return content
+}
+
+/**
+ * Get standalone route info from resolved preset manifests.
+ * Used by server-app.ts generator to mount standalone routes.
+ */
+export function getStandaloneRoutes(resolved: ResolvedPreset): StandaloneRoute[] {
+  const routes: StandaloneRoute[] = []
+  const usedNames = new Set<string>()
+
+  for (const [name, manifest] of resolved.modules) {
+    if (manifest.routes.standalone) {
+      const { exportName, mountPath } = manifest.routes.standalone
+      const localName = usedNames.has(exportName)
+        ? `${name}${exportName.charAt(0).toUpperCase()}${exportName.slice(1)}`
+        : exportName
+      usedNames.add(localName)
+      routes.push({ localName, mountPath })
+    }
+  }
+
+  return routes
 }

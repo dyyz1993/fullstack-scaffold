@@ -41,7 +41,19 @@ export const UpdateContentSchema = z.object({
 
 export const ContentListSchema = z.array(ContentSchema)
 
-export const DeleteResultSchema = z.object({
+export const ContentListResponseSchema = z.object({
+  contents: z.array(ContentSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+})
+
+export const ContentListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+})
+
+export const ContentDeleteResultSchema = z.object({
   message: z.string(),
 })
 
@@ -50,4 +62,6 @@ export type ContentStatus = z.infer<typeof ContentStatusSchema>
 export type Content = z.infer<typeof ContentSchema>
 export type CreateContentInput = z.infer<typeof CreateContentSchema>
 export type UpdateContentInput = z.infer<typeof UpdateContentSchema>
-export type DeleteResult = z.infer<typeof DeleteResultSchema>
+export type ContentListResponse = z.infer<typeof ContentListResponseSchema>
+export type ContentListQuery = z.infer<typeof ContentListQuerySchema>
+export type ContentDeleteResult = z.infer<typeof ContentDeleteResultSchema>

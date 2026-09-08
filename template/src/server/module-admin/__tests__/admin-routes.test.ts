@@ -3,7 +3,7 @@ import { createTestClient } from '@server/test-utils/test-client'
 import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 import { getRawClient } from '@server/db'
 import { Role } from '@shared/modules/permission'
-import * as notificationService from '@server/module-notifications/services/notification-service'
+import * as notificationService from '@server/module-notifications'
 
 function authedClient(token = 'admin-token') {
   return createTestClient(undefined, {

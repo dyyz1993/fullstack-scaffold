@@ -5,9 +5,11 @@
  * Supports Cloudflare Cache API and in-memory fallback.
  *
  * @framework-modify
- * @reason 移除未使用的 fullOptions 变量，修复 TypeScript strict 检查
- * @impact 不影响功能，仅清理代码
+ * @reason 模块化改造：移除硬编码路由，路由判断委托给 isrRegistry
+ * @impact isr-invalidation 也需要同步改造
  */
+
+import { isrRegistry } from './isr-registry'
 
 export interface ISRCacheEntry {
   html: string
@@ -29,16 +31,8 @@ export interface ISRCacheOptions {
 const DEFAULT_MAX_AGE = 60
 const DEFAULT_STALE_WHILE_REVALIDATE = 300
 
-const ISR_ROUTES = ['/', '/todos', '/content', '/notifications', '/websocket']
-
-const ISR_ROUTE_PREFIXES = ['/content/']
-
 export function isISRRoute(pathname: string): boolean {
-  if (ISR_ROUTES.includes(pathname)) return true
-  for (const prefix of ISR_ROUTE_PREFIXES) {
-    if (pathname.startsWith(prefix)) return true
-  }
-  return false
+  return isrRegistry.isISRRoute(pathname)
 }
 
 export function generateCacheKey(pathname: string): string {
@@ -110,7 +104,7 @@ class MemoryCacheStore implements ISRCacheStore {
 
 class CloudflareCacheStore implements ISRCacheStore {
   private cache: Cache | null = null
-  private origin = 'https://isr.local'
+  private origin = 'https://isr-v7.local'
 
   private async getCache(): Promise<Cache> {
     if (!this.cache) {

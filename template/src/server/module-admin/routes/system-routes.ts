@@ -9,6 +9,8 @@ import {
   HealthCheckSchema,
   RecentActivitySchema,
   ClearTodosResultSchema,
+  SettingsSchema,
+  UpdateSettingsSchema,
 } from '@shared/modules/admin'
 
 const getStatsRoute = createRoute({
@@ -68,7 +70,58 @@ const clearAllTodosRoute = createRoute({
   },
 })
 
+const getSettingsRoute = createRoute({
+  method: 'get',
+  path: '/admin/settings',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  responses: {
+    200: successResponse(SettingsSchema, 'Get system settings'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+  },
+})
+
+const updateSettingsRoute = createRoute({
+  method: 'put',
+  path: '/admin/settings',
+  tags: ['admin'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
+  request: {
+    body: {
+      content: { 'application/json': { schema: UpdateSettingsSchema } },
+    },
+  },
+  responses: {
+    200: successResponse(SettingsSchema, 'Settings updated'),
+    401: errorResponse('Unauthorized'),
+    403: errorResponse('Forbidden'),
+  },
+})
+
+let settingsState: z.infer<typeof SettingsSchema> = {
+  siteName: 'Biomimic Admin',
+  siteDescription: 'A full-stack admin dashboard',
+  smtpHost: 'smtp.example.com',
+  smtpPort: 587,
+  emailFrom: 'noreply@example.com',
+  sessionTimeout: 30,
+  maxLoginAttempts: 5,
+  emailNotifications: true,
+  pushNotifications: false,
+}
+
 export const systemRoutes = new OpenAPIHono<{ Variables: { authUser: AuthUser } }>()
+  .openapi(getSettingsRoute, async c => {
+    return c.json(success(settingsState), 200)
+  })
+  .openapi(updateSettingsRoute, async c => {
+    const body = c.req.valid('json')
+    settingsState = { ...settingsState, ...body }
+    return c.json(success(settingsState), 200)
+  })
   .openapi(getStatsRoute, async c => {
     const stats = await adminService.getSystemStats()
     return c.json(success(stats), 200)

@@ -33,9 +33,12 @@ describe('Todo Service', () => {
     it('should return empty array when no todos exist', async () => {
       const result = await todoService.listTodos()
 
-      expect(result).toEqual([])
-      expect(Array.isArray(result)).toBe(true)
-      expect(result.length).toBe(0)
+      expect(result.todos).toEqual([])
+      expect(Array.isArray(result.todos)).toBe(true)
+      expect(result.todos.length).toBe(0)
+      expect(result.total).toBe(0)
+      expect(result.page).toBe(1)
+      expect(result.limit).toBe(20)
     })
 
     it('should return all todos ordered by created_at DESC', async () => {
@@ -55,11 +58,11 @@ describe('Todo Service', () => {
 
       const result = await todoService.listTodos()
 
-      expect(result).toHaveLength(2)
-      expect(result[0].title).toBe('Todo 2')
-      expect(result[0].status).toBe('completed')
-      expect(result[1].title).toBe('Todo 1')
-      expect(result[1].status).toBe('pending')
+      expect(result.todos).toHaveLength(2)
+      expect(result.todos[0].title).toBe('Todo 2')
+      expect(result.todos[0].status).toBe('completed')
+      expect(result.todos[1].title).toBe('Todo 1')
+      expect(result.todos[1].status).toBe('pending')
     })
   })
 
@@ -183,7 +186,7 @@ describe('Todo Service', () => {
         expect(checkResult.rows.length).toBe(0)
 
         const allTodos = await todoService.listTodos()
-        expect(allTodos.length).toBe(0)
+        expect(allTodos.total).toBe(0)
       }
     })
 

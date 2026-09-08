@@ -16,7 +16,7 @@ export {
   RoleLabelsSchema,
   PermissionLabelsSchema,
   PermissionInitSchema,
-  type RoleType,
+  type PermissionRoleType,
   type PermissionType,
   type RoleInfo,
   type PermissionInfo,

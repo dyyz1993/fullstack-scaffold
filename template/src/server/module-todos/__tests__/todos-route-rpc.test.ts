@@ -438,13 +438,13 @@ describe('Todo Routes - Business Logic Tests', () => {
       await createMultipleTodos(3)
       const client = createTestClient(undefined, { headers: authHeaders })
 
-      const res = await client.api.todos.$get({ headers: authHeaders })
+      const res = await client.api.todos.$get({ query: {} })
       const data = await res.json()
 
       expect(data.success).toBe(true)
-      if (data.success && Array.isArray(data.data)) {
-        expect(data.data).toHaveLength(3)
-        const timestamps = data.data.map((t: { createdAt: string }) =>
+      if (data.success && 'data' in data) {
+        expect(data.data.todos).toHaveLength(3)
+        const timestamps = data.data.todos.map((t: { createdAt: string }) =>
           new Date(t.createdAt).getTime()
         )
         for (let i = 0; i < timestamps.length - 1; i++) {
@@ -456,12 +456,12 @@ describe('Todo Routes - Business Logic Tests', () => {
     it('should return empty array when no todos exist', async () => {
       const client = createTestClient(undefined, { headers: authHeaders })
 
-      const res = await client.api.todos.$get({ headers: authHeaders })
+      const res = await client.api.todos.$get({ query: {} })
       const data = await res.json()
 
       expect(data.success).toBe(true)
       if (data.success) {
-        expect(data.data).toEqual([])
+        expect(data.data.todos).toEqual([])
       }
     })
   })

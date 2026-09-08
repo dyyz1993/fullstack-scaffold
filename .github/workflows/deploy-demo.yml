@@ -2,7 +2,7 @@ name: Deploy Demo
 
 on:
   push:
-    branches: [master]
+    branches: [master, main, feat/*]
     paths:
       - 'template/**'
       - 'src/**'
@@ -30,10 +30,15 @@ jobs:
         run: sed -i 's/database_id = "".*$/database_id = "c77a8486-8aa0-45c0-a19a-8a0da73408b9"/' wrangler.toml
       - name: Install demo dependencies
         working-directory: /tmp/demo-app
-        run: npm ci
+        # 脚手架本身用 npm install --legacy-peer-deps 装依赖；npm ci 的严格 peer
+        # 校验会拒绝 legacy-peer-deps 产出的锁文件（puppeteer/picomatch 等报 Missing）
+        run: npm install --legacy-peer-deps
       - name: Build for Cloudflare
         working-directory: /tmp/demo-app
         run: npm run build:cloudflare
+      - name: Generate migrations
+        working-directory: /tmp/demo-app
+        run: npm run db:generate
       - name: Apply D1 migrations
         working-directory: /tmp/demo-app
         run: |

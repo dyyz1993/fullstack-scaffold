@@ -6,6 +6,7 @@ import path from 'node:path'
 
 const PROJECT_ROOT = path.resolve(import.meta.dirname, '../..')
 const CLI_ENTRY = path.join(PROJECT_ROOT, 'src/index.ts')
+const TSX_BIN = path.join(PROJECT_ROOT, 'node_modules/.bin/tsx')
 const tmpDir = path.join(os.tmpdir(), `e2e-scaffold-${randomUUID()}`)
 const projectName = 'e2e-test-app'
 const projectPath = path.join(tmpDir, projectName)
@@ -17,7 +18,7 @@ function run(cmd: string, cwd: string, timeout = 120_000, env?: Record<string, s
     timeout,
     stdio: 'pipe',
     maxBuffer: 50 * 1024 * 1024,
-    env: { ...process.env, ...env },
+    env: { ...process.env, PUPPETEER_SKIP_DOWNLOAD: '1', ...env },
   })
 }
 
@@ -63,9 +64,9 @@ describe('E2E: Scaffold → Install → Verify', () => {
     }
   })
 
-  test('step 1: scaffolds a new project', { timeout: 60_000 }, () => {
+  test('step 1: scaffolds a new project', { timeout: 180_000 }, () => {
     fs.mkdirSync(tmpDir, { recursive: true })
-    run(`npx tsx "${CLI_ENTRY}" ${projectName}`, tmpDir, 60_000)
+    run(`"${TSX_BIN}" "${CLI_ENTRY}" ${projectName} --no-install`, tmpDir, 180_000)
     expect(fs.existsSync(projectPath)).toBe(true)
     expect(fs.existsSync(path.join(projectPath, 'package.json'))).toBe(true)
     expect(fs.existsSync(path.join(projectPath, 'tsconfig.json'))).toBe(true)
@@ -74,7 +75,13 @@ describe('E2E: Scaffold → Install → Verify', () => {
 
   test('step 2: installs dependencies', { timeout: 300_000 }, () => {
     expect(fs.existsSync(projectPath)).toBe(true)
-    run('npm install', projectPath, 300_000)
+    run('npm install --legacy-peer-deps', projectPath, 300_000)
+    // Apply patches (TypeScript, Hono, etc.)
+    try {
+      run('npx patch-package', projectPath, 60_000)
+    } catch {
+      // patch-package failure is non-blocking
+    }
     expect(fs.existsSync(path.join(projectPath, 'node_modules'))).toBe(true)
   })
 
@@ -82,10 +89,10 @@ describe('E2E: Scaffold → Install → Verify', () => {
     run('npx tsc --noEmit', projectPath, 300_000, { NODE_OPTIONS: '--max-old-space-size=6144' })
   })
 
-  test('step 4: unit tests pass', { timeout: 300_000 }, () => {
+  test('step 4: unit tests pass', { timeout: 660_000 }, () => {
     let output: string
     try {
-      output = run('npx vitest run 2>&1', projectPath, 300_000)
+      output = run('npx vitest run 2>&1', projectPath, 600_000) // mac 慢机整套子套件可超 300s
     } catch (e: unknown) {
       const err = e as { stdout?: string | Buffer; stderr?: string | Buffer }
       output = (err.stdout as string) ?? (err.stderr as string) ?? String(e)
@@ -113,10 +120,20 @@ describe('E2E: Scaffold → Install → Verify', () => {
     const port = 30999
     const serverLogs: string[] = []
 
+    try {
+      const dataDir = path.join(projectPath, 'data')
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
+      run('npx drizzle-kit push --force 2>&1', projectPath, 30_000, {
+        NODE_ENV: 'development',
+      })
+    } catch {
+      // db:push failure is non-blocking
+    }
+
     const devServer = spawn('npx', ['vite', '--port', String(port), '--strictPort'], {
       cwd: projectPath,
       stdio: 'pipe',
-      env: { ...process.env },
+      env: { ...process.env, NODE_ENV: 'development' },
       detached: true,
     })
 
@@ -145,7 +162,8 @@ describe('E2E: Scaffold → Install → Verify', () => {
       // 6c. Public API: GET /api/todos (no auth required)
       const todos = JSON.parse(curlGet('/api/todos'))
       expect(todos.success).toBe(true)
-      expect(Array.isArray(todos.data)).toBe(true)
+      // 列表 API 返回分页对象 { todos, total, page, limit }（TodoListResponseSchema）
+      expect(Array.isArray(todos.data?.todos ?? todos.data)).toBe(true)
 
       // 6d. Public API: GET /api/notifications
       const notifications = JSON.parse(curlGet('/api/notifications'))

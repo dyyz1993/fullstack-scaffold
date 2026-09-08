@@ -1,1 +1,1 @@
-export { createRPCClient, type AppType } from './client'
+export { createRPCClient, type ApiFacade } from './client'

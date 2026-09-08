@@ -1,4 +1,4 @@
-import { createRoute, z } from '@hono/zod-openapi'
+import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import * as ticketService from '../services/ticket-service'
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
@@ -9,8 +9,9 @@ import {
   TicketSchema,
   CreateTicketSchema,
   UpdateTicketSchema,
-  TicketListSchema,
-  DeleteResultSchema,
+  TicketListResponseSchema,
+  TicketListQuerySchema,
+  TicketDeleteResultSchema,
   ReplyTicketSchema,
 } from '@shared/modules/ticket'
 
@@ -21,13 +22,10 @@ const listRoute = createRoute({
   security: [{ Bearer: [] }],
   middleware: [authMiddleware({ requiredPermissions: [Permission.TICKET_VIEW] })],
   request: {
-    query: z.object({
-      limit: z.coerce.number().int().positive().max(100).default(20),
-      offset: z.coerce.number().int().min(0).default(0),
-    }),
+    query: TicketListQuerySchema,
   },
   responses: {
-    200: successResponse(TicketListSchema, 'List all tickets'),
+    200: successResponse(TicketListResponseSchema, 'List all tickets'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     500: errorResponse('Internal server error'),
@@ -112,7 +110,7 @@ const deleteRoute = createRoute({
     params: TicketSchema.pick({ id: true }),
   },
   responses: {
-    200: successResponse(DeleteResultSchema, 'Ticket deleted'),
+    200: successResponse(TicketDeleteResultSchema, 'Ticket deleted'),
     401: errorResponse('Unauthorized'),
     403: errorResponse('Forbidden'),
     404: errorResponse('Ticket not found'),
@@ -167,9 +165,9 @@ const closeRoute = createRoute({
 
 export const ticketRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
-    const { limit, offset } = c.req.valid('query')
-    const result = await ticketService.getTickets()
-    return c.json(success(result.slice(offset, offset + limit)), 200)
+    const { page, limit } = c.req.valid('query')
+    const result = await ticketService.getTickets({ page, limit })
+    return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
     const { id } = c.req.valid('param')
@@ -208,3 +206,6 @@ export const ticketRoutes = new OpenAPIHono()
     if (!result) throw new NotFoundError('Ticket', id)
     return c.json(success(result), 200)
   })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type TicketsApiType = typeof ticketRoutes

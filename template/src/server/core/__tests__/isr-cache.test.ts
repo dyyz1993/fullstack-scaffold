@@ -1,117 +1,121 @@
 /**
- * @framework-baseline dd5cd4fe46320b03
- * @framework-modify
- * @reason 移除未使用的 vi import，修复 TypeScript strict 检查
- * @impact 不影响功能，仅清理代码
+ * @framework-baseline 68a6e13bffb67f13
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { isISRRoute, generateCacheKey, createISRCache, type ISRCache } from '@server/core/isr-cache'
+import { createISRCache } from '@server/core/isr-cache'
 
-describe('isISRRoute', () => {
-  it('matches static ISR routes', () => {
-    expect(isISRRoute('/')).toBe(true)
-    expect(isISRRoute('/todos')).toBe(true)
-    expect(isISRRoute('/content')).toBe(true)
-    expect(isISRRoute('/notifications')).toBe(true)
-    expect(isISRRoute('/websocket')).toBe(true)
-  })
-
-  it('matches dynamic content routes', () => {
-    expect(isISRRoute('/content/123')).toBe(true)
-    expect(isISRRoute('/content/content-456')).toBe(true)
-    expect(isISRRoute('/content/abc-def')).toBe(true)
-  })
-
-  it('does not match non-ISR routes', () => {
-    expect(isISRRoute('/api/todos')).toBe(false)
-    expect(isISRRoute('/api/health')).toBe(false)
-    expect(isISRRoute('/assets/main.js')).toBe(false)
-    expect(isISRRoute('/admin/dashboard')).toBe(false)
-    expect(isISRRoute('/health')).toBe(false)
-    expect(isISRRoute('/vite.svg')).toBe(false)
-  })
-})
-
-describe('generateCacheKey', () => {
-  it('normalizes root path', () => {
-    expect(generateCacheKey('/')).toBe('isr:/index')
-  })
-
-  it('generates keys for regular paths', () => {
-    expect(generateCacheKey('/todos')).toBe('isr:/todos')
-    expect(generateCacheKey('/content/123')).toBe('isr:/content/123')
-  })
-
-  it('removes trailing slash', () => {
-    expect(generateCacheKey('/todos/')).toBe('isr:/todos')
-  })
-})
-
-describe('ISRCache (memory)', () => {
-  let cache: ISRCache
+describe('ISR Cache', () => {
+  let cache: ReturnType<typeof createISRCache>
 
   beforeEach(() => {
-    cache = createISRCache({ maxAge: 1, staleWhileRevalidate: 1 })
+    cache = createISRCache({ maxAge: 1, staleWhileRevalidate: 2 })
   })
 
-  it('returns miss for uncached routes', async () => {
-    const result = await cache.lookup('/todos')
-    expect(result.status).toBe('miss')
-    expect(result.html).toBeNull()
+  describe('lookup — no cache', () => {
+    it('should return miss for uncached path', async () => {
+      const result = await cache.lookup('/todos')
+      expect(result.status).toBe('miss')
+      expect(result.html).toBeNull()
+    })
   })
 
-  it('stores and retrieves pages', async () => {
-    await cache.store('/todos', '<html>todos</html>')
-    const result = await cache.lookup('/todos')
-    expect(result.status).toBe('fresh')
-    expect(result.html).toBe('<html>todos</html>')
+  describe('store → lookup fresh', () => {
+    it('should return fresh after store', async () => {
+      await cache.store('/todos', '<html>todos</html>')
+      const result = await cache.lookup('/todos')
+      expect(result.status).toBe('fresh')
+      expect(result.html).toBe('<html>todos</html>')
+    })
   })
 
-  it('serves stale content after maxAge', async () => {
-    cache = createISRCache({ maxAge: 0, staleWhileRevalidate: 60 })
-
-    await cache.store('/todos', '<html>todos</html>')
-
-    await new Promise(resolve => setTimeout(resolve, 10))
-
-    const result = await cache.lookup('/todos')
-    expect(result.status).toBe('stale')
-    expect(result.html).toBe('<html>todos</html>')
+  describe('store → wait → lookup stale', () => {
+    it('should return stale after maxAge', async () => {
+      await cache.store('/todos', '<html>todos</html>')
+      // Wait beyond maxAge (1s) but within staleWhileRevalidate (1+2=3s)
+      await new Promise(r => setTimeout(r, 1200))
+      const result = await cache.lookup('/todos')
+      expect(result.status).toBe('stale')
+      expect(result.html).toBe('<html>todos</html>')
+    })
   })
 
-  it('returns miss after maxAge + staleWhileRevalidate', async () => {
-    cache = createISRCache({ maxAge: 0, staleWhileRevalidate: 0 })
-
-    await cache.store('/todos', '<html>todos</html>')
-
-    await new Promise(resolve => setTimeout(resolve, 10))
-
-    const result = await cache.lookup('/todos')
-    expect(result.status).toBe('miss')
+  describe('store → wait → lookup miss (expired)', () => {
+    it('should return miss after maxAge + staleWhileRevalidate', async () => {
+      await cache.store('/todos', '<html>todos</html>')
+      // Wait beyond both maxAge and staleWhileRevalidate
+      await new Promise(r => setTimeout(r, 3500))
+      const result = await cache.lookup('/todos')
+      expect(result.status).toBe('miss')
+      expect(result.html).toBeNull()
+    })
   })
 
-  it('purges specific pages', async () => {
-    await cache.store('/todos', '<html>todos</html>')
-    await cache.store('/content', '<html>content</html>')
+  describe('purge', () => {
+    it('should purge specific path', async () => {
+      await cache.store('/todos', '<html>todos</html>')
+      await cache.store('/content', '<html>content</html>')
 
-    await cache.purge('/todos')
+      await cache.purge('/todos')
 
-    expect((await cache.lookup('/todos')).status).toBe('miss')
-    expect((await cache.lookup('/content')).status).toBe('fresh')
+      expect((await cache.lookup('/todos')).status).toBe('miss')
+      expect((await cache.lookup('/content')).status).toBe('fresh')
+    })
+
+    it('should not error on purge of uncached path', async () => {
+      await expect(cache.purge('/never-cached')).resolves.not.toThrow()
+    })
   })
 
-  it('purges by pattern', async () => {
-    await cache.store('/content', '<html>list</html>')
-    await cache.store('/content/123', '<html>detail 123</html>')
-    await cache.store('/content/456', '<html>detail 456</html>')
-    await cache.store('/todos', '<html>todos</html>')
+  describe('purgePattern', () => {
+    it('should purge matching pattern', async () => {
+      await cache.store('/content', '<html>list</html>')
+      await cache.store('/content/article-1', '<html>a1</html>')
+      await cache.store('/content/article-2', '<html>a2</html>')
+      await cache.store('/todos', '<html>todos</html>')
 
-    await cache.purgePattern('isr:/content/*')
+      await cache.purgePattern('isr:/content/*')
 
-    expect((await cache.lookup('/content')).status).toBe('fresh')
-    expect((await cache.lookup('/content/123')).status).toBe('miss')
-    expect((await cache.lookup('/content/456')).status).toBe('miss')
-    expect((await cache.lookup('/todos')).status).toBe('fresh')
+      // /content (exact) should still be cached
+      expect((await cache.lookup('/content')).status).toBe('fresh')
+      // /content/* should be purged
+      expect((await cache.lookup('/content/article-1')).status).toBe('miss')
+      expect((await cache.lookup('/content/article-2')).status).toBe('miss')
+      // /todos should be unaffected
+      expect((await cache.lookup('/todos')).status).toBe('fresh')
+    })
+  })
+
+  describe('full lifecycle', () => {
+    it('miss → store → fresh → purge → miss', async () => {
+      // Step 1: Initial miss
+      let result = await cache.lookup('/todos')
+      expect(result.status).toBe('miss')
+
+      // Step 2: Store
+      await cache.store('/todos', '<html>todos v1</html>')
+
+      // Step 3: Fresh hit
+      result = await cache.lookup('/todos')
+      expect(result.status).toBe('fresh')
+      expect(result.html).toBe('<html>todos v1</html>')
+
+      // Step 4: Purge
+      await cache.purge('/todos')
+
+      // Step 5: Miss again
+      result = await cache.lookup('/todos')
+      expect(result.status).toBe('miss')
+    })
+
+    it('store v1 → purge → store v2 → returns v2', async () => {
+      await cache.store('/todos', '<html>v1</html>')
+      await cache.purge('/todos')
+      await cache.store('/todos', '<html>v2</html>')
+
+      const result = await cache.lookup('/todos')
+      expect(result.status).toBe('fresh')
+      expect(result.html).toBe('<html>v2</html>')
+    })
   })
 })

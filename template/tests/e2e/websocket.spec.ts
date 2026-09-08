@@ -7,7 +7,7 @@
  * on a random available port.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 function getBaseUrl(): string {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3010'
@@ -15,53 +15,7 @@ function getBaseUrl(): string {
 
 const persistenceTestInProgress = false
 
-async function waitForServerReady(baseUrl: string, timeout = 30000): Promise<void> {
-  const startTime = Date.now()
-  while (Date.now() - startTime < timeout) {
-    try {
-      const response = await fetch(`${baseUrl}/health`)
-      if (response.ok) return
-    } catch {
-      // Server not ready yet
-    }
-    await new Promise(resolve => setTimeout(resolve, 500))
-  }
-  throw new Error(`Server not ready after ${timeout}ms`)
-}
-
-async function connectWithRetry(page: Page, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const connectBtn = page.locator('[data-testid="connect-ws-button"]')
-    if (await connectBtn.isEnabled({ timeout: 2000 }).catch(() => false)) {
-      await connectBtn.click()
-    }
-
-    try {
-      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
-      return
-    } catch {
-      const disconnectBtn = page.locator('[data-testid="disconnect-ws-button"]')
-      if (
-        (await disconnectBtn.isVisible({ timeout: 1000 }).catch(() => false)) &&
-        (await disconnectBtn.isEnabled({ timeout: 500 }).catch(() => false))
-      ) {
-        await disconnectBtn.click()
-        await page.waitForTimeout(1000)
-      } else {
-        await page.waitForTimeout(1000)
-      }
-    }
-  }
-  await page.locator('[data-testid="connect-ws-button"]').click()
-  await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 15000 })
-}
-
-// Skip WebSocket tests in CI - Vite dev server WS proxy causes browser crash
-test.skip(!!process.env.CI, 'WebSocket tests crash browser in CI - Vite WS proxy unreliable')
-
 test.beforeEach(async ({ page }) => {
-  await waitForServerReady(getBaseUrl())
-
   if (!persistenceTestInProgress) {
     try {
       const response = await page.request.post(`${getBaseUrl()}/api/__test__/cleanup`)
@@ -115,22 +69,25 @@ test.describe('WebSocket App', () => {
 
   test.describe('WebSocket Connection', () => {
     test('should connect to WebSocket', async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
       await expect(page.locator('[data-testid="ws-status-open"]')).toBeVisible()
     })
 
     test('should disconnect from WebSocket', async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
 
       await page.click('[data-testid="disconnect-ws-button"]')
-      await page.waitForSelector('[data-testid="ws-status-closed"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="ws-status-closed"]', { timeout: 10000 })
       await expect(page.locator('[data-testid="ws-status-closed"]')).toBeVisible()
     })
   })
 
   test.describe('Send Messages', () => {
     test.beforeEach(async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
     })
 
     test('should send echo message', async ({ page }) => {
@@ -193,7 +150,8 @@ test.describe('WebSocket App', () => {
 
   test.describe('Clear Messages', () => {
     test.beforeEach(async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
 
       await page.fill('[data-testid="ws-message-input"]', 'Test message')
       await page.selectOption('[data-testid="ws-message-type-select"]', 'echo')
@@ -210,7 +168,8 @@ test.describe('WebSocket App', () => {
 
   test.describe('Multiple Messages', () => {
     test.beforeEach(async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
     })
 
     test('should display multiple messages', async ({ page }) => {
@@ -239,15 +198,17 @@ test.describe('WebSocket App', () => {
 
   test.describe('WebSocket Status', () => {
     test('should show open status when connected', async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
       await expect(page.locator('[data-testid="ws-status-open"]')).toBeVisible()
     })
 
     test('should show closed status when disconnected', async ({ page }) => {
-      await connectWithRetry(page)
+      await page.click('[data-testid="connect-ws-button"]')
+      await page.waitForSelector('[data-testid="ws-status-open"]', { timeout: 10000 })
 
       await page.click('[data-testid="disconnect-ws-button"]')
-      await page.waitForSelector('[data-testid="ws-status-closed"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="ws-status-closed"]', { timeout: 10000 })
       await expect(page.locator('[data-testid="ws-status-closed"]')).toBeVisible()
     })
   })

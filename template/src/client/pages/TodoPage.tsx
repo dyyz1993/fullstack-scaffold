@@ -112,7 +112,10 @@ export const TodoPage: React.FC = () => {
         <title>Todo List - Biomimic App</title>
         <meta name="description" content="Manage your todo items with full CRUD operations" />
         <meta property="og:title" content="Todo List - Biomimic App" />
-        <meta property="og:description" content="Manage your todo items with full CRUD operations" />
+        <meta
+          property="og:description"
+          content="Manage your todo items with full CRUD operations"
+        />
       </Helmet>
       <div className="mb-8">
         <h1
@@ -275,6 +278,11 @@ export const TodoPage: React.FC = () => {
                     </select>
                     <span className="text-xs text-gray-400">
                       {new Date(todo.createdAt).toLocaleString()}
+                      {todo.updatedAt && todo.updatedAt !== todo.createdAt && (
+                        <span className="ml-2">
+                          · Updated {new Date(todo.updatedAt).toLocaleString()}
+                        </span>
+                      )}
                     </span>
                   </div>
                 </div>

@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+logs/
+*.log
+
+# Test artifacts
+playwright-artifacts/
+playwright-report/
+test-results/
+coverage/
+
+# Uploads (user-generated)
+uploads/
+
+# Data (local DB)
+data/
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local

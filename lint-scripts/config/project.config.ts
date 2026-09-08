@@ -16,6 +16,9 @@ import type {
   TestQualityConfig,
   ClientTestsConfig,
   MdRefsConfig,
+  SchemaUniquenessConfig,
+  ModulePublicApiConfig,
+  ConfigSyncConfig,
 } from '../validators/index.js'
 
 // ============================================
@@ -211,7 +214,16 @@ export const directoryStructureConfig: DirectoryStructureConfig = {
       suggestion: 'Move to scripts/ directory at project root',
     },
   ],
-  ignoreDirs: ['node_modules', 'dist', '.git', 'build', 'coverage', 'drizzle', 'patches'],
+  ignoreDirs: [
+    'node_modules',
+    'dist',
+    '.git',
+    'build',
+    'coverage',
+    'drizzle',
+    'patches',
+    '.claude',
+  ],
   allowedRootFiles: [
     '*.config.ts',
     '*.config.js',
@@ -307,6 +319,7 @@ export const clientTestsConfig: ClientTestsConfig = {
     'stores',
     'hooks',
     'services',
+    '.claude',
   ],
   checkDirs: ['src/client'],
 }
@@ -339,6 +352,31 @@ export const consoleLogConfig: ConsoleLogConfig = {
 }
 
 // ============================================
+// Schema 命名唯一性验证配置
+// ============================================
+export const schemaUniquenessConfig: SchemaUniquenessConfig = {
+  modulesDir: 'src/shared/modules',
+  checkDirs: ['src/shared/modules'],
+  ignoreDirs: ['node_modules', 'dist'],
+}
+
+// ============================================
+// 模块公共 API 验证配置
+// ============================================
+export const modulePublicApiConfig: ModulePublicApiConfig = {
+  serverDir: 'src/server',
+  checkDirs: ['src/server'],
+}
+
+export const configSyncConfig: ConfigSyncConfig = {
+  rootDir: '.',
+  templateDir: 'template',
+  checkPairs: [
+    { root: 'eslint-rules', template: 'template/eslint-rules', label: 'eslint-rules' },
+  ],
+}
+
+// ============================================
 // 统一导出
 // ============================================
 export const projectConfig = {
@@ -353,6 +391,9 @@ export const projectConfig = {
   clientTests: clientTestsConfig,
   mdRefs: mdRefsConfig,
   consoleLog: consoleLogConfig,
+  schemaUniqueness: schemaUniquenessConfig,
+  modulePublicApi: modulePublicApiConfig,
+  configSync: configSyncConfig,
 } as const
 
 export default projectConfig

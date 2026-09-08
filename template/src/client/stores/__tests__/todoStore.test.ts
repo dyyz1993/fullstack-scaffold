@@ -117,7 +117,10 @@ describe('Todo Store', () => {
   describe('fetchTodos', () => {
     it('should fetch todos successfully with array response', async () => {
       const todos = [createMockTodo({ id: 1 }), createMockTodo({ id: 2 })]
-      mockJson.mockResolvedValue({ success: true, data: todos })
+      mockJson.mockResolvedValue({
+        success: true,
+        data: { todos, total: todos.length, page: 1, limit: 20 },
+      })
 
       await useTodoStore.getState().fetchTodos()
 
@@ -128,7 +131,10 @@ describe('Todo Store', () => {
     })
 
     it('should handle empty array response', async () => {
-      mockJson.mockResolvedValue({ success: true, data: [] })
+      mockJson.mockResolvedValue({
+        success: true,
+        data: { todos: [], total: 0, page: 1, limit: 20 },
+      })
 
       await useTodoStore.getState().fetchTodos()
 
@@ -176,7 +182,10 @@ describe('Todo Store', () => {
       const fetchPromise = useTodoStore.getState().fetchTodos()
       expect(useTodoStore.getState().loading).toBe(true)
 
-      resolvePromise({ json: () => Promise.resolve({ success: true, data: [] }) })
+      resolvePromise({
+        json: () =>
+          Promise.resolve({ success: true, data: { todos: [], total: 0, page: 1, limit: 20 } }),
+      })
       await fetchPromise
 
       expect(useTodoStore.getState().loading).toBe(false)

@@ -41,7 +41,7 @@ function runCli(
     const stdout = execSync(`"${TSX_BIN}" "${CLI_ENTRY}" ${args.join(' ')}`, {
       cwd: cwd ?? os.tmpdir(),
       encoding: 'utf-8',
-      timeout: 60_000,
+      timeout: 180_000, // 并发 I/O 下脚手架偶发超 60s（copy ~2000 文件）
       stdio: ['pipe', 'pipe', 'pipe'],
     })
     return { stdout, stderr: '', status: 0 }
@@ -86,6 +86,17 @@ describe('Scaffold Presets', () => {
       expect(fs.existsSync(path.join(projectDir, 'package.json'))).toBe(true)
       expect(fs.existsSync(path.join(projectDir, 'src'))).toBe(true)
       expect(fs.existsSync(path.join(projectDir, 'tsconfig.json'))).toBe(true)
+    })
+
+    it('should ship agent workspace hooks (.zcode) and sync script', () => {
+      // 工作区钩子随模板生成：ZCode 打开即生效；hooks:sync 支持同步到全局
+      expect(fs.existsSync(path.join(projectDir, '.zcode/config.json'))).toBe(true)
+      expect(fs.existsSync(path.join(projectDir, '.zcode/hooks/no-no-verify.mjs'))).toBe(true)
+      const cfg = JSON.parse(fs.readFileSync(path.join(projectDir, '.zcode/config.json'), 'utf-8'))
+      expect(cfg.hooks.enabled).toBe(true)
+      const pkg = readPackageJson(projectDir)
+      const scripts = pkg.scripts as Record<string, string> | undefined
+      expect(scripts?.['hooks:sync']).toBeDefined()
     })
 
     it('should have only module-todos directory', () => {
@@ -142,10 +153,15 @@ describe('Scaffold Presets', () => {
       expect(content).not.toMatch(/admin/)
     })
 
-    it('should have client App.tsx with config-driven routing', () => {
-      const content = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
-      expect(content).toMatch(/PresetProvider/)
-      expect(content).toMatch(/getPresetUIConfig/)
+    it('should have config-driven routing (PresetProvider moved to AppRoutes)', () => {
+      const appContent = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
+      expect(appContent).toMatch(/AppRoutes/)
+      const routesContent = fs.readFileSync(
+        path.join(projectDir, 'src/client/AppRoutes.tsx'),
+        'utf-8'
+      )
+      expect(routesContent).toMatch(/PresetProvider/)
+      expect(routesContent).toMatch(/getPresetUIConfig/)
     })
 
     it('should not have excluded client stores', () => {
@@ -224,10 +240,15 @@ describe('Scaffold Presets', () => {
       expect(clientRoutes?.length).toBeGreaterThanOrEqual(4)
     })
 
-    it('should have client App.tsx with config-driven routing', () => {
-      const content = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
-      expect(content).toMatch(/PresetProvider/)
-      expect(content).toMatch(/getPresetUIConfig/)
+    it('should have config-driven routing (PresetProvider moved to AppRoutes)', () => {
+      const appContent = fs.readFileSync(path.join(projectDir, 'src/client/App.tsx'), 'utf-8')
+      expect(appContent).toMatch(/AppRoutes/)
+      const routesContent = fs.readFileSync(
+        path.join(projectDir, 'src/client/AppRoutes.tsx'),
+        'utf-8'
+      )
+      expect(routesContent).toMatch(/PresetProvider/)
+      expect(routesContent).toMatch(/getPresetUIConfig/)
     })
 
     it('should have all client stores', () => {

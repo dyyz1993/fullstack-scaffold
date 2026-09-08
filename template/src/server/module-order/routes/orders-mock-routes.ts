@@ -65,3 +65,6 @@ const getOrdersRoute = createRoute({
 export const ordersMockRoutes = new OpenAPIHono().openapi(getOrdersRoute, async c => {
   return c.json({ success: true as const, data: MOCK_ORDERS })
 })
+
+/** 模块级窄类型（深度 = 1 个模块）— 供 rpc-surface 门面使用，禁止再向上合并 */
+export type OrdersMockApiType = typeof ordersMockRoutes

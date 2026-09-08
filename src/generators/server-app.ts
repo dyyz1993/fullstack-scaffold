@@ -1,10 +1,11 @@
 import type { ResolvedPreset } from './template-generator'
+import { getStandaloneRoutes } from './route-registry'
 
 export function generateServerApp(resolved: ResolvedPreset): string {
   const useRealtime = resolved.hasSSE || resolved.hasWebSocket
   const useAuditLog = resolved.hasPermission
   const useCaptcha = resolved.hasCaptcha
-  const useFileRoutes = resolved.modules.has('file')
+  const standaloneRoutes = getStandaloneRoutes(resolved)
 
   const imports: string[] = [
     `import { OpenAPIHono } from '@hono/zod-openapi'`,
@@ -33,8 +34,22 @@ export function generateServerApp(resolved: ResolvedPreset): string {
     `import { adminApiRoutes, clientApiRoutes } from './route-registry'`
   )
 
-  if (useFileRoutes) {
-    imports.push(`import { fileRoutes } from './module-file/routes/file-routes'`)
+  // Import standalone routes from their source modules (already imported via route-registry)
+  // But standalone routes are NOT part of the aggregated clientApiRoutes/adminApiRoutes,
+  // so we import them directly for mounting at their custom paths.
+  const standaloneImportSet = new Set<string>()
+  for (const [name, manifest] of resolved.modules) {
+    if (manifest.routes.standalone) {
+      const { importPath, exportName } = manifest.routes.standalone
+      const moduleDir = `module-${name}`
+      const relPath = importPath.replace(/^\.\//, '')
+      // Check if this import is already in the route-registry (which re-exports aren't — we import directly)
+      const stmt = `import { ${exportName} } from './${moduleDir}/${relPath}'`
+      if (!standaloneImportSet.has(stmt)) {
+        standaloneImportSet.add(stmt)
+        imports.push(stmt)
+      }
+    }
   }
 
   const middlewareChain: string[] = [
@@ -57,8 +72,9 @@ export function generateServerApp(resolved: ResolvedPreset): string {
 
   const routes: string[] = [`.route('/', clientApiRoutes)`, `.route('/', adminApiRoutes)`]
 
-  if (useFileRoutes) {
-    routes.push(`.route('/files', fileRoutes)`)
+  // Dynamically mount standalone routes at their custom paths
+  for (const sr of standaloneRoutes) {
+    routes.push(`.route('${sr.mountPath}', ${sr.localName})`)
   }
 
   const indent = '    '
@@ -80,7 +96,10 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ status: 'ok', timestamp: new Date().toISOString(), db: 'not configured' })
       }
     })
-    .post('/api/__test__/cleanup', async c => {
+  // 测试辅助端点：仅开发/测试环境注册（Cloudflare 构建时 NODE_ENV 被替换为
+  // "production"，此端点不会出现在生产 bundle 中）
+  if (process.env.NODE_ENV !== 'production') {
+    app.post('/api/__test__/cleanup', async c => {
       try {
         const { cleanupTestDatabase } = await import('./db/test-setup')
         await cleanupTestDatabase()
@@ -90,6 +109,7 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
         return c.json({ success: false as const, message: 'Failed to cleanup database' }, 500)
       }
     })
+  }
 
   autoRegisterRealtime(app as unknown as Parameters<typeof autoRegisterRealtime>[0])
 
@@ -136,8 +156,5 @@ export function createApp<T extends AppBindings = AppBindings>(_options: CreateA
 
   return app
 }
-export type AdminApiType = typeof adminApiRoutes
-export type ClientApiType = typeof clientApiRoutes
-export type AppType = ReturnType<typeof createApp>
 `
 }

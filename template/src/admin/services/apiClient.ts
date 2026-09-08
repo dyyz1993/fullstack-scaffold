@@ -5,12 +5,11 @@
  * @impact loading 控制现在通过 api().withLoading() 链式调用实现
  */
 
-import { hc } from 'hono/client'
 import { WSClientImpl } from '@shared/core/ws-client'
 import { SSEClientImpl } from '@shared/core/sse-client'
 import { createRequestInterceptor } from './requestInterceptor'
 import { useCaptchaStore } from '../stores/captchaStore'
-import type { AdminApiType } from '@server/index'
+import { createApiFacade } from '@server/rpc-surface'
 
 const baseUrl = import.meta.env.API_BASE_URL || window.location.origin
 
@@ -50,7 +49,7 @@ function createCustomFetch() {
   })
 }
 
-export const apiClient = hc<AdminApiType>(baseUrl, {
+export const apiClient = createApiFacade(baseUrl, {
   fetch: createCustomFetch() as typeof fetch,
   webSocket: url => new WSClientImpl(url) as unknown as WebSocket,
   sse: url => {

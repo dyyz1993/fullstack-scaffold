@@ -154,8 +154,13 @@ export async function getTickets(filters?: {
   status?: TicketStatus
   priority?: TicketPriority
   category?: TicketCategory
-}): Promise<Ticket[]> {
+  page?: number
+  limit?: number
+}): Promise<{ tickets: Ticket[]; total: number; page: number; limit: number }> {
   const db = await getDb()
+  const page = filters?.page ?? 1
+  const limit = filters?.limit ?? 20
+  const offset = (page - 1) * limit
   const conditions = []
 
   if (filters?.status) {
@@ -169,7 +174,7 @@ export async function getTickets(filters?: {
   }
 
   const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
-  const rows =
+  const allRows =
     conditions.length > 0
       ? await db
           .select()
@@ -177,14 +182,20 @@ export async function getTickets(filters?: {
           .where(and(...conditions))
       : await db.select().from(tickets)
 
-  const sorted = rows.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+  const sorted = allRows.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+  const rows = sorted.slice(offset, offset + limit)
 
   const result: Ticket[] = []
-  for (const row of sorted) {
+  for (const row of rows) {
     result.push(await loadTicketWithReplies(row))
   }
 
-  return result
+  return {
+    tickets: result,
+    total: sorted.length,
+    page,
+    limit,
+  }
 }
 
 export async function getTicketById(id: string): Promise<Ticket | null> {

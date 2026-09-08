@@ -1,6 +1,6 @@
 import { eq, desc } from 'drizzle-orm'
 import type { Plugin } from '@shared/schemas'
-import { getDb, getRawClient } from '@server/db'
+import { getDb } from '@server/db'
 import { plugins } from '@server/db/schema'
 import { NotFoundError } from '@server/utils/app-error'
 import { mapRow } from './plugin-service'
@@ -27,14 +27,8 @@ export async function listPending(
     .limit(limit)
     .offset(offset)
 
-  const client = await getRawClient()
-  let total = 0
-  if (client && 'execute' in client) {
-    const result = await client.execute(
-      "SELECT COUNT(*) as count FROM plugins WHERE status = 'pending'"
-    )
-    total = (result.rows[0] as unknown as { count: number })?.count ?? 0
-  }
+  const allPending = await db.select().from(plugins).where(eq(plugins.status, 'pending'))
+  const total = allPending.length
 
   return { plugins: rows.map(mapRow), total, page, limit }
 }
@@ -120,15 +114,13 @@ export async function listAllPlugins(
         .offset(offset)
     : await db.select().from(plugins).orderBy(desc(plugins.createdAt)).limit(limit).offset(offset)
 
-  const client = await getRawClient()
-  let total = 0
-  if (client && 'execute' in client) {
-    const query = options.status
-      ? `SELECT COUNT(*) as count FROM plugins WHERE status = '${options.status}'`
-      : 'SELECT COUNT(*) as count FROM plugins'
-    const result = await client.execute(query)
-    total = (result.rows[0] as unknown as { count: number })?.count ?? 0
-  }
+  const allRows = options.status
+    ? await db
+        .select()
+        .from(plugins)
+        .where(eq(plugins.status, options.status as 'pending' | 'approved' | 'rejected'))
+    : await db.select().from(plugins)
+  const total = allRows.length
 
   return { plugins: rows.map(mapRow), total, page, limit }
 }
