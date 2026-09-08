@@ -16,8 +16,15 @@ import {
 import { createISRCache } from '@server/core/isr-cache'
 
 // Side-effect: 注册 ISR 路由到全局 registry（purgeAllPages 遍历它）。
-// content 模块在部分 preset 中不存在 —— 可选导入，缺省时跳过
-import '@server/module-todos/isr'
+// todos/content 在部分 preset 中不存在 —— 均为可选导入
+const todosIsrModule = '@server/module-todos/isr'
+let hasTodosModule = false
+try {
+  await import(/* @vite-ignore */ todosIsrModule)
+  hasTodosModule = true
+} catch {
+  // preset 无 todos 模块（forum/xbrowser 等）
+}
 const contentIsrModule = '@server/module-content/isr'
 let hasContentModule = false
 try {
@@ -75,8 +82,11 @@ describe('isr-invalidation', () => {
 
       await purgeAllPages()
 
-      expect((await cache.lookup('/')).status).toBe('miss')
-      expect((await cache.lookup('/todos')).status).toBe('miss')
+      if (hasTodosModule) {
+        // '/' 与 '/todos' 路由由 todos 模块注册，仅含 todos 的 preset 可断言
+        expect((await cache.lookup('/')).status).toBe('miss')
+        expect((await cache.lookup('/todos')).status).toBe('miss')
+      }
       if (hasContentModule) {
         // content 相关页仅在 preset 含 content 模块时被注册、才可被清理
         expect((await cache.lookup('/content')).status).toBe('miss')
