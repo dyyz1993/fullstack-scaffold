@@ -42,7 +42,7 @@ jobs:
           [ -f /root/env-backup/todo-app.env ] && cp /root/env-backup/todo-app.env /root/todo-app/.env || true
           cd /root/todo-app && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/todo-app && npm run db:push 2>&1 | tail -2 || true
-          cd /root/todo-app && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3011 > /root/todo-app/vite.log 2>&1 &
+          cd /root/todo-app && npm run build 2>&1 | tail -2 && PORT=3011 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/todo-app/app.log 2>&1 &
 
       - name: Deploy minimal
         if: contains(inputs.presets, 'minimal')
@@ -52,7 +52,7 @@ jobs:
           [ -f /root/env-backup/minimal.env ] && cp /root/env-backup/minimal.env /root/minimal/.env || true
           cd /root/minimal && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/minimal && npm run db:push 2>&1 | tail -2 || true
-          cd /root/minimal && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3013 > /root/minimal/vite.log 2>&1 &
+          cd /root/minimal && npm run build 2>&1 | tail -2 && PORT=3013 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/minimal/app.log 2>&1 &
 
       - name: Deploy ecommerce
         if: contains(inputs.presets, 'ecommerce')
@@ -62,7 +62,7 @@ jobs:
           [ -f /root/env-backup/shop.env ] && cp /root/env-backup/shop.env /root/shop/.env || true
           cd /root/shop && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/shop && npm run db:push 2>&1 | tail -2 || true
-          cd /root/shop && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3014 > /root/shop/vite.log 2>&1 &
+          cd /root/shop && npm run build 2>&1 | tail -2 && PORT=3014 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/shop/app.log 2>&1 &
 
       - name: Deploy xbrowser-marketplace
         if: contains(inputs.presets, 'xbrowser-marketplace')
@@ -72,7 +72,7 @@ jobs:
           [ -f /root/env-backup/plugin.env ] && cp /root/env-backup/plugin.env /root/plugin/.env || true
           cd /root/plugin && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/plugin && npm run db:push 2>&1 | tail -2 || true
-          cd /root/plugin && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3015 > /root/plugin/vite.log 2>&1 &
+          cd /root/plugin && npm run build 2>&1 | tail -2 && PORT=3015 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/plugin/app.log 2>&1 &
 
       - name: Deploy fullstack-admin
         if: contains(inputs.presets, 'fullstack-admin')
@@ -82,7 +82,7 @@ jobs:
           [ -f /root/env-backup/fullstack-admin.env ] && cp /root/env-backup/fullstack-admin.env /root/fullstack-admin/.env || true
           cd /root/fullstack-admin && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/fullstack-admin && npm run db:push 2>&1 | tail -2 || true
-          cd /root/fullstack-admin && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3016 > /root/fullstack-admin/vite.log 2>&1 &
+          cd /root/fullstack-admin && npm run build 2>&1 | tail -2 && PORT=3016 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/fullstack-admin/app.log 2>&1 &
 
       - name: Deploy forum
         if: contains(inputs.presets, 'forum')
@@ -92,7 +92,7 @@ jobs:
           [ -f /root/env-backup/forum.env ] && cp /root/env-backup/forum.env /root/forum/.env || true
           cd /root/forum && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/forum && npm run db:push 2>&1 | tail -2 || true
-          cd /root/forum && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3018 > /root/forum/vite.log 2>&1 &
+          cd /root/forum && npm run build 2>&1 | tail -2 && PORT=3018 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/forum/app.log 2>&1 &
 
       - name: Deploy saas
         if: contains(inputs.presets, 'saas')
@@ -102,7 +102,7 @@ jobs:
           [ -f /root/env-backup/saas.env ] && cp /root/env-backup/saas.env /root/saas/.env || true
           cd /root/saas && npm install --legacy-peer-deps 2>&1 | tail -2 && npx patch-package 2>&1 | tail -2
           cd /root/saas && npm run db:push 2>&1 | tail -2 || true
-          cd /root/saas && rm -rf node_modules/.vite && nohup npx vite --host 0.0.0.0 --port 3020 > /root/saas/vite.log 2>&1 &
+          cd /root/saas && npm run build 2>&1 | tail -2 && PORT=3020 NODE_ENV=production ENABLE_DEV_TOKENS=true nohup npm start > /root/saas/app.log 2>&1 &
 
       - name: Wait for services to start
         run: sleep 15
