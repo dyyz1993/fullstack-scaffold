@@ -357,7 +357,6 @@ class ProjectAnalyzer {
 ## 📖 相关文档
 
 - [使用指南](./DEV_CONTEXT_GUIDE.md) - 详细使用说明
-- [项目架构](./DESIGN.md) - 架构设计文档
 - [开发规范](./.claude/rules/) - 开发规范文档
 
 ---

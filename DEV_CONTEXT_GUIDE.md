@@ -343,7 +343,6 @@ AI：好的，我了解了项目结构。根据你的需求，我将帮你实现
 
 ## 📖 相关文档
 
-- [项目架构文档](./DESIGN.md)
 - [开发规范](./.claude/rules/)
 - [测试指南](./.claude/rules/60-testing-standards.md)
 

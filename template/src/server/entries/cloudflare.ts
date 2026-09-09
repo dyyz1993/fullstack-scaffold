@@ -135,17 +135,30 @@ export default {
   },
 }
 
-async function regeneratePage(
+// 单飞：同 isolate 内并发 stale 请求共享同一次重建，防缓存击穿
+const inflightRevalidations = new Map<string, Promise<void>>()
+
+function regeneratePage(
   pathname: string,
   env: CloudflareBindings,
   request: Request
 ): Promise<void> {
-  try {
-    const html = await renderISRForRoute(pathname, env, request)
-    await isrCache.store(pathname, html)
-  } catch (error) {
-    console.error('ISR regeneration failed:', error)
-  }
+  const existing = inflightRevalidations.get(pathname)
+  if (existing) return existing
+
+  const task = (async () => {
+    try {
+      const html = await renderISRForRoute(pathname, env, request)
+      await isrCache.store(pathname, html)
+    } catch (error) {
+      console.error('ISR regeneration failed:', error)
+    } finally {
+      inflightRevalidations.delete(pathname)
+    }
+  })()
+
+  inflightRevalidations.set(pathname, task)
+  return task
 }
 
 async function renderISRForRoute(

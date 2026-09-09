@@ -130,6 +130,33 @@ class CloudflareCacheStore implements ISRCacheStore {
     return { html, createdAt, revalidateAt }
   }
 
+  // Cache API 没有 list()：用专用索引键记录所有已缓存 pathname（JSON 数组），
+  // purgePattern 据此清剿。跨 isolate 各自记账，最终一致（各自清理各自的键，
+  // 键相同即覆盖，无重复副作用）。
+  private static readonly INDEX_KEY = 'isr:__index__'
+
+  private async readIndex(): Promise<string[]> {
+    const cache = await this.getCache()
+    const res = await cache.match(this.toUrl(CloudflareCacheStore.INDEX_KEY))
+    if (!res) return []
+    try {
+      const parsed = JSON.parse(await res.text())
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+
+  private async writeIndex(keys: string[]): Promise<void> {
+    const cache = await this.getCache()
+    // 索引不必常驻新鲜——purge 类操作低频，短 TTL 控制体积
+    const body = JSON.stringify([...new Set(keys)])
+    await cache.put(
+      this.toUrl(CloudflareCacheStore.INDEX_KEY),
+      new Response(body, { headers: { 'Content-Type': 'application/json' } })
+    )
+  }
+
   async set(key: string, html: string, options: Required<ISRCacheOptions>): Promise<void> {
     const cache = await this.getCache()
     const url = this.toUrl(key)
@@ -147,26 +174,48 @@ class CloudflareCacheStore implements ISRCacheStore {
     })
 
     await cache.put(url, response)
+
+    const index = await this.readIndex()
+    if (!index.includes(key)) {
+      index.push(key)
+      await this.writeIndex(index)
+    }
   }
 
   async purge(key: string): Promise<void> {
     const cache = await this.getCache()
     const url = this.toUrl(key)
     await cache.delete(url)
+
+    const index = await this.readIndex()
+    if (index.includes(key)) {
+      await this.writeIndex(index.filter(k => k !== key))
+    }
   }
 
   async purgePattern(pattern: string): Promise<void> {
+    // 此前为永远不执行的死代码（allKeys 恒空）——CF 上内容更新后
+    // 陈旧详情页会一直服务到自然过期。现按索引清单真清剿。
+    const regex = new RegExp('^' + this.escapeForPattern(pattern).replace(/\*/g, '.*') + '$')
+    const index = await this.readIndex()
     const cache = await this.getCache()
-    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
-    const allKeys: Request[] = []
+    const survivors: string[] = []
 
-    for (const request of allKeys) {
-      const url = new URL(request.url)
-      const key = `isr:${url.pathname}`
+    for (const key of index) {
       if (regex.test(key)) {
-        await cache.delete(request)
+        await cache.delete(this.toUrl(key))
+      } else {
+        survivors.push(key)
       }
     }
+    if (survivors.length !== index.length) {
+      await this.writeIndex(survivors)
+    }
+  }
+
+  private escapeForPattern(pattern: string): string {
+    // 转义除 * 外的正则元字符，防 'content/1+2' 之类键名误匹配
+    return pattern.replace(/[.+?^${}()|[\]]/g, '\\$&')
   }
 }
 
