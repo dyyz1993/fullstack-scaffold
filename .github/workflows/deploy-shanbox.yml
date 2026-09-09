@@ -1,6 +1,12 @@
 name: Deploy Shanbox
 
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'NPM version to deploy'
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       version:
