@@ -72,6 +72,9 @@ jobs:
 
   deploy-shanbox:
     name: Deploy to Shanbox
+    # 必须等 npm publish 完成：此前与 release 并行，registry 还没有新版本
+    # 就开装（notarget → 卸了旧包 → 版本检查 Cannot find module）
+    needs: release
     # 复用 deploy-shanbox.yml（self-hosted runner 本地执行版）。
     # 此前内嵌版本从云 runner SSH 内网 IP 192.168.0.29——物理不可达，
     # 每次 Release 尾部必挂（npm 发布本身成功，只是这个尾巴红了）。
