@@ -1,5 +1,16 @@
 import { test, expect } from '@playwright/test'
 
+// 0.5.x 列表 API 返回分页对象 {todos,total,page,limit}；兼容裸数组形态
+function extractList(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === 'object') {
+    for (const v of Object.values(data as Record<string, unknown>)) {
+      if (Array.isArray(v)) return v
+    }
+  }
+  return []
+}
+
 const BASE_URL = 'https://saas.shanbox.19930810.xyz:8443'
 
 async function waitForPageReady(page: import('@playwright/test').Page): Promise<void> {
@@ -96,7 +107,7 @@ test.describe('SaaS Preset E2E', () => {
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data.success).toBe(true)
-    expect(Array.isArray(data.data)).toBe(true)
+    expect(Array.isArray(extractList(data.data))).toBe(true)
   })
 
   test('permissions roles API returns data', async () => {
@@ -104,7 +115,7 @@ test.describe('SaaS Preset E2E', () => {
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data.success).toBe(true)
-    expect(Array.isArray(data.data)).toBe(true)
+    expect(Array.isArray(extractList(data.data))).toBe(true)
   })
 
   test('permissions menu-config API returns data', async () => {
@@ -112,7 +123,7 @@ test.describe('SaaS Preset E2E', () => {
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data.success).toBe(true)
-    expect(Array.isArray(data.data)).toBe(true)
+    expect(Array.isArray(extractList(data.data))).toBe(true)
   })
 
   test('permissions categories API returns data', async () => {
@@ -136,7 +147,7 @@ test.describe('SaaS Preset E2E', () => {
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data.success).toBe(true)
-    expect(Array.isArray(data.data)).toBe(true)
+    expect(Array.isArray(extractList(data.data))).toBe(true)
   })
 
   test('screenshot - homepage', async ({ page }) => {

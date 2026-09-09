@@ -267,9 +267,13 @@ test.describe('Plugin / Xbrowser-Marketplace - Seed Data Verification', () => {
 
     const data = await response.json()
     expect(data.success, 'Content API should return success').toBe(true)
-    expect(Array.isArray(data.data), 'Content API should return array').toBe(true)
+    // 0.5.x 列表 API 返回分页对象；兼容裸数组
+    const contentItems = Array.isArray(data.data)
+      ? data.data
+      : (((data.data as Record<string, unknown>)?.contents as unknown[]) ?? [])
+    expect(Array.isArray(contentItems), 'Content API should return list').toBe(true)
 
-    console.error(`Plugin preset - Content items: ${data.data.length}`)
+    console.error(`Plugin preset - Content items: ${contentItems.length}`)
   })
 })
 
