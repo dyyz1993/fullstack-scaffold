@@ -114,6 +114,7 @@ export default tseslint.config(
   },
   {
     files: ['src/server/**/*.ts'],
+    ignores: ['src/server/route-registry.ts'],
     rules: {
       'no-console': 'error',
       'local-rules/require-hono-chain-syntax': 'error',
@@ -128,7 +129,9 @@ export default tseslint.config(
       'local-rules/no-new-old-service-naming': 'error',
       'local-rules/no-cross-module-service-import': 'error',
       'local-rules/route-location': 'error',
-      'local-rules/limit-type-complexity': ['warn', { maxRouteChainLength: 15 }],
+      // TS2589 防线收紧：类型出口已由 no-merged-api-type-export 封死，
+      // 链长阈值从 warn/15 收紧到 error/5（超出即架构回归信号）
+      'local-rules/limit-type-complexity': ['error', { maxRouteChainLength: 5 }],
       'local-rules/no-merged-api-type-export': 'error',
     },
   },
