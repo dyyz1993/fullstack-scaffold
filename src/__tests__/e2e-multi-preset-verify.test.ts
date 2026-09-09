@@ -17,9 +17,21 @@ interface PresetConfig {
   notExpectedAPIs: string[]
   hasAdmin: boolean
   hasTenant: boolean
+  hasClient?: boolean
 }
 
 const PRESETS_TO_VERIFY: PresetConfig[] = [
+  {
+    id: 'cli-only',
+    dir: 'verify-cli-only',
+    port: 40008,
+    expectedModules: ['todos', 'chat', 'notifications', 'auth'],
+    expectedAPIs: ['/api/todos'],
+    notExpectedAPIs: ['/api/admin/dashboard/stats'],
+    hasAdmin: false,
+    hasTenant: false,
+    hasClient: false,
+  },
   {
     id: 'minimal',
     dir: 'verify-minimal',
@@ -376,10 +388,12 @@ describe.each(PRESETS_TO_VERIFY)(
         ).toBe(false)
       }
 
-      expect(
-        fs.existsSync(path.join(projectDir, 'src/client/App.tsx')),
-        'src/client/App.tsx should exist'
-      ).toBe(true)
+      if (preset.hasClient !== false) {
+        expect(
+          fs.existsSync(path.join(projectDir, 'src/client/App.tsx')),
+          'src/client/App.tsx should exist'
+        ).toBe(true)
+      }
     })
 
     test('step 3: installs dependencies', { timeout: 300_000 }, () => {
@@ -446,6 +460,7 @@ describe.each(PRESETS_TO_VERIFY)(
     })
 
     test('step 7: dev server + API verification', { timeout: 120_000 }, async () => {
+      if (preset.hasClient === false) return // cli-only 无 vite 前端，无 dev server 可验证
       const { port } = preset
       const serverLogs: string[] = []
 
