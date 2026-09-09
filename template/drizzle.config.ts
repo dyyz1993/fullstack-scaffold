@@ -16,6 +16,6 @@ export default defineConfig({
   dbCredentials: {
     // 与运行时保持同一库文件：drizzle-kit 在无 NODE_ENV 下执行时
     // config.sqlitePath 会解析为 development.db，这里不能写死 app.db
-    url: config.sqlitePath || './data/development.db',
+    url: config.sqlitePath || './data/app.db',
   },
 })

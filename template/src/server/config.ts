@@ -66,9 +66,7 @@ export function getAppConfig(): AppConfig {
     database: {
       driver: isCloudflare ? 'd1' : dbDriver,
       sqlitePath:
-        typeof process !== 'undefined'
-          ? process.env.SQLITE_PATH || `./data/${nodeEnv}.db`
-          : undefined,
+        typeof process !== 'undefined' ? process.env.SQLITE_PATH || './data/app.db' : undefined,
       mysqlHost: typeof process !== 'undefined' ? process.env.MYSQL_HOST || 'localhost' : undefined,
       mysqlPort:
         typeof process !== 'undefined' ? parseInt(process.env.MYSQL_PORT || '3306', 10) : undefined,

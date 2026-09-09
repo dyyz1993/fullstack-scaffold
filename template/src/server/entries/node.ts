@@ -202,7 +202,9 @@ export async function startServer() {
     await initializeDatabase()
     bootstrapLog.info({}, 'Database ready')
   } catch (err) {
-    bootstrapLog.error({ err }, 'Database initialization failed')
+    // pino 走异步 thread-stream transport，process.exit 前不 flush——
+    // 生产致命错误必须同步 console.error，否则静默死（exit 1 零输出）
+    console.error('Database initialization failed:', err)
     process.exit(1)
   }
 
