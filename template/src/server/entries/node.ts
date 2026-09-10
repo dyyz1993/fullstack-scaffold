@@ -18,7 +18,18 @@ import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
 import { createISRCache, isISRRoute } from '@server/core/isr-cache'
 import { renderISRPage } from '@server/core/isr-renderer'
-import { renderSSR } from '@client/entry-server'
+// @client/entry-server 仅含 client 的 preset 存在；cli-only 会因静态
+// 导入悬空（verify 链已拦过一次）。运行时按需加载，缺省回退壳渲染。
+type RenderSSRFn = (pathname: string, data: never) => { html: string }
+
+async function loadRenderSSR(): Promise<RenderSSRFn | null> {
+  try {
+    const m = await import('@client/entry-server')
+    return m.renderSSR as RenderSSRFn
+  } catch {
+    return null
+  }
+}
 import { isrRegistry, type ISRRouterContext } from '@server/core/isr-registry'
 import { setISRCache } from '@server/core/isr-invalidation'
 import { setRuntimeAdapter } from '@server/core/runtime'
@@ -215,8 +226,10 @@ async function renderISRForRoute(pathname: string): Promise<string | null> {
   } catch {
     // DB 错误——回退默认 meta 继续渲染壳
   }
+  const renderSSR = await loadRenderSSR()
+  if (!renderSSR) return null // 无 client（cli-only 等）——调用方回退 SPA
   try {
-    const ssr = renderSSR(pathname, data as Parameters<typeof renderSSR>[1])
+    const ssr = renderSSR(pathname, data as never)
     return renderISRPage({ template: indexHtml, body: ssr.html, meta, data })
   } catch (e) {
     console.warn('ISR render failed:', e)
