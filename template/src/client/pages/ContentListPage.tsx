@@ -13,9 +13,20 @@ const CATEGORIES: { value: ContentCategory | ''; label: string }[] = [
   { value: 'policy', label: '政策' },
 ]
 
+// SSR 首帧数据：ISR 管线在服务端把数据写进 __SSR_DATA__，客户端首帧
+// 直接用它渲染（水合一致、爬虫可见真实内容），effect 再刷新
+function ssrInitialContents(): Content[] {
+  try {
+    const d = (window as unknown as { __SSR_DATA__?: { contents?: Content[] } }).__SSR_DATA__
+    return d?.contents ?? []
+  } catch {
+    return []
+  }
+}
+
 export const ContentListPage: React.FC = () => {
-  const [contents, setContents] = useState<Content[]>([])
-  const [loading, setLoading] = useState(true)
+  const [contents, setContents] = useState<Content[]>(ssrInitialContents)
+  const [loading, setLoading] = useState(ssrInitialContents().length === 0)
   const [error, setError] = useState<string | null>(null)
   const [category, setCategory] = useState<ContentCategory | ''>('')
   const [search, setSearch] = useState('')

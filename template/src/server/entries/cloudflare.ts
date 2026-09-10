@@ -1,5 +1,5 @@
 /**
- * @framework-baseline e350401421193896
+ * @framework-baseline e6d62c9969957f22
  * @framework-modify
  * @reason 模块化 ISR 改造 + SSR 渲染：调用 renderSSR 生成 React body，注入到 ISR 模板
  * @impact CF 入口集成 React SSR，ISR 同时负责 SEO meta 标签和 body 渲染
@@ -212,7 +212,7 @@ async function renderISRForRoute(
     // Fallback: empty body, SPA will hydrate
   }
 
-  return renderISRPage({ template: cachedTemplate, body, meta })
+  return renderISRPage({ template: cachedTemplate, body, meta, data })
 }
 
 export { isrCache }

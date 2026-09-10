@@ -1,5 +1,5 @@
 /**
- * @framework-baseline cec621fae360ba2b
+ * @framework-baseline 108b720f9d939fcd
  *
  *
  * @framework-modify
@@ -32,6 +32,8 @@ export interface ISRRenderOptions {
   body?: string
   /** Meta tags */
   meta: ISRPageMeta
+  /** ISR 抓取数据：序列化进 window.__SSR_DATA__ 供客户端首帧渲染（水合一致） */
+  data?: unknown
 }
 
 /**
@@ -39,7 +41,7 @@ export interface ISRRenderOptions {
  * If template is null, generates a minimal standalone HTML.
  */
 export function renderISRPage(opts: ISRRenderOptions): string {
-  const { template, body = '', meta } = opts
+  const { template, body = '', meta, data } = opts
   const safeTitle = escapeHtml(meta.title)
   const safeDesc = escapeHtml(meta.description)
 
@@ -54,6 +56,10 @@ export function renderISRPage(opts: ISRRenderOptions): string {
       `    <meta name="description" content="${safeDesc}" />\n    <meta property="og:title" content="${safeTitle}" />\n    <meta property="og:description" content="${safeDesc}" />\n    <meta name="generator" content="ISR-SSG" />\n  </head>`
     )
     html = html.replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+    if (data !== undefined) {
+      const json = JSON.stringify(data).replace(/</g, '\\u003c')
+      html = html.replace('</body>', `<script>window.__SSR_DATA__=${json};</script></body>`)
+    }
     return html
   }
 

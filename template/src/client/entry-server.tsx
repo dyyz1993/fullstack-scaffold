@@ -1,5 +1,5 @@
 /**
- * @framework-baseline 1a361bf1bb0e5343
+ * @framework-baseline 00b6a72a77e03864
  */
 
 /**
@@ -17,6 +17,7 @@ import { StaticRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
 import { AppRoutes } from './AppRoutes'
+import { getSsrPage } from './ssr-pages'
 import {
   snapshotEntryStores,
   seedEntryStores,
@@ -50,17 +51,25 @@ export function renderSSR(pathname: string, data: SSRData): SSRRenderResult {
   const helmetContext: Record<string, unknown> = {}
 
   try {
-    const html = renderToString(
-      React.createElement(
-        HelmetProvider,
-        { context: helmetContext },
-        React.createElement(
-          StaticRouter,
-          { location: pathname },
-          React.createElement(AppRoutes, { presetId: preset })
+    // 页面级 SSR：ISR 路由有静态同构组件（ssr-pages）——渲染真实页面
+    // 内容而非 lazy Loading 壳（SEO 核心）；其余路由回退 AppRoutes 壳。
+    const SsrPage = getSsrPage(pathname)
+    const body = SsrPage
+      ? React.createElement(
+          HelmetProvider,
+          { context: helmetContext },
+          React.createElement(StaticRouter, { location: pathname }, React.createElement(SsrPage))
         )
-      )
-    )
+      : React.createElement(
+          HelmetProvider,
+          { context: helmetContext },
+          React.createElement(
+            StaticRouter,
+            { location: pathname },
+            React.createElement(AppRoutes, { presetId: preset })
+          )
+        )
+    const html = renderToString(body)
 
     // 5. Extract helmet data
     const helmet = (helmetContext as { helmet?: Record<string, unknown> }).helmet || {}

@@ -4,10 +4,21 @@ import { Helmet } from 'react-helmet-async'
 import type { Content } from '@shared/modules/content'
 import { apiClient } from '@client/services/apiClient'
 
+// SSR 首帧数据：ISR 服务端写入 __SSR_DATA__.content（详情页按 id 匹配）
+function ssrInitialContent(id?: string): Content | null {
+  try {
+    const d = (window as unknown as { __SSR_DATA__?: { content?: Content | null } }).__SSR_DATA__
+    const c = d?.content ?? null
+    return c && (!id || c.id === id) ? c : null
+  } catch {
+    return null
+  }
+}
+
 export const ContentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const [content, setContent] = useState<Content | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [content, setContent] = useState<Content | null>(() => ssrInitialContent(id))
+  const [loading, setLoading] = useState(() => ssrInitialContent(id) === null)
   const [error, setError] = useState<string | null>(null)
 
   const fetchContent = useCallback(async (contentId: string) => {

@@ -12,6 +12,9 @@ import type { Todo } from '@shared/schemas'
 
 export interface SSRData {
   todos?: Todo[]
+  /** content 模块 ISR 数据（列表/详情首帧，页面从 __SSR_DATA__ 读取） */
+  contents?: unknown[]
+  content?: Record<string, unknown> | null
   [key: string]: unknown
 }
 

@@ -67,11 +67,24 @@ const RootApp = () => {
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <RootApp />
-  </React.StrictMode>
-)
+// 水合：SSR（ISR 管线）已输出 #root 内的 HTML——hydrateRoot 复用而非
+// 重画（SEO/首屏收益成立的前提）。无 SSR 的普通访问 fallback createRoot。
+const rootEl = document.getElementById('root')!
+const hasSsrMarkup = rootEl.hasChildNodes()
+if (hasSsrMarkup) {
+  ReactDOM.hydrateRoot(
+    rootEl,
+    <React.StrictMode>
+      <RootApp />
+    </React.StrictMode>
+  )
+} else {
+  ReactDOM.createRoot(rootEl).render(
+    <React.StrictMode>
+      <RootApp />
+    </React.StrictMode>
+  )
+}
 
 if (typeof window !== 'undefined') {
   requestAnimationFrame(() => {
