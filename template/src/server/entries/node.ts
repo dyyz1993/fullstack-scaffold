@@ -21,22 +21,8 @@ import { createISRCache, isISRRoute } from '@server/core/isr-cache'
 // registry 空 → isISRRoute 恒 false → ISR 永远不触发，SSR 壳照旧）
 import '@server/isr-modules'
 import { renderISRPage } from '@server/core/isr-renderer'
-// @client/entry-server 仅含 client 的 preset 存在；cli-only 会因静态
-// 导入悬空（verify 链已拦过一次）。运行时按需加载，缺省回退壳渲染。
-type RenderSSRFn = (pathname: string, data: never) => { html: string }
-
-async function loadRenderSSR(): Promise<RenderSSRFn | null> {
-  try {
-    // 变量说明符：tsc 不做模块解析（cli-only 无 client 目录时字面量
-    // 动态导入也会被 tsc 拦——与 vitest.config 的 react 插件同法）
-    const mod = '@client/entry-server'
-    const m = (await import(/* @vite-ignore */ mod)) as { renderSSR: RenderSSRFn }
-    return m.renderSSR
-  } catch {
-    return null
-  }
-}
 import { isrRegistry, type ISRRouterContext } from '@server/core/isr-registry'
+import { renderSSR } from '@server/ssr-bridge'
 import { setISRCache } from '@server/core/isr-invalidation'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
@@ -232,10 +218,9 @@ async function renderISRForRoute(pathname: string): Promise<string | null> {
   } catch {
     // DB 错误——回退默认 meta 继续渲染壳
   }
-  const renderSSR = await loadRenderSSR()
-  if (!renderSSR) return null // 无 client（cli-only 等）——调用方回退 SPA
+  if (!renderSSR) return null // 无 client 的 preset（cli-only 等）回退 SPA 壳
   try {
-    const ssr = renderSSR(pathname, data as never)
+    const ssr = renderSSR(pathname, data)
     return renderISRPage({ template: indexHtml, body: ssr.html, meta, data })
   } catch (e) {
     console.warn('ISR render failed:', e)

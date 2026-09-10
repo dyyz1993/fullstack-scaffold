@@ -427,6 +427,27 @@ export async function createProject(
         fs.existsSync(path.join(targetDir, 'src/client/pages', `${name}.tsx`))
       )
       await fs.writeFile(path.join(targetDir, 'src/client/ssr-pages.ts'), ssrPagesContent)
+
+      // SSR 渲染桥：有 client 转发 entry-server 的 renderSSR；无 client
+      // （cli-only）导出 null——node 入口回退 SPA 壳而非悬空导入。
+      // 两个文件都必须生成（不能留在 hasClient 块外让模板全量版漏进来）
+      const ssrBridgePath = path.join(targetDir, 'src/server/ssr-bridge.ts')
+      const hasClientDir = fs.existsSync(path.join(targetDir, 'src/client/entry-server.tsx'))
+      const bridge = hasClientDir
+        ? "import { renderSSR as renderSSRImpl } from '@client/entry-server'\n\n// data 由 ISR registry fetch 提供，renderSSRImpl 内部自取所需字段\nexport function renderSSR(pathname: string, data: unknown): { html: string } | null {\n  return renderSSRImpl(pathname, data as Parameters<typeof renderSSRImpl>[1])\n}\n"
+        : 'export function renderSSR(...args: unknown[]): null {\n  return null\n}\n'
+      await fs.writeFile(ssrBridgePath, bridge)
+    } else {
+      // 无 client 的 preset（cli-only 等）：SSR 桥与页面注册表都必须是
+      // 空/ null 版本——模板全量版若漏进来会因 react 缺失/悬空导入炸 tsc
+      await fs.writeFile(
+        path.join(targetDir, 'src/server/ssr-bridge.ts'),
+        'export const renderSSR: ((pathname: string, data: unknown) => null) | null = null\n'
+      )
+      await fs.writeFile(
+        path.join(targetDir, 'src/client/ssr-pages.ts'),
+        '// 本 preset 无 client 页面——SSR 输出布局壳 + meta\nexport function getSsrPage(_pathname: string): null {\n  return null\n}\n'
+      )
     }
 
     const dbSchemaContent = generateDbSchemaBarrel(resolved)

@@ -193,6 +193,7 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     'src/server/isr-modules.ts',
     'src/client/stores/entry-stores.ts',
     'src/client/ssr-pages.ts',
+    'src/server/ssr-bridge.ts',
     'src/server/db/schema/index.ts',
     'src/shared/modules/index.ts',
     'src/shared/schemas/index.ts',
