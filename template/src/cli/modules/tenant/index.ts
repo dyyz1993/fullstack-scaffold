@@ -139,4 +139,93 @@ export function registerTenantCommands(site: SiteInstance) {
       }
     },
   })
+
+  site.command('members', {
+    description: 'List members of a tenant',
+    parameters: z.object({
+      id: z.string().describe('Tenant ID'),
+    }),
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
+      try {
+        const client = getClient()
+        const res = await client.api.tenants[':tenantId'].members.$get({
+          param: { tenantId: p.id },
+        })
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to list members')
+      }
+    },
+  })
+
+  site.command('roles', {
+    description: 'List roles of a tenant',
+    parameters: z.object({
+      id: z.string().describe('Tenant ID'),
+    }),
+    handler: async (params: unknown) => {
+      const p = params as { id: string }
+      try {
+        const client = getClient()
+        const res = await client.api.tenants[':tenantId'].roles.$get({
+          param: { tenantId: p.id },
+        })
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to list roles')
+      }
+    },
+  })
+
+  site.command('invite', {
+    description: 'Invite a member to a tenant (returns a 7-day invitation link)',
+    parameters: z.object({
+      id: z.string().describe('Tenant ID'),
+      email: z.string().describe('Invitee email'),
+      'role-id': z.string().describe('Role ID (see tenant roles command)'),
+    }),
+    handler: async (params: unknown) => {
+      const p = params as { id: string; email: string; 'role-id': string }
+      try {
+        const client = getClient()
+        const res = await client.api.tenants[':tenantId'].members.invite.$post({
+          param: { tenantId: p.id },
+          json: { email: p.email, roleId: p['role-id'] },
+        })
+        const data = await res.json()
+        if (data.success && data.data?.token) {
+          return ok({
+            ...data,
+            data: { ...data.data, inviteLink: `/tenant/invite/${data.data.token}` },
+          })
+        }
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to invite member')
+      }
+    },
+  })
+
+  site.command('invitation', {
+    description: 'Show invitation detail by token (public)',
+    parameters: z.object({
+      token: z.string().describe('Invitation token'),
+    }),
+    handler: async (params: unknown) => {
+      const p = params as { token: string }
+      try {
+        const client = getClient()
+        const res = await client.api.tenants.invitations[':token'].$get({
+          param: { token: p.token },
+        })
+        const data = await res.json()
+        return ok(data)
+      } catch (err) {
+        return fail(err instanceof Error ? err.message : 'Failed to get invitation')
+      }
+    },
+  })
 }

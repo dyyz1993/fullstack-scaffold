@@ -138,6 +138,8 @@ export const TenantMemberSchema = z.object({
   tenantId: z.number().int().positive(),
   userId: z.string(),
   roleId: z.string(),
+  /** 展示名：developers 表用户名，dev token 用户回退 userId */
+  username: z.string().nullish(),
   role: TenantRoleSchema.nullish(),
   status: z.enum(['active', 'pending', 'suspended', 'left']),
   invitedBy: z.string().nullish(),

@@ -1,9 +1,6 @@
 import { getDb } from './driver'
 import { permissions, roles, rolePermissions } from './schema'
-import { developers } from './schema/developers'
 import { logger } from '../utils/logger'
-import { generateUUID } from '../utils/uuid'
-import { hash } from 'bcryptjs'
 
 const log = logger.db()
 
@@ -354,53 +351,6 @@ const initialRolePermissions = [
   { roleId: 'role_user', permissionId: 'perm_order_view' },
 ]
 
-async function seedDevelopersIfEmpty() {
-  try {
-    const db = await getDb()
-
-    const existing = await db.select().from(developers)
-    if (existing.length > 0) return
-
-    log.info({}, 'Seeding developers...')
-
-    const demoPasswordHash = await hash('demo123', 10)
-    const adminPasswordHash = await hash('admin123', 10)
-
-    const sampleDevelopers = [
-      {
-        id: generateUUID(),
-        username: 'demo',
-        email: 'demo@biomimic.app',
-        passwordHash: demoPasswordHash,
-        role: 'developer' as const,
-        apiKey: generateUUID(),
-      },
-      {
-        id: generateUUID(),
-        username: 'superadmin',
-        email: 'admin@biomimic.app',
-        passwordHash: adminPasswordHash,
-        role: 'admin' as const,
-        apiKey: generateUUID(),
-      },
-    ]
-
-    await db.insert(developers).values(sampleDevelopers)
-
-    log.info({}, 'Developers seeding complete!')
-  } catch (error) {
-    // 如果表不存在，忽略错误（可能在某些模板中不需要 developers 表）
-    if (
-      error instanceof Error &&
-      (error.message.includes('no such table') || error.message.includes('does not exist'))
-    ) {
-      log.debug({}, 'Developers table not found, skipping seed')
-      return
-    }
-    throw error
-  }
-}
-
 export async function initializeDatabase() {
   const db = await getDb()
 
@@ -444,8 +394,6 @@ export async function initializeDatabase() {
       }))
     )
   }
-
-  await seedDevelopersIfEmpty()
 
   log.info({}, 'Database initialization complete!')
 

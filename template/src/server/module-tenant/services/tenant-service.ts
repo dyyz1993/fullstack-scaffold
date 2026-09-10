@@ -19,6 +19,7 @@ import {
   tenantRoles,
   tenantMembers,
   tenantInvitations,
+  developers,
   type TenantTable,
   type TenantRoleTable,
   type TenantMemberTable,
@@ -484,6 +485,7 @@ function rowToMember(row: TenantMemberTable, role: TenantRole | null): TenantMem
     tenantId: row.tenantId,
     userId: row.userId,
     roleId: row.roleId,
+    username: row.userId,
     role,
     status: row.status as 'active' | 'pending' | 'suspended' | 'left',
     invitedBy: row.invitedBy,
@@ -506,7 +508,23 @@ export async function getTenantMembers(tenantId: number): Promise<TenantMember[]
   const roleRows = await db.select().from(tenantRoles).where(inArray(tenantRoles.id, roleIds))
   const roleMap = new Map(roleRows.map(r => [r.id, rowToRole(r)]))
 
-  return memberRows.map(m => rowToMember(m, roleMap.get(m.roleId) ?? null))
+  // 联认证体系取用户名（dev token 用户不在 developers 表，回退 userId）
+  const members = memberRows.map(m => rowToMember(m, roleMap.get(m.roleId) ?? null))
+  return enrichUsernames(members)
+}
+
+/** 批量补用户名：命中 developers 表用 username，否则保留 userId */
+async function enrichUsernames(members: TenantMember[]): Promise<TenantMember[]> {
+  try {
+    const db = await getDb()
+    // 联合驱动下 partial-select 重载坍缩，用全量 select 后映射（同文件惯例）
+    const rows = await db.select().from(developers)
+    const nameMap = new Map(rows.map(r => [r.id as string, r.username as string]))
+    return members.map(m => ({ ...m, username: nameMap.get(m.userId) ?? m.userId }))
+  } catch {
+    // developers 表不存在（无 auth 模块 preset）——全部回退 userId
+    return members.map(m => ({ ...m, username: m.userId }))
+  }
 }
 
 export async function getActiveMemberCount(tenantId: number): Promise<number> {

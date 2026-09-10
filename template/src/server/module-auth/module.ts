@@ -33,7 +33,8 @@ const authManifest: ModuleManifest = {
 
   dbSchemas: {
     files: ['developers'],
-    hasSeed: false,
+    hasSeed: true,
+    seed: { serviceFile: 'auth-service', functionName: 'seedDevelopersIfEmpty' },
   },
 
   cliModule: { dir: 'auth', registerFunction: 'registerAuthCommands' },

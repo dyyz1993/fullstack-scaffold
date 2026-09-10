@@ -77,7 +77,7 @@ export const UsersPage: React.FC = () => {
   }
 
   const columns: ColumnsType<TenantMember> = [
-    { title: 'Account', dataIndex: 'userId', key: 'userId' },
+    { title: 'Account', dataIndex: 'username', key: 'username' },
     {
       title: 'Role',
       key: 'role',

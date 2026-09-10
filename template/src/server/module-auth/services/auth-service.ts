@@ -6,6 +6,7 @@ import { developers, type DeveloperTable } from '@server/db/schema'
 import { ConflictError, AuthenticationError } from '@server/utils/app-error'
 import { generateUUID } from '@server/utils/uuid'
 import { toISOString } from '@server/utils/date'
+import { createModuleLoggerSync } from '@server/utils/logger'
 
 // eslint-disable-next-line local-rules/no-util-functions-in-service -- module-specific row-to-profile mapping
 function toProfile(row: DeveloperTable): DeveloperProfile {
@@ -97,4 +98,42 @@ export async function getDeveloperById(id: string): Promise<DeveloperProfile | n
   if (rows.length === 0) return null
 
   return toProfile(rows[0])
+}
+
+/**
+ * 认证种子（首启空库）：demo 开发者 + 平台超管。
+ * superadmin 必须是 super_admin 角色——requireSuperAdminMiddleware 只认这个值。
+ * 凭据 superadmin/admin123，首启日志打印一次，上线前必须改密。
+ */
+export async function seedDevelopersIfEmpty(): Promise<void> {
+  const db = await getDb()
+  const existing = await db.select().from(developers)
+  if (existing.length > 0) return
+
+  const log = createModuleLoggerSync('auth-service')
+  log.info({}, 'Seeding developers...')
+  const demoPasswordHash = hashSync('demo123', 10)
+  const adminPasswordHash = hashSync('admin123', 10)
+  await db.insert(developers).values([
+    {
+      id: generateUUID(),
+      username: 'demo',
+      email: 'demo@biomimic.app',
+      passwordHash: demoPasswordHash,
+      role: 'developer' as const,
+      apiKey: generateUUID(),
+    },
+    {
+      id: generateUUID(),
+      username: 'superadmin',
+      email: 'admin@biomimic.app',
+      passwordHash: adminPasswordHash,
+      role: 'super_admin' as const,
+      apiKey: generateUUID(),
+    },
+  ])
+  log.warn(
+    { account: 'superadmin', password: 'admin123', note: 'CHANGE IMMEDIATELY' },
+    'Platform super admin seeded (first boot only) — change the password before any real deployment'
+  )
 }
