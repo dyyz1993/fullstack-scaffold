@@ -14,6 +14,7 @@ import { generateRouteRegistry } from '../generators/route-registry'
 import { generateRpcSurface } from '../generators/rpc-surface'
 import { generateIsrModules } from '../generators/isr-modules'
 import { generateEntryStores } from '../generators/entry-stores'
+import { generateSsrPages } from '../generators/ssr-pages'
 import { generateClientNavigation } from '../generators/client-navigation'
 import { generateClientAppTest } from '../generators/client-app-test'
 import { generateClientNavigationTest } from '../generators/client-navigation-test'
@@ -419,6 +420,13 @@ export async function createProject(
         path.join(targetDir, 'src/client/stores/entry-stores.ts'),
         entryStoresContent
       )
+
+      // SSR 静态页面注册表：只导入本 preset 实际存在的页面
+      //（模板全量版含全部导入，小 preset 裁页后会悬空）
+      const ssrPagesContent = generateSsrPages(resolved, name =>
+        fs.existsSync(path.join(targetDir, 'src/client/pages', `${name}.tsx`))
+      )
+      await fs.writeFile(path.join(targetDir, 'src/client/ssr-pages.ts'), ssrPagesContent)
     }
 
     const dbSchemaContent = generateDbSchemaBarrel(resolved)
