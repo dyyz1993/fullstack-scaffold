@@ -17,7 +17,9 @@ import { logger } from '../utils/logger'
 import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
 import { createISRCache, isISRRoute } from '@server/core/isr-cache'
-import { renderPage } from '@server/core/ssr-renderer'
+import { renderISRPage } from '@server/core/isr-renderer'
+import { renderSSR } from '@client/entry-server'
+import { isrRegistry, type ISRRouterContext } from '@server/core/isr-registry'
 import { setISRCache } from '@server/core/isr-invalidation'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
@@ -130,11 +132,13 @@ app.get('*', async c => {
     }
 
     if (result.status === 'stale' && result.html) {
-      renderPage(pathname)
-        .then(rendered => {
-          isrCache.store(pathname, rendered.html).catch(e => {
-            console.warn('ISR cache store (background revalidation) failed:', e)
-          })
+      renderISRForRoute(pathname)
+        .then(html => {
+          if (html) {
+            isrCache.store(pathname, html).catch(e => {
+              console.warn('ISR cache store (background revalidation) failed:', e)
+            })
+          }
         })
         .catch(e => {
           console.warn('ISR background render failed:', e)
@@ -142,11 +146,14 @@ app.get('*', async c => {
       return c.html(result.html)
     }
 
-    const rendered = await renderPage(pathname)
-    isrCache.store(pathname, rendered.html).catch(e => {
-      console.warn('ISR cache store failed:', e)
-    })
-    return c.html(rendered.html)
+    const html = await renderISRForRoute(pathname)
+    if (html) {
+      isrCache.store(pathname, html).catch(e => {
+        console.warn('ISR cache store failed:', e)
+      })
+      return c.html(html)
+    }
+    return c.html(indexHtml)
   }
 
   return c.html(indexHtml)
@@ -189,6 +196,32 @@ export async function createServer() {
   })
 
   return { server, port: config.port }
+}
+
+/**
+ * 真 ISR 渲染（与 CF 入口同管线）：registry fetch 数据 → renderSSR
+ * 页面级渲染 → renderISRPage 注入 body + meta + __SSR_DATA__。
+ * 返回 null 表示无注册路由/渲染失败，调用方回退 SPA index.html。
+ */
+async function renderISRForRoute(pathname: string): Promise<string | null> {
+  const entry = isrRegistry.match(pathname)
+  if (!entry) return null
+  const ctx: ISRRouterContext = { db: await getDb(), env: {} }
+  let data: unknown = {}
+  let meta = { title: 'App', description: '' }
+  try {
+    data = await entry.fetch(pathname, ctx)
+    meta = entry.meta(data, pathname)
+  } catch {
+    // DB 错误——回退默认 meta 继续渲染壳
+  }
+  try {
+    const ssr = renderSSR(pathname, data as Parameters<typeof renderSSR>[1])
+    return renderISRPage({ template: indexHtml, body: ssr.html, meta, data })
+  } catch (e) {
+    console.warn('ISR render failed:', e)
+    return null
+  }
 }
 
 export async function startServer() {
