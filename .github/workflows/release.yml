@@ -81,5 +81,9 @@ jobs:
     uses: ./.github/workflows/deploy-shanbox.yml
     with:
       version: ${{ github.ref_name }}
+      # workflow_call 的 inputs 默认值不会跨工作流传递——不显式传
+      # presets 时 contains(inputs.presets,'todo-app') 为 false，
+      # 7 个部署步骤全部 skipped（健康检查 502 仍 job 绿，线上旧版本）
+      presets: todo-app,minimal,ecommerce,xbrowser-marketplace,fullstack-admin,forum,saas
     secrets: inherit
 
