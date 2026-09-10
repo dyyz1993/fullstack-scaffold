@@ -17,6 +17,9 @@ import { logger } from '../utils/logger'
 import { createApp } from '../app'
 import { getDb, runMigrations } from '../db'
 import { createISRCache, isISRRoute } from '@server/core/isr-cache'
+// Side-effect: 注册 ISR 路由到全局 registry（Node 入口此前漏了这一行——
+// registry 空 → isISRRoute 恒 false → ISR 永远不触发，SSR 壳照旧）
+import '@server/isr-modules'
 import { renderISRPage } from '@server/core/isr-renderer'
 // @client/entry-server 仅含 client 的 preset 存在；cli-only 会因静态
 // 导入悬空（verify 链已拦过一次）。运行时按需加载，缺省回退壳渲染。
