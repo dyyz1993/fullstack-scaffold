@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi'
+import { TENANT_PERMISSION_VALUES } from './permissions'
 
 export const TenantStatusSchema = z.enum(['active', 'suspended', 'trial'])
 export type TenantStatus = z.infer<typeof TenantStatusSchema>
@@ -87,3 +88,110 @@ export const TenantQuerySchema = z.object({
 })
 
 export type TenantQuery = z.infer<typeof TenantQuerySchema>
+
+// ============ 租户角色 ============
+export const TenantRoleSchema = z.object({
+  id: z.string(),
+  tenantId: z.number().int().positive(),
+  code: z.string().min(1).max(100),
+  name: z.string().min(1).max(100),
+  label: z.string().min(1).max(100),
+  description: z.string().nullish(),
+  permissions: z.array(z.enum(TENANT_PERMISSION_VALUES as [string, ...string[]])),
+  isSystem: z.boolean(),
+  isActive: z.boolean(),
+  sortOrder: z.number().int(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
+
+export type TenantRole = z.infer<typeof TenantRoleSchema>
+
+export const CreateTenantRoleSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9_-]+$/),
+  name: z.string().min(1).max(100),
+  label: z.string().min(1).max(100),
+  description: z.string().nullish(),
+  permissions: z.array(z.enum(TENANT_PERMISSION_VALUES as [string, ...string[]])).min(1),
+})
+
+export type CreateTenantRoleInput = z.infer<typeof CreateTenantRoleSchema>
+
+export const UpdateTenantRoleSchema = z.object({
+  label: z.string().min(1).max(100).nullish(),
+  description: z.string().nullish(),
+  permissions: z
+    .array(z.enum(TENANT_PERMISSION_VALUES as [string, ...string[]]))
+    .min(1)
+    .nullish(),
+})
+
+export type UpdateTenantRoleInput = z.infer<typeof UpdateTenantRoleSchema>
+
+// ============ 租户成员 ============
+export const TenantMemberSchema = z.object({
+  id: z.string(),
+  tenantId: z.number().int().positive(),
+  userId: z.string(),
+  role: TenantRoleSchema.nullish(),
+  status: z.enum(['active', 'pending', 'suspended', 'left']),
+  invitedBy: z.string().nullish(),
+  invitedAt: z.string().datetime().nullish(),
+  joinedAt: z.string().datetime(),
+  lastActiveAt: z.string().datetime().nullish(),
+})
+
+export type TenantMember = z.infer<typeof TenantMemberSchema>
+
+export const UpdateMemberRoleSchema = z.object({
+  roleId: z.string().min(1),
+})
+
+export type UpdateMemberRoleInput = z.infer<typeof UpdateMemberRoleSchema>
+
+// ============ 租户邀请 ============
+export const TenantInvitationSchema = z.object({
+  id: z.string(),
+  tenantId: z.number().int().positive(),
+  email: z.string().email(),
+  roleId: z.string(),
+  inviterId: z.string(),
+  token: z.string(),
+  status: z.enum(['pending', 'accepted', 'declined', 'expired', 'cancelled']),
+  expiresAt: z.string().datetime(),
+  acceptedAt: z.string().datetime().nullish(),
+  createdAt: z.string().datetime(),
+})
+
+export type TenantInvitation = z.infer<typeof TenantInvitationSchema>
+
+export const InviteMemberSchema = z.object({
+  email: z.string().email(),
+  roleId: z.string().min(1),
+})
+
+export type InviteMemberInput = z.infer<typeof InviteMemberSchema>
+
+/** 邀请详情（公开接口）：脱敏后返回，不含 inviterId */
+export const PublicInvitationSchema = z.object({
+  tenantName: z.string(),
+  tenantSlug: z.string(),
+  email: z.string().email(),
+  roleLabel: z.string(),
+  status: z.enum(['pending', 'accepted', 'declined', 'expired', 'cancelled']),
+  expiresAt: z.string().datetime(),
+})
+
+export type PublicInvitation = z.infer<typeof PublicInvitationSchema>
+
+// ============ 列表/ID 响应包装（路由 responses 不得内联 schema） ============
+export const StringIdResponseSchema = z.object({ id: z.string() })
+export type StringIdResponse = z.infer<typeof StringIdResponseSchema>
+
+export const TenantArrayResponseSchema = z.array(TenantSchema)
+export const TenantRoleArrayResponseSchema = z.array(TenantRoleSchema)
+export const TenantMemberArrayResponseSchema = z.array(TenantMemberSchema)

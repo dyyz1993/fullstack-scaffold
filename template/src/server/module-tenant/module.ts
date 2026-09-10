@@ -22,7 +22,7 @@ const tenantManifest: ModuleManifest = {
   clientPages: [],
 
   dbSchemas: {
-    files: ['tenants'],
+    files: ['tenants', 'tenant-roles', 'tenant-members', 'tenant-invitations'],
     hasSeed: true,
     seed: { serviceFile: 'tenant-service', functionName: 'seedTenantsIfEmpty' },
   },

@@ -23,7 +23,6 @@ export default defineConfig({
         return 'node'
       }
     })(),
-    setupFiles: ['./vitest.setup.ts'],
     include: [
       '**/__tests__/**/*.test.ts',
       '**/__tests__/**/*.test.tsx',
@@ -32,6 +31,9 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/dist/**'],
     testTimeout: 60000,
     hookTimeout: 60000,
+    // setup-db-path 必须在前：把 :memory: 换成临时文件（libsql 事务与
+    // :memory: 不兼容），vitest.setup 再注册 jest-dom 等
+    setupFiles: ['./src/test/setup-db-path.ts', './vitest.setup.ts'],
     env: {
       NODE_ENV: 'test',
       SQLITE_PATH: ':memory:',

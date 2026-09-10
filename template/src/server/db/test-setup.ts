@@ -298,6 +298,43 @@ export async function setupTestDatabase(): Promise<void> {
       updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS tenant_roles (
+      id TEXT PRIMARY KEY NOT NULL,
+      tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      label TEXT NOT NULL,
+      description TEXT,
+      permissions TEXT NOT NULL,
+      is_system INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS tenant_members (
+      id TEXT PRIMARY KEY NOT NULL,
+      tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL,
+      role_id TEXT NOT NULL REFERENCES tenant_roles(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'active',
+      invited_by TEXT,
+      invited_at TEXT,
+      joined_at TEXT NOT NULL,
+      last_active_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS tenant_invitations (
+      id TEXT PRIMARY KEY NOT NULL,
+      tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      role_id TEXT NOT NULL REFERENCES tenant_roles(id) ON DELETE CASCADE,
+      inviter_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      expires_at TEXT NOT NULL,
+      accepted_at TEXT,
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS merchants (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       user_id TEXT NOT NULL,
@@ -799,6 +836,93 @@ async function seedTestData(client: Client): Promise<void> {
     }
   }
 
+  // Seed tenant roles + owner member（与 app 启动种子 seedTenantsIfEmpty 对齐，demo 租户 id=1）
+  const tenantNowIso = new Date().toISOString()
+  const tenantRoleSeed = [
+    {
+      id: 'tr_seed_admin',
+      code: 'tenant_admin',
+      label: '租户管理员',
+      perms: JSON.stringify([
+        'tenant:member:view',
+        'tenant:member:invite',
+        'tenant:member:remove',
+        'tenant:member:role:assign',
+        'tenant:role:view',
+        'tenant:role:create',
+        'tenant:role:edit',
+        'tenant:role:delete',
+        'tenant:settings:view',
+        'tenant:settings:edit',
+        'tenant:data:view',
+        'tenant:data:create',
+        'tenant:data:edit',
+        'tenant:data:delete',
+        'tenant:data:export',
+        'tenant:data:import',
+        'tenant:billing:view',
+        'tenant:billing:manage',
+        'tenant:audit:view',
+      ]),
+      sortOrder: 0,
+    },
+    {
+      id: 'tr_seed_member',
+      code: 'tenant_member',
+      label: '普通成员',
+      perms: JSON.stringify([
+        'tenant:member:view',
+        'tenant:role:view',
+        'tenant:settings:view',
+        'tenant:data:view',
+        'tenant:data:create',
+        'tenant:data:edit',
+        'tenant:data:delete',
+        'tenant:data:export',
+      ]),
+      sortOrder: 1,
+    },
+    {
+      id: 'tr_seed_guest',
+      code: 'tenant_guest',
+      label: '访客',
+      perms: JSON.stringify([
+        'tenant:member:view',
+        'tenant:role:view',
+        'tenant:settings:view',
+        'tenant:data:view',
+      ]),
+      sortOrder: 2,
+    },
+  ]
+  for (const role of tenantRoleSeed) {
+    try {
+      await client.execute({
+        sql: `INSERT OR IGNORE INTO tenant_roles (id, tenant_id, code, name, label, description, permissions, is_system, is_active, sort_order, created_at, updated_at) VALUES (?, 1, ?, ?, ?, NULL, ?, 1, 1, ?, ?, ?)`,
+        args: [
+          role.id,
+          role.code,
+          role.code,
+          role.label,
+          role.perms,
+          role.sortOrder,
+          tenantNowIso,
+          tenantNowIso,
+        ],
+      })
+    } catch {
+      // Ignore duplicate errors
+    }
+  }
+  try {
+    await client.execute({
+      sql: `INSERT OR IGNORE INTO tenant_members (id, tenant_id, user_id, role_id, status, invited_by, invited_at, joined_at, last_active_at) VALUES ('tm_seed_owner', 1, 'test-super-admin-1', 'tr_seed_admin', 'active', NULL, NULL, ?, ?)`,
+      args: [tenantNowIso, tenantNowIso],
+    })
+  } catch {
+    // Ignore duplicate errors
+  }
+
   // Seed products for testing
   const products = [
     {
@@ -968,6 +1092,9 @@ export async function cleanupTestDatabase(): Promise<void> {
     } catch {
       // Plugin tables may not exist in all test environments
     }
+    await client.execute('DELETE FROM tenant_invitations')
+    await client.execute('DELETE FROM tenant_members')
+    await client.execute('DELETE FROM tenant_roles')
     await client.execute('DELETE FROM tenants')
     await client.execute('DELETE FROM merchants')
     await client.execute('DELETE FROM products')
