@@ -1,5 +1,5 @@
 /**
- * @framework-baseline 159d5e23f19e9793
+ * @framework-baseline 91c7b6f83b7c9913
  * @framework-modify
  * @reason 添加 SPA 前端路由处理，区分开发/生产环境
  * @impact 新增前端路由处理逻辑，/admin/* 返回 admin.html，其他路由返回 index.html
@@ -221,6 +221,7 @@ async function renderISRForRoute(pathname: string): Promise<string | null> {
   if (!renderSSR) return null // 无 client 的 preset（cli-only 等）回退 SPA 壳
   try {
     const ssr = renderSSR(pathname, data)
+    if (!ssr) return null // 渲染桥返回 null（无 client 变体）
     return renderISRPage({ template: indexHtml, body: ssr.html, meta, data })
   } catch (e) {
     console.warn('ISR render failed:', e)
