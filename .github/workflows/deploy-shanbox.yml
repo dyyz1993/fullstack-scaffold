@@ -7,6 +7,11 @@ on:
         description: 'NPM version to deploy'
         required: true
         type: string
+      presets:
+        description: 'Comma-separated presets to deploy (empty = all)'
+        required: false
+        type: string
+        default: 'todo-app,minimal,ecommerce,xbrowser-marketplace,fullstack-admin,forum,saas'
   workflow_dispatch:
     inputs:
       version:
