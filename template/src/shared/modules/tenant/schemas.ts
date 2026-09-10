@@ -36,7 +36,8 @@ export const CreateTenantSchema = z.object({
     .regex(/^[a-z0-9-]+$/),
   plan: TenantPlanSchema.default('free'),
   maxUsers: z.number().int().min(1).max(1000).default(5),
-  settings: TenantSettingsSchema,
+  // 可选：建租户时通常没有初始配置，service 层兜底空对象
+  settings: TenantSettingsSchema.nullish().default({}),
 })
 
 export type CreateTenantInput = z.infer<typeof CreateTenantSchema>
