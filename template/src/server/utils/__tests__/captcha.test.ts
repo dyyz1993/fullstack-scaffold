@@ -6,10 +6,12 @@ function extractCodeFromSvg(image: string): string {
   const decoded = Buffer.from(image.split(',')[1], 'base64').toString()
   const matches = decoded.match(/>\s*([A-Z0-9])\s*<\/text>/g)
   if (!matches) throw new Error('Could not extract code from SVG')
-  return matches.map(m => {
-    const char = m.match(/>\s*([A-Z0-9])\s*</)
-    return char ? char[1] : ''
-  }).join('')
+  return matches
+    .map((m: string) => {
+      const char = m.match(/>\s*([A-Z0-9])\s*</)
+      return char ? char[1] : ''
+    })
+    .join('')
 }
 
 describe('captcha', () => {
