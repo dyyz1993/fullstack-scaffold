@@ -149,8 +149,18 @@ describe('E2E: Scaffold → Install → Verify', () => {
     try {
       await waitForServer(port, 60_000)
 
-      // Warm up: Vite dev server cold-starts Hono on first API request
-      await new Promise(r => setTimeout(r, 3_000))
+      // Warm up: Vite dev server cold-starts Hono on first API request（慢 runner
+      // 冷启动可超 curlGet 的 15s 上限——与 multi-preset 版同款 5×2s 重试）
+      let retries = 0
+      while (retries < 5) {
+        try {
+          curlGet('/health')
+          break
+        } catch {
+          retries++
+          await new Promise(r => setTimeout(r, 2_000))
+        }
+      }
 
       // 6a. Root HTML page
       expect(curlGet('/')).toContain('<html')
