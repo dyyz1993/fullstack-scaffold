@@ -285,6 +285,43 @@ describe('provisioning & membership (P1)', () => {
     expect(role.isSystem).toBe(false)
   })
 
+  it('P4：套餐成员配额——满员后邀请被拦截，升级后放行', async () => {
+    // maxUsers=1 的租户：owner 已占 1 席
+    const tiny = await createTenant(
+      { name: '配额租户', slug: 'quota-member', plan: 'free', maxUsers: 1, settings: {} },
+      'test-super-admin-1'
+    )
+    const guestRole = (await getTenantRoles(tiny.id)).find(r => r.code === 'tenant_guest')!
+
+    await expect(
+      inviteMember(tiny.id, 'full@quota.io', guestRole.id, 'test-super-admin-1')
+    ).rejects.toThrow(/上限/)
+
+    // 升级 maxUsers=2 后放行；接受时也过配额
+    await updateTenant(tiny.id, { maxUsers: 2 })
+    const inv = await inviteMember(tiny.id, 'full@quota.io', guestRole.id, 'test-super-admin-1')
+    const member = await acceptInvitation(inv.token, 'test-user-4')
+    expect(member?.status).toBe('active')
+
+    // 满员（2/2）后再邀新邮箱 → 拦截
+    await expect(
+      inviteMember(tiny.id, 'overflow@quota.io', guestRole.id, 'test-super-admin-1')
+    ).rejects.toThrow(/上限/)
+  })
+
+  it('P4：接受时二次校验——邀请有效期内满员则接受被拦截', async () => {
+    const t = await createTenant(
+      { name: '二次校验', slug: 'quota-accept', plan: 'free', maxUsers: 2, settings: {} },
+      'test-super-admin-1'
+    )
+    const guestRole = (await getTenantRoles(t.id)).find(r => r.code === 'tenant_guest')!
+    const inv = await inviteMember(t.id, 'late@quota.io', guestRole.id, 'test-super-admin-1')
+
+    // 邀请发出后把 maxUsers 降到 1（owner 已满员）
+    await updateTenant(t.id, { maxUsers: 1 })
+    await expect(acceptInvitation(inv.token, 'test-user-5')).rejects.toThrow(/上限/)
+  })
+
   it('getUserTenants 只返回本人 active 成员的租户', async () => {
     const mine = await getUserTenants('test-super-admin-1')
     expect(mine.length).toBeGreaterThanOrEqual(2) // demo 种子 + 本组新建

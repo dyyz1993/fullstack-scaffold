@@ -641,6 +641,12 @@ export async function inviteMember(
     throw new ValidationError('邀请指定的角色不属于本租户')
   }
 
+  // 套餐成员数配额：邀请时拦截（接受时二次校验，防邀请后配额被占满）
+  const activeCount = await getActiveMemberCount(tenantId)
+  if (activeCount >= tenant.maxUsers) {
+    throw new ValidationError(`成员数已达套餐上限（${tenant.maxUsers} 人），请升级套餐后再邀请`)
+  }
+
   const now = new Date().toISOString()
   const [row] = await db
     .insert(tenantInvitations)
@@ -726,6 +732,17 @@ export async function acceptInvitation(
 
   const { invitation } = detail
   if (invitation.status !== 'pending') return null
+
+  // 接受时二次校验配额（邀请发出后名额可能已被占满/套餐降级）
+  const tenantRow = await getTenantById(invitation.tenantId)
+  if (tenantRow) {
+    const activeCount = await getActiveMemberCount(invitation.tenantId)
+    if (activeCount >= tenantRow.maxUsers) {
+      throw new ValidationError(
+        `该租户成员数已达套餐上限（${tenantRow.maxUsers} 人），请联系租户管理员升级套餐`
+      )
+    }
+  }
 
   const existing = await getMembership(userId, invitation.tenantId)
   const now = new Date().toISOString()

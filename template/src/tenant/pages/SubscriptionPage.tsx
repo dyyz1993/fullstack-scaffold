@@ -1,8 +1,12 @@
 import { useEffect } from 'react'
-import { Card, Descriptions, Button, message } from 'antd'
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { Card, Descriptions, Progress, Button, Typography, Tooltip } from 'antd'
 import { useTenantStore } from '../stores/tenantStore'
 
+/**
+ * 订阅/配额页——全部真实数据：plan/maxUsers 来自租户记录，
+ * 成员用量来自 members 接口；配额在邀请与接受两处服务端真实拦截。
+ * 套餐变更走平台管理员（ tenants 属平台管理域），此处按钮以提示代替假动作。
+ */
 export const SubscriptionPage: React.FC = () => {
   const { subscription, loading, fetchSubscription } = useTenantStore()
 
@@ -10,72 +14,45 @@ export const SubscriptionPage: React.FC = () => {
     fetchSubscription()
   }, [fetchSubscription])
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircleOutlined style={{ color: '#52c41a' }} />
-      case 'pending':
-        return <ClockCircleOutlined style={{ color: '#faad14' }} />
-      case 'cancelled':
-        return <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-      default:
-        return null
-    }
-  }
-
-  const handleUpgrade = () => {
-    message.success('Upgrade feature coming soon!')
-  }
-
-  const handleCancel = () => {
-    message.success('Cancel subscription feature coming soon!')
-  }
-
-  if (loading) {
+  if (loading && !subscription) {
     return <div>Loading subscription...</div>
   }
 
-  const subData = subscription as {
-    plan?: string
-    status?: string
-    startDate?: string
-    endDate?: string
-    usersLimit?: number
-    storageLimit?: string
-    features?: string[]
+  if (!subscription) {
+    return <div>No subscription data</div>
   }
+
+  const { plan, maxUsers, currentUsers } = subscription
+  const percent = maxUsers > 0 ? Math.round((currentUsers / maxUsers) * 100) : 0
 
   return (
     <div data-testid="tenant-subscription">
       <h1 className="text-2xl font-bold mb-6">Subscription</h1>
       <Card>
-        <Descriptions title={subData?.plan || 'No Plan'} bordered>
-          <Descriptions.Item label="Status">
-            {subData?.status ? (
-              <span>
-                {getStatusIcon(subData.status)} {subData.status}
-              </span>
-            ) : (
-              'No subscription'
-            )}
+        <Descriptions title={plan.toUpperCase()} bordered>
+          <Descriptions.Item label="Plan">{plan}</Descriptions.Item>
+          <Descriptions.Item label="Members">
+            {currentUsers} / {maxUsers}
           </Descriptions.Item>
-          <Descriptions.Item label="Start Date">{subData?.startDate || '-'}</Descriptions.Item>
-          <Descriptions.Item label="End Date">{subData?.endDate || '-'}</Descriptions.Item>
-          <Descriptions.Item label="Users Limit">{subData?.usersLimit || '-'}</Descriptions.Item>
-          <Descriptions.Item label="Storage Limit">
-            {subData?.storageLimit || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="Features">
-            {subData?.features?.join(', ') || 'None'}
+          <Descriptions.Item label="Custom role limit">
+            {{ free: 3, starter: 5, pro: 10, enterprise: 'Unlimited' }[plan] ?? '-'}
           </Descriptions.Item>
         </Descriptions>
+        <div className="mt-6">
+          <Typography.Paragraph strong>Member quota usage</Typography.Paragraph>
+          <Progress percent={percent} status={percent >= 100 ? 'exception' : 'normal'} />
+          {percent >= 100 && (
+            <Typography.Paragraph type="danger">
+              Quota is full — new invitations will be rejected until the plan is upgraded.
+            </Typography.Paragraph>
+          )}
+        </div>
         <div className="mt-6 flex gap-4">
-          <Button type="primary" onClick={handleUpgrade}>
-            Upgrade Plan
-          </Button>
-          <Button danger onClick={handleCancel}>
-            Cancel Subscription
-          </Button>
+          <Tooltip title="Plan changes are managed by the platform administrator">
+            <Button type="primary" disabled>
+              Upgrade Plan
+            </Button>
+          </Tooltip>
         </div>
       </Card>
     </div>
