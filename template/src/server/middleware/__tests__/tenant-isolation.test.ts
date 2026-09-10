@@ -58,23 +58,37 @@ describe('tenantIsolationMiddleware', () => {
     return app
   }
 
-  it('should return error when no tenant header or subdomain', async () => {
+  // P2 起中间件为"可选上下文"语义：无租户标识 → 放行且不设上下文
+  //（全局模式：dev token / 平台级 API / 无 tenant 模块 preset 不受影响）
+  it('should pass through without context when no tenant header or subdomain', async () => {
     const app = createApp()
     const res = await app.request('/api/test')
-    expect(res.status).toBe(404)
+    // /api/test 无路由 → 404 来自路由缺失而非中间件；断言响应不是
+    // tenant-not-found 错误体即可证明中间件放行
+    const body = (await res.json()) as { error?: string }
+    expect(String(body.error)).not.toContain('Tenant')
   })
 
-  it('should return error when tenant header is empty string', async () => {
+  it('should pass through without context when tenant header is empty string', async () => {
     const app = createApp()
     const res = await app.request('/api/test', {
       headers: { 'X-Tenant-Slug': '' },
     })
-    expect(res.status).toBe(404)
+    const body = (await res.json()) as { error?: string }
+    expect(String(body.error)).not.toContain('Tenant')
   })
 
   it('should pass with valid tenant from header', async () => {
     mockDbResult([
-      { id: 1, slug: 'test-tenant', name: 'Test', status: 'active', plan: 'free', maxUsers: 10, settings: null },
+      {
+        id: 1,
+        slug: 'test-tenant',
+        name: 'Test',
+        status: 'active',
+        plan: 'free',
+        maxUsers: 10,
+        settings: null,
+      },
     ])
     const app = createApp()
     const res = await app.request('/api/test', {
@@ -98,7 +112,15 @@ describe('tenantIsolationMiddleware', () => {
 
   it('should extract tenant from subdomain when no header', async () => {
     mockDbResult([
-      { id: 2, slug: 'acme', name: 'Acme', status: 'active', plan: 'pro', maxUsers: 100, settings: null },
+      {
+        id: 2,
+        slug: 'acme',
+        name: 'Acme',
+        status: 'active',
+        plan: 'pro',
+        maxUsers: 100,
+        settings: null,
+      },
     ])
     const app = createApp()
     const res = await app.request('/api/test', {
@@ -111,7 +133,15 @@ describe('tenantIsolationMiddleware', () => {
 
   it('should prefer X-Tenant-Slug header over subdomain', async () => {
     mockDbResult([
-      { id: 3, slug: 'header-tenant', name: 'Header', status: 'active', plan: 'free', maxUsers: 5, settings: null },
+      {
+        id: 3,
+        slug: 'header-tenant',
+        name: 'Header',
+        status: 'active',
+        plan: 'free',
+        maxUsers: 5,
+        settings: null,
+      },
     ])
     const app = createApp()
     const res = await app.request('/api/test', {
@@ -124,7 +154,15 @@ describe('tenantIsolationMiddleware', () => {
 
   it('should parse tenant settings JSON', async () => {
     mockDbResult([
-      { id: 4, slug: 'with-settings', name: 'Settings', status: 'active', plan: 'pro', maxUsers: 50, settings: '{"theme":"dark"}' },
+      {
+        id: 4,
+        slug: 'with-settings',
+        name: 'Settings',
+        status: 'active',
+        plan: 'pro',
+        maxUsers: 50,
+        settings: '{"theme":"dark"}',
+      },
     ])
     const app = createApp()
     const res = await app.request('/api/test', {
@@ -137,7 +175,15 @@ describe('tenantIsolationMiddleware', () => {
 
   it('should handle null settings gracefully', async () => {
     mockDbResult([
-      { id: 5, slug: 'no-settings', name: 'NoSettings', status: 'active', plan: 'free', maxUsers: 5, settings: null },
+      {
+        id: 5,
+        slug: 'no-settings',
+        name: 'NoSettings',
+        status: 'active',
+        plan: 'free',
+        maxUsers: 5,
+        settings: null,
+      },
     ])
     const app = createApp()
     const res = await app.request('/api/test', {

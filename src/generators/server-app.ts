@@ -5,6 +5,7 @@ export function generateServerApp(resolved: ResolvedPreset): string {
   const useRealtime = resolved.hasSSE || resolved.hasWebSocket
   const useAuditLog = resolved.hasPermission
   const useCaptcha = resolved.hasCaptcha
+  const useTenantIsolation = resolved.modules.has('tenant')
   const standaloneRoutes = getStandaloneRoutes(resolved)
 
   const imports: string[] = [
@@ -27,6 +28,9 @@ export function generateServerApp(resolved: ResolvedPreset): string {
   }
   if (useCaptcha) {
     imports.push(`import { captchaMiddleware } from './middleware/captcha'`)
+  }
+  if (useTenantIsolation) {
+    imports.push(`import { tenantIsolationMiddleware } from './middleware/tenant-isolation'`)
   }
 
   imports.push(
@@ -68,6 +72,10 @@ export function generateServerApp(resolved: ResolvedPreset): string {
     middlewareChain.push(
       `.use(\n      '/api/admin/*',\n      captchaMiddleware({\n        maxRequests: 20,\n        windowMs: 60000,\n      })\n    )`
     )
+  }
+  if (useTenantIsolation) {
+    // 可选租户上下文：X-Tenant-Slug 头或子域名 → c.tenant；无标识则放行
+    middlewareChain.push(`.use('/api/*', tenantIsolationMiddleware())`)
   }
 
   const routes: string[] = [`.route('/', clientApiRoutes)`, `.route('/', adminApiRoutes)`]

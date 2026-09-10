@@ -11,6 +11,7 @@ export async function setupTestDatabase(): Promise<void> {
   const migrationSQL = `
     CREATE TABLE IF NOT EXISTS todos (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      tenant_id INTEGER,
       title TEXT NOT NULL,
       description TEXT,
       status TEXT DEFAULT 'pending' NOT NULL,

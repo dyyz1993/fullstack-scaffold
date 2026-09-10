@@ -19,6 +19,14 @@ import { getAuthUser } from '@server/utils/auth'
 import { NotFoundError, ValidationError } from '@server/utils/app-error'
 import { authMiddleware } from '@server/middleware/auth'
 
+// 租户上下文：仅含 tenant 模块的 preset 由隔离中间件注入 c.tenant。
+// 松散读取避免依赖各 preset 差异化的 AppBindings 类型声明
+type TenantContext = { id: number } | undefined
+function tenantIdFrom(c: { get?: (key: string) => unknown }): number | undefined {
+  const tenant = c.get?.('tenant') as TenantContext
+  return tenant?.id
+}
+
 const listRoute = createRoute({
   method: 'get',
   path: '/todos',
@@ -170,7 +178,7 @@ const deleteAttachmentRoute = createRoute({
 export const apiRoutes = new OpenAPIHono()
   .openapi(listRoute, async c => {
     const { page, limit } = c.req.valid('query')
-    const result = await todoService.listTodos({ page, limit })
+    const result = await todoService.listTodos({ page, limit, tenantId: tenantIdFrom(c) })
     return c.json(success(result), 200)
   })
   .openapi(getRoute, async c => {
@@ -181,7 +189,7 @@ export const apiRoutes = new OpenAPIHono()
   })
   .openapi(createRouteDef, async c => {
     const data = c.req.valid('json')
-    const todo = await todoService.createTodo(data)
+    const todo = await todoService.createTodo(data, tenantIdFrom(c))
     return c.json(created(todo), 201)
   })
   .openapi(updateRoute, async c => {

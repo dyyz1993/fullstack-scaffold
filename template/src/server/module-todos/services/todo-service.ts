@@ -61,6 +61,8 @@ export async function seedTodosIfEmpty(): Promise<void> {
 export async function listTodos(options?: {
   page?: number
   limit?: number
+  /** 租户上下文存在时按租户隔离（saas 等含 tenant 模块的 preset） */
+  tenantId?: number
 }): Promise<{ todos: Todo[]; total: number; page: number; limit: number }> {
   const db = await getDb()
   const page = options?.page ?? 1
@@ -71,15 +73,20 @@ export async function listTodos(options?: {
   const rows = await db
     .select()
     .from(todos)
+    .where(options?.tenantId != null ? eq(todos.tenantId, options.tenantId) : undefined)
     .orderBy(desc(todos.createdAt))
     .limit(limit)
     .offset(offset)
   // db 为 LibSQL|D1 联合类型：select(config) 会重载坍缩，$count 两驱动同签名
-  const total = await db.$count(todos)
+  const total = await db.$count(
+    todos,
+    options?.tenantId != null ? eq(todos.tenantId, options.tenantId) : undefined
+  )
 
   return {
     todos: rows.map((row: TodoTable) => ({
       id: row.id,
+      tenantId: row.tenantId ?? null,
       title: row.title,
       description: row.description ?? undefined,
       status: row.status,
@@ -109,12 +116,13 @@ export async function getTodo(id: number): Promise<Todo | null> {
   }
 }
 
-export async function createTodo(input: CreateTodoInput): Promise<Todo> {
+export async function createTodo(input: CreateTodoInput, tenantId?: number): Promise<Todo> {
   const db = await getDb()
   const now = new Date()
   const result = await db
     .insert(todos)
     .values({
+      tenantId: tenantId ?? null,
       title: input.title,
       description: input.description ?? null,
       status: 'pending',
@@ -126,6 +134,7 @@ export async function createTodo(input: CreateTodoInput): Promise<Todo> {
   const row = result[0]
   return {
     id: row.id,
+    tenantId: row.tenantId ?? null,
     title: row.title,
     description: row.description ?? undefined,
     status: row.status,
@@ -158,6 +167,7 @@ export async function updateTodo(id: number, input: UpdateTodoInput): Promise<To
   const row = result[0]
   return {
     id: row.id,
+    tenantId: row.tenantId ?? null,
     title: row.title,
     description: row.description ?? undefined,
     status: row.status,

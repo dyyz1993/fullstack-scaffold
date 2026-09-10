@@ -41,9 +41,11 @@ export function tenantIsolationMiddleware(): MiddlewareHandler {
     const hostname = c.req.header('host') || ''
     const tenantSlug = extractTenantSlug(hostname, c.req.header('X-Tenant-Slug'))
 
+    // 无租户标识 → 不设上下文继续（全局模式：dev token、平台级 API、
+    // 无 tenant 模块 preset 的既有行为都不受影响）
     if (!tenantSlug) {
-      log.warn({ hostname, path: c.req.path }, 'No tenant slug found')
-      throw NotFoundError.tenant()
+      await next()
+      return
     }
 
     const db = await getDb()

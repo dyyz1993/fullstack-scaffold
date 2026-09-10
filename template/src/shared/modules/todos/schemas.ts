@@ -4,6 +4,7 @@ export const TodoStatusSchema = z.enum(['pending', 'in_progress', 'completed'])
 
 export const TodoSchema = z.object({
   id: z.number().int().positive(),
+  tenantId: z.number().int().positive().nullish(),
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   description: z.string().max(1000, 'Description too long').nullish(),
   status: TodoStatusSchema,
