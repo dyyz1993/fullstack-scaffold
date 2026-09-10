@@ -24,8 +24,11 @@ type RenderSSRFn = (pathname: string, data: never) => { html: string }
 
 async function loadRenderSSR(): Promise<RenderSSRFn | null> {
   try {
-    const m = await import('@client/entry-server')
-    return m.renderSSR as RenderSSRFn
+    // 变量说明符：tsc 不做模块解析（cli-only 无 client 目录时字面量
+    // 动态导入也会被 tsc 拦——与 vitest.config 的 react 插件同法）
+    const mod = '@client/entry-server'
+    const m = (await import(/* @vite-ignore */ mod)) as { renderSSR: RenderSSRFn }
+    return m.renderSSR
   } catch {
     return null
   }
