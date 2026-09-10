@@ -36,7 +36,7 @@ jobs:
 
       - name: Install create-fullstack-scaffold
         run: |
-          npm uninstall -g create-fullstack-scaffold 2>/dev/null; rm -rf ~/.npm/_npx/; npm install -g create-fullstack-scaffold@${{ inputs.version }} 2>&1 | tail -3
+          npm uninstall -g create-fullstack-scaffold 2>/dev/null; rm -rf ~/.npm/_npx/; npm install -g create-fullstack-scaffold@${{ inputs.version }} --registry=https://registry.npmjs.org 2>&1 | tail -3
           node -p "require('/usr/lib/node_modules/create-fullstack-scaffold/package.json').version"
 
       - name: Mark deploying (watchdog mutual exclusion)
