@@ -9,14 +9,24 @@ interface TenantGuardProps {
 
 export const TenantGuard: React.FC<TenantGuardProps> = ({ children }) => {
   const location = useLocation()
-  const { isAuthenticated, currentTenant, loading, fetchCurrentTenant } = useTenantStore()
+  const { isAuthenticated, currentTenant, loading, fetchCurrentTenant, restoreFromToken } =
+    useTenantStore()
 
   useEffect(() => {
+    // 已有租户上下文即短路——fetch 会 set 新对象，若把它放进依赖/重复
+    // 触发会形成无限请求循环（250ms 内百次请求打满限流被弹回登录）
+    if (currentTenant) return
+    if (!isAuthenticated) return
+
     const tenantSlug = extractTenantSlug()
     if (tenantSlug) {
       fetchCurrentTenant(tenantSlug)
+      return
     }
-  }, [fetchCurrentTenant])
+    // 无 slug（如邀请接受后直跳）：token 在则从 mine 恢复租户上下文
+    restoreFromToken()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, currentTenant])
 
   if (loading) {
     return (

@@ -5,6 +5,7 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from '@ant-design/icons'
+import { useTenantStore } from '../stores/tenantStore'
 
 interface HeaderProps {
   collapsed: boolean
@@ -12,9 +13,12 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
+  const logout = useTenantStore(state => state.logout)
+
   const handleLogout = () => {
-    localStorage.removeItem('tenant-token')
-    window.location.href = '/login'
+    logout()
+    // basename=/tenant 下的路由跳转
+    window.location.href = '/tenant/login'
   }
 
   const userMenuItems = [

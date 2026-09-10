@@ -483,6 +483,7 @@ function rowToMember(row: TenantMemberTable, role: TenantRole | null): TenantMem
     id: row.id,
     tenantId: row.tenantId,
     userId: row.userId,
+    roleId: row.roleId,
     role,
     status: row.status as 'active' | 'pending' | 'suspended' | 'left',
     invitedBy: row.invitedBy,

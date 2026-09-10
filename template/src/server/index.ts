@@ -24,6 +24,7 @@ setRuntimeAdapter(runtimeAdapter)
 // HTML 文件路径（开发环境直接读取根目录）
 const indexHtmlPath = resolve(process.cwd(), 'index.html')
 const adminHtmlPath = resolve(process.cwd(), 'admin.html')
+const tenantHtmlPath = resolve(process.cwd(), 'tenant.html')
 
 const indexHtml = existsSync(indexHtmlPath)
   ? readFileSync(indexHtmlPath, 'utf-8')
@@ -31,6 +32,8 @@ const indexHtml = existsSync(indexHtmlPath)
 const adminHtml = existsSync(adminHtmlPath)
   ? readFileSync(adminHtmlPath, 'utf-8')
   : '<html><body>admin.html not found</body></html>'
+// saas 等含 tenant 模块的 preset 才有 tenant.html；缺失时回落 index
+const tenantHtml = existsSync(tenantHtmlPath) ? readFileSync(tenantHtmlPath, 'utf-8') : indexHtml
 
 // 创建 Hono 应用
 const app = createApp()
@@ -38,6 +41,15 @@ const app = createApp()
 // 添加 Admin 路由
 app.get('/admin/*', c => {
   return c.html(adminHtml)
+})
+
+// 租户控制台（basename=/tenant 的独立 SPA）——无此入口时 /tenant/* 会
+// 落进客户端 SPA fallback 渲染成 404
+app.get('/tenant/*', c => {
+  return c.html(tenantHtml)
+})
+app.get('/tenant', c => {
+  return c.html(tenantHtml)
 })
 
 // SPA fallback - 使用中间件方式，确保 API 路由已经注册后才添加

@@ -131,27 +131,25 @@ function verifyToken(token: string, key: string): AuthUser | null {
     }
   }
 
-  if (key !== defaultSecretKey) {
-    try {
-      const decoded = jwt.verify(token, key) as {
-        userId: string
-        role: string
-        username: string
-        email: string
-      }
-      return {
-        id: decoded.userId,
-        username: decoded.username,
-        email: decoded.email,
-        role: decoded.role as UserRole,
-        permissions: getPermissionsByRole(decoded.role as UserRole),
-      }
-    } catch {
-      return null
+  // 真实 JWT 验证对默认/自定义 key 均启用——此前仅非默认 key 才走此分支，
+  // 导致 dev 未设 AUTH_SECRET_KEY 时所有注册账号的登录 token 恒 401
+  try {
+    const decoded = jwt.verify(token, key) as {
+      userId: string
+      role: string
+      username: string
+      email: string
     }
+    return {
+      id: decoded.userId,
+      username: decoded.username,
+      email: decoded.email,
+      role: decoded.role as UserRole,
+      permissions: getPermissionsByRole(decoded.role as UserRole),
+    }
+  } catch {
+    return null
   }
-
-  return null
 }
 
 export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareHandler {

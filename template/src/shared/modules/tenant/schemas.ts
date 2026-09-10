@@ -137,6 +137,7 @@ export const TenantMemberSchema = z.object({
   id: z.string(),
   tenantId: z.number().int().positive(),
   userId: z.string(),
+  roleId: z.string(),
   role: TenantRoleSchema.nullish(),
   status: z.enum(['active', 'pending', 'suspended', 'left']),
   invitedBy: z.string().nullish(),

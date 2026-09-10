@@ -1,109 +1,123 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Space, Modal, Form, Input, message } from 'antd'
+import { Table, Button, Space, Modal, Form, Input, Select, Typography, App } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { EditOutlined, DeleteOutlined, PlusOutlined, UserAddOutlined } from '@ant-design/icons'
 import { useTenantStore } from '../stores/tenantStore'
+import type { TenantMember } from '@shared/schemas'
 
+/**
+ * 租户成员管理：列表（含角色）/邀请新成员（邮件+角色）/改角色/移除。
+ * 后端在邀请与接受时执行套餐成员数配额（P4）。
+ */
 export const UsersPage: React.FC = () => {
-  const { users, loading, fetchUsers, createUser, updateUser, deleteUser } = useTenantStore()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<unknown | null>(null)
-  const [form] = Form.useForm()
+  const { users, roles, loading, fetchUsers, fetchRoles, inviteUser, updateUser, deleteUser } =
+    useTenantStore()
+  const { message } = App.useApp()
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [roleTarget, setRoleTarget] = useState<TenantMember | null>(null)
+  const [inviteForm] = Form.useForm()
+  const [roleForm] = Form.useForm()
 
   useEffect(() => {
     fetchUsers()
-  }, [fetchUsers])
+    fetchRoles()
+  }, [fetchUsers, fetchRoles])
 
-  const handleAdd = () => {
-    setEditingUser(null)
-    form.resetFields()
-    setIsModalOpen(true)
+  const handleInvite = async () => {
+    try {
+      const values = await inviteForm.validateFields()
+      const ok = await inviteUser(values.email, values.roleId)
+      if (ok) {
+        message.success('Invitation created — the invitee will receive a join link')
+        setInviteOpen(false)
+        inviteForm.resetFields()
+        fetchUsers()
+      } else {
+        message.error('Failed to create invitation')
+      }
+    } catch {
+      // validation error
+    }
   }
 
-  const handleEdit = (user: unknown) => {
-    setEditingUser(user)
-    form.setFieldsValue(user)
-    setIsModalOpen(true)
+  const handleRoleChange = async () => {
+    if (!roleTarget) return
+    try {
+      const values = await roleForm.validateFields()
+      const ok = await updateUser(roleTarget.id, { roleId: values.roleId })
+      if (ok) {
+        message.success('Member role updated')
+        setRoleTarget(null)
+        fetchUsers()
+      } else {
+        message.error('Failed to update role')
+      }
+    } catch {
+      // validation error
+    }
   }
 
-  const handleDelete = async (userId: number) => {
+  const handleRemove = (member: TenantMember) => {
     Modal.confirm({
-      title: 'Confirm Delete',
-      content: 'Are you sure you want to delete this user?',
-      okText: 'Yes',
-      cancelText: 'No',
+      title: 'Remove member',
+      content: `Remove ${member.userId} from this tenant? They will lose access immediately.`,
+      okText: 'Remove',
+      okButtonProps: { danger: true },
+      cancelText: 'Cancel',
       onOk: async () => {
-        const success = await deleteUser(userId)
-        if (success) {
-          message.success('User deleted successfully')
+        const ok = await deleteUser(member.id)
+        if (ok) {
+          message.success('Member removed')
           fetchUsers()
+        } else {
+          message.error('Failed to remove member')
         }
       },
     })
   }
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields()
-
-      if (editingUser) {
-        const userId = (editingUser as { id: number }).id
-        const success = await updateUser(userId, values)
-        if (success) {
-          message.success('User updated successfully')
-          fetchUsers()
-        }
-      } else {
-        const success = await createUser(values)
-        if (success) {
-          message.success('User created successfully')
-          fetchUsers()
-        }
-      }
-
-      setIsModalOpen(false)
-      form.resetFields()
-    } catch (error) {
-      console.error('Validation failed:', error)
-    }
-  }
-
-  const columns: ColumnsType<unknown> = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      title: 'Username',
-      dataIndex: 'username',
-      key: 'username',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
+  const columns: ColumnsType<TenantMember> = [
+    { title: 'Account', dataIndex: 'userId', key: 'userId' },
     {
       title: 'Role',
-      dataIndex: 'role',
       key: 'role',
+      render: (_, record) => (
+        <Typography.Text code>{record.role?.label ?? record.roleId}</Typography.Text>
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+    },
+    {
+      title: 'Joined',
+      dataIndex: 'joinedAt',
+      key: 'joinedAt',
+      render: (v: string) => (v ? new Date(v).toLocaleDateString() : '-'),
     },
     {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)}>
-            Edit
+          <Button
+            icon={<EditOutlined />}
+            size="small"
+            onClick={() => {
+              setRoleTarget(record)
+              roleForm.setFieldsValue({ roleId: record.roleId })
+            }}
+          >
+            Role
           </Button>
           <Button
             icon={<DeleteOutlined />}
             size="small"
             danger
-            onClick={() => handleDelete(Number((record as { id: unknown }).id))}
+            onClick={() => handleRemove(record)}
           >
-            Delete
+            Remove
           </Button>
         </Space>
       ),
@@ -112,32 +126,64 @@ export const UsersPage: React.FC = () => {
 
   return (
     <div data-testid="tenant-users">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Users</h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          Add User
+      <div className="flex justify-between items-center mb-4">
+        <Typography.Title level={5} className="!mb-0">
+          Members
+        </Typography.Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setInviteOpen(true)}>
+          Invite member
         </Button>
       </div>
-      <Table columns={columns} dataSource={users as unknown[]} loading={loading} rowKey="id" />
+      <Table columns={columns} dataSource={users} loading={loading} rowKey="id" />
+
       <Modal
-        title={editingUser ? 'Edit User' : 'Add User'}
-        open={isModalOpen}
-        onOk={handleSubmit}
-        onCancel={() => setIsModalOpen(false)}
-        destroyOnClose
+        title={
+          <span>
+            <UserAddOutlined /> Invite member
+          </span>
+        }
+        open={inviteOpen}
+        onOk={handleInvite}
+        onCancel={() => setInviteOpen(false)}
+        okText="Send invitation"
       >
-        <Form form={form} layout="vertical">
-          <Form.Item name="username" label="Username" rules={[{ required: true }]}>
-            <Input />
+        <Typography.Paragraph type="secondary">
+          An invitation link (valid for 7 days) will be generated for the invitee.
+        </Typography.Paragraph>
+        <Form form={inviteForm} layout="vertical">
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Please input email' },
+              { type: 'email', message: 'Invalid email' },
+            ]}
+          >
+            <Input placeholder="teammate@example.com" />
           </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-            <Input />
+          <Form.Item
+            name="roleId"
+            label="Role"
+            rules={[{ required: true, message: 'Pick a role' }]}
+          >
+            <Select
+              placeholder="Select role"
+              options={roles.map(r => ({ value: r.id, label: r.label }))}
+            />
           </Form.Item>
-          <Form.Item name="password" label="Password" rules={[{ required: !editingUser }]}>
-            <Input.Password />
-          </Form.Item>
-          <Form.Item name="role" label="Role" rules={[{ required: true }]}>
-            <Input />
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Change member role"
+        open={!!roleTarget}
+        onOk={handleRoleChange}
+        onCancel={() => setRoleTarget(null)}
+        okText="Save"
+      >
+        <Form form={roleForm} layout="vertical">
+          <Form.Item name="roleId" label="Role" rules={[{ required: true }]}>
+            <Select options={roles.map(r => ({ value: r.id, label: r.label }))} />
           </Form.Item>
         </Form>
       </Modal>

@@ -38,6 +38,9 @@ const indexHtmlPath = hasDist
 const adminHtmlPath = hasDist
   ? resolve(distPath, 'admin.html')
   : resolve(process.cwd(), 'admin.html')
+const tenantHtmlPath = hasDist
+  ? resolve(distPath, 'tenant.html')
+  : resolve(process.cwd(), 'tenant.html')
 
 const indexHtml = existsSync(indexHtmlPath)
   ? readFileSync(indexHtmlPath, 'utf-8')
@@ -45,6 +48,8 @@ const indexHtml = existsSync(indexHtmlPath)
 const adminHtml = existsSync(adminHtmlPath)
   ? readFileSync(adminHtmlPath, 'utf-8')
   : '<html><body>admin.html not found</body></html>'
+// saas 等含 tenant 模块的 preset 才有 tenant.html；缺失回落 index
+const tenantHtml = existsSync(tenantHtmlPath) ? readFileSync(tenantHtmlPath, 'utf-8') : indexHtml
 
 const log = logger.api()
 
@@ -116,6 +121,14 @@ if (hasDist) {
 // Admin 路由返回 admin.html
 app.get('/admin/*', c => {
   return c.html(adminHtml)
+})
+
+// 租户控制台独立 SPA（basename=/tenant）
+app.get('/tenant', c => {
+  return c.html(tenantHtml)
+})
+app.get('/tenant/*', c => {
+  return c.html(tenantHtml)
 })
 
 // 其他非 API 路由返回 index.html（ISR 路由尝试缓存）
