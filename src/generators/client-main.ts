@@ -64,14 +64,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <RootApp />
   </React.StrictMode>,
 )
-
-if (typeof window !== 'undefined') {
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      document.dispatchEvent(new CustomEvent('prerender-ready'))
-    }, 100)
-  })
-}
 `
   }
 
@@ -96,13 +88,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <RootApp />
   </React.StrictMode>,
 )
-
-if (typeof window !== 'undefined') {
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      document.dispatchEvent(new CustomEvent('prerender-ready'))
-    }, 100)
-  })
-}
 `
 }

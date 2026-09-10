@@ -1,5 +1,4 @@
 import path from 'path'
-import { existsSync } from 'fs'
 import { defineConfig, type Plugin } from 'vite'
 import devServer from '@hono/vite-dev-server'
 import { websocketPlugin, dbPlugin } from './vite-plugins'
@@ -20,64 +19,9 @@ if (process.env.ANALYZE === 'true') {
     // rollup-plugin-visualizer not installed — run: npm install -D rollup-plugin-visualizer
   }
 }
-// Prerender is optional — only needed during production build with puppeteer + Chrome installed
-let prerender: typeof import('@prerenderer/rollup-plugin').default | undefined
-let puppeteerRenderer: typeof import('@prerenderer/renderer-puppeteer').default | undefined
-try {
-  const prerenderMod = await import('@prerenderer/rollup-plugin')
-  prerender = prerenderMod.default
-  const rendererMod = await import('@prerenderer/renderer-puppeteer')
-  puppeteerRenderer = rendererMod.default
-  // Verify Chrome is actually available at runtime
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore — puppeteer is an optional dependency, may not be installed
-  const pupMod = await import('puppeteer')
-  const chromePath: string = await pupMod.executablePath()
-  if (!existsSync(chromePath)) {
-    prerender = undefined
-    puppeteerRenderer = undefined
-  }
-} catch {
-  // puppeteer/Chrome not available — prerendering disabled
-}
-
-async function getPrerenderRoutes(): Promise<string[]> {
-  const staticRoutes = ['/', '/todos', '/notifications', '/websocket', '/content']
-
-  try {
-    const { createClient } = await import('@libsql/client')
-    const dbCandidates = [
-      path.resolve(process.cwd(), 'data/production.db'),
-      path.resolve(process.cwd(), 'data/app.db'),
-      path.resolve(process.cwd(), 'data/development.db'),
-    ]
-
-    for (const dbPath of dbCandidates) {
-      if (!existsSync(dbPath)) continue
-
-      const client = createClient({ url: `file:${dbPath}` })
-      try {
-        const rs = await client.execute(
-          "SELECT id FROM contents WHERE status = 'published' ORDER BY created_at DESC"
-        )
-        client.close()
-
-        if (rs.rows.length > 0) {
-          const contentRoutes = rs.rows.map(row => `/content/content-${row.id}`)
-          return [...staticRoutes, ...contentRoutes]
-        }
-      } catch {
-        client.close()
-      }
-    }
-  } catch {
-    // fallback
-  }
-
-  return staticRoutes
-}
-
-const routes = await getPrerenderRoutes()
+// 说明：构建期 puppeteer 预渲染已移除——ISR 运行时管线（registry fetch +
+// renderSSR + __SSR_DATA__ 注入）在请求时产出新鲜 HTML，构建期快照反而会
+// 以空数据/错误文本固化页面并在 serveStatic 下遮蔽运行时 ISR。
 
 export default defineConfig({
   server: {
@@ -117,20 +61,7 @@ export default defineConfig({
           'vendor-hono': ['hono'],
           'vendor-zustand': ['zustand'],
         },
-        plugins: [
-          ...(prerender && puppeteerRenderer
-            ? [
-                prerender({
-                  routes,
-                  renderer: new puppeteerRenderer({
-                    renderAfterDocumentEvent: 'prerender-ready',
-                    renderAfterTime: 5000,
-                  }),
-                }),
-              ]
-            : []),
-          ...(visualizerPlugin ? [visualizerPlugin()] : []),
-        ],
+        plugins: [...(visualizerPlugin ? [visualizerPlugin()] : [])],
       },
       onwarn(warning, defaultHandler) {
         // Suppress antd "use client" directive warnings (React Server Components marker)

@@ -57,4 +57,3 @@ CLI unit + scaffold-verify (root vitest) → template unit (1893 tests) → temp
 - `--no-verify` commits are forbidden (agent hooks `no-no-verify.mjs` enforce this for ZCode/Codex)
 - Generator changes must be verified with `tsc --noEmit` inside a freshly scaffolded app (vitest transpile does NOT type-check)
 - Shared zod schemas live in `src/shared/modules/<name>/`, re-exported via generated barrels
-- Env: `PUPPETEER_SKIP_DOWNLOAD=1` for local installs (prerender Chrome is optional)

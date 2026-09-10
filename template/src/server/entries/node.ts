@@ -22,7 +22,6 @@ import { createISRCache, isISRRoute } from '@server/core/isr-cache'
 import '@server/isr-modules'
 import { renderISRPage } from '@server/core/isr-renderer'
 import { isrRegistry, type ISRRouterContext } from '@server/core/isr-registry'
-import { renderSSR } from '@server/ssr-bridge'
 import { setISRCache } from '@server/core/isr-invalidation'
 import { setRuntimeAdapter } from '@server/core/runtime'
 import { getNodeRuntimeAdapter } from '@server/core/runtime-node'
@@ -206,9 +205,28 @@ export async function createServer() {
  * 页面级渲染 → renderISRPage 注入 body + meta + __SSR_DATA__。
  * 返回 null 表示无注册路由/渲染失败，调用方回退 SPA index.html。
  */
+type SSRRenderer = (pathname: string, data: unknown) => { html: string } | null
+
+// 渲染桥按需加载：静态 import 会把整个 React SSR 图（react-router-dom 等
+// CJS 依赖）拉进 vite dev 的 SSR 模块图，dev server 全路由 500；动态加载
+// 只在生产渲染 ISR 路由时触发，dev 下失败则回退 SPA 壳。
+let cachedRenderer: SSRRenderer | null | undefined
+async function loadSSRRenderer(): Promise<SSRRenderer | null> {
+  if (cachedRenderer !== undefined) return cachedRenderer
+  try {
+    const mod = await import('@server/ssr-bridge')
+    cachedRenderer = mod.renderSSR
+  } catch {
+    cachedRenderer = null
+  }
+  return cachedRenderer
+}
+
 async function renderISRForRoute(pathname: string): Promise<string | null> {
   const entry = isrRegistry.match(pathname)
   if (!entry) return null
+  const renderSSR = await loadSSRRenderer()
+  if (!renderSSR) return null // 无 client 的 preset（cli-only 等）回退 SPA 壳
   const ctx: ISRRouterContext = { db: await getDb(), env: {} }
   let data: unknown = {}
   let meta = { title: 'App', description: '' }
@@ -218,7 +236,6 @@ async function renderISRForRoute(pathname: string): Promise<string | null> {
   } catch {
     // DB 错误——回退默认 meta 继续渲染壳
   }
-  if (!renderSSR) return null // 无 client 的 preset（cli-only 等）回退 SPA 壳
   try {
     const ssr = renderSSR(pathname, data)
     if (!ssr) return null // 渲染桥返回 null（无 client 变体）

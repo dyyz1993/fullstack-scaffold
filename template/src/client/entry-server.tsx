@@ -50,6 +50,11 @@ export function renderSSR(pathname: string, data: SSRData): SSRRenderResult {
   // 4. Render with helmet context to extract head tags
   const helmetContext: Record<string, unknown> = {}
 
+  // 服务端把 ISR 数据挂到 globalThis：组件的 ssrInitial*() 在 renderToString
+  // 期间与浏览器水合同源读取（globalThis === window），首帧即渲染真实内容
+  const globalData = globalThis as { __SSR_DATA__?: unknown }
+  globalData.__SSR_DATA__ = data
+
   try {
     // 页面级 SSR：ISR 路由有静态同构组件（ssr-pages）——渲染真实页面
     // 内容而非 lazy Loading 壳（SEO 核心）；其余路由回退 AppRoutes 壳。
@@ -78,7 +83,8 @@ export function renderSSR(pathname: string, data: SSRData): SSRRenderResult {
 
     return { html, helmet: { title: titleStr, meta: metaStr } }
   } finally {
-    // 6. Restore store state
+    // 6. Restore store state + 清理服务端数据挂载（防跨请求泄漏）
     restoreEntryStores(snapshot)
+    delete globalData.__SSR_DATA__
   }
 }

@@ -7,7 +7,7 @@ import { apiClient } from '@client/services/apiClient'
 // SSR 首帧数据：ISR 服务端写入 __SSR_DATA__.content（详情页按 id 匹配）
 function ssrInitialContent(id?: string): Content | null {
   try {
-    const d = (window as unknown as { __SSR_DATA__?: { content?: Content | null } }).__SSR_DATA__
+    const d = (globalThis as { __SSR_DATA__?: { content?: Content | null } }).__SSR_DATA__
     const c = d?.content ?? null
     return c && (!id || c.id === id) ? c : null
   } catch {

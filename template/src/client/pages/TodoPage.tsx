@@ -22,6 +22,19 @@ import type { Todo } from '@shared/schemas'
 
 type FilterType = 'all' | 'pending' | 'in_progress' | 'completed'
 
+// SSR 首帧数据：ISR 管线把 registry fetch 的数据写进 __SSR_DATA__，
+// 服务端 renderToString 与浏览器水合从同一 globalThis 读取。zustand v5 的
+// 服务端快照固定为 getInitialState（setState 种子对 SSR 不可见），首帧
+// 列表必须从这里兜底，挂载后 effect 再走 store 刷新
+function ssrInitialTodos(): Todo[] {
+  try {
+    const d = (globalThis as { __SSR_DATA__?: { todos?: Todo[] } }).__SSR_DATA__
+    return d?.todos ?? []
+  } catch {
+    return []
+  }
+}
+
 export const TodoPage: React.FC = () => {
   const todos = useTodoStore(state => state.todos)
   const loading = useTodoStore(state => state.loading)
@@ -37,6 +50,9 @@ export const TodoPage: React.FC = () => {
 
   const [newTodoTitle, setNewTodoTitle] = useState('')
   const [newTodoDescription, setNewTodoDescription] = useState('')
+  const [ssrTodos] = useState<Todo[]>(ssrInitialTodos)
+  // store 一旦有数据（挂载后 fetch 完成）即以 store 为准，首帧用 SSR 数据兜底
+  const visibleTodos = todos.length > 0 ? todos : ssrTodos
   const [filter, setFilter] = useState<FilterType>('all')
   const [expandedTodoId, setExpandedTodoId] = useState<number | null>(null)
   const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map())
@@ -95,7 +111,7 @@ export const TodoPage: React.FC = () => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
-  const filteredTodos = todos.filter(todo => {
+  const filteredTodos = visibleTodos.filter(todo => {
     if (filter === 'all') return true
     return todo.status === filter
   })
@@ -174,17 +190,17 @@ export const TodoPage: React.FC = () => {
         </div>
       )}
 
-      {loading && todos.length === 0 && (
+      {loading && visibleTodos.length === 0 && (
         <div className="flex items-center justify-center py-12" data-testid="loading-indicator">
           <LoadingSpinner size="lg" />
         </div>
       )}
 
-      {todos.length > 0 && (
+      {visibleTodos.length > 0 && (
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2" data-testid="todo-count">
             <span className="text-sm text-gray-500">Total:</span>
-            <span className="text-sm font-medium text-gray-900">{todos.length}</span>
+            <span className="text-sm font-medium text-gray-900">{visibleTodos.length}</span>
           </div>
           <div className="flex items-center gap-2">
             <button

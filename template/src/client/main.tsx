@@ -85,11 +85,3 @@ if (hasSsrMarkup) {
     </React.StrictMode>
   )
 }
-
-if (typeof window !== 'undefined') {
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      document.dispatchEvent(new CustomEvent('prerender-ready'))
-    }, 100)
-  })
-}

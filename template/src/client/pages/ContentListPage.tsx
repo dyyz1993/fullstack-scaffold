@@ -17,7 +17,7 @@ const CATEGORIES: { value: ContentCategory | ''; label: string }[] = [
 // 直接用它渲染（水合一致、爬虫可见真实内容），effect 再刷新
 function ssrInitialContents(): Content[] {
   try {
-    const d = (window as unknown as { __SSR_DATA__?: { contents?: Content[] } }).__SSR_DATA__
+    const d = (globalThis as { __SSR_DATA__?: { contents?: Content[] } }).__SSR_DATA__
     return d?.contents ?? []
   } catch {
     return []
