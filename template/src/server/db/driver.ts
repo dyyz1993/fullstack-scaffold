@@ -105,13 +105,13 @@ export async function closeDb(): Promise<void> {
 async function stampJournalIfPushBuilt(migrationsFolder: string): Promise<void> {
   if (!_client || !('execute' in _client)) return
 
-  // todos 表在（= 当前 schema 形态、由 push 建成）。只查 todos——
-  // tenants 仅存在于含 tenant 模块的 preset，用它做条件会漏掉全部
-  // 无 tenant preset 的库（0.6.2 首次部署七杀五的根因）
-  const shape = await _client.execute(
-    "SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name='todos'"
+  // 普适判定：库里有任何业务表 && 账本为空 = push 建库形态。
+  // 不能锚定具体表名——preset 组合差异大（forum/plugin 无 todos、
+  // 多数 preset 无 tenants，0.6.2/0.6.3 两次部署事故均源于此）
+  const bizTables = await _client.execute(
+    "SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != '__drizzle_migrations'"
   )
-  if (Number(shape.rows[0]?.c ?? 0) < 1) return
+  if (Number(bizTables.rows[0]?.c ?? 0) < 1) return
 
   const journalTable = await _client.execute(
     "SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'"
