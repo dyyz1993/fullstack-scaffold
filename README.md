@@ -4,6 +4,12 @@
 
 Zero-config fullstack app generator with type-safe RPC, 15+ modules, and 8 production-ready presets. One command, zero `.env`, instant `npm run dev`.
 
+## Try It & Mission Pack
+
+- **Live demo** (fullstack-admin preset): https://demo.lpm1.top
+- **Mission Pack** — copy-paste prompts that make any AI agent build with this scaffold:
+  [MISSION-PACK.md](./MISSION-PACK.md) (includes downloadable Skill URLs, task prompts A–D, and hard-won agent tips)
+
 ## Quick Start
 
 ```bash
