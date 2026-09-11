@@ -14,6 +14,22 @@
 | 在线 Demo（fullstack-admin 全形态） | https://demo.lpm1.top                                                                                    |
 | 多租户形态文档（随 app 分发）       | 生成后在 `docs/SAAS-MULTITENANT-GUIDE.md`                                                                |
 
+## 在线形态目录（全部可点）
+
+| 门户                           | 地址                       |
+| ------------------------------ | -------------------------- |
+| 🗂 形态总览门户                | https://presets.lpm1.top   |
+| 全模块后台                     | https://fullstack.lpm1.top |
+| 经典 Todo                      | https://todo.lpm1.top      |
+| 多租户 SaaS                    | https://saas.lpm1.top      |
+| 电商（shop）                   | https://shop.lpm1.top      |
+| 论坛                           | https://forum.lpm1.top     |
+| 插件市场（market）             | https://market.lpm1.top    |
+| 极简（minimal）                | https://minimal.lpm1.top   |
+| 全形态 Demo（fullstack-admin） | https://demo.lpm1.top      |
+
+> 七站点共用一个 D1 演示数据池；登录凭据见各 preset 文档验证清单。
+
 ## 模板速览
 
 React 18 + Hono(OpenAPI RPC) + Drizzle ORM + SQLite/Cloudflare D1 + Vite。
