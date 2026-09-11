@@ -1,0 +1,67 @@
+name: Deploy Presets to Cloudflare
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'template/**'
+      - 'src/**'
+      - 'package.json'
+  workflow_dispatch:
+
+# 所有 preset 共用 preset-pool-db（一个 D1，表并集，同名同构零冲突）
+env:
+  POOL_DB_ID: a45a10de-fee4-43d8-bc62-73a80f8b066e
+
+jobs:
+  deploy:
+    name: Deploy ${{ matrix.preset }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: fullstack-admin
+            short: fullstack
+          - preset: todo-app
+            short: todo
+          - preset: saas
+            short: saas
+          - preset: ecommerce
+            short: shop
+          - preset: forum
+            short: forum
+          - preset: xbrowser-marketplace
+            short: market
+          - preset: minimal
+            short: minimal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - run: npm ci
+      - name: Build CLI
+        run: npm run build:cli
+      - name: Scaffold
+        working-directory: /tmp
+        run: node ${{ github.workspace }}/dist/cli/index.js app-${{ matrix.short }} --preset ${{ matrix.preset }}
+      - name: Configure shared D1
+        working-directory: /tmp/app-${{ matrix.short }}
+        run: sed -i 's/database_id = "".*$/database_id = "${{ env.POOL_DB_ID }}"/' wrangler.toml
+      - name: Install dependencies
+        working-directory: /tmp/app-${{ matrix.short }}
+        run: npm install --legacy-peer-deps
+      - name: Build for Cloudflare
+        working-directory: /tmp/app-${{ matrix.short }}
+        run: npm run build:cloudflare
+      - name: Deploy to Cloudflare Workers
+        working-directory: /tmp/app-${{ matrix.short }}
+        run: npx wrangler deploy --name preset-${{ matrix.short }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Health check (workers.dev, for CI visibility)
+        run: |
+          sleep 5
+          curl -sf -m 30 https://preset-${{ matrix.short }}.dyyz1993.workers.dev/health || echo "Worker may need time to propagate"
