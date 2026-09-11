@@ -9,7 +9,7 @@ Todo Application Template - A full-stack React + Hono application demonstrating 
 ## Commands
 
 ```bash
-npm run dev          # Start Vite dev server on port 3010 with Hono backend
+npm run dev          # Vite dev server (auto port, usually 5173) with Hono backend
 npm run build        # Production build
 npm run preview      # Preview production build
 npm run test         # Run all Vitest tests
@@ -68,7 +68,7 @@ src/
 
 ### Single-Port Development
 
-Uses "@hono/vite-dev-server" to run both frontend and backend on port 3010:
+Uses "@hono/vite-dev-server" to run both frontend and backend on one Vite-assigned port:
 
 - No CORS issues in development
 - Type safety across the boundary
@@ -169,7 +169,7 @@ import { useTodoStore } from '@client/stores/todoStore'
 Required variables (see `.env.example`):
 
 ```bash
-API_BASE_URL=http://localhost:3010
+API_BASE_URL=http://localhost:5173
 ```
 
 ### Module Manifest System

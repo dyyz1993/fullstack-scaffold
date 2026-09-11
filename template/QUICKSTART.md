@@ -15,10 +15,10 @@ npm install
 ## Development
 
 ```bash
-# Start development server (port 3010)
+# Start development server (Vite-assigned port, usually 5173)
 npm run dev
 
-# The app will be available at http://localhost:3010
+# The app URL is printed by the dev server (usually http://localhost:5173)
 ```
 
 ## Project Structure
@@ -276,7 +276,7 @@ git commit --no-verify -m "message"
 ### Port Already in Use
 
 ```bash
-# Kill process on port 3010
+# Kill process on the dev port (adjust as printed; 5173 shown)
 lsof -ti:3010 | xargs kill -9
 ```
 

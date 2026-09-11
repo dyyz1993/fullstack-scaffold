@@ -52,7 +52,7 @@ npm install
 npm run dev
 ```
 
-The application will be available at http://localhost:3010
+Dev 端口由 Vite 自动分配（通常 5173，以启动日志为准）；生产模式 `PORT=3010 npm start` 才是 3010
 
 ### Build
 
@@ -83,7 +83,7 @@ npm run test:integration
 
 ### Single-Port Development
 
-Uses "@hono/vite-dev-server" to run both frontend and backend on port 3010.
+Uses "@hono/vite-dev-server" to run both frontend and backend on a single Vite-assigned port (usually 5173; see dev output).
 
 ### Framework Layer vs Business Layer
 

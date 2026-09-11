@@ -147,7 +147,7 @@ The project has clear separation between framework and business layers:
 
 - ✅ Monorepo-style structure with client/server separation
 - ✅ Shared types for end-to-end type safety
-- ✅ Single-port development (3010) using @hono/vite-dev-server
+- ✅ Single-port development (Vite-assigned, usually 5173) using @hono/vite-dev-server
 - ✅ Modular backend with feature-based organization
 - ✅ Framework layer vs Business layer separation
 
