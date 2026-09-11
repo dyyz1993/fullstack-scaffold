@@ -88,7 +88,9 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
     try {
       const loginRes = await api<{ token: string }>('/auth/login', {
         method: 'POST',
-        body: { account, password },
+        // account + username 双字段：不同 preset 的 LoginSchema 字段名不同
+        //（saas 用 account，fullstack-admin 等用 username），双发保证兼容
+        body: { account, username: account, password },
       })
       if (!loginRes.success || !loginRes.data?.token) {
         return { ok: false, hasTenant: false, error: 'Invalid credentials' }
