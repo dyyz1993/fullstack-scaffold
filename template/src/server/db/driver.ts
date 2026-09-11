@@ -105,11 +105,13 @@ export async function closeDb(): Promise<void> {
 async function stampJournalIfPushBuilt(migrationsFolder: string): Promise<void> {
   if (!_client || !('execute' in _client)) return
 
-  // 核心表 + 租户表都在（= 当前 schema 形态、由 push 建成）
+  // todos 表在（= 当前 schema 形态、由 push 建成）。只查 todos——
+  // tenants 仅存在于含 tenant 模块的 preset，用它做条件会漏掉全部
+  // 无 tenant preset 的库（0.6.2 首次部署七杀五的根因）
   const shape = await _client.execute(
-    "SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name IN ('todos','tenants')"
+    "SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name='todos'"
   )
-  if (Number(shape.rows[0]?.c ?? 0) < 2) return
+  if (Number(shape.rows[0]?.c ?? 0) < 1) return
 
   const journalTable = await _client.execute(
     "SELECT COUNT(*) AS c FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'"
