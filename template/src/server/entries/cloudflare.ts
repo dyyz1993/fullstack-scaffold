@@ -39,10 +39,27 @@ const app = createApp<CloudflareBindings>()
 const isrCache = createISRCache()
 setISRCache(isrCache)
 
+/**
+ * 把 Workers 运行时的 env bindings 映射进 process.env。
+ * wrangler [vars] 不自动进 process.env，而 tsup 构建又把
+ * process.env.NODE_ENV 静态替换为 "production"——不映射的话
+ * ENABLE_DEV_TOKENS / AUTH_SECRET_KEY 等 config 读取全部失效。
+ */
+function mapEnvToProcess(env: Record<string, unknown>): void {
+  const proc = globalThis.process as unknown as { env: Record<string, unknown> }
+  if (!proc?.env) return
+  for (const [k, v] of Object.entries(env)) {
+    if (typeof v === 'string' && proc.env[k] === undefined) {
+      proc.env[k] = v
+    }
+  }
+}
+
 let cachedTemplate: string | null = null
 
 const wrappedApp = app
   .use('*', async (c, next) => {
+    mapEnvToProcess(c.env as unknown as Record<string, unknown>)
     ;(globalThis as unknown as { DB: D1Database }).DB = c.env.DB
     await next()
   })
@@ -71,6 +88,7 @@ const wrappedApp = app
 
 export default {
   fetch: async (request: Request, env: CloudflareBindings, ctx: ExecutionContext) => {
+    mapEnvToProcess(env as unknown as Record<string, unknown>)
     ;(globalThis as unknown as { DB: D1Database }).DB = env.DB
 
     const url = new URL(request.url)
