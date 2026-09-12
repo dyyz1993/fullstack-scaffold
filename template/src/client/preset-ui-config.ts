@@ -555,8 +555,10 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
 const PRESET_ALIASES: Record<string, PresetType> = {
   forum: 'community',
   'xbrowser-marketplace': 'plugin',
-  'fullstack-admin': 'saas',
   'todo-app': 'todo',
+  // 注意：fullstack-admin 不做别名——主站必须挂客户端应用（todos/SSE/WS），
+  // 管理后台走独立 /admin 入口（admin.html）。此前误映射为 'saas' 导致
+  // 主站被 AdminApp 接管，客户端页全灭且未登录时表现为"点击无反应"
 }
 
 export function getPresetUIConfig(id: string): PresetUIConfig {

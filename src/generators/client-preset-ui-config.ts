@@ -5,7 +5,6 @@ function getPresetType(presetId: string): string {
     'todo-app': 'todo',
     'xbrowser-marketplace': 'plugin',
     ecommerce: 'ecommerce',
-    'fullstack-admin': 'saas',
     forum: 'community',
     minimal: 'todo',
   }
@@ -542,7 +541,6 @@ export function generatePresetUIConfig(resolved: ResolvedPreset, presetId: strin
     'todo-app': 'todo',
     'xbrowser-marketplace': 'plugin',
     ecommerce: 'ecommerce',
-    'fullstack-admin': 'saas',
     forum: 'community',
     minimal: 'todo',
     saas: 'saas',
