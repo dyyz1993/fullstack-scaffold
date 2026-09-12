@@ -13,7 +13,7 @@ import {
   TENANT_ROLE_TEMPLATES,
   PLAN_ROLE_LIMITS,
 } from '@shared/schemas'
-import { getDb } from '@server/db'
+import { getDb, runTransactional } from '@server/db'
 import {
   tenants,
   tenantRoles,
@@ -225,7 +225,7 @@ export async function createTenant(input: CreateTenantInput, ownerId: string): P
 
   // 开通事务：租户 + 3 个系统角色模板 + owner 以 tenant_admin 身份入组。
   // 三步原子完成——"注册→建租户→可用"，否则新租户是无角色的空壳
-  const row = await db.transaction(async tx => {
+  const row = await runTransactional(async tx => {
     const inserted = await tx
       .insert(tenants)
       .values({
@@ -744,7 +744,6 @@ export async function acceptInvitation(
   token: string,
   userId: string
 ): Promise<TenantMember | null> {
-  const db = await getDb()
   const detail = await getInvitationByToken(token)
   if (!detail) return null
 
@@ -765,7 +764,7 @@ export async function acceptInvitation(
   const existing = await getMembership(userId, invitation.tenantId)
   const now = new Date().toISOString()
 
-  const memberRow = await db.transaction(async tx => {
+  const memberRow = await runTransactional(async tx => {
     await tx
       .update(tenantInvitations)
       .set({ status: 'accepted', acceptedAt: now })

@@ -144,6 +144,28 @@ async function stampJournalIfPushBuilt(migrationsFolder: string): Promise<void> 
   )
 }
 
+/**
+ * 事务兼容执行：Node/libsql 走真事务；D1（HTTP）不支持交互式事务，
+ * begin 直接报错——捕获后退化为顺序执行（牺牲原子性换取可用性，
+ * Cloudflare 部署路径的唯一选择）。业务回调对 tx/db 同形调用。
+ */
+/** LibSQL 事务句柄类型（D1 降级时传入的是整库句柄，方法同形） */
+type TxLike = Parameters<Parameters<LibSQLDb['transaction']>[0]>[0]
+
+export async function runTransactional<T>(fn: (tx: TxLike | LibSQLDb) => Promise<T>): Promise<T> {
+  const db = (await getDb()) as unknown as LibSQLDb
+  try {
+    return await db.transaction(async tx => fn(tx))
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    // D1（HTTP）不支持交互式事务，begin 直接报错——降级为顺序执行
+    if (/^Failed query: begin/i.test(msg) || msg.includes('transactions are not supported')) {
+      return await fn(db)
+    }
+    throw err
+  }
+}
+
 export async function runMigrations(): Promise<void> {
   if (isCloudflare) {
     log.info({}, 'Migrations skipped in Cloudflare Workers')
