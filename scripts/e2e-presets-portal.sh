@@ -130,9 +130,9 @@ check "saas 接受邀请（D1 事务）" "OK" "$ACCEPT"
 say ""
 say "== 4. 门户内容 =="
 PORTAL=$(json https://presets.$TLD/)
-check "门户含品牌名" "3" "$(echo "$PORTAL" | grep -c 'create-fullstack-scaffold')"
-# 门户 v2 为 hash SPA：服务端渲染默认 preset + 全部导航 chip
-SUB_COUNT=$(echo "$PORTAL" | grep -oE 'class="chip( on)?"' | wc -l | tr -d ' ')
+# 门户 v3：静态 HTML + 数据驱动渲染（sub:'xxx' 为 preset 数据条目）
+check "门户含品牌名" "2" "$(echo "$PORTAL" | grep -c 'create-fullstack-scaffold')"
+SUB_COUNT=$(echo "$PORTAL" | grep -oE "sub:'[a-z-]+'" | sort -u | wc -l | tr -d ' ')
 check "门户导航 7 个 preset" "7" "$SUB_COUNT"
 JOURNEY_COUNT=$(echo "$PORTAL" | grep -c "journey")
 [ "$JOURNEY_COUNT" -ge 1 ] && J=ok || J=none
