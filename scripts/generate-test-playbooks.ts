@@ -156,28 +156,28 @@ const PRESETS: Array<{
             title: '登录（快捷按钮）',
             steps: ['打开 /admin', '点击"客服人员"快捷登录按钮'],
             verify: '登录成功，header 显示 customerservice + 客服人员徽标',
-            shot: 'matrix/fullstack/cs-full/cs-01-dashboard.png',
+            shot: 'matrix/fullstack/cs-01-dashboard.png',
             selectors: { 快捷登录客服按钮: "find text '客服人员 customerservice' --action click" },
           },
           {
             title: '仪表盘统计被拒（API 403 → 卡片显示 0）',
             steps: ['登录后到达 /admin/dashboard'],
             verify: '统计卡全 0（API 403），但页面壳正常渲染',
-            shot: 'matrix/fullstack/cs-full/cs-01-dashboard.png',
+            shot: 'matrix/fullstack/cs-01-dashboard.png',
             selectors: { 统计API: '/api/admin/stats → 403' },
           },
           {
             title: '用户管理数据被拒（API 403 → 空表）',
             steps: ['点击侧栏"用户管理"'],
             verify: '表头完整但 No data（API 403）',
-            shot: 'matrix/fullstack/cs-full/cs-03-users-page-denied-empty.png',
+            shot: 'matrix/fullstack/cs-03-users-page-denied-empty.png',
             selectors: { 用户API: '/api/admin/users → 403 Permission denied: user:view' },
           },
           {
             title: '内容列表可见（只读）',
             steps: ['点击侧栏"内容管理" → "内容列表"'],
             verify: '2 篇文章可见，无编辑/删除按钮，无新建按钮',
-            shot: 'matrix/fullstack/cs-full/cs-02-notification-center-empty.png',
+            shot: 'matrix/fullstack/cs-02-notification-center-empty.png',
           },
         ],
       },
@@ -189,20 +189,20 @@ const PRESETS: Array<{
             title: '登录（快捷按钮）',
             steps: ['打开 /admin', '点击"普通用户"快捷登录按钮'],
             verify: '登录成功，header 显示 user1 + 普通用户徽标',
-            shot: 'matrix/fullstack/user-full/user-01-dashboard.png',
+            shot: 'matrix/fullstack/user-01-dashboard.png',
             selectors: { 快捷登录普通用户按钮: "find text '普通用户 user1' --action click" },
           },
           {
             title: '仪表盘统计被拒',
             steps: ['登录后到达 /admin/dashboard'],
             verify: '统计卡全 0（API 403）',
-            shot: 'matrix/fullstack/user-full/user-01-dashboard.png',
+            shot: 'matrix/fullstack/user-01-dashboard.png',
           },
           {
             title: '用户管理数据被拒',
             steps: ['点击侧栏"用户管理"'],
             verify: '表头完整但 No data',
-            shot: 'matrix/fullstack/user-full/user-03-users-page-denied-empty.png',
+            shot: 'matrix/fullstack/user-03-users-page-denied-empty.png',
           },
         ],
       },
@@ -350,7 +350,7 @@ const PRESETS: Array<{
             title: '注册新账号',
             steps: ['打开 /register', '填写 Username/Email/Password（min 6）', '点击注册'],
             verify: '跳转到 /login，无报错',
-            shot: 'matrix/todo/06-register.png',
+            shot: 'matrix/todo/todo-09-register.png',
             selectors: { 注册页URL: '/register' },
           },
           {
@@ -388,6 +388,297 @@ const PRESETS: Array<{
             steps: ['直接打开 /todos'],
             verify: '自动登录为 Demo User，可直接增删改',
             shot: 'matrix/todo/01-home.png',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'xbrowser-marketplace',
+    name: 'XBrowser Marketplace',
+    site: 'https://market.lpm1.top',
+    kbModule: 'market',
+    identities: [
+      {
+        name: '平台管理员',
+        cred: 'superadmin / 123456',
+        cases: [
+          {
+            title: '登录管理后台',
+            steps: ['打开 /admin', '输入 superadmin / 123456', '点击登录'],
+            verify: '进入管理后台',
+          },
+          {
+            title: '插件审核（approve/reject）',
+            steps: ['进入插件管理页', '查看待审核列表', '点击 approve 或 reject'],
+            verify: '插件状态变更',
+          },
+          {
+            title: '插件上架/下架',
+            steps: ['进入插件管理页', '操作上架/下架按钮'],
+            verify: '插件可见性变更',
+          },
+        ],
+      },
+      {
+        name: '开发者',
+        cred: '注册后登录',
+        cases: [
+          {
+            title: '注册开发者账号',
+            steps: ['打开注册页', '填写用户名/邮箱/密码', '提交'],
+            verify: '注册成功跳转登录',
+          },
+          {
+            title: '提交插件',
+            steps: ['登录后点击 Publish', '填写插件信息（名称/描述/版本/仓库）', '提交'],
+            verify: '插件进入 pending 审核状态',
+          },
+          {
+            title: '查看审核状态',
+            steps: ['进入 Developer 页面', '查看自己的插件列表'],
+            verify: '显示各插件的 pending/approved/rejected 状态',
+          },
+        ],
+      },
+      {
+        name: '用户/浏览器用户',
+        cred: '注册后登录',
+        cases: [
+          {
+            title: '浏览插件市场',
+            steps: ['打开首页'],
+            verify: '插件卡片渲染（Auth Guard / AI Helper）',
+            shot: 'matrix/market/market-01.png',
+          },
+          {
+            title: '搜索插件',
+            steps: ['点击导航 Search', '输入 auth', '提交搜索'],
+            verify: 'Found 1 results，仅 Auth Guard',
+            shot: 'matrix/market/market-03-search-auth.png',
+          },
+          {
+            title: '查看插件详情',
+            steps: ['点击 Auth Guard 卡片'],
+            verify: '详情页显示 approved/Featured/v1.0.0',
+            shot: 'matrix/market/market-04-auth-guard-detail.png',
+          },
+          {
+            title: '安装插件',
+            steps: ['在详情页点击 Install Plugin'],
+            verify: '后端 POST 200（UI 反馈为已知缺陷）',
+            shot: 'matrix/market/market-05-install-click.png',
+          },
+          {
+            title: '写评论（逆向：静默失败）',
+            steps: ['在详情页评论表单填写 5 星+标题+正文', '点击提交'],
+            verify: '⚠ POST 404 Plugin not found，UI 清空表单假装成功（已知缺陷）',
+            shot: 'matrix/market/market-07-review-after-submit.png',
+          },
+        ],
+      },
+      {
+        name: '游客（未登录）',
+        cred: '无需登录',
+        cases: [
+          {
+            title: '浏览插件列表',
+            steps: ['直接打开首页'],
+            verify: '插件卡片可见',
+            shot: 'matrix/market/market-01.png',
+          },
+          {
+            title: '搜索（不需登录）',
+            steps: ['点击 Search', '输入关键词', '提交'],
+            verify: '搜索结果正常',
+            shot: 'matrix/market/market-03-search-auth.png',
+          },
+          {
+            title: '空结果态',
+            steps: ['搜索不存在的词 zzzqqq'],
+            verify: '显示 No results for zzzqqq',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'forum',
+    name: 'Forum',
+    site: 'https://forum.lpm1.top',
+    kbModule: 'forum',
+    identities: [
+      {
+        name: '管理员',
+        cred: 'superadmin / 123456',
+        cases: [
+          {
+            title: '内容新建/编辑/发布',
+            steps: ['登录管理后台', '进入内容管理', '新建内容 → 填写 → 发布'],
+            verify: '内容状态变为 published',
+          },
+          {
+            title: '用户管理',
+            steps: ['进入用户管理页'],
+            verify: '用户列表正常渲染',
+          },
+          {
+            title: '系统设置',
+            steps: ['进入系统设置页'],
+            verify: '表单带出真实配置值',
+          },
+        ],
+      },
+      {
+        name: '注册用户',
+        cred: 'member@community.dev（预填）',
+        cases: [
+          {
+            title: '注册/登录',
+            steps: ['打开 /register', '填写表单', '提交', '登录'],
+            verify: '注册→登录成功',
+            shot: 'matrix/forum/06-register.png',
+          },
+          {
+            title: '浏览全部内容',
+            steps: ['打开首页'],
+            verify: '全部已发布内容可见',
+            shot: 'matrix/forum/01-home.png',
+          },
+          {
+            title: '分类筛选',
+            steps: ['点击"文章"筛选胶囊'],
+            verify: '列表缩至仅文章类',
+            shot: 'matrix/forum/02-filter-article.png',
+          },
+          {
+            title: '搜索',
+            steps: ['输入 ISR', '点击搜索'],
+            verify: '命中 ISR 教程',
+            shot: 'matrix/forum/03-search-isr.png',
+          },
+          {
+            title: '查看内容详情',
+            steps: ['点击内容卡片'],
+            verify: '详情页完整（面包屑/正文/返回）',
+            shot: 'matrix/forum/04-detail-welcome.png',
+          },
+        ],
+      },
+      {
+        name: '游客（未登录）',
+        cred: '无需登录',
+        cases: [
+          {
+            title: '浏览内容列表',
+            steps: ['直接打开首页'],
+            verify: '公开内容可见',
+            shot: 'matrix/forum/01-home.png',
+          },
+          {
+            title: '发帖/评论被拒',
+            steps: ['尝试发帖或评论（需登录）'],
+            verify: '被要求登录',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ecommerce',
+    name: 'Ecommerce',
+    site: 'https://shop.lpm1.top',
+    kbModule: 'preset-sites',
+    identities: [
+      {
+        name: '游客/消费者（唯一身份）',
+        cred: '无需登录（此形态无 auth 模块）',
+        cases: [
+          {
+            title: '浏览内容中心',
+            steps: ['直接打开首页'],
+            verify: '内容卡片 + 分类 tab + 搜索框',
+            shot: 'matrix/shop/shop-01.png',
+          },
+          {
+            title: '分类筛选',
+            steps: ['点击"教程"分类 tab'],
+            verify: '列表缩至仅教程类',
+            shot: 'matrix/shop/shop-02.png',
+          },
+          {
+            title: '搜索',
+            steps: ['输入 ISR', '点击搜索'],
+            verify: '命中 ISR 教程',
+            shot: 'matrix/shop/shop-03.png',
+          },
+          {
+            title: '查看内容详情',
+            steps: ['点击内容卡片'],
+            verify: '详情页完整',
+            shot: 'matrix/shop/shop-04.png',
+          },
+          {
+            title: '购物车页面',
+            steps: ['点击导航 Cart'],
+            verify: 'mock 商品 + Order Summary + Checkout 按钮',
+            shot: 'matrix/shop/shop-06.png',
+          },
+          {
+            title: '订单页面',
+            steps: ['点击导航 Orders'],
+            verify: 'mock 订单列表 + 状态筛选',
+            shot: 'matrix/shop/shop-05.png',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'minimal',
+    name: 'Minimal',
+    site: 'https://minimal.lpm1.top',
+    kbModule: 'preset-sites',
+    identities: [
+      {
+        name: '游客（唯一身份，无认证模块）',
+        cred: '无需登录',
+        cases: [
+          {
+            title: '浏览 todos 列表',
+            steps: ['直接打开首页'],
+            verify: 'Todos 列表 + 极简导航（仅 Biomimic+Todos）',
+            shot: 'matrix/minimal/01-home.png',
+          },
+          {
+            title: '新增 todo',
+            steps: ['在输入框填写标题', '点击 Add'],
+            verify: 'Total +1，新条目置顶',
+            shot: 'matrix/minimal/02-add-new.png',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'cli-only',
+    name: 'CLI Only',
+    site: '',
+    kbModule: 'preset-sites',
+    identities: [
+      {
+        name: 'CLI 用户（唯一身份）',
+        cred: '通过 CLI 登录',
+        cases: [
+          {
+            title: 'CLI 命令',
+            steps: ['npm run cli -- --help', '运行 todos list 等命令'],
+            verify: '命令输出正常',
+          },
+          {
+            title: 'API 调用',
+            steps: ['curl http://localhost:3010/api/todos'],
+            verify: 'API 返回 JSON 数据',
           },
         ],
       },
