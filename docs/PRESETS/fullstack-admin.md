@@ -6,6 +6,14 @@
 - **模块数**：15
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/fullstack-admin.md
 
+## 界面速览
+
+![fullstack-login](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/fullstack-login.png)
+
+![fullstack-dashboard](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/fullstack-dashboard.png)
+
+![fullstack-users](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/fullstack-users.png)
+
 ## 适用 / 不适用
 
 - **适用**：快速搭全能型后台原型；学习 Hono RPC/Zod 端到端类型安全与多入口管理台架构；AI Agent 自动开发场景。

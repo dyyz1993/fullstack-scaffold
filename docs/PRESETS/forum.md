@@ -6,6 +6,10 @@
 - **模块数**：5
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/forum.md
 
+## 界面速览
+
+![forum-home](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/forum-home.png)
+
 ## 适用 / 不适用
 
 - **适用**：社区/论坛/博客平台原型；内容审核流场景。

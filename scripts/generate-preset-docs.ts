@@ -175,6 +175,24 @@ function main() {
       }
     }
 
+    // 截图区：raw.githubusercontent 引用仓库内 docs/PRESETS/screenshots/<short>-*.png
+    const rawBase =
+      'https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots'
+    const shotMap: Record<string, string[]> = {
+      'fullstack-admin': ['fullstack-login', 'fullstack-dashboard', 'fullstack-users'],
+      'todo-app': ['todo-home'],
+      saas: ['saas-home', 'saas-tenant-login', 'saas-tenant-dashboard'],
+      ecommerce: ['shop-home'],
+      forum: ['forum-home'],
+      'xbrowser-marketplace': ['market-home', 'market-detail'],
+      minimal: ['minimal-home'],
+    }
+    const shots = shotMap[p.id] ?? []
+    const shotSection =
+      shots.length > 0
+        ? `## 界面速览\n\n${shots.map(n => `![${n}](${rawBase}/${n}.png)`).join('\n\n')}\n`
+        : ''
+
     const doc = `# ${meta.title}
 
 > ${meta.positioning}
@@ -183,7 +201,7 @@ function main() {
 - **模块数**：${p.modules.length}
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/${p.id}.md
 
-## 适用 / 不适用
+${shotSection}## 适用 / 不适用
 
 - **适用**：${meta.fit}
 - **不适用**：${meta.notfit}

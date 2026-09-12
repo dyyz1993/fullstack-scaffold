@@ -6,6 +6,10 @@
 - **模块数**：9
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/ecommerce.md
 
+## 界面速览
+
+![shop-home](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/shop-home.png)
+
 ## 适用 / 不适用
 
 - **适用**：交易类应用原型；需要工单与仲裁流程的业务。

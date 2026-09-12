@@ -43,11 +43,25 @@ export default {
       },
       { name: 'Minimal', zh: '极简单模块', sub: 'minimal', desc: '只有 todos 的最小可用骨架' },
     ]
+
+    const RAW =
+      'https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots'
+    const shots = {
+      fullstack: 'fullstack-dashboard',
+      todo: 'todo-home',
+      saas: 'saas-tenant-dashboard',
+      shop: 'shop-home',
+      forum: 'forum-home',
+      market: 'market-home',
+      minimal: 'minimal-home',
+    }
+
     const cards = presets
       .map(
         p => `<a class="card" href="https://${p.sub}.lpm1.top" target="_blank" rel="noopener">
         <h2>${p.name}<span>${p.zh}</span></h2>
         <p>${p.desc}</p>
+        <img loading="lazy" src="${RAW}/${shots[p.sub] || 'portal'}.png" alt="${p.name} screenshot" style="width:100%;border-radius:8px;margin-bottom:10px;border:1px solid #334155">
         <code>https://${p.sub}.lpm1.top</code>
       </a>`
       )

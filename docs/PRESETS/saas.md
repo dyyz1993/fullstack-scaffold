@@ -6,6 +6,14 @@
 - **模块数**：8
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/saas.md
 
+## 界面速览
+
+![saas-home](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/saas-home.png)
+
+![saas-tenant-login](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/saas-tenant-login.png)
+
+![saas-tenant-dashboard](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/saas-tenant-dashboard.png)
+
 ## 适用 / 不适用
 
 - **适用**：B2B 工具站/多组织内容平台/内部多部门系统。

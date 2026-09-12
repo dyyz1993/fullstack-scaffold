@@ -6,6 +6,10 @@
 - **模块数**：4
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/todo-app.md
 
+## 界面速览
+
+![todo-home](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/todo-home.png)
+
 ## 适用 / 不适用
 
 - **适用**：学习脚手架主干（RPC/测试/部署）；以此为底座开发自己的业务模块。

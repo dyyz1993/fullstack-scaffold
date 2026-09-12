@@ -6,6 +6,10 @@
 - **模块数**：1
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/minimal.md
 
+## 界面速览
+
+![minimal-home](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/minimal-home.png)
+
 ## 适用 / 不适用
 
 - **适用**：验证部署链路；作为从零学习模板结构的起点。

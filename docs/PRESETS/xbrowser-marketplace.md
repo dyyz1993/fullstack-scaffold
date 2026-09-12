@@ -6,6 +6,12 @@
 - **模块数**：11
 - **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/xbrowser-marketplace.md
 
+## 界面速览
+
+![market-home](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/market-home.png)
+
+![market-detail](https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/market-detail.png)
+
 ## 适用 / 不适用
 
 - **适用**：浏览器插件/应用市场类平台；需要审核流的 UGC 平台。
