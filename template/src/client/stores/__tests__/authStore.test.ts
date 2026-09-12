@@ -75,6 +75,8 @@ interface FullAuthState extends AuthState {
   clearError: () => void
 }
 
+type PersistedAuthState = Pick<FullAuthState, 'token' | 'isAuthenticated' | 'user'>
+
 const createFullAuthStore = (storage: Record<string, unknown> = noopStorage) =>
   create<FullAuthState>()(
     persist(
@@ -155,13 +157,13 @@ const createFullAuthStore = (storage: Record<string, unknown> = noopStorage) =>
       }),
       {
         name: 'auth-token-test',
-        partialize: (state: FullAuthState) => ({
+        partialize: (state: FullAuthState): PersistedAuthState => ({
           token: state.token,
           isAuthenticated: state.isAuthenticated,
           user: state.user,
         }),
         storage: storage as unknown as ReturnType<
-          typeof import('zustand/middleware').createJSONStorage<FullAuthState>
+          typeof import('zustand/middleware').createJSONStorage<PersistedAuthState>
         >,
       }
     )
