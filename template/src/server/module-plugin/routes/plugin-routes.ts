@@ -311,7 +311,8 @@ export const pluginRoutes = new OpenAPIHono()
         return c.json({ success: false as const, error: 'Already reviewed' }, 409)
       }
       console.error('[plugin-routes] submitReview failed:', error)
-      return c.json({ success: false as const, error: 'Failed to submit review' }, 500)
+      const detail = error instanceof Error ? error.message : String(error)
+      return c.json({ success: false as const, error: `Failed to submit review: ${detail}` }, 500)
     }
   })
   .openapi(getReviewsRoute, async c => {
