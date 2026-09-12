@@ -98,6 +98,22 @@ export default {
       return wrappedApp.fetch(request, env, ctx)
     }
 
+    // 多入口 HTML：/tenant/* → tenant.html、/admin/* → admin.html。
+    // 不显式分流的话这些路径会落入 SPA fallback（index.html），
+    // 租户控制台/管理端在 CF 上表现为客户端 404（0.6.6 部署实测）
+    if (env.ASSETS && (pathname === '/tenant' || pathname.startsWith('/tenant/'))) {
+      const tenantResp = await env.ASSETS.fetch(
+        new Request(new URL('/tenant.html', request.url).toString())
+      )
+      if (tenantResp.status !== 404) return tenantResp
+    }
+    if (env.ASSETS && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
+      const adminResp = await env.ASSETS.fetch(
+        new Request(new URL('/admin.html', request.url).toString())
+      )
+      if (adminResp.status !== 404) return adminResp
+    }
+
     if (env.ASSETS) {
       if (
         pathname.startsWith('/assets/') ||

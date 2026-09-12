@@ -5,7 +5,11 @@ import { successResponse, errorResponse } from '@server/utils/route-helpers'
 import { NotFoundError } from '@server/utils/app-error'
 import { success } from '@server/utils/response'
 import { z } from '@hono/zod-openapi'
-import { ContentSchema, ContentCategorySchema } from '@shared/modules/content'
+import {
+  ContentSchema,
+  ContentListResponseSchema,
+  ContentCategorySchema,
+} from '@shared/modules/content'
 
 const listPublicRoute = createRoute({
   method: 'get',
@@ -20,7 +24,7 @@ const listPublicRoute = createRoute({
     }),
   },
   responses: {
-    200: successResponse(z.array(ContentSchema), 'List published contents'),
+    200: successResponse(ContentListResponseSchema, 'List published contents'),
   },
 })
 

@@ -44,7 +44,8 @@ export const ContentListPage: React.FC = () => {
       })
       const result = await res.json()
       if (result.success) {
-        setContents(result.data)
+        // API 信封 data = { contents: [...], total, page, limit }
+        setContents(result.data?.contents ?? [])
       } else {
         setError('Failed to fetch contents')
       }

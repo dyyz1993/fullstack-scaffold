@@ -75,7 +75,10 @@ describe('ContentListPage', () => {
     beforeEach(() => {
       mockApiGet.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true, data: mockContents }),
+        json: async () => ({
+          success: true,
+          data: { contents: mockContents, total: mockContents.length, page: 1, limit: 20 },
+        }),
       })
     })
 
@@ -117,7 +120,7 @@ describe('ContentListPage', () => {
     it('should show empty state when no contents', async () => {
       mockApiGet.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true, data: [] }),
+        json: async () => ({ success: true, data: { contents: [], total: 0, page: 1, limit: 20 } }),
       })
       renderPage()
       await waitFor(() => {
@@ -151,7 +154,10 @@ describe('ContentListPage', () => {
     beforeEach(() => {
       mockApiGet.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true, data: mockContents }),
+        json: async () => ({
+          success: true,
+          data: { contents: mockContents, total: mockContents.length, page: 1, limit: 20 },
+        }),
       })
     })
 
@@ -175,7 +181,10 @@ describe('ContentListPage', () => {
     beforeEach(() => {
       mockApiGet.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true, data: mockContents }),
+        json: async () => ({
+          success: true,
+          data: { contents: mockContents, total: mockContents.length, page: 1, limit: 20 },
+        }),
       })
     })
 
