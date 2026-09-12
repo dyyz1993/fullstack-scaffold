@@ -106,13 +106,35 @@ check "fullstack mock 登录（superadmin/123456）" "OK" "$FA_LOGIN"
 # 3c. 租户控制台页面
 check "saas /tenant/login 页面" 200 "$(code https://saas.$TLD/tenant/login)"
 
+# ---------- 3b. 邀请全链（D1 事务兼容回归） ----------
+say ""
+say "== 3b. 邀请全链（线上真实事务路径） =="
+INV=$(json -X POST "https://saas.$TLD/api/tenants/5/members/invite" -H "Authorization: Bearer test-super-admin-1" -H "Content-Type: application/json" -d '{"email":"e2e-invite@lpm1.top","roleId":"tr_saas_admin"}' | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d['data']['token'] if d.get('success') else 'ERR')
+except Exception: print('EXC')" 2>/dev/null)
+check "saas 创建邀请" "48" "${#INV}"
+ACCEPT=$(json -X POST "https://saas.$TLD/api/tenants/invitations/$INV/accept" -H "Authorization: Bearer test-user-9" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print('OK' if d.get('success') else 'ERR')
+except Exception: print('EXC')" 2>/dev/null)
+check "saas 接受邀请（D1 事务）" "OK" "$ACCEPT"
+
 # ---------- 4. 门户内容 ----------
 say ""
 say "== 4. 门户内容 =="
 PORTAL=$(json https://presets.$TLD/)
 check "门户含品牌名" "3" "$(echo "$PORTAL" | grep -c 'create-fullstack-scaffold')"
-SUB_COUNT=$(echo "$PORTAL" | grep -oE "[a-z]+\.${TLD}" | sort -u | grep -vE "^(presets|demo)\." | wc -l | tr -d ' ')
-check "门户列出 7 个 preset 站点入口" "7" "$SUB_COUNT"
+# 门户 v2 为 hash SPA：服务端渲染默认 preset + 全部导航 chip
+SUB_COUNT=$(echo "$PORTAL" | grep -oE 'class="chip( on)?"' | wc -l | tr -d ' ')
+check "门户导航 7 个 preset" "7" "$SUB_COUNT"
+JOURNEY_COUNT=$(echo "$PORTAL" | grep -c "journey")
+[ "$JOURNEY_COUNT" -ge 1 ] && J=ok || J=none
+check "门户含旅程故事板" "ok" "$J"
 check "门户含 Mission Pack 链接" "1" "$(echo "$PORTAL" | grep -c 'MISSION-PACK')"
 
 # ---------- 5. 文档存在性（GitHub raw） ----------
