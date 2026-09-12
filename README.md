@@ -9,6 +9,8 @@ Zero-config fullstack app generator with type-safe RPC, 15+ modules, and 8 produ
 - **Live demo** (fullstack-admin preset): https://demo.lpm1.top
 - **Mission Pack** — copy-paste prompts that make any AI agent build with this scaffold:
   [MISSION-PACK.md](./MISSION-PACK.md) (includes downloadable Skill URLs, task prompts A–D, and hard-won agent tips)
+- **Coverage report** — every function × every role, tested with screenshots:
+  [docs/PRESETS/COVERAGE.md](./docs/PRESETS/COVERAGE.md)（99 张实拍截图）
 
 ## Quick Start
 

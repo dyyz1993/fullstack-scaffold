@@ -299,6 +299,7 @@ ${journeys}
 <div class="links">
   <a href="https://github.com/dyyz1993/fullstack-scaffold/blob/master/MISSION-PACK.md" target="_blank" rel="noopener">📋 Mission Pack（Agent 提示词包）</a>
   <a href="https://github.com/dyyz1993/fullstack-scaffold/tree/master/docs/PRESETS" target="_blank" rel="noopener">📚 全部形态文档</a>
+  <a href="https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/COVERAGE.md" target="_blank" rel="noopener">🧪 全功能×身份覆盖矩阵（99 图实测）</a>
   <a href="https://www.npmjs.com/package/create-fullstack-scaffold" target="_blank" rel="noopener">⬇ npm</a>
   <a href="https://demo.lpm1.top" target="_blank" rel="noopener">▶ 全形态 Demo</a>
 </div>
