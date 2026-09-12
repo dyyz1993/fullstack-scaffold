@@ -1,15 +1,32 @@
-# cli-only
+# CLI Only — 纯命令行形态
 
-> CLI + Server only, no web client. For AI agent automation — no browser UI needed
+> 无前端 UI，纯 CLI + API 服务。
 
-- **在线演示**：无（纯 CLI 形态，本地生成使用）
+- **在线演示**：无（纯 CLI 形态）
 - **模块数**：4
-- **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/cli-only.md
+- **身份数**：1
+- **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/cli-only.md)
 
 ## 适用 / 不适用
 
-- **适用**：—
-- **不适用**：—
+- **适用**：后端 API 原型；CLI 工具开发。
+- **不适用**：需要 Web 界面的场景。
+
+## 用户角色与权限（1 种身份）
+
+### CLI 用户
+
+通过命令行与 API 交互
+**凭据**: `通过 CLI 登录`
+
+**能做**:
+
+- ✓ CLI 命令（todos/notifications/auth 等）
+- ✓ API 调用
+
+**不能做**:
+
+- ✗ Web UI（此形态无前端）
 
 ## 模块清单
 
@@ -22,14 +39,10 @@
 
 ## API 面
 
-**todos**（9 条）：
+**todos**（5 条）：
 
 - `OPENAPI /todos`
 - `OPENAPI /todos/{id}`
-- `OPENAPI /todos`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/with-attachments`
 - `OPENAPI /todos/{todoId}/attachments/{attachmentId}`
@@ -39,16 +52,14 @@
 - `OPENAPI /chat/ws/status`
 - `OPENAPI /chat/ws`
 
-**notifications**（8 条）：
+**notifications**（6 条）：
 
 - `OPENAPI /notifications/stream`
 - `OPENAPI /notifications`
 - `OPENAPI /notifications/unread-count`
 - `OPENAPI /notifications/{id}`
-- `OPENAPI /notifications`
 - `OPENAPI /notifications/read-all`
 - `OPENAPI /notifications/{id}/read`
-- `OPENAPI /notifications/{id}`
 
 **auth**（5 条）：
 
@@ -58,10 +69,8 @@
 - `OPENAPI /auth/verify`
 - `OPENAPI /profile`
 
-## 验证清单（部署后逐条执行）
+## 验证清单
 
-- 本地 `npm run cli -- --help` → 命令列表正常
+- CLI 可用
 
-- 登录凭据（如适用）：`superadmin / 123456`（admin mock）；saas 控制台 `superadmin / admin123`
-
-> 本文档由 `scripts/generate-preset-docs.ts` 生成——结构化部分来自模块清单，改动模块后请重新生成。
+> 由 `scripts/generate-preset-docs.ts` 生成。

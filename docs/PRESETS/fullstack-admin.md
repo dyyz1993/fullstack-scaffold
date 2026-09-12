@@ -1,10 +1,11 @@
 # Fullstack Admin — 全模块管理后台
 
-> 全部 13 个模块的最全形态：管理后台 + 多租户 + 插件市场 + 电商 + 内容，一 applic全有。
+> 全部 13 个模块的最全形态：管理后台 + 多租户 + 插件市场 + 电商 + 内容，一套全有。
 
 - **在线演示**：https://fullstack.lpm1.top
 - **模块数**：15
-- **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/fullstack-admin.md
+- **身份数**：4
+- **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/fullstack-admin.md)
 
 ## 界面速览
 
@@ -16,8 +17,88 @@
 
 ## 适用 / 不适用
 
-- **适用**：快速搭全能型后台原型；学习 Hono RPC/Zod 端到端类型安全与多入口管理台架构；AI Agent 自动开发场景。
-- **不适用**：生产直接使用（演示站协议与默认凭据需先处理）；只要单一功能的轻量场景。
+- **适用**：快速搭全能型后台原型；学习 Hono RPC/Zod 端到端类型安全与多入口管理台架构。
+- **不适用**：生产直接使用（演示站协议与默认凭据需先处理）。
+
+## 用户角色与权限（4 种身份）
+
+### 超级管理员 (super_admin)
+
+拥有全部 45 项权限，可管理所有模块、用户、角色、系统设置
+**凭据**: `superadmin / 123456（或快速登录按钮）`
+
+**能做**:
+
+- ✓ 仪表盘统计（总待办/待处理/已完成）
+- ✓ 用户管理（查看/创建/编辑/删除）
+- ✓ 内容管理（新建/编辑/发布/删除）
+- ✓ 订单/工单/纠纷管理
+- ✓ 角色与权限管理
+- ✓ 系统设置读写
+- ✓ 插件管理与审核
+- ✓ 审计日志查看
+- ✓ 租户管理（/tenant 独立入口）
+
+**不能做**:
+
+- ✗ —（拥有全部权限）
+
+### 客服人员 (customer_service)
+
+可查看内容、处理工单，不能管理系统或用户
+**凭据**: `customerservice / 123456（快速登录按钮）`
+
+**能做**:
+
+- ✓ 查看内容列表（只读）
+- ✓ 查看工单管理页
+- ✓ 通知中心
+- ✓ 自己的 todos
+
+**不能做**:
+
+- ✗ 仪表盘统计（API 403 → 卡片显示 0）
+- ✗ 用户管理（API 403 → 空表）
+- ✗ 系统设置（API 403 → 空表单）
+- ✗ 内容新建/编辑（按钮不渲染）
+- ✗ 角色管理（API 403）
+
+### 普通用户 (user)
+
+基础权限：查看内容、管理自己的 todos
+**凭据**: `user1 / 123456（快速登录按钮）`
+
+**能做**:
+
+- ✓ 查看内容列表
+- ✓ 自己的 todos CRUD
+- ✓ 通知中心
+- ✓ 媒体/验证码测试页
+
+**不能做**:
+
+- ✗ 仪表盘统计
+- ✗ 用户管理
+- ✗ 系统设置
+- ✗ 内容新建/编辑
+- ✗ 角色管理
+- ✗ 订单/工单/纠纷
+
+### 游客（未登录）
+
+无需登录即可浏览公开页面
+**凭据**: `无需登录`
+
+**能做**:
+
+- ✓ 浏览 /todos 页（SSR 渲染数据）
+- ✓ 浏览 /notifications（SSE Demo）
+- ✓ 浏览 /websocket（WS Demo）
+
+**不能做**:
+
+- ✗ 写操作需认证（API 返回 401）
+- ✗ 访问 /admin 管理后台
 
 ## 模块清单
 
@@ -41,14 +122,10 @@
 
 ## API 面
 
-**todos**（9 条）：
+**todos**（5 条）：
 
 - `OPENAPI /todos`
 - `OPENAPI /todos/{id}`
-- `OPENAPI /todos`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/with-attachments`
 - `OPENAPI /todos/{todoId}/attachments/{attachmentId}`
@@ -58,24 +135,20 @@
 - `OPENAPI /chat/ws/status`
 - `OPENAPI /chat/ws`
 
-**notifications**（8 条）：
+**notifications**（6 条）：
 
 - `OPENAPI /notifications/stream`
 - `OPENAPI /notifications`
 - `OPENAPI /notifications/unread-count`
 - `OPENAPI /notifications/{id}`
-- `OPENAPI /notifications`
 - `OPENAPI /notifications/read-all`
 - `OPENAPI /notifications/{id}/read`
-- `OPENAPI /notifications/{id}`
 
-**file**（6 条）：
+**file**（4 条）：
 
 - `OPENAPI /public/{namespace}/{filename}`
 - `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /generate-url`
-- `OPENAPI /public/{namespace}/{filename}`
-- `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /upload`
 
 **captcha**（2 条）：
@@ -83,7 +156,7 @@
 - `OPENAPI /captcha`
 - `OPENAPI /verify-captcha`
 
-**permission**（18 条）：
+**permission**（15 条）：
 
 - `OPENAPI /audit-logs`
 - `OPENAPI /audit-logs/:id`
@@ -99,12 +172,9 @@
 - `OPENAPI /permissions/init`
 - `OPENAPI /roles`
 - `OPENAPI /roles/:id`
-- `OPENAPI /roles`
-- `OPENAPI /roles/:id`
-- `OPENAPI /roles/:id`
 - `OPENAPI /roles/:id/permissions`
 
-**admin**（30 条）：
+**admin**（26 条）：
 
 - `OPENAPI /admin/notifications`
 - `OPENAPI /admin/notifications/unread-count`
@@ -130,12 +200,8 @@
 - `OPENAPI /admin/activity`
 - `OPENAPI /admin/todos/all`
 - `OPENAPI /admin/settings`
-- `OPENAPI /admin/settings`
 - `OPENAPI /admin/users`
 - `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users`
 
 **auth**（5 条）：
 
@@ -145,7 +211,7 @@
 - `OPENAPI /auth/verify`
 - `OPENAPI /profile`
 
-**plugin**（28 条）：
+**plugin**（19 条）：
 
 - `OPENAPI /stats/dashboard`
 - `OPENAPI /plugins/pending`
@@ -157,88 +223,61 @@
 - `OPENAPI /plugins/bulk-approve`
 - `OPENAPI /plugins/bulk-reject`
 - `OPENAPI /categories`
-- `OPENAPI /categories`
 - `OPENAPI /categories/{id}`
-- `OPENAPI /categories/{id}`
-- `OPENAPI /plugins`
 - `OPENAPI /plugins/search`
-- `OPENAPI /plugins/{slug}`
 - `OPENAPI /plugins/{slug}/versions`
-- `OPENAPI /plugins`
-- `OPENAPI /plugins/{slug}`
-- `OPENAPI /plugins/{slug}`
-- `OPENAPI /plugins/{slug}/reviews`
 - `OPENAPI /plugins/{slug}/reviews`
 - `OPENAPI /plugins/{slug}/reviews/{reviewId}`
 - `OPENAPI /plugins/{slug}/install`
-- `OPENAPI /categories`
 - `OPENAPI /categories/{slug}/plugins`
 - `OPENAPI /stats`
 - `OPENAPI /plugins/mine`
 
-**tenant**（21 条）：
+**tenant**（15 条）：
 
 - `GET authUser`
 - `GET tenant`
 - `OPENAPI /tenants`
 - `OPENAPI /tenants/{id}`
 - `OPENAPI /tenants/slug/{slug}`
-- `OPENAPI /tenants`
-- `OPENAPI /tenants/{id}`
-- `OPENAPI /tenants/{id}`
 - `OPENAPI /tenants/mine`
 - `OPENAPI /tenants/{tenantId}/roles`
-- `OPENAPI /tenants/{tenantId}/roles`
-- `OPENAPI /tenants/{tenantId}/roles/{roleId}`
 - `OPENAPI /tenants/{tenantId}/roles/{roleId}`
 - `OPENAPI /tenants/{tenantId}/members`
 - `OPENAPI /tenants/{tenantId}/members/invite`
-- `OPENAPI /tenants/{tenantId}/members/{memberId}`
 - `OPENAPI /tenants/{tenantId}/members/{memberId}`
 - `OPENAPI /tenants/{tenantId}/invitations/{invitationId}`
 - `OPENAPI /tenants/invitations/{token}`
 - `OPENAPI /tenants/invitations/{token}/accept`
 - `OPENAPI /tenant/current`
 
-**order**（11 条）：
+**order**（8 条）：
 
 - `OPENAPI /cart`
 - `OPENAPI /cart/items`
 - `OPENAPI /cart/items/{id}`
 - `OPENAPI /orders`
 - `OPENAPI /orders/{id}`
-- `OPENAPI /orders`
-- `OPENAPI /orders/{id}`
-- `OPENAPI /orders/{id}`
 - `OPENAPI /orders/{id}/process`
 - `OPENAPI /orders/{id}/cancel`
 - `OPENAPI /orders-mock`
 
-**ticket**（7 条）：
+**ticket**（4 条）：
 
 - `OPENAPI /tickets`
-- `OPENAPI /tickets/{id}`
-- `OPENAPI /tickets`
-- `OPENAPI /tickets/{id}`
 - `OPENAPI /tickets/{id}`
 - `OPENAPI /tickets/{id}/reply`
 - `OPENAPI /tickets/{id}/close`
 
-**dispute**（6 条）：
+**dispute**（3 条）：
 
 - `OPENAPI /disputes`
-- `OPENAPI /disputes/{id}`
-- `OPENAPI /disputes`
-- `OPENAPI /disputes/{id}`
 - `OPENAPI /disputes/{id}`
 - `OPENAPI /disputes/{id}/resolve`
 
-**content**（12 条）：
+**content**（9 条）：
 
 - `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
-- `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}/publish`
 - `OPENAPI /contents/{id}/archive`
@@ -248,20 +287,18 @@
 - `OPENAPI /topics/popular`
 - `OPENAPI /profile`
 
-**merchant**（6 条）：
+**merchant**（5 条）：
 
 - `GET authUser`
 - `OPENAPI /merchant/me`
 - `OPENAPI /merchant/login`
 - `OPENAPI /merchant/stats`
 - `OPENAPI /merchant/products`
-- `OPENAPI /merchant/products`
 
-## 验证清单（部署后逐条执行）
+## 验证清单
 
-- `curl https://fullstack.lpm1.top/health` → 200 `{"status":"ok"}`
-- GET /api/plugins/search?q=a → 200 插件市场数据
-- POST /api/auth/login (username=superadmin, password=123456) → 200（admin mock 登录）
-- 登录凭据（如适用）：`superadmin / 123456`（admin mock）；saas 控制台 `superadmin / admin123`
+- `curl https://fullstack.lpm1.top/health` → 200
+- GET /api/plugins/search?q=a → 200
+- POST /api/auth/login → 200
 
-> 本文档由 `scripts/generate-preset-docs.ts` 生成——结构化部分来自模块清单，改动模块后请重新生成。
+> 由 `scripts/generate-preset-docs.ts` 生成。

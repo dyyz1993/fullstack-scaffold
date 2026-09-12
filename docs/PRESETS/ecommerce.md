@@ -1,10 +1,11 @@
 # Ecommerce — 电商交易形态
 
-> 订单/购物车/工单/纠纷仲裁/内容的电商组合，含审批流工单与争议仲裁状态机。
+> 订单/购物车/工单/纠纷仲裁/内容的电商组合。
 
 - **在线演示**：https://shop.lpm1.top
 - **模块数**：9
-- **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/ecommerce.md
+- **身份数**：2
+- **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/ecommerce.md)
 
 ## 界面速览
 
@@ -13,7 +14,43 @@
 ## 适用 / 不适用
 
 - **适用**：交易类应用原型；需要工单与仲裁流程的业务。
-- **不适用**：真实支付（订单为演示数据，未接支付网关）。
+- **不适用**：真实支付（订单为演示数据）。
+
+## 用户角色与权限（2 种身份）
+
+### 超级管理员 (super_admin)
+
+管理订单、工单、纠纷仲裁、内容
+**凭据**: `superadmin / 123456`
+
+**能做**:
+
+- ✓ 订单管理
+- ✓ 工单处理
+- ✓ 纠纷仲裁
+- ✓ 内容发布/审核
+- ✓ 系统设置
+
+**不能做**:
+
+- ✗ —（全权限）
+
+### 消费者/游客
+
+浏览内容、查看订单（演示态）
+**凭据**: `无需登录（自动登录）`
+
+**能做**:
+
+- ✓ 浏览内容中心
+- ✓ 分类筛选/搜索
+- ✓ 查看内容详情
+- ✓ 购物车页面（mock 数据）
+
+**不能做**:
+
+- ✗ 真实下单/支付（mock 数据）
+- ✗ 管理后台
 
 ## 模块清单
 
@@ -31,14 +68,10 @@
 
 ## API 面
 
-**todos**（9 条）：
+**todos**（5 条）：
 
 - `OPENAPI /todos`
 - `OPENAPI /todos/{id}`
-- `OPENAPI /todos`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/with-attachments`
 - `OPENAPI /todos/{todoId}/attachments/{attachmentId}`
@@ -48,27 +81,23 @@
 - `OPENAPI /chat/ws/status`
 - `OPENAPI /chat/ws`
 
-**notifications**（8 条）：
+**notifications**（6 条）：
 
 - `OPENAPI /notifications/stream`
 - `OPENAPI /notifications`
 - `OPENAPI /notifications/unread-count`
 - `OPENAPI /notifications/{id}`
-- `OPENAPI /notifications`
 - `OPENAPI /notifications/read-all`
 - `OPENAPI /notifications/{id}/read`
-- `OPENAPI /notifications/{id}`
 
-**file**（6 条）：
+**file**（4 条）：
 
 - `OPENAPI /public/{namespace}/{filename}`
 - `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /generate-url`
-- `OPENAPI /public/{namespace}/{filename}`
-- `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /upload`
 
-**permission**（18 条）：
+**permission**（15 条）：
 
 - `OPENAPI /audit-logs`
 - `OPENAPI /audit-logs/:id`
@@ -84,50 +113,35 @@
 - `OPENAPI /permissions/init`
 - `OPENAPI /roles`
 - `OPENAPI /roles/:id`
-- `OPENAPI /roles`
-- `OPENAPI /roles/:id`
-- `OPENAPI /roles/:id`
 - `OPENAPI /roles/:id/permissions`
 
-**order**（11 条）：
+**order**（8 条）：
 
 - `OPENAPI /cart`
 - `OPENAPI /cart/items`
 - `OPENAPI /cart/items/{id}`
 - `OPENAPI /orders`
 - `OPENAPI /orders/{id}`
-- `OPENAPI /orders`
-- `OPENAPI /orders/{id}`
-- `OPENAPI /orders/{id}`
 - `OPENAPI /orders/{id}/process`
 - `OPENAPI /orders/{id}/cancel`
 - `OPENAPI /orders-mock`
 
-**ticket**（7 条）：
+**ticket**（4 条）：
 
 - `OPENAPI /tickets`
-- `OPENAPI /tickets/{id}`
-- `OPENAPI /tickets`
-- `OPENAPI /tickets/{id}`
 - `OPENAPI /tickets/{id}`
 - `OPENAPI /tickets/{id}/reply`
 - `OPENAPI /tickets/{id}/close`
 
-**dispute**（6 条）：
+**dispute**（3 条）：
 
 - `OPENAPI /disputes`
-- `OPENAPI /disputes/{id}`
-- `OPENAPI /disputes`
-- `OPENAPI /disputes/{id}`
 - `OPENAPI /disputes/{id}`
 - `OPENAPI /disputes/{id}/resolve`
 
-**content**（12 条）：
+**content**（9 条）：
 
 - `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
-- `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}/publish`
 - `OPENAPI /contents/{id}/archive`
@@ -137,11 +151,10 @@
 - `OPENAPI /topics/popular`
 - `OPENAPI /profile`
 
-## 验证清单（部署后逐条执行）
+## 验证清单
 
-- `curl https://shop.lpm1.top/health` → 200 `{"status":"ok"}`
-- GET /api/orders-mock → 200 订单演示数据
+- `curl https://shop.lpm1.top/health` → 200
+- GET /api/orders-mock → 200
 - GET /api/todos → 200
-- 登录凭据（如适用）：`superadmin / 123456`（admin mock）；saas 控制台 `superadmin / admin123`
 
-> 本文档由 `scripts/generate-preset-docs.ts` 生成——结构化部分来自模块清单，改动模块后请重新生成。
+> 由 `scripts/generate-preset-docs.ts` 生成。

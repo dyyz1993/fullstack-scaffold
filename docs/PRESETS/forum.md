@@ -1,10 +1,11 @@
 # Forum — 社区论坛形态
 
-> 内容 + 权限 + 管理后台 + 通知的社区组合，内容发布/审核/公开浏览全链。
+> 内容 + 权限 + 管理后台 + 通知的社区组合。
 
 - **在线演示**：https://forum.lpm1.top
 - **模块数**：5
-- **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/forum.md
+- **身份数**：3
+- **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/forum.md)
 
 ## 界面速览
 
@@ -13,7 +14,57 @@
 ## 适用 / 不适用
 
 - **适用**：社区/论坛/博客平台原型；内容审核流场景。
-- **不适用**：需要用户动态/实时聊天（未含 chat 模块）。
+- **不适用**：需要用户动态/实时聊天。
+
+## 用户角色与权限（3 种身份）
+
+### 管理员 (super_admin)
+
+内容发布/审核/删除、用户管理、系统设置
+**凭据**: `superadmin / 123456`
+
+**能做**:
+
+- ✓ 内容新建/编辑/发布/删除
+- ✓ 用户管理
+- ✓ 系统设置
+- ✓ 审计日志
+
+**不能做**:
+
+- ✗ —（全权限）
+
+### 注册用户
+
+注册后可发帖/评论
+**凭据**: `member@community.dev（预填）`
+
+**能做**:
+
+- ✓ 注册/登录
+- ✓ 浏览全部内容
+- ✓ 查看内容详情
+
+**不能做**:
+
+- ✗ 管理后台
+- ✗ 删除他人内容
+
+### 游客（未登录）
+
+浏览公开内容
+**凭据**: `无需登录`
+
+**能做**:
+
+- ✓ 浏览内容列表
+- ✓ 分类筛选/搜索
+- ✓ 查看内容详情
+
+**不能做**:
+
+- ✗ 发帖/评论
+- ✗ 管理后台
 
 ## 模块清单
 
@@ -27,12 +78,9 @@
 
 ## API 面
 
-**content**（12 条）：
+**content**（9 条）：
 
 - `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
-- `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}/publish`
 - `OPENAPI /contents/{id}/archive`
@@ -50,7 +98,7 @@
 - `OPENAPI /auth/verify`
 - `OPENAPI /profile`
 
-**permission**（18 条）：
+**permission**（15 条）：
 
 - `OPENAPI /audit-logs`
 - `OPENAPI /audit-logs/:id`
@@ -66,12 +114,9 @@
 - `OPENAPI /permissions/init`
 - `OPENAPI /roles`
 - `OPENAPI /roles/:id`
-- `OPENAPI /roles`
-- `OPENAPI /roles/:id`
-- `OPENAPI /roles/:id`
 - `OPENAPI /roles/:id/permissions`
 
-**admin**（30 条）：
+**admin**（26 条）：
 
 - `OPENAPI /admin/notifications`
 - `OPENAPI /admin/notifications/unread-count`
@@ -97,29 +142,22 @@
 - `OPENAPI /admin/activity`
 - `OPENAPI /admin/todos/all`
 - `OPENAPI /admin/settings`
-- `OPENAPI /admin/settings`
 - `OPENAPI /admin/users`
 - `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users`
 
-**notifications**（8 条）：
+**notifications**（6 条）：
 
 - `OPENAPI /notifications/stream`
 - `OPENAPI /notifications`
 - `OPENAPI /notifications/unread-count`
 - `OPENAPI /notifications/{id}`
-- `OPENAPI /notifications`
 - `OPENAPI /notifications/read-all`
 - `OPENAPI /notifications/{id}/read`
-- `OPENAPI /notifications/{id}`
 
-## 验证清单（部署后逐条执行）
+## 验证清单
 
-- `curl https://forum.lpm1.top/health` → 200 `{"status":"ok"}`
-- GET /api/public/contents → 200 已发布内容列表
-- GET /api/topics → 200 话题
-- 登录凭据（如适用）：`superadmin / 123456`（admin mock）；saas 控制台 `superadmin / admin123`
+- `curl https://forum.lpm1.top/health` → 200
+- GET /api/public/contents → 200
+- GET /api/topics → 200
 
-> 本文档由 `scripts/generate-preset-docs.ts` 生成——结构化部分来自模块清单，改动模块后请重新生成。
+> 由 `scripts/generate-preset-docs.ts` 生成。

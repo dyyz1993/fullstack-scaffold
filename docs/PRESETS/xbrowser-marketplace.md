@@ -1,10 +1,11 @@
 # XBrowser Marketplace — 插件市场
 
-> 插件上架/审核/安装/评价全生命周期 + 商家端 + 订单工单纠纷，最复杂的业务形态。
+> 插件上架/审核/安装/评价全生命周期 + 商家端 + 订单工单纠纷。
 
 - **在线演示**：https://market.lpm1.top
 - **模块数**：11
-- **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/xbrowser-marketplace.md
+- **身份数**：4
+- **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/xbrowser-marketplace.md)
 
 ## 界面速览
 
@@ -15,7 +16,80 @@
 ## 适用 / 不适用
 
 - **适用**：浏览器插件/应用市场类平台；需要审核流的 UGC 平台。
-- **不适用**：轻量工具站（模块多，按需取舍）。
+- **不适用**：轻量工具站。
+
+## 用户角色与权限（4 种身份）
+
+### 平台管理员 (super_admin)
+
+插件审核/上架/下架、商家管理、订单纠纷处理
+**凭据**: `superadmin / 123456`
+
+**能做**:
+
+- ✓ 插件审核（approve/reject）
+- ✓ 插件上架/下架
+- ✓ 商家管理
+- ✓ 订单/工单/纠纷
+- ✓ 系统设置
+
+**不能做**:
+
+- ✗ —（全权限）
+
+### 开发者 (developer)
+
+注册后可提交插件、管理自己的插件版本
+**凭据**: `注册后登录`
+
+**能做**:
+
+- ✓ 注册开发者账号
+- ✓ 提交插件
+- ✓ 管理自己的插件版本
+- ✓ 查看审核状态
+
+**不能做**:
+
+- ✗ 审核他人插件
+- ✗ 管理后台
+- ✗ 订单管理
+
+### 用户/浏览器用户
+
+浏览/搜索/安装/评价插件
+**凭据**: `无需登录（浏览）/ 注册后（评论）`
+
+**能做**:
+
+- ✓ 浏览插件市场
+- ✓ 搜索插件
+- ✓ 查看插件详情
+- ✓ 安装插件
+- ✓ 写评论
+
+**不能做**:
+
+- ✗ 提交插件（需开发者身份）
+- ✗ 审核插件
+- ✗ 管理后台
+
+### 游客（未登录）
+
+仅浏览插件市场
+**凭据**: `无需登录`
+
+**能做**:
+
+- ✓ 浏览插件列表
+- ✓ 搜索
+- ✓ 查看插件详情
+
+**不能做**:
+
+- ✗ 安装/评论（需登录）
+- ✗ 提交插件
+- ✗ 管理后台
 
 ## 模块清单
 
@@ -35,24 +109,20 @@
 
 ## API 面
 
-**notifications**（8 条）：
+**notifications**（6 条）：
 
 - `OPENAPI /notifications/stream`
 - `OPENAPI /notifications`
 - `OPENAPI /notifications/unread-count`
 - `OPENAPI /notifications/{id}`
-- `OPENAPI /notifications`
 - `OPENAPI /notifications/read-all`
 - `OPENAPI /notifications/{id}/read`
-- `OPENAPI /notifications/{id}`
 
-**file**（6 条）：
+**file**（4 条）：
 
 - `OPENAPI /public/{namespace}/{filename}`
 - `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /generate-url`
-- `OPENAPI /public/{namespace}/{filename}`
-- `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /upload`
 
 **captcha**（2 条）：
@@ -68,7 +138,7 @@
 - `OPENAPI /auth/verify`
 - `OPENAPI /profile`
 
-**permission**（18 条）：
+**permission**（15 条）：
 
 - `OPENAPI /audit-logs`
 - `OPENAPI /audit-logs/:id`
@@ -84,12 +154,9 @@
 - `OPENAPI /permissions/init`
 - `OPENAPI /roles`
 - `OPENAPI /roles/:id`
-- `OPENAPI /roles`
-- `OPENAPI /roles/:id`
-- `OPENAPI /roles/:id`
 - `OPENAPI /roles/:id/permissions`
 
-**admin**（30 条）：
+**admin**（26 条）：
 
 - `OPENAPI /admin/notifications`
 - `OPENAPI /admin/notifications/unread-count`
@@ -115,14 +182,10 @@
 - `OPENAPI /admin/activity`
 - `OPENAPI /admin/todos/all`
 - `OPENAPI /admin/settings`
-- `OPENAPI /admin/settings`
 - `OPENAPI /admin/users`
 - `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users/:id`
-- `OPENAPI /admin/users`
 
-**plugin**（28 条）：
+**plugin**（19 条）：
 
 - `OPENAPI /stats/dashboard`
 - `OPENAPI /plugins/pending`
@@ -134,64 +197,43 @@
 - `OPENAPI /plugins/bulk-approve`
 - `OPENAPI /plugins/bulk-reject`
 - `OPENAPI /categories`
-- `OPENAPI /categories`
 - `OPENAPI /categories/{id}`
-- `OPENAPI /categories/{id}`
-- `OPENAPI /plugins`
 - `OPENAPI /plugins/search`
-- `OPENAPI /plugins/{slug}`
 - `OPENAPI /plugins/{slug}/versions`
-- `OPENAPI /plugins`
-- `OPENAPI /plugins/{slug}`
-- `OPENAPI /plugins/{slug}`
-- `OPENAPI /plugins/{slug}/reviews`
 - `OPENAPI /plugins/{slug}/reviews`
 - `OPENAPI /plugins/{slug}/reviews/{reviewId}`
 - `OPENAPI /plugins/{slug}/install`
-- `OPENAPI /categories`
 - `OPENAPI /categories/{slug}/plugins`
 - `OPENAPI /stats`
 - `OPENAPI /plugins/mine`
 
-**order**（11 条）：
+**order**（8 条）：
 
 - `OPENAPI /cart`
 - `OPENAPI /cart/items`
 - `OPENAPI /cart/items/{id}`
 - `OPENAPI /orders`
 - `OPENAPI /orders/{id}`
-- `OPENAPI /orders`
-- `OPENAPI /orders/{id}`
-- `OPENAPI /orders/{id}`
 - `OPENAPI /orders/{id}/process`
 - `OPENAPI /orders/{id}/cancel`
 - `OPENAPI /orders-mock`
 
-**ticket**（7 条）：
+**ticket**（4 条）：
 
 - `OPENAPI /tickets`
-- `OPENAPI /tickets/{id}`
-- `OPENAPI /tickets`
-- `OPENAPI /tickets/{id}`
 - `OPENAPI /tickets/{id}`
 - `OPENAPI /tickets/{id}/reply`
 - `OPENAPI /tickets/{id}/close`
 
-**dispute**（6 条）：
+**dispute**（3 条）：
 
 - `OPENAPI /disputes`
-- `OPENAPI /disputes/{id}`
-- `OPENAPI /disputes`
-- `OPENAPI /disputes/{id}`
 - `OPENAPI /disputes/{id}`
 - `OPENAPI /disputes/{id}/resolve`
 
-**content**（12 条）：
+**content**（9 条）：
 
 - `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
-- `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}/publish`
 - `OPENAPI /contents/{id}/archive`
@@ -201,11 +243,9 @@
 - `OPENAPI /topics/popular`
 - `OPENAPI /profile`
 
-## 验证清单（部署后逐条执行）
+## 验证清单
 
-- `curl https://market.lpm1.top/health` → 200 `{"status":"ok"}`
-- GET /api/plugins/search?q=a → 200 搜索
-- GET /api/plugins/pending → 200/401 审核队列
-- 登录凭据（如适用）：`superadmin / 123456`（admin mock）；saas 控制台 `superadmin / admin123`
+- `curl https://market.lpm1.top/health` → 200
+- GET /api/plugins/search?q=a → 200
 
-> 本文档由 `scripts/generate-preset-docs.ts` 生成——结构化部分来自模块清单，改动模块后请重新生成。
+> 由 `scripts/generate-preset-docs.ts` 生成。

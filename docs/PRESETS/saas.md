@@ -1,10 +1,11 @@
 # SaaS Multi-Tenant — 多租户 SaaS
 
-> 多租户 SaaS 全链路：租户开通事务、成员邀请（7 天 token）、租户内角色、套餐配额、子域隔离、租户控制台。
+> 多租户 SaaS 全链路：租户开通事务、成员邀请、租户内角色、套餐配额、子域隔离。
 
 - **在线演示**：https://saas.lpm1.top
 - **模块数**：8
-- **官方文档**：https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/saas.md
+- **身份数**：4
+- **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/saas.md)
 
 ## 界面速览
 
@@ -17,7 +18,76 @@
 ## 适用 / 不适用
 
 - **适用**：B2B 工具站/多组织内容平台/内部多部门系统。
-- **不适用**：C 端个人用户（用 user_id 即可）；需要真订阅计费（Stripe 未集成）；需要 SSO/SCIM。
+- **不适用**：C 端个人用户；需要真订阅计费（Stripe 未集成）。
+
+## 用户角色与权限（4 种身份）
+
+### 平台超管 (super_admin)
+
+管理所有租户、开通/暂停、设置套餐配额
+**凭据**: `superadmin / admin123`
+
+**能做**:
+
+- ✓ 租户 CRUD
+- ✓ 设置套餐（plan/max_users）
+- ✓ 查看所有租户的成员和角色
+- ✓ CLI 管理
+
+**不能做**:
+
+- ✗ —（平台级最高权限）
+
+### 租户管理员 (tenant_admin)
+
+管理本租户的成员、角色、设置
+**凭据**: `superadmin / admin123（/tenant/login）`
+
+**能做**:
+
+- ✓ 查看仪表盘统计
+- ✓ 成员列表/邀请/改角色/移除
+- ✓ 租户设置（改名等）
+- ✓ 查看订阅/配额
+- ✓ 本租户的 todos CRUD
+
+**不能做**:
+
+- ✗ 创建/删除租户（需平台超管）
+- ✗ 修改套餐 plan（需平台超管）
+
+### 租户成员 (tenant_member)
+
+受邀请加入租户的普通成员
+**凭据**: `受邀注册后登录`
+
+**能做**:
+
+- ✓ 查看仪表盘（按用户隔离）
+- ✓ 自己的 todos CRUD
+- ✓ 查看内容
+
+**不能做**:
+
+- ✗ 邀请成员（API 403）
+- ✗ 移除成员（API 403）
+- ✗ 修改租户设置
+- ✗ 管理租户角色
+
+### 访客（未登录）
+
+未认证用户
+**凭据**: `无需登录`
+
+**能做**:
+
+- ✓ 查看邀请落地页（脱敏详情）
+- ✓ 注册新账号
+
+**不能做**:
+
+- ✗ 访问租户控制台（拦回登录页）
+- ✗ 伪造邀请 token（显示 Invitation not found）
 
 ## 模块清单
 
@@ -34,36 +104,28 @@
 
 ## API 面
 
-**todos**（9 条）：
+**todos**（5 条）：
 
 - `OPENAPI /todos`
 - `OPENAPI /todos/{id}`
-- `OPENAPI /todos`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}`
-- `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/attachments`
 - `OPENAPI /todos/{id}/with-attachments`
 - `OPENAPI /todos/{todoId}/attachments/{attachmentId}`
 
-**notifications**（8 条）：
+**notifications**（6 条）：
 
 - `OPENAPI /notifications/stream`
 - `OPENAPI /notifications`
 - `OPENAPI /notifications/unread-count`
 - `OPENAPI /notifications/{id}`
-- `OPENAPI /notifications`
 - `OPENAPI /notifications/read-all`
 - `OPENAPI /notifications/{id}/read`
-- `OPENAPI /notifications/{id}`
 
-**file**（6 条）：
+**file**（4 条）：
 
 - `OPENAPI /public/{namespace}/{filename}`
 - `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /generate-url`
-- `OPENAPI /public/{namespace}/{filename}`
-- `OPENAPI /private/{namespace}/{filename}`
 - `OPENAPI /upload`
 
 **captcha**（2 条）：
@@ -71,7 +133,7 @@
 - `OPENAPI /captcha`
 - `OPENAPI /verify-captcha`
 
-**permission**（18 条）：
+**permission**（15 条）：
 
 - `OPENAPI /audit-logs`
 - `OPENAPI /audit-logs/:id`
@@ -87,9 +149,6 @@
 - `OPENAPI /permissions/init`
 - `OPENAPI /roles`
 - `OPENAPI /roles/:id`
-- `OPENAPI /roles`
-- `OPENAPI /roles/:id`
-- `OPENAPI /roles/:id`
 - `OPENAPI /roles/:id/permissions`
 
 **auth**（5 条）：
@@ -100,36 +159,27 @@
 - `OPENAPI /auth/verify`
 - `OPENAPI /profile`
 
-**tenant**（21 条）：
+**tenant**（15 条）：
 
 - `GET authUser`
 - `GET tenant`
 - `OPENAPI /tenants`
 - `OPENAPI /tenants/{id}`
 - `OPENAPI /tenants/slug/{slug}`
-- `OPENAPI /tenants`
-- `OPENAPI /tenants/{id}`
-- `OPENAPI /tenants/{id}`
 - `OPENAPI /tenants/mine`
 - `OPENAPI /tenants/{tenantId}/roles`
-- `OPENAPI /tenants/{tenantId}/roles`
-- `OPENAPI /tenants/{tenantId}/roles/{roleId}`
 - `OPENAPI /tenants/{tenantId}/roles/{roleId}`
 - `OPENAPI /tenants/{tenantId}/members`
 - `OPENAPI /tenants/{tenantId}/members/invite`
-- `OPENAPI /tenants/{tenantId}/members/{memberId}`
 - `OPENAPI /tenants/{tenantId}/members/{memberId}`
 - `OPENAPI /tenants/{tenantId}/invitations/{invitationId}`
 - `OPENAPI /tenants/invitations/{token}`
 - `OPENAPI /tenants/invitations/{token}/accept`
 - `OPENAPI /tenant/current`
 
-**content**（12 条）：
+**content**（9 条）：
 
 - `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
-- `OPENAPI /contents`
-- `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}`
 - `OPENAPI /contents/{id}/publish`
 - `OPENAPI /contents/{id}/archive`
@@ -139,12 +189,10 @@
 - `OPENAPI /topics/popular`
 - `OPENAPI /profile`
 
-## 验证清单（部署后逐条执行）
+## 验证清单
 
-- `curl https://saas.lpm1.top/health` → 200 `{"status":"ok"}`
-- POST /api/auth/login (account=superadmin, password=admin123) → 200 JWT
-- GET /api/tenants/mine (Bearer) → 200 含 demo/saas 租户
-- GET /tenant/login → 200 租户控制台登录页
-- 登录凭据（如适用）：`superadmin / 123456`（admin mock）；saas 控制台 `superadmin / admin123`
+- `curl https://saas.lpm1.top/health` → 200
+- POST /api/auth/login → 200 JWT
+- GET /api/tenants/mine → 200
 
-> 本文档由 `scripts/generate-preset-docs.ts` 生成——结构化部分来自模块清单，改动模块后请重新生成。
+> 由 `scripts/generate-preset-docs.ts` 生成。
