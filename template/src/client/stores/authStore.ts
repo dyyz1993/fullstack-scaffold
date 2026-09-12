@@ -99,6 +99,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-token',
+      partialize: state => ({
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+        user: state.user,
+      }),
     }
   )
 )

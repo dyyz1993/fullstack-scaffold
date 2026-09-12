@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { LogIn } from 'lucide-react'
@@ -26,12 +26,17 @@ export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState(creds.email)
   const [password, setPassword] = useState(creds.password)
 
+  // 旧版本会把 error 持久化进 localStorage，挂载时清掉历史残留
+  useEffect(() => {
+    if (useAuthStore.getState().error) clearError()
+  }, [clearError])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await login(username, password)
     const state = useAuthStore.getState()
     if (state.isAuthenticated) {
-      navigate('/todos')
+      navigate('/')
     }
   }
 

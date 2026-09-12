@@ -51,6 +51,22 @@ const noopStorage = {
   removeItem: () => {},
 }
 
+const recordingStorage = () => {
+  const written: Record<string, string> = {}
+  return {
+    written,
+    storage: {
+      getItem: (name: string) => written[name] ?? null,
+      setItem: (name: string, value: string | object) => {
+        written[name] = typeof value === 'string' ? value : JSON.stringify(value)
+      },
+      removeItem: (name: string) => {
+        delete written[name]
+      },
+    },
+  }
+}
+
 interface FullAuthState extends AuthState {
   loading: boolean
   error: string | null
@@ -59,7 +75,7 @@ interface FullAuthState extends AuthState {
   clearError: () => void
 }
 
-const createFullAuthStore = () =>
+const createFullAuthStore = (storage: Record<string, unknown> = noopStorage) =>
   create<FullAuthState>()(
     persist(
       set => ({
@@ -139,7 +155,12 @@ const createFullAuthStore = () =>
       }),
       {
         name: 'auth-token-test',
-        storage: noopStorage as unknown as ReturnType<
+        partialize: (state: FullAuthState) => ({
+          token: state.token,
+          isAuthenticated: state.isAuthenticated,
+          user: state.user,
+        }),
+        storage: storage as unknown as ReturnType<
           typeof import('zustand/middleware').createJSONStorage<FullAuthState>
         >,
       }
@@ -370,6 +391,23 @@ describe('authStore - register action', () => {
     const state = store.getState()
     expect(state.error).toBe('Registration failed. Please try again.')
     expect(state.loading).toBe(false)
+  })
+})
+
+describe('authStore - persist partialize', () => {
+  it('should persist auth identity but never error/loading state', async () => {
+    const { written, storage } = recordingStorage()
+    const store = createFullAuthStore(storage)
+
+    mockJson.mockResolvedValue({ success: false, error: 'Invalid credentials' })
+    await store.getState().login('wrong', 'wrong')
+    expect(store.getState().error).toBe('Invalid credentials')
+
+    const persisted = JSON.parse(written['auth-token-test'])
+    expect(persisted.state.token).toBeNull()
+    expect(persisted.state.isAuthenticated).toBe(false)
+    expect('error' in persisted.state).toBe(false)
+    expect('loading' in persisted.state).toBe(false)
   })
 })
 

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { LoginPage } from '../LoginPage'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 
 interface MockAuthStore {
   login: ReturnType<typeof vi.fn>
@@ -115,6 +115,25 @@ describe('LoginPage', () => {
         expect(mockStore.login).toHaveBeenCalledWith('testuser', 'pass123')
       })
     })
+
+    it('should navigate to / (preset defaultRoute) after successful login', async () => {
+      render(
+        <HelmetProvider>
+          <MemoryRouter initialEntries={['/login']}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/" element={<div data-testid="preset-home">preset-home</div>} />
+            </Routes>
+          </MemoryRouter>
+        </HelmetProvider>
+      )
+      mockStore.isAuthenticated = true
+      fireEvent.click(screen.getByTestId('login-submit'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('preset-home')).toBeInTheDocument()
+      })
+    })
   })
 
   describe('Error Display', () => {
@@ -123,6 +142,17 @@ describe('LoginPage', () => {
       renderLoginPage()
       expect(screen.getByTestId('login-error')).toBeInTheDocument()
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
+    })
+
+    it('should clear stale persisted error on mount', () => {
+      mockStore.error = 'Invalid credentials'
+      renderLoginPage()
+      expect(mockStore.clearError).toHaveBeenCalled()
+    })
+
+    it('should not call clearError on mount when no error', () => {
+      renderLoginPage()
+      expect(mockStore.clearError).not.toHaveBeenCalled()
     })
 
     it('should not display error message when error is null', () => {
