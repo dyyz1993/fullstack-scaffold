@@ -5,7 +5,6 @@ function getPresetType(presetId: string): string {
     'todo-app': 'todo',
     'xbrowser-marketplace': 'plugin',
     ecommerce: 'ecommerce',
-    'fullstack-admin': 'saas',
     forum: 'community',
     minimal: 'todo',
   }
