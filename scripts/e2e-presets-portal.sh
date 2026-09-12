@@ -49,11 +49,13 @@ try:
     print('OK' if (t != 'ERR' and t != 'EXC') else 'ERR') if '$s' == 'fullstack' else print(t)
 except Exception:
     print('EXC')" 2>/dev/null)
-  # fullstack-admin 的 todos 随租户数据状态变化（total 可为 0），只断言接口语义成功
+  # 共享演示库是活的（各智能体/访客会增删数据）——断言语义为
+  # "接口成功且有种子数据"，不断言精确计数
   if [ "$s" = "fullstack" ]; then
     check "$s todos 接口语义成功" "OK" "$TOTAL"
   else
-    check "$s todos 种子共享" "10" "$TOTAL"
+    GE10=$(python3 -c "print('OK' if '$TOTAL'.isdigit() and int('$TOTAL') >= 10 else 'ERR')")
+    check "$s todos 种子共享（≥10）" "OK" "$GE10"
   fi
 done
 
