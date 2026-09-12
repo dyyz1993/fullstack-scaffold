@@ -479,7 +479,7 @@ function getNavConfigForPreset(
           "{ label: 'Profile', icon: 'User', path: '/profile' }",
           "{ label: 'Chat', icon: 'MessageCircle', path: '/websocket' }",
         ],
-        defaultRoute: '/',
+        defaultRoute: '/topics',
       }
 
     default:
