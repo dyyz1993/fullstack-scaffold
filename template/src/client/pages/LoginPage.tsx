@@ -7,9 +7,9 @@ import { usePreset } from '../contexts/PresetContext'
 
 const DEMO_CREDENTIALS: Record<string, { email: string; password: string; name: string }> = {
   todo: { email: 'demo@biomimic.app', password: 'demo123', name: 'Demo User' },
-  plugin: { email: 'developer@pluginhub.io', password: 'dev123', name: 'Plugin Developer' },
-  ecommerce: { email: 'shopper@shopmart.com', password: 'shop123', name: 'Shopper' },
-  community: { email: 'member@community.dev', password: 'member123', name: 'Community Member' },
+  plugin: { email: 'demo@biomimic.app', password: 'demo123', name: 'Demo User' },
+  ecommerce: { email: 'demo@biomimic.app', password: 'demo123', name: 'Demo User' },
+  community: { email: 'demo@biomimic.app', password: 'demo123', name: 'Demo User' },
   saas: { email: 'admin@biomimic.app', password: 'admin123', name: 'Admin' },
 }
 

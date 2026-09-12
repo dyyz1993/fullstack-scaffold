@@ -24,6 +24,7 @@ import {
 } from '@shared/schemas'
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
 import { getAuthUser } from '@server/utils/auth'
+import { authMiddleware } from '@server/middleware/auth'
 import { NotFoundError, ConflictError } from '@server/utils/app-error'
 
 const listRoute = createRoute({
@@ -75,6 +76,7 @@ const createRouteDef = createRoute({
   path: '/plugins',
   tags: ['plugins'],
   security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     body: { content: { 'application/json': { schema: CreatePluginSchema } } },
   },
@@ -90,6 +92,7 @@ const updateRoute = createRoute({
   path: '/plugins/{slug}',
   tags: ['plugins'],
   security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: PluginSlugSchema,
     body: { content: { 'application/json': { schema: UpdatePluginSchema } } },
@@ -106,6 +109,7 @@ const deleteRoute = createRoute({
   path: '/plugins/{slug}',
   tags: ['plugins'],
   security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: { params: PluginSlugSchema },
   responses: {
     200: successResponse(PluginDeleteResponseSchema, 'Delete plugin'),
@@ -119,6 +123,7 @@ const submitReviewRoute = createRoute({
   path: '/plugins/{slug}/reviews',
   tags: ['plugins'],
   security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: PluginSlugSchema,
     body: { content: { 'application/json': { schema: CreateReviewSchema } } },
@@ -145,6 +150,7 @@ const deleteReviewRoute = createRoute({
   path: '/plugins/{slug}/reviews/{reviewId}',
   tags: ['plugins'],
   security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   request: {
     params: ReviewIdParamsSchema,
   },
@@ -203,6 +209,7 @@ const listMyPluginsRoute = createRoute({
   path: '/plugins/mine',
   tags: ['plugins'],
   security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
   responses: {
     200: successResponse(z.array(PluginSchema), 'My plugins'),
   },
