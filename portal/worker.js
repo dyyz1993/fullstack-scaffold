@@ -213,7 +213,9 @@ const PRESETS = [
 ]
 
 function render() {
-  const hash = (location.hash || '').replace('#', '')
+  // Workers 运行时无 location（服务端渲染默认页）；浏览器端 hash 切换由
+  // onhashchange 触发重渲，此时 location 存在
+  const hash = (typeof location !== 'undefined' ? location.hash : '').replace('#', '')
   const current = PRESETS.find(p => p.id === hash) || PRESETS[0]
 
   const chips = PRESETS.map(
