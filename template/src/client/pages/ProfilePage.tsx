@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { MessageSquare, FileText, ThumbsUp, Pencil } from 'lucide-react'
 import { apiClient } from '@client/services/apiClient'
+import { useAuthStore } from '@client/stores/authStore'
 import { LoadingSpinner } from '@client/components'
 import type { ProfileStats, ProfileActivity } from '@shared/schemas'
 
@@ -19,6 +20,16 @@ const DEFAULT_PROFILE: ProfileData = {
   initials: 'JD',
   joinedDate: 'March 2025',
   bio: 'Full-stack developer passionate about real-time web apps, type safety, and building developer tools.',
+}
+
+function profileFromUsername(username: string): ProfileData {
+  const name = username || 'Guest User'
+  return {
+    name,
+    initials: name.slice(0, 2).toUpperCase(),
+    joinedDate: DEFAULT_PROFILE.joinedDate,
+    bio: DEFAULT_PROFILE.bio,
+  }
 }
 
 const DEFAULT_STATS: ProfileStats = {
@@ -56,8 +67,11 @@ const activityColor = (type: ProfileActivity['type']) => {
 }
 
 export const ProfilePage: React.FC = () => {
+  const user = useAuthStore(state => state.user)
   const [activeTab, setActiveTab] = useState<ProfileTab>('activity')
-  const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE)
+  const [profile, setProfile] = useState<ProfileData>(() =>
+    user ? profileFromUsername(user.username) : DEFAULT_PROFILE
+  )
   const [stats, setStats] = useState<ProfileStats>(DEFAULT_STATS)
   const [activity, setActivity] = useState<ProfileActivity[]>([])
   const [loading, setLoading] = useState(true)

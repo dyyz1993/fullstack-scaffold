@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   Sun,
@@ -51,10 +50,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({ tabs, theme }) => {
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState(() => {
-    const match = tabs.find(tab => location.pathname.startsWith(tab.path))
-    return match?.path || tabs[0]?.path || ''
-  })
 
   const primaryColor = theme?.primaryColor ?? '#6366f1'
 
@@ -71,13 +66,14 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ tabs, theme }) => {
       <div className="flex items-center justify-around h-16 px-2">
         {tabs.map(tab => {
           const Icon = ICON_MAP[tab.icon] || LayoutDashboard
-          const isActive = activeTab === tab.path || location.pathname.startsWith(tab.path)
+          // 根路径 tab 只在路径完全等于 / 时高亮，否则 "/" 会前缀匹配所有路由
+          const isActive =
+            tab.path === '/' ? location.pathname === '/' : location.pathname.startsWith(tab.path)
 
           return (
             <NavLink
               key={tab.path}
               to={tab.path}
-              onClick={() => setActiveTab(tab.path)}
               data-testid={`bottom-tab-${tab.label.toLowerCase()}`}
               className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-xl transition-all duration-200 min-w-0 ${
                 isActive ? '' : 'text-gray-400 hover:text-gray-600'

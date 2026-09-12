@@ -24,6 +24,7 @@ import {
 } from '@shared/schemas'
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
 import { getAuthUser } from '@server/utils/auth'
+import { NotFoundError, ConflictError } from '@server/utils/app-error'
 
 const listRoute = createRoute({
   method: 'get',
@@ -229,6 +230,7 @@ export const pluginRoutes = new OpenAPIHono()
         status: query.status,
         sort: query.sort,
         featured: query.featured,
+        category: query.category,
       })
       return c.json(success(result), 200)
     } catch {
@@ -301,8 +303,15 @@ export const pluginRoutes = new OpenAPIHono()
         content: data.content,
       })
       return c.json(created(review), 201)
-    } catch {
-      return c.json({ success: false as const, error: 'Plugin not found' }, 404)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json({ success: false as const, error: 'Plugin not found' }, 404)
+      }
+      if (error instanceof ConflictError) {
+        return c.json({ success: false as const, error: 'Already reviewed' }, 409)
+      }
+      console.error('[plugin-routes] submitReview failed:', error)
+      return c.json({ success: false as const, error: 'Failed to submit review' }, 500)
     }
   })
   .openapi(getReviewsRoute, async c => {

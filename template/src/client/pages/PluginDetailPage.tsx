@@ -27,6 +27,7 @@ export const PluginDetailPage: React.FC = () => {
   const fetchPlugin = usePluginStore(state => state.fetchPlugin)
   const fetchReviews = usePluginStore(state => state.fetchReviews)
   const trackInstall = usePluginStore(state => state.trackInstall)
+  const installedSlugs = usePluginStore(state => state.installedSlugs)
   const submitReview = usePluginStore(state => state.submitReview)
   const clearCurrentPlugin = usePluginStore(state => state.clearCurrentPlugin)
 
@@ -36,6 +37,7 @@ export const PluginDetailPage: React.FC = () => {
     content: '',
   })
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [installing, setInstalling] = useState(false)
 
   useEffect(() => {
     if (slug) {
@@ -46,9 +48,10 @@ export const PluginDetailPage: React.FC = () => {
   }, [slug, fetchPlugin, fetchReviews, clearCurrentPlugin])
 
   const handleInstall = async () => {
-    if (slug) {
-      await trackInstall(slug)
-    }
+    if (!slug || installing) return
+    setInstalling(true)
+    await trackInstall(slug)
+    setInstalling(false)
   }
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -56,8 +59,11 @@ export const PluginDetailPage: React.FC = () => {
     if (!slug) return
     setSubmittingReview(true)
     await submitReview(slug, reviewForm)
+    const failed = !!usePluginStore.getState().error
     setSubmittingReview(false)
-    setReviewForm({ rating: 5, title: '', content: '' })
+    if (!failed) {
+      setReviewForm({ rating: 5, title: '', content: '' })
+    }
   }
 
   if (loading && !currentPlugin) {
@@ -157,11 +163,26 @@ export const PluginDetailPage: React.FC = () => {
           <div className="mt-8 flex items-center gap-3 flex-wrap">
             <button
               onClick={handleInstall}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl hover:from-violet-400 hover:to-fuchsia-400 transition-all shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 font-semibold"
+              disabled={installing || !!installedSlugs[slug ?? '']}
+              data-testid="install-button"
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-lg ${
+                installedSlugs[slug ?? '']
+                  ? 'bg-emerald-500/90 text-white cursor-default shadow-emerald-500/20'
+                  : 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-400 hover:to-fuchsia-400 shadow-violet-500/25 hover:shadow-violet-500/40 disabled:opacity-60'
+              }`}
             >
               <Download className="w-5 h-5" />
-              Install Plugin
+              {installedSlugs[slug ?? '']
+                ? 'Installed ✓'
+                : installing
+                  ? 'Installing...'
+                  : 'Install Plugin'}
             </button>
+            {installedSlugs[slug ?? ''] && (
+              <span className="text-emerald-300 text-sm" data-testid="install-feedback">
+                Installed successfully
+              </span>
+            )}
             {currentPlugin.repositoryUrl && (
               <a
                 href={currentPlugin.repositoryUrl}
@@ -292,6 +313,14 @@ export const PluginDetailPage: React.FC = () => {
 
           <form onSubmit={handleSubmitReview} className="mt-8 pt-8 border-t border-gray-100">
             <h3 className="text-base font-semibold text-gray-900 mb-5">Write a Review</h3>
+            {error && currentPlugin && (
+              <div
+                className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5"
+                data-testid="review-error"
+              >
+                {error}
+              </div>
+            )}
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-600 mb-2">Rating</label>
               <div className="flex items-center gap-1.5">

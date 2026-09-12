@@ -18,28 +18,20 @@ export function generateClientMain(resolved: ResolvedPreset, presetId: string): 
   const authTokenBlock = isSaas
     ? ''
     : `
-if (preset !== 'saas') {
-  try {
-    const raw = localStorage.getItem('auth-token')
-    const parsed = raw ? JSON.parse(raw) : null
-    if (!parsed?.state?.token) {
-      localStorage.setItem('auth-token', JSON.stringify({
-        state: {
-          token: 'user-token',
-          isAuthenticated: true,
-          user: { id: 'user-1', username: 'Demo User', role: 'USER' },
-          loading: false,
-          error: null,
-        },
-        version: 0,
-      }))
-    }
-  } catch {
-    localStorage.setItem('auth-token', JSON.stringify({
-      state: { token: 'user-token', isAuthenticated: true, user: { id: 'user-1', username: 'Demo User', role: 'USER' }, loading: false, error: null },
-      version: 0,
-    }))
-  }
+// Demo 登录令牌：仅供演示站开箱体验。仅在 localStorage 完全没有
+// auth-token 键时注入（首次访问）；用户登出后不再重新播种，
+// 否则 Sign Out 在下一次页面加载时会被覆盖回 Demo User。
+if (preset !== 'saas' && localStorage.getItem('auth-token') === null) {
+  localStorage.setItem('auth-token', JSON.stringify({
+    state: {
+      token: 'user-token',
+      isAuthenticated: true,
+      user: { id: 'user-1', username: 'Demo User', role: 'USER' },
+      loading: false,
+      error: null,
+    },
+    version: 0,
+  }))
 }
 `
 

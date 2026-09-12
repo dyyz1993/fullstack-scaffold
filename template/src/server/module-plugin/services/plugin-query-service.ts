@@ -61,6 +61,7 @@ export interface ListOptions {
   status?: string | null
   sort?: 'newest' | 'popular' | 'downloads' | 'name'
   featured?: boolean | null
+  category?: string | null
 }
 
 export async function listPlugins(options: ListOptions = {}): Promise<PluginListResponse> {
@@ -78,6 +79,32 @@ export async function listPlugins(options: ListOptions = {}): Promise<PluginList
     }
     if (options.featured !== undefined && options.featured !== null) {
       conditions.push(eq(plugins.featured, options.featured))
+    }
+
+    if (options.category) {
+      const catRows = await db
+        .select()
+        .from(pluginCategories)
+        .where(eq(pluginCategories.slug, options.category))
+      if (catRows.length > 0) {
+        const mappingRows = await db
+          .select()
+          .from(pluginCategoryMappings)
+          .where(eq(pluginCategoryMappings.categoryId, catRows[0].id))
+        if (mappingRows.length > 0) {
+          const ids = mappingRows.map(p => p.pluginId)
+          conditions.push(
+            sql`${plugins.id} IN (${sql.join(
+              ids.map(id => sql`${id}`),
+              sql`, `
+            )})`
+          )
+        } else {
+          conditions.push(sql`1 = 0`)
+        }
+      } else {
+        conditions.push(sql`1 = 0`)
+      }
     }
 
     const where = conditions.length > 1 ? and(...conditions) : conditions[0]

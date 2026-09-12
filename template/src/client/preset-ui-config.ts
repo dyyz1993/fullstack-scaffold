@@ -298,14 +298,12 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
       { label: 'Products', icon: 'ShoppingBag', path: '/products' },
       { label: 'Cart', icon: 'ShoppingCart', path: '/cart' },
       { label: 'Orders', icon: 'Package', path: '/orders' },
-      { label: 'Account', icon: 'User', path: '/content' },
     ],
     mobileTabs: [
       { label: 'Home', icon: 'Home', path: '/' },
       { label: 'Products', icon: 'ShoppingBag', path: '/products' },
       { label: 'Cart', icon: 'ShoppingCart', path: '/cart' },
       { label: 'Orders', icon: 'Package', path: '/orders' },
-      { label: 'Me', icon: 'User', path: '/content' },
     ],
     defaultRoute: '/',
     routes: [

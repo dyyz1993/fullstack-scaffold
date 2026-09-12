@@ -8,27 +8,11 @@ import './index.css'
 const preset = import.meta.env.VITE_PRESET || 'todo'
 
 // Demo 登录令牌：仅供开发服务器开箱体验（e2e 也依赖）；生产构建
-// （import.meta.env.DEV === false）不注入，用户走正常注册/登录
+// （import.meta.env.DEV === false）不注入，用户走正常注册/登录。
+// 仅在 localStorage 完全没有 auth-token 键时注入（首次访问），
+// 用户登出后（键存在但 token 为空）不再重新播种。
 if (preset !== 'saas' && import.meta.env.DEV) {
-  try {
-    const raw = localStorage.getItem('auth-token')
-    const parsed = raw ? JSON.parse(raw) : null
-    if (!parsed?.state?.token) {
-      localStorage.setItem(
-        'auth-token',
-        JSON.stringify({
-          state: {
-            token: 'user-token',
-            isAuthenticated: true,
-            user: { id: 'user-1', username: 'Demo User', role: 'USER' },
-            loading: false,
-            error: null,
-          },
-          version: 0,
-        })
-      )
-    }
-  } catch {
+  if (localStorage.getItem('auth-token') === null) {
     localStorage.setItem(
       'auth-token',
       JSON.stringify({

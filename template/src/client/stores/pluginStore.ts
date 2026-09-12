@@ -24,6 +24,7 @@ interface PluginState {
   loading: boolean
   error: string | null
   pagination: Pagination
+  installedSlugs: Record<string, boolean>
 
   fetchPlugins: (page?: number) => Promise<void>
   fetchPlugin: (slug: string) => Promise<void>
@@ -35,7 +36,7 @@ interface PluginState {
   createPlugin: (data: CreatePluginInput) => Promise<string | null>
   deletePlugin: (slug: string) => Promise<void>
   submitReview: (slug: string, data: CreateReviewInput) => Promise<void>
-  trackInstall: (slug: string) => Promise<void>
+  trackInstall: (slug: string) => Promise<boolean>
   setSearchQuery: (query: string) => void
   setSelectedCategory: (category: string | null) => void
   clearError: () => void
@@ -59,6 +60,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
   loading: false,
   error: null,
   pagination: { page: 1, limit: 20, total: 0 },
+  installedSlugs: {},
 
   fetchPlugins: async (page = 1) => {
     set({ loading: true, error: null })
@@ -266,9 +268,23 @@ export const usePluginStore = create<PluginState>((set, get) => ({
 
   trackInstall: async (slug: string) => {
     try {
-      await apiClient.api.plugins[':slug'].install.$post({ param: { slug } })
+      const response = await apiClient.api.plugins[':slug'].install.$post({ param: { slug } })
+      const result = await response.json()
+      if (result.success) {
+        set(state => ({
+          installedSlugs: { ...state.installedSlugs, [slug]: true },
+          currentPlugin:
+            state.currentPlugin?.slug === slug
+              ? { ...state.currentPlugin, downloadCount: state.currentPlugin.downloadCount + 1 }
+              : state.currentPlugin,
+        }))
+        return true
+      }
+      set({ error: (result as { error?: string }).error ?? 'Failed to install plugin' })
+      return false
     } catch (error) {
-      console.error('Failed to track install:', error)
+      set({ error: getErrorMessage(error) })
+      return false
     }
   },
 
