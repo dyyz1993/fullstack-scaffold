@@ -10,7 +10,7 @@
 
 **凭据**: `无需登录`
 
-**案例数**: 2
+**案例数**: 7
 
 ### 浏览 todos 列表
 
@@ -32,5 +32,62 @@
 **验证**: Total +1，新条目置顶
 
 **截图**: ![新增 todo](../screenshots/matrix/minimal/02-add-new.png)
+
+### 输入中状态（按钮可用性）
+
+**步骤**:
+
+1. 聚焦输入框并输入标题（不提交）
+
+**验证**: Add Todo 由 disabled 变可用
+
+**截图**: ![输入中状态（按钮可用性）](../screenshots/matrix/minimal/minimal-06-add-input.png)
+
+**选择器**:
+| 元素 | 选择器 |
+|---|---|
+| 输入框 | `[data-testid='todo-title-input']` |
+| 添加按钮 | `[data-testid='add-todo-button']` |
+
+### 新增后列表置顶
+
+**步骤**:
+
+1. 提交新增
+
+**验证**: 新条目置顶，Total 12→13，输入框清空
+
+**截图**: ![新增后列表置顶](../screenshots/matrix/minimal/minimal-07-added-top.png)
+
+### 状态切换为 completed
+
+**步骤**:
+
+1. 下拉选择 completed
+
+**验证**: 卡片变绿 + 标题划线 + 绿勾
+
+**截图**: ![状态切换为 completed](../screenshots/matrix/minimal/minimal-08-completed.png)
+
+### 删除条目
+
+**步骤**:
+
+1. 点击删除
+
+**验证**: 立即移除（无确认弹窗），Total 13→12
+
+**截图**: ![删除条目](../screenshots/matrix/minimal/minimal-09-after-delete.png)
+
+### 移动端 375px
+
+**步骤**:
+
+1. 切 375x812 视口
+2. 打开首页
+
+**验证**: 无横向溢出；已知 P3：过滤 chips 右缘截断
+
+**截图**: ![移动端 375px](../screenshots/matrix/minimal/minimal-10-home-mobile.png)
 
 ---

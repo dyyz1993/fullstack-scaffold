@@ -8,9 +8,9 @@
 
 ## 平台管理员
 
-**凭据**: `superadmin / 123456`
+**凭据**: `superadmin / 123456（/admin 快速登录）`
 
-**案例数**: 3
+**案例数**: 6
 
 ### 登录管理后台
 
@@ -41,13 +41,43 @@
 
 **验证**: 插件可见性变更
 
+### 管理后台登录页（快速登录三按钮）
+
+**步骤**:
+
+1. 打开 /admin/login
+
+**验证**: 中文后台 + 超级管理员/客服人员/普通用户快速登录按钮
+
+**截图**: ![管理后台登录页（快速登录三按钮）](../screenshots/matrix/market/market-21-admin-login.png)
+
+### 管理员仪表盘
+
+**步骤**:
+
+1. 快速登录超级管理员
+
+**验证**: 统计卡/菜单/测试通知正常；P3：最后更新显示原始 ISO 时间戳
+
+**截图**: ![管理员仪表盘](../screenshots/matrix/market/market-21b-admin-dashboard.png)
+
+### 管理员内容列表
+
+**步骤**:
+
+1. 进入内容列表
+
+**验证**: 2 条种子内容 + 编辑操作正常
+
+**截图**: ![管理员内容列表](../screenshots/matrix/market/market-21c-admin-content-list.png)
+
 ---
 
 ## 开发者
 
-**凭据**: `注册后登录`
+**凭据**: `注册后登录（注意：登录页预填 developer@pluginhub.io 实际无效）`
 
-**案例数**: 3
+**案例数**: 7
 
 ### 注册开发者账号
 
@@ -78,13 +108,53 @@
 
 **验证**: 显示各插件的 pending/approved/rejected 状态
 
+### 开发者控制台角色守卫（逆向）
+
+**步骤**:
+
+1. 普通用户登录后访问 /developer
+
+**验证**: ⚠ P2：静默弹回 /login，无任何权限提示
+
+**截图**: ![开发者控制台角色守卫（逆向）](../screenshots/matrix/market/market-20-developer-guard-redirect-login.png)
+
+### 直连 /developer URL 守卫确认
+
+**步骤**:
+
+1. 地址栏直接输入 /developer
+
+**验证**: 同样弹回 /login（角色守卫生效但无提示）
+
+**截图**: ![直连 /developer URL 守卫确认](../screenshots/matrix/market/market-20c-developer-direct-url-redirect.png)
+
+### /publish 发布表单（普通用户可访问）
+
+**步骤**:
+
+1. 登录态访问 /publish
+
+**验证**: 完整表单（名称/Slug/描述/仓库/NPM/License）可访问
+
+**截图**: ![/publish 发布表单（普通用户可访问）](../screenshots/matrix/market/market-20d-publish-form.png)
+
+### demo 预填凭据登录（逆向）
+
+**步骤**:
+
+1. /login 直接用预填 developer@pluginhub.io 登录
+
+**验证**: ⚠ P2：预填凭据报 Invalid credentials（demo 凭据失效）
+
+**截图**: ![demo 预填凭据登录（逆向）](../screenshots/matrix/market/market-20b-demo-credentials-invalid.png)
+
 ---
 
 ## 用户/浏览器用户
 
 **凭据**: `注册后登录`
 
-**案例数**: 5
+**案例数**: 10
 
 ### 浏览插件市场
 
@@ -139,13 +209,65 @@
 
 **截图**: ![写评论（逆向：静默失败）](../screenshots/matrix/market/market-07-review-after-submit.png)
 
+### 注册并登录（2026-09-12 补拍）
+
+**步骤**:
+
+1. 注册 markettest0912@t.com
+2. 登录
+
+**验证**: 右上角显示 markettest0912（⚠ 落地 /todos 404 为已知 P2）
+
+**截图**: ![注册并登录（2026-09-12 补拍）](../screenshots/matrix/market/market-16b-logged-in-home.png)
+
+### 登录后落地页（逆向：404）
+
+**步骤**:
+
+1. 登录成功观察跳转
+
+**验证**: ⚠ P2 BUG：跳 /todos 渲染 404（冷会话稳定复现）
+
+**截图**: ![登录后落地页（逆向：404）](../screenshots/matrix/market/market-16-postlogin-404.png)
+
+### 登录态点 Install（逆向：零反馈）
+
+**步骤**:
+
+1. 登录态在详情页点 Install Plugin
+
+**验证**: ⚠ P1 BUG：按钮/计数/URL 全无变化，登录态同样复现
+
+**截图**: ![登录态点 Install（逆向：零反馈）](../screenshots/matrix/market/market-17-install-logged-in-no-change.png)
+
+### 评论提交后刷新验证（逆向：未入库）
+
+**步骤**:
+
+1. 提交评论后 F5 刷新
+
+**验证**: ⚠ P1 BUG：刷新后仍 No reviews yet，评论未持久化
+
+**截图**: ![评论提交后刷新验证（逆向：未入库）](../screenshots/matrix/market/market-18b-review-after-reload.png)
+
+### 个人中心（逆向：硬编码 + 入口缺失）
+
+**步骤**:
+
+1. 访问 /profile
+2. 探测 /account /me /installed /my-plugins
+
+**验证**: ⚠ P2：profile 硬编码 Jane Doe；全站无"我的安装"页
+
+**截图**: ![个人中心（逆向：硬编码 + 入口缺失）](../screenshots/matrix/market/market-19-profile-janedoe-hardcoded.png)
+
 ---
 
 ## 游客（未登录）
 
 **凭据**: `无需登录`
 
-**案例数**: 3
+**案例数**: 14
 
 ### 浏览插件列表
 
@@ -176,6 +298,116 @@
 1. 搜索不存在的词 zzzqqq
 
 **验证**: 显示 No results for zzzqqq
+
+### 首页完整卡片墙（真实游客态，2026-09-12 补拍）
+
+**步骤**:
+
+1. Sign Out 后打开首页
+
+**验证**: 卡片墙 + 分类侧栏 + Login 入口
+
+**截图**: ![首页完整卡片墙（真实游客态，2026-09-12 补拍）](../screenshots/matrix/market/market-10.png)
+
+### 分类筛选（逆向：no-op）
+
+**步骤**:
+
+1. 点击分类侧栏"工具"
+
+**验证**: ⚠ P1 BUG：列表不变（API payload 无 category 字段），仅 chip 高亮
+
+**截图**: ![分类筛选（逆向：no-op）](../screenshots/matrix/market/market-11.png)
+
+### 搜索 "ai" 结果页
+
+**步骤**:
+
+1. 搜索 ai
+
+**验证**: Found 1 results → AI Helper；P3：chip 状态泄漏高亮
+
+**截图**: ![搜索 "ai" 结果页](../screenshots/matrix/market/market-12.png)
+
+### 详情页上半部
+
+**步骤**:
+
+1. 打开插件详情
+
+**验证**: 描述/评分/作者/徽章齐全；P3：发布日期 1970/1/1
+
+**截图**: ![详情页上半部](../screenshots/matrix/market/market-13.png)
+
+### 详情页下半部（评论区 + 版本历史探测）
+
+**步骤**:
+
+1. 详情页滚动到底
+
+**验证**: Reviews(0) 空态 + 评论表单；缺口：版本历史区块不存在
+
+**截图**: ![详情页下半部（评论区 + 版本历史探测）](../screenshots/matrix/market/market-14.png)
+
+### 游客点 Install（逆向：零反馈不鉴权）
+
+**步骤**:
+
+1. 未登录点 Install Plugin
+
+**验证**: ⚠ P1 BUG：无任何反应也不跳登录（URL/按钮/计数全不变）
+
+**截图**: ![游客点 Install（逆向：零反馈不鉴权）](../screenshots/matrix/market/market-15.png)
+
+### 登录页（游客入口）
+
+**步骤**:
+
+1. 点导航 Login
+
+**验证**: /login 渲染正常（预填凭据问题另案）
+
+**截图**: ![登录页（游客入口）](../screenshots/matrix/market/market-15b-login-page.png)
+
+### 移动端首页（375px）
+
+**步骤**:
+
+1. 切 375x812 视口打开首页
+
+**验证**: hero/CTA/卡片/底部 tab（Discover/Plugins/Categories/Search/My）完整
+
+**截图**: ![移动端首页（375px）](../screenshots/matrix/market/market-22-mobile-home.png)
+
+### 移动端详情页
+
+**步骤**:
+
+1. 375px 打开详情
+
+**验证**: hero/Install/评分/评论表单完整
+
+**截图**: ![移动端详情页](../screenshots/matrix/market/market-23-mobile-detail.png)
+
+### 移动端搜索结果
+
+**步骤**:
+
+1. 375px 搜索 ai
+
+**验证**: Found 1 results + Search tab 高亮
+
+**截图**: ![移动端搜索结果](../screenshots/matrix/market/market-24-mobile-search.png)
+
+### 硬刷新详情页（边界）
+
+**步骤**:
+
+1. 详情页直连 URL 冷加载
+
+**验证**: 无白屏无 hydration 错误；注意头部身份漂移怪癖（显示 Demo User）
+
+**截图**: ![硬刷新详情页（边界）](../screenshots/matrix/market/market-25-hard-refresh-detail.png)
 
 ---
 
