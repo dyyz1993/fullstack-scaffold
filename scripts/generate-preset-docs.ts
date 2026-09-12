@@ -35,7 +35,7 @@ const META: Record<
 > = {
   'fullstack-admin': {
     title: 'Fullstack Admin — 全模块管理后台',
-    positioning: '全部 13 个模块的最全形态：管理后台 + 多租户 + 插件市场 + 电商 + 内容，一套全有。',
+    positioning: '全部 15 个模块的最全形态：管理后台 + 多租户 + 插件市场 + 电商 + 内容，一套全有。',
     fit: '快速搭全能型后台原型；学习 Hono RPC/Zod 端到端类型安全与多入口管理台架构。',
     notfit: '生产直接使用（演示站协议与默认凭据需先处理）。',
     subdomain: 'fullstack',
@@ -95,6 +95,27 @@ const META: Record<
         ],
         cannotDo: ['写操作需认证（API 返回 401）', '访问 /admin 管理后台'],
         credentials: '无需登录',
+      },
+      {
+        name: '开发者 (developer)',
+        desc: '通过 auth 模块注册，可管理 API key',
+        canDo: ['注册开发者账号', '获取 API key', 'API 调用'],
+        cannotDo: ['管理后台（需 admin 角色）', '管理租户'],
+        credentials: '通过 /api/auth/register 注册',
+      },
+      {
+        name: '商家 (merchant)',
+        desc: '商家端独立登录，管理自己的商品和订单',
+        canDo: ['商家端登录', '管理自己的商品', '查看自己的订单/统计'],
+        cannotDo: ['管理后台', '管理其他商家'],
+        credentials: 'merchant 模块种子账号（Demo@2024!）',
+      },
+      {
+        name: '租户管理员 (tenant_admin)',
+        desc: '通过 /tenant 独立入口管理本租户',
+        canDo: ['租户控制台管理成员/角色', '租户设置', '租户内 todos'],
+        cannotDo: ['平台级管理（需 super_admin）'],
+        credentials: 'superadmin / admin123（/tenant/login）',
       },
     ],
   },
@@ -168,6 +189,13 @@ const META: Record<
         cannotDo: ['访问租户控制台（拦回登录页）', '伪造邀请 token（显示 Invitation not found）'],
         credentials: '无需登录',
       },
+      {
+        name: '开发者 (developer)',
+        desc: '通过 auth 模块注册，可管理 API key',
+        canDo: ['注册开发者账号', '获取 API key'],
+        cannotDo: ['管理租户', '管理后台'],
+        credentials: '通过 /api/auth/register 注册',
+      },
     ],
   },
   ecommerce: {
@@ -179,18 +207,18 @@ const META: Record<
     extraVerify: ['GET /api/orders-mock → 200', 'GET /api/todos → 200'],
     roles: [
       {
-        name: '超级管理员 (super_admin)',
-        desc: '管理订单、工单、纠纷仲裁、内容',
-        canDo: ['订单管理', '工单处理', '纠纷仲裁', '内容发布/审核', '系统设置'],
-        cannotDo: ['—（全权限）'],
-        credentials: 'superadmin / 123456',
-      },
-      {
-        name: '消费者/游客',
-        desc: '浏览内容、查看订单（演示态）',
-        canDo: ['浏览内容中心', '分类筛选/搜索', '查看内容详情', '购物车页面（mock 数据）'],
-        cannotDo: ['真实下单/支付（mock 数据）', '管理后台'],
-        credentials: '无需登录（自动登录）',
+        name: '游客/消费者',
+        desc: '此形态无 auth 模块，线上唯一身份就是游客（浏览+操作演示数据）',
+        canDo: [
+          '浏览内容中心',
+          '分类筛选/搜索',
+          '查看内容详情',
+          '购物车页面（mock）',
+          '查看订单（mock）',
+          'todos CRUD',
+        ],
+        cannotDo: ['真实下单/支付', '管理后台（此形态无 /admin）', '登录/注册（无 auth 模块）'],
+        credentials: '无需登录（此形态无认证模块，仅有游客身份）',
       },
     ],
   },
@@ -227,7 +255,7 @@ const META: Record<
   },
   'xbrowser-marketplace': {
     title: 'XBrowser Marketplace — 插件市场',
-    positioning: '插件上架/审核/安装/评价全生命周期 + 商家端 + 订单工单纠纷。',
+    positioning: '插件上架/审核/安装/评价全生命周期 + 订单工单纠纷。',
     fit: '浏览器插件/应用市场类平台；需要审核流的 UGC 平台。',
     notfit: '轻量工具站。',
     subdomain: 'market',
@@ -336,8 +364,9 @@ function extractRoutes(moduleName: string): string[] {
 
   for (const f of files) {
     const s = readFileSync(join(routesDir, f), 'utf-8')
-    // RESTful 风格
+    // RESTful 风格——过滤 getter 调用（如 c.get('authUser')，非 HTTP 路径）
     for (const rm of s.matchAll(/\.(get|post|put|delete|patch)\('([^']+)'/g)) {
+      if (!rm[2].startsWith('/')) continue // 排除非路径（authUser/tenant 等上下文读取）
       const key = `${rm[1].toUpperCase()} ${rm[2]}`
       if (!seen.has(key)) {
         seen.add(key)

@@ -4,7 +4,7 @@
 
 - **在线演示**：https://saas.lpm1.top
 - **模块数**：8
-- **身份数**：4
+- **身份数**：5
 - **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/saas.md)
 
 ## 界面速览
@@ -20,7 +20,7 @@
 - **适用**：B2B 工具站/多组织内容平台/内部多部门系统。
 - **不适用**：C 端个人用户；需要真订阅计费（Stripe 未集成）。
 
-## 用户角色与权限（4 种身份）
+## 用户角色与权限（5 种身份）
 
 ### 平台超管 (super_admin)
 
@@ -89,6 +89,21 @@
 - ✗ 访问租户控制台（拦回登录页）
 - ✗ 伪造邀请 token（显示 Invitation not found）
 
+### 开发者 (developer)
+
+通过 auth 模块注册，可管理 API key
+**凭据**: `通过 /api/auth/register 注册`
+
+**能做**:
+
+- ✓ 注册开发者账号
+- ✓ 获取 API key
+
+**不能做**:
+
+- ✗ 管理租户
+- ✗ 管理后台
+
 ## 模块清单
 
 | 模块            | 职责                                                                      |
@@ -151,18 +166,15 @@
 - `OPENAPI /roles/:id`
 - `OPENAPI /roles/:id/permissions`
 
-**auth**（5 条）：
+**auth**（4 条）：
 
-- `GET authUser`
 - `OPENAPI /auth/register`
 - `OPENAPI /auth/login`
 - `OPENAPI /auth/verify`
 - `OPENAPI /profile`
 
-**tenant**（15 条）：
+**tenant**（13 条）：
 
-- `GET authUser`
-- `GET tenant`
 - `OPENAPI /tenants`
 - `OPENAPI /tenants/{id}`
 - `OPENAPI /tenants/slug/{slug}`

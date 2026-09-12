@@ -90,9 +90,8 @@
 - `OPENAPI /topics/popular`
 - `OPENAPI /profile`
 
-**auth**（5 条）：
+**auth**（4 条）：
 
-- `GET authUser`
 - `OPENAPI /auth/register`
 - `OPENAPI /auth/login`
 - `OPENAPI /auth/verify`

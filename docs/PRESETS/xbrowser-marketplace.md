@@ -1,6 +1,6 @@
 # XBrowser Marketplace — 插件市场
 
-> 插件上架/审核/安装/评价全生命周期 + 商家端 + 订单工单纠纷。
+> 插件上架/审核/安装/评价全生命周期 + 订单工单纠纷。
 
 - **在线演示**：https://market.lpm1.top
 - **模块数**：11
@@ -130,9 +130,8 @@
 - `OPENAPI /captcha`
 - `OPENAPI /verify-captcha`
 
-**auth**（5 条）：
+**auth**（4 条）：
 
-- `GET authUser`
 - `OPENAPI /auth/register`
 - `OPENAPI /auth/login`
 - `OPENAPI /auth/verify`

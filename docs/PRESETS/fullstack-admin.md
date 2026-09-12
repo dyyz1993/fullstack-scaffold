@@ -1,10 +1,10 @@
 # Fullstack Admin — 全模块管理后台
 
-> 全部 13 个模块的最全形态：管理后台 + 多租户 + 插件市场 + 电商 + 内容，一套全有。
+> 全部 15 个模块的最全形态：管理后台 + 多租户 + 插件市场 + 电商 + 内容，一套全有。
 
 - **在线演示**：https://fullstack.lpm1.top
 - **模块数**：15
-- **身份数**：4
+- **身份数**：7
 - **文档**: [GitHub](https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS/fullstack-admin.md)
 
 ## 界面速览
@@ -20,7 +20,7 @@
 - **适用**：快速搭全能型后台原型；学习 Hono RPC/Zod 端到端类型安全与多入口管理台架构。
 - **不适用**：生产直接使用（演示站协议与默认凭据需先处理）。
 
-## 用户角色与权限（4 种身份）
+## 用户角色与权限（7 种身份）
 
 ### 超级管理员 (super_admin)
 
@@ -99,6 +99,53 @@
 
 - ✗ 写操作需认证（API 返回 401）
 - ✗ 访问 /admin 管理后台
+
+### 开发者 (developer)
+
+通过 auth 模块注册，可管理 API key
+**凭据**: `通过 /api/auth/register 注册`
+
+**能做**:
+
+- ✓ 注册开发者账号
+- ✓ 获取 API key
+- ✓ API 调用
+
+**不能做**:
+
+- ✗ 管理后台（需 admin 角色）
+- ✗ 管理租户
+
+### 商家 (merchant)
+
+商家端独立登录，管理自己的商品和订单
+**凭据**: `merchant 模块种子账号（Demo@2024!）`
+
+**能做**:
+
+- ✓ 商家端登录
+- ✓ 管理自己的商品
+- ✓ 查看自己的订单/统计
+
+**不能做**:
+
+- ✗ 管理后台
+- ✗ 管理其他商家
+
+### 租户管理员 (tenant_admin)
+
+通过 /tenant 独立入口管理本租户
+**凭据**: `superadmin / admin123（/tenant/login）`
+
+**能做**:
+
+- ✓ 租户控制台管理成员/角色
+- ✓ 租户设置
+- ✓ 租户内 todos
+
+**不能做**:
+
+- ✗ 平台级管理（需 super_admin）
 
 ## 模块清单
 
@@ -203,9 +250,8 @@
 - `OPENAPI /admin/users`
 - `OPENAPI /admin/users/:id`
 
-**auth**（5 条）：
+**auth**（4 条）：
 
-- `GET authUser`
 - `OPENAPI /auth/register`
 - `OPENAPI /auth/login`
 - `OPENAPI /auth/verify`
@@ -233,10 +279,8 @@
 - `OPENAPI /stats`
 - `OPENAPI /plugins/mine`
 
-**tenant**（15 条）：
+**tenant**（13 条）：
 
-- `GET authUser`
-- `GET tenant`
 - `OPENAPI /tenants`
 - `OPENAPI /tenants/{id}`
 - `OPENAPI /tenants/slug/{slug}`
@@ -287,9 +331,8 @@
 - `OPENAPI /topics/popular`
 - `OPENAPI /profile`
 
-**merchant**（5 条）：
+**merchant**（4 条）：
 
-- `GET authUser`
 - `OPENAPI /merchant/me`
 - `OPENAPI /merchant/login`
 - `OPENAPI /merchant/stats`
