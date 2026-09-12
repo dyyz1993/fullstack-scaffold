@@ -92,6 +92,15 @@ React 18 + Hono(OpenAPI RPC) + Drizzle ORM + SQLite/Cloudflare D1 + Vite。
 
 ---
 
+## 自动化验证（部署后必跑）
+
+```bash
+bash scripts/e2e-presets-portal.sh        # 36 项检查，PASS 36 / FAIL 0 才算通过
+```
+
+覆盖六大类：九站点健康 → 共享数据面（跨 preset 数据一致）→ 双认证登录链 → 门户内容 → 文档/Skill 分发 → 60 秒存活复检。
+脚本无环境依赖（curl+python3），可在任意机器执行；退出码非 0 即存在失败，报告落盘 `${TMPDIR:-/tmp}/e2e-presets-report.txt`。
+
 ## 给 Agent 运营方的两条硬建议（实测教训）
 
 1. 任务提示词里把验收写成**硬命令**（如“`npx tsc --noEmit` 0 错误才许停”），口头标准（“要三绿”）Agent 容易跳过验证直接报完成。

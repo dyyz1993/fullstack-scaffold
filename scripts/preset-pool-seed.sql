@@ -77,3 +77,16 @@ INSERT OR IGNORE INTO plugins (id, slug, name, description, category_id, status,
 INSERT OR IGNORE INTO notifications (id, type, title, message, read, created_at) VALUES
   ('notif-demo-1', 'info', '欢迎使用演示站', '本站为 create-fullstack-scaffold 的在线演示。', 0, strftime('%s','now')*1000),
   ('notif-demo-2', 'success', '多租户能力已上线', '租户开通、邀请、配额、隔离全链路可用。', 0, strftime('%s','now')*1000);
+
+-- ============ 七子域租户（saas 隔离中间件按子域 slug 查租户，缺则 404） ============
+INSERT OR IGNORE INTO tenants (name, slug, status, plan, max_users, settings, created_at, updated_at) VALUES
+  ('Saas Demo', 'saas', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000),
+  ('Fullstack Demo', 'fullstack', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000),
+  ('Todo Demo', 'todo', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000),
+  ('Shop Demo', 'shop', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000),
+  ('Forum Demo', 'forum', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000),
+  ('Market Demo', 'market', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000),
+  ('Minimal Demo', 'minimal', 'active', 'pro', 50, NULL, 1789000000000, 1789000000000);
+
+-- 注意：凡 schema 声明 integer mode:'timestamp' 的列必须存 unixepoch 毫秒数——
+-- 存 ISO 字符串会导致 Workers 端 toISOString 抛 Invalid time value（0.6.6 部署实测）
