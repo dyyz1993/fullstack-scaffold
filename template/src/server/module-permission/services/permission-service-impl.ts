@@ -114,22 +114,18 @@ export class PermissionService {
       return []
     }
 
-    // DB（roles/role_permissions/permissions 表）有种子数据时以 DB 为准；
-    // 共享演示库可能未跑种子——此时回退静态角色权限，
-    // 保证 /permissions/init 与登录响应（静态 ROLE_PERMISSIONS）同源一致
+    // super_admin：后端 hasPermission 对该角色恒放行（不查库）。
+    // init 必须与之一致返回全量权限，否则前端 PermissionGuard 会误隐藏
+    // "新建内容"等按钮（DB 种子往往只配了少量 rolePermissions）。
+    if (roleCode === 'super_admin') {
+      return getStaticPermissionsByRoleCode(roleCode).map(code => ({ code }))
+    }
+
+    // 其余角色：DB（roles/role_permissions 表）有种子数据时以 DB 为准；
+    // 共享演示库可能未跑种子——回退静态角色权限，与登录响应（静态
+    // ROLE_PERMISSIONS）保持同源，避免双源不一致
     try {
       const role = await roleService.getByCode(roleCode)
-
-      // 超级管理员拥有所有权限
-      if (role && roleCode === 'super_admin') {
-        const db = await getDb()
-        const allPermissions = await db
-          .select()
-          .from(permissions)
-          .where(eq(permissions.isActive, true))
-        if (allPermissions.length > 0) return allPermissions
-      }
-
       if (role) {
         const rolePerms = await this.getRolePermissions(role.id)
         if (rolePerms.length > 0) return rolePerms
