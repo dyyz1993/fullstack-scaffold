@@ -16,10 +16,10 @@ export const todos = sqliteTable(
     status: text('status', { enum: todoStatus }).notNull().default('pending'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
     updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     statusIdx: index('todos_status_idx').on(table.status),

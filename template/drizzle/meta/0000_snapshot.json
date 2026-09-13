@@ -49,7 +49,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -57,7 +57,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -152,7 +152,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {},
@@ -216,7 +216,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -815,7 +815,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -823,7 +823,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -888,7 +888,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -994,7 +994,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1002,7 +1002,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -1123,7 +1123,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1131,7 +1131,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -1245,7 +1245,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1253,7 +1253,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -1330,7 +1330,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1338,7 +1338,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -1549,7 +1549,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -1640,7 +1640,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -1832,7 +1832,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1840,7 +1840,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {
@@ -2445,7 +2445,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2453,7 +2453,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
+          "default": "(unixepoch())"
         }
       },
       "indexes": {

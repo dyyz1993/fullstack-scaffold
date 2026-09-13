@@ -30,10 +30,10 @@ export const plugins = sqliteTable(
     rejectReason: text('reject_reason'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
     updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     statusIdx: index('plugins_status_idx').on(table.status),
@@ -58,7 +58,7 @@ export const pluginVersions = sqliteTable(
     status: text('status', { enum: pluginStatus }).notNull().default('pending'),
     publishedAt: integer('published_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     pluginVersionUnique: uniqueIndex('plugin_version_unique').on(table.pluginId, table.version),
@@ -80,7 +80,7 @@ export const pluginReviews = sqliteTable(
     content: text('content'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     pluginUserUnique: uniqueIndex('plugin_review_user_unique').on(table.pluginId, table.userId),

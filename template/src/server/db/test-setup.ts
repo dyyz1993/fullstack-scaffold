@@ -15,8 +15,8 @@ export async function setupTestDatabase(): Promise<void> {
       title TEXT NOT NULL,
       description TEXT,
       status TEXT DEFAULT 'pending' NOT NULL,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
     
     CREATE TABLE IF NOT EXISTS todo_attachments (
@@ -28,7 +28,7 @@ export async function setupTestDatabase(): Promise<void> {
       size INTEGER NOT NULL,
       path TEXT NOT NULL,
       uploaded_by TEXT,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
       FOREIGN KEY (todo_id) REFERENCES todos(id) ON DELETE CASCADE
     );
     
@@ -38,7 +38,7 @@ export async function setupTestDatabase(): Promise<void> {
       title TEXT NOT NULL,
       message TEXT NOT NULL,
       read INTEGER DEFAULT false NOT NULL,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS permissions (
@@ -130,8 +130,8 @@ export async function setupTestDatabase(): Promise<void> {
       product_name TEXT NOT NULL,
       amount INTEGER NOT NULL,
       status TEXT DEFAULT 'pending' NOT NULL,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS tickets (
@@ -145,8 +145,8 @@ export async function setupTestDatabase(): Promise<void> {
       priority TEXT DEFAULT 'medium' NOT NULL,
       category TEXT NOT NULL,
       assigned_to TEXT,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS ticket_replies (
@@ -155,7 +155,7 @@ export async function setupTestDatabase(): Promise<void> {
       content TEXT NOT NULL,
       author TEXT NOT NULL,
       is_customer INTEGER DEFAULT 0 NOT NULL,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
       FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
     );
 
@@ -173,8 +173,8 @@ export async function setupTestDatabase(): Promise<void> {
       amount INTEGER NOT NULL,
       resolved_at INTEGER,
       resolved_by TEXT,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS contents (
@@ -189,8 +189,8 @@ export async function setupTestDatabase(): Promise<void> {
       view_count INTEGER DEFAULT 0 NOT NULL,
       like_count INTEGER DEFAULT 0 NOT NULL,
       published_at INTEGER,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS content_comments (
@@ -199,7 +199,7 @@ export async function setupTestDatabase(): Promise<void> {
       user_id TEXT NOT NULL,
       user_name TEXT NOT NULL,
       body TEXT NOT NULL,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
       FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
     );
 
@@ -210,8 +210,8 @@ export async function setupTestDatabase(): Promise<void> {
       password_hash TEXT NOT NULL,
       role TEXT DEFAULT 'developer' NOT NULL,
       api_key TEXT NOT NULL UNIQUE,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS plugins (
@@ -236,8 +236,8 @@ export async function setupTestDatabase(): Promise<void> {
       tags TEXT,
       commands TEXT,
       reject_reason TEXT,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS plugin_versions (
@@ -249,7 +249,7 @@ export async function setupTestDatabase(): Promise<void> {
       file_size INTEGER,
       checksum TEXT,
       status TEXT NOT NULL DEFAULT 'pending',
-      published_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      published_at INTEGER DEFAULT (unixepoch()) NOT NULL,
       FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
       UNIQUE(plugin_id, version)
     );
@@ -262,7 +262,7 @@ export async function setupTestDatabase(): Promise<void> {
       rating INTEGER NOT NULL,
       title TEXT,
       content TEXT,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
       FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
       UNIQUE(plugin_id, user_id)
     );
@@ -305,8 +305,8 @@ export async function setupTestDatabase(): Promise<void> {
       stock INTEGER NOT NULL DEFAULT 0,
       image_url TEXT,
       merchant_id INTEGER NOT NULL,
-      created_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL,
-      updated_at INTEGER DEFAULT (unixepoch() * 1000) NOT NULL
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS tenant_roles (

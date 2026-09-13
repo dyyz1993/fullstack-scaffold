@@ -31,10 +31,10 @@ export const disputes = sqliteTable(
     resolvedBy: text('resolved_by'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
     updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     statusIdx: index('disputes_status_idx').on(table.status),

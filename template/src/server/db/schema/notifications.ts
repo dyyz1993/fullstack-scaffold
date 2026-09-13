@@ -11,7 +11,7 @@ export const notifications = sqliteTable(
     read: integer('read', { mode: 'boolean' }).notNull().default(false),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     createdAtIdx: index('notifications_created_at_idx').on(table.createdAt),

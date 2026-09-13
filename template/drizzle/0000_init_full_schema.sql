@@ -4,8 +4,8 @@ CREATE TABLE `todos` (
 	`title` text NOT NULL,
 	`description` text,
 	`status` text DEFAULT 'pending' NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `todos_status_idx` ON `todos` (`status`);--> statement-breakpoint
@@ -21,7 +21,7 @@ CREATE TABLE `todo_attachments` (
 	`size` integer NOT NULL,
 	`path` text NOT NULL,
 	`uploaded_by` text,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`todo_id`) REFERENCES `todos`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -31,7 +31,7 @@ CREATE TABLE `notifications` (
 	`title` text NOT NULL,
 	`message` text NOT NULL,
 	`read` integer DEFAULT false NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `notifications_created_at_idx` ON `notifications` (`created_at`);--> statement-breakpoint
@@ -127,8 +127,8 @@ CREATE TABLE `orders` (
 	`product_name` text NOT NULL,
 	`amount` integer NOT NULL,
 	`status` text DEFAULT 'pending' NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `orders_status_idx` ON `orders` (`status`);--> statement-breakpoint
@@ -139,7 +139,7 @@ CREATE TABLE `ticket_replies` (
 	`content` text NOT NULL,
 	`author` text NOT NULL,
 	`is_customer` integer DEFAULT false NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`ticket_id`) REFERENCES `tickets`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -155,8 +155,8 @@ CREATE TABLE `tickets` (
 	`priority` text DEFAULT 'medium' NOT NULL,
 	`category` text NOT NULL,
 	`assigned_to` text,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `tickets_status_idx` ON `tickets` (`status`);--> statement-breakpoint
@@ -175,8 +175,8 @@ CREATE TABLE `disputes` (
 	`amount` integer NOT NULL,
 	`resolved_at` integer,
 	`resolved_by` text,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `disputes_status_idx` ON `disputes` (`status`);--> statement-breakpoint
@@ -194,8 +194,8 @@ CREATE TABLE `contents` (
 	`view_count` integer DEFAULT 0 NOT NULL,
 	`like_count` integer DEFAULT 0 NOT NULL,
 	`published_at` integer,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `contents_status_idx` ON `contents` (`status`);--> statement-breakpoint
@@ -220,8 +220,8 @@ CREATE TABLE `developers` (
 	`password_hash` text NOT NULL,
 	`role` text DEFAULT 'developer' NOT NULL,
 	`api_key` text NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `developers_username_unique` ON `developers` (`username`);--> statement-breakpoint
@@ -257,7 +257,7 @@ CREATE TABLE `plugin_reviews` (
 	`rating` integer NOT NULL,
 	`title` text,
 	`content` text,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`plugin_id`) REFERENCES `plugins`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -271,7 +271,7 @@ CREATE TABLE `plugin_versions` (
 	`file_size` integer,
 	`checksum` text,
 	`status` text DEFAULT 'pending' NOT NULL,
-	`published_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	`published_at` integer DEFAULT (unixepoch()) NOT NULL,
 	FOREIGN KEY (`plugin_id`) REFERENCES `plugins`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -299,8 +299,8 @@ CREATE TABLE `plugins` (
 	`tags` text,
 	`commands` text,
 	`reject_reason` text,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `plugins_slug_unique` ON `plugins` (`slug`);--> statement-breakpoint
@@ -394,8 +394,8 @@ CREATE TABLE `products` (
 	`stock` integer DEFAULT 0 NOT NULL,
 	`image_url` text,
 	`merchant_id` integer NOT NULL,
-	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `products_status_idx` ON `products` (`status`);--> statement-breakpoint

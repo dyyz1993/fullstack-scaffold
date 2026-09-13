@@ -39,10 +39,10 @@ export const tickets = sqliteTable(
     assignedTo: text('assigned_to'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
     updatedAt: integer('updated_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     statusIdx: index('tickets_status_idx').on(table.status),
@@ -62,7 +62,7 @@ export const ticketReplies = sqliteTable(
     isCustomer: integer('is_customer', { mode: 'boolean' }).notNull().default(false),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     ticketIdIdx: index('ticket_replies_ticket_id_idx').on(table.ticketId),

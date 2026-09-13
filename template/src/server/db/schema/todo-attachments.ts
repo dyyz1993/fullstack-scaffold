@@ -15,7 +15,7 @@ export const todoAttachments = sqliteTable('todo_attachments', {
   uploadedBy: text('uploaded_by'),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+    .default(sql`(unixepoch())`),
 })
 
 export type TodoAttachmentTable = typeof todoAttachments.$inferSelect

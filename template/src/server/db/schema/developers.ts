@@ -10,10 +10,10 @@ export const developers = sqliteTable('developers', {
   apiKey: text('api_key').notNull().unique(),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+    .default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+    .default(sql`(unixepoch())`),
 })
 
 export type DeveloperTable = typeof developers.$inferSelect
