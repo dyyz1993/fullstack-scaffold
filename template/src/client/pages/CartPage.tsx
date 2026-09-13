@@ -53,6 +53,14 @@ export const CartPage: React.FC = () => {
           <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-6">
             <ShoppingBag className="w-10 h-10 text-amber-500" />
           </div>
+          {ordered ? (
+            <h2
+              className="text-xl font-semibold text-emerald-600 mb-2"
+              data-testid="cart-order-done"
+            >
+              ✓ 订单已提交（演示闭环，未产生真实扣款）
+            </h2>
+          ) : null}
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
           <p className="text-gray-500 mb-6">Looks like you haven&apos;t added anything yet.</p>
           <button
