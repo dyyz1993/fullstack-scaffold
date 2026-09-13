@@ -580,9 +580,13 @@ const PRESETS: Array<{
             shot: 'matrix/market/market-21c-admin-content-list.png',
           },
           {
-            title: '下架不存在的插件（逆向）',
-            steps: ['管理后台对未知 slug 执行下架操作'],
-            verify: '返回 404，不产生副作用',
+            title: '插件下架入口缺失（逆向·功能缺口实勘）',
+            steps: [
+              'superadmin 登录 /admin 遍历菜单找插件下架入口',
+              'API 级 DELETE /api/plugins/not-exist-slug',
+            ],
+            verify:
+              '实勘：管理端无插件下架 UI（菜单仅仪表盘/内容/用户订单/系统，软回退 200）——记录为功能缺口；API 层对不存在 slug 返回 404 不产生副作用',
           },
           {
             title: '缺名称的插件表单被拒（逆向）',

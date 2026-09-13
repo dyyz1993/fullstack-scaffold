@@ -71,13 +71,14 @@
 
 **截图**: ![管理员内容列表](../screenshots/matrix/market/market-21c-admin-content-list.png)
 
-### 下架不存在的插件（逆向）
+### 插件下架入口缺失（逆向·功能缺口实勘）
 
 **步骤**:
 
-1. 管理后台对未知 slug 执行下架操作
+1. superadmin 登录 /admin 遍历菜单找插件下架入口
+2. API 级 DELETE /api/plugins/not-exist-slug
 
-**验证**: 返回 404，不产生副作用
+**验证**: 实勘：管理端无插件下架 UI（菜单仅仪表盘/内容/用户订单/系统，软回退 200）——记录为功能缺口；API 层对不存在 slug 返回 404 不产生副作用
 
 ### 缺名称的插件表单被拒（逆向）
 
