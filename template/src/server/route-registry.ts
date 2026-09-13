@@ -14,6 +14,7 @@ import { ticketRoutes } from './module-ticket/routes/ticket-routes'
 import { disputeRoutes } from './module-dispute/routes/dispute-routes'
 import { contentRoutes } from './module-content/routes/content-routes'
 import { publicContentRoutes } from './module-content/routes/public-content-routes'
+import { commentRoutes } from './module-content/routes/comment-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
 import { authRoutes } from './module-auth/routes/auth-routes'
 import { pluginRoutes } from './module-plugin/routes/plugin-routes'
@@ -40,6 +41,7 @@ export const clientApiRoutes = new OpenAPIHono()
   .route('/api', apiRoutes)
   .route('/api', pluginRoutes)
   .route('/api', publicContentRoutes)
+  .route('/api', commentRoutes)
   .route('/api', cartRoutes)
   .route('/api', ordersMockRoutes)
   .route('/api', topicsRoutes)

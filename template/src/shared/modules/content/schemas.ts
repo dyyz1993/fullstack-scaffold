@@ -57,6 +57,30 @@ export const ContentDeleteResultSchema = z.object({
   message: z.string(),
 })
 
+export const ContentCommentSchema = z.object({
+  id: z.string(),
+  contentId: z.string(),
+  userId: z.string(),
+  userName: z.string(),
+  body: z.string(),
+  createdAt: z.string(),
+})
+
+export const CreateContentCommentSchema = z.object({
+  body: z.string().min(1).max(2000),
+})
+
+export const ContentCommentListSchema = z.array(ContentCommentSchema)
+
+export const ContentCommentListResponseSchema = z.object({
+  comments: ContentCommentListSchema,
+  total: z.number(),
+})
+
+export type ContentComment = z.infer<typeof ContentCommentSchema>
+export type CreateContentCommentInput = z.infer<typeof CreateContentCommentSchema>
+export type ContentCommentListResponse = z.infer<typeof ContentCommentListResponseSchema>
+
 export type ContentCategory = z.infer<typeof ContentCategorySchema>
 export type ContentStatus = z.infer<typeof ContentStatusSchema>
 export type Content = z.infer<typeof ContentSchema>

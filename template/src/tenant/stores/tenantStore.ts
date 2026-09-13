@@ -14,6 +14,8 @@ import { api, setToken, setSlug, getToken } from '../services/tenantApi'
 interface TenantState {
   isAuthenticated: boolean
   currentTenant: Tenant | null
+  /** 登录账号（Header 欢迎语用，替代写死的 "Tenant Admin"） */
+  account: string | null
   loading: boolean
   users: TenantMember[]
   roles: TenantRole[]
@@ -101,12 +103,13 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
       // 认证已成功——无租户账号保留 token（受邀新用户需登录态接受邀请），
       // 由调用方引导回邀请落地页而非硬拒
       if (!mineRes.success || !mineRes.data || mineRes.data.length === 0) {
+        set({ account })
         return { ok: true, hasTenant: false }
       }
 
       const tenant = mineRes.data[0]
       setSlug(tenant.slug)
-      set({ isAuthenticated: true, currentTenant: tenant })
+      set({ isAuthenticated: true, currentTenant: tenant, account })
       return { ok: true, hasTenant: true }
     } finally {
       set({ loading: false })
@@ -126,7 +129,7 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
   logout: () => {
     setToken(null)
     setSlug(null)
-    set({ isAuthenticated: false, currentTenant: null, users: [], todos: [] })
+    set({ isAuthenticated: false, currentTenant: null, account: null, users: [], todos: [] })
   },
 
   setCurrentTenant: tenant => set({ currentTenant: tenant }),

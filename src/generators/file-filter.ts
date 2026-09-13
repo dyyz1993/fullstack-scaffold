@@ -28,6 +28,19 @@ export function getExcludePatterns(
   // 生成的 app 由 rpc-surface.ts 本身提供等价的按模块实例化覆盖。
   excludes.push('src/server/rpc-type-canary.ts')
 
+  // community/forum 核心页面：TopicsPage（话题聚合）/ PopularPage（热度排行）
+  // 由 content 模块的公开内容 API 驱动，但页面文件历史上仅由 plugin 模块声明
+  // clientPages。forum/ecommerce/saas 等含 content 而不含 plugin 的 preset 若按
+  // "plugin 缺席"裁剪这些页面，生成的 preset-ui-config 会悬空引用 ./pages/TopicsPage。
+  // 与下方 standaloneSharedModules.community 同规则：content 模块在 preset 中
+  // （或有模块声明这些页面）时保留页面文件。
+  const communityPageNames = ['TopicsPage', 'PopularPage']
+  const keepCommunityPages =
+    resolved.modules.has('content') ||
+    [...resolved.modules.values()].some(
+      m => m.clientPages?.some(p => communityPageNames.includes(p.name)) ?? false
+    )
+
   for (const [name, manifest] of allManifests) {
     if (resolved.modules.has(name)) continue
 
@@ -50,6 +63,7 @@ export function getExcludePatterns(
 
     if (manifest.clientPages) {
       for (const page of manifest.clientPages) {
+        if (keepCommunityPages && communityPageNames.includes(page.name)) continue
         excludes.push(`src/client/pages/${page.name}.tsx`)
         excludes.push(`src/client/pages/__tests__/${page.name}.test.tsx`)
       }

@@ -14,6 +14,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
   const logout = useTenantStore(state => state.logout)
+  const account = useTenantStore(state => state.account)
 
   const handleLogout = () => {
     logout()
@@ -48,7 +49,9 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
         {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </button>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-600">Welcome, Tenant Admin</span>
+        <span className="text-sm text-gray-600" data-testid="tenant-welcome">
+          Welcome, {account ?? 'Tenant Admin'}
+        </span>
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
           <div className="cursor-pointer flex items-center gap-2">
             <UserOutlined className="text-gray-600" />

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { ShoppingCart, Check } from 'lucide-react'
-import type { Content } from '@shared/modules/content'
+import { ShoppingCart, Check, MessageCircle, Send } from 'lucide-react'
+import type { Content, ContentComment } from '@shared/modules/content'
 import { apiClient } from '@client/services/apiClient'
+import { useAuthStore } from '../stores/authStore'
 import { usePreset } from '../contexts/PresetContext'
 import { useCartStore, demoPriceFor } from '../stores/cartStore'
 
@@ -22,10 +23,17 @@ export const ContentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const preset = usePreset()
   const addItem = useCartStore(state => state.addItem)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const currentUser = useAuthStore(state => state.user)
   const [addedToCart, setAddedToCart] = useState(false)
   const [content, setContent] = useState<Content | null>(() => ssrInitialContent(id))
   const [loading, setLoading] = useState(() => ssrInitialContent(id) === null)
   const [error, setError] = useState<string | null>(null)
+  const [comments, setComments] = useState<ContentComment[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [commentBody, setCommentBody] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [commentError, setCommentError] = useState<string | null>(null)
 
   const fetchContent = useCallback(async (contentId: string) => {
     setLoading(true)
@@ -58,6 +66,67 @@ export const ContentDetailPage: React.FC = () => {
   useEffect(() => {
     if (id) fetchContent(id)
   }, [id, fetchContent])
+
+  const fetchComments = useCallback(async (contentId: string) => {
+    setCommentsLoading(true)
+    try {
+      const res = await apiClient.api.contents[':id'].comments.$get({
+        param: { id: contentId },
+      })
+      if (res.ok) {
+        const result = await res.json()
+        if (result.success) {
+          setComments(result.data?.comments ?? [])
+        }
+      }
+    } catch {
+      // 评论区加载失败不阻塞正文展示
+    } finally {
+      setCommentsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (id) fetchComments(id)
+  }, [id, fetchComments])
+
+  const submitComment = useCallback(async () => {
+    if (!id || !commentBody.trim() || submitting) return
+    setSubmitting(true)
+    setCommentError(null)
+    try {
+      const res = await apiClient.api.contents[':id'].comments.$post({
+        param: { id },
+        json: { body: commentBody.trim() },
+      })
+      if (!res.ok) {
+        // 401 由 apiClient 统一拦截并跳转 /login，这里提示通用失败文案
+        setCommentError('评论发布失败，请重试')
+        return
+      }
+      const result = await res.json()
+      if (result.success && result.data) {
+        setComments(prev => [...prev, result.data])
+        setCommentBody('')
+      } else {
+        setCommentError('评论发布失败，请重试')
+      }
+    } catch {
+      setCommentError('网络错误，请重试')
+    } finally {
+      setSubmitting(false)
+    }
+  }, [id, commentBody, submitting])
+
+  const formatCommentDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return ''
@@ -188,6 +257,88 @@ export const ContentDetailPage: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* 评论区：游客可浏览，登录用户可发表评论 */}
+        <section
+          className="mt-6 bg-white rounded-xl border border-gray-200 p-8"
+          data-testid="comment-section"
+        >
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-6">
+            <MessageCircle className="w-5 h-5" />
+            评论 ({comments.length})
+          </h2>
+
+          {isAuthenticated ? (
+            <div className="mb-8" data-testid="comment-form">
+              <textarea
+                value={commentBody}
+                onChange={e => setCommentBody(e.target.value)}
+                placeholder={`发表你的看法...（${currentUser?.username ?? '我'}）`}
+                rows={3}
+                maxLength={2000}
+                data-testid="comment-input"
+                className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 resize-none"
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs text-gray-400">
+                  {commentError ?? `${commentBody.length}/2000`}
+                </span>
+                <button
+                  onClick={submitComment}
+                  disabled={submitting || !commentBody.trim()}
+                  data-testid="comment-submit"
+                  className="flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                  {submitting ? '发布中...' : '发布评论'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="mb-8 flex items-center justify-between rounded-lg bg-gray-50 px-5 py-4"
+              data-testid="comment-login-guide"
+            >
+              <span className="text-sm text-gray-500">登录后参与讨论，分享你的想法</span>
+              <Link
+                to="/login"
+                data-testid="comment-login-link"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                登录
+              </Link>
+            </div>
+          )}
+
+          {commentsLoading ? (
+            <div className="py-6 text-center text-sm text-gray-400">评论加载中...</div>
+          ) : comments.length === 0 ? (
+            <div className="py-6 text-center text-sm text-gray-400" data-testid="comment-empty">
+              还没有评论，来抢沙发吧
+            </div>
+          ) : (
+            <ul className="space-y-6" data-testid="comment-list">
+              {comments.map(comment => (
+                <li key={comment.id} className="flex gap-3" data-testid="comment-item">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                    {comment.userName.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-900">{comment.userName}</span>
+                      <span className="text-xs text-gray-400">
+                        {formatCommentDate(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">
+                      {comment.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <div className="mt-6">
           <Link to="/content" className="text-blue-600 hover:underline">

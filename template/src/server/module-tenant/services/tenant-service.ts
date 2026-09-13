@@ -26,6 +26,7 @@ import {
   type NewTenant,
 } from '@server/db/schema'
 import { generateId, generateToken } from '@server/utils/id-helpers'
+import { normalizeTimestamp } from '@server/utils/date'
 import { createModuleLoggerSync } from '../../utils/logger'
 import { ValidationError, AuthorizationError, NotFoundError } from '../../utils/app-error'
 
@@ -489,9 +490,9 @@ function rowToMember(row: TenantMemberTable, role: TenantRole | null): TenantMem
     role,
     status: row.status as 'active' | 'pending' | 'suspended' | 'left',
     invitedBy: row.invitedBy,
-    invitedAt: row.invitedAt,
-    joinedAt: row.joinedAt,
-    lastActiveAt: row.lastActiveAt,
+    invitedAt: normalizeTimestamp(row.invitedAt),
+    joinedAt: normalizeTimestamp(row.joinedAt),
+    lastActiveAt: normalizeTimestamp(row.lastActiveAt),
   }
 }
 

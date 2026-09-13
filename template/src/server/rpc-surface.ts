@@ -25,6 +25,7 @@ import type { NotificationsApiType } from './module-notifications/routes/notific
 import type { TodosApiType } from './module-todos/routes/todos-routes'
 import type { PluginsApiType } from './module-plugin/routes/plugin-routes'
 import type { PublicContentApiType } from './module-content/routes/public-content-routes'
+import type { CommentsApiType } from './module-content/routes/comment-routes'
 import type { CartApiType } from './module-order/routes/cart-routes'
 import type { OrdersMockApiType } from './module-order/routes/orders-mock-routes'
 import type { TopicsApiType } from './module-content/routes/topics-routes'
@@ -60,6 +61,7 @@ export function createApiFacade(baseUrl: string, options: RpcClientOptions = {})
   const todosClient = hc<TodosApiType>(api, options)
   const pluginsClient = hc<PluginsApiType>(api, options)
   const publicContentClient = hc<PublicContentApiType>(api, options)
+  const commentsClient = hc<CommentsApiType>(api, options)
   const cartClient = hc<CartApiType>(api, options)
   const ordersMockClient = hc<OrdersMockApiType>(api, options)
   const topicsClient = hc<TopicsApiType>(api, options)
@@ -99,7 +101,9 @@ export function createApiFacade(baseUrl: string, options: RpcClientOptions = {})
       orders: ordersClient.orders,
       tickets: ticketsClient.tickets,
       disputes: disputesClient.disputes,
-      contents: contentsClient.contents,
+      // 'contents' 段由 comment-routes（client）与 content-routes（admin）共同提供，
+      // 用运行时合并避免类型层 merge
+      contents: mergeRpcObjects(commentsClient.contents, contentsClient.contents),
       captcha: captchaClient.captcha,
       'verify-captcha': captchaClient['verify-captcha'],
       permissions: permissionsClient.permissions,

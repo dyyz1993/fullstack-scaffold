@@ -48,3 +48,16 @@ export function transformAuditLog<T extends AuditLogWithDate>(
     createdAt: transformDateField(log.createdAt),
   }
 }
+
+/**
+ * TEXT 时间列的历史形态归一化：共享演示库部分行存毫秒数字串
+ * （"1789000000000"），运行时写入存 ISO 串。统一归一化为 ISO 输出，
+ * 避免前端 new Date("1789000000000") 得到 Invalid Date。
+ */
+export function normalizeTimestamp(value: string | null): string | null {
+  if (!value) return null
+  if (/^\d+$/.test(value)) {
+    return new Date(Number(value)).toISOString()
+  }
+  return value
+}

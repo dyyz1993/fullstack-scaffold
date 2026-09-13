@@ -13,6 +13,10 @@ const contentManifest: ModuleManifest = {
         exportName: 'publicContentRoutes',
       },
       {
+        importPath: './routes/comment-routes',
+        exportName: 'commentRoutes',
+      },
+      {
         importPath: './routes/topics-routes',
         exportName: 'topicsRoutes',
       },

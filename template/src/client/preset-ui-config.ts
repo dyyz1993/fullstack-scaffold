@@ -401,8 +401,17 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
         label: 'Topics',
       },
       {
+        path: '/topics/:id',
+        component: lazy(() =>
+          import('./pages/ContentDetailPage').then(m => ({ default: m.ContentDetailPage }))
+        ),
+        label: 'Topic Detail',
+      },
+      {
         path: '/popular',
-        component: lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage }))),
+        component: lazy(() =>
+          import('./pages/PopularPage').then(m => ({ default: m.PopularPage }))
+        ),
         label: 'Popular',
       },
       {
@@ -515,8 +524,17 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
         label: 'Topics',
       },
       {
+        path: '/topics/:id',
+        component: lazy(() =>
+          import('./pages/ContentDetailPage').then(m => ({ default: m.ContentDetailPage }))
+        ),
+        label: 'Topic Detail',
+      },
+      {
         path: '/popular',
-        component: lazy(() => import('./pages/TopicsPage').then(m => ({ default: m.TopicsPage }))),
+        component: lazy(() =>
+          import('./pages/PopularPage').then(m => ({ default: m.PopularPage }))
+        ),
         label: 'Popular',
       },
       {

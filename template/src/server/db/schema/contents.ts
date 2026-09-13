@@ -35,5 +35,27 @@ export const contents = sqliteTable(
   })
 )
 
+export const contentComments = sqliteTable(
+  'content_comments',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    contentId: integer('content_id')
+      .notNull()
+      .references(() => contents.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull(),
+    userName: text('user_name').notNull(),
+    body: text('body').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  table => ({
+    contentIdIdx: index('content_comments_content_id_idx').on(table.contentId),
+    createdAtIdx: index('content_comments_created_at_idx').on(table.createdAt),
+  })
+)
+
 export type ContentTable = typeof contents.$inferSelect
 export type NewContent = typeof contents.$inferInsert
+export type ContentCommentTable = typeof contentComments.$inferSelect
+export type NewContentComment = typeof contentComments.$inferInsert

@@ -302,8 +302,8 @@ function getRoutesForPreset(presetType: string, resolved: ResolvedPreset): LazyR
           },
           {
             path: '/topics',
-            importPath: './pages/ContentListPage',
-            componentName: 'ContentListPage',
+            importPath: './pages/TopicsPage',
+            componentName: 'TopicsPage',
             label: 'Topics',
           },
           {
@@ -314,8 +314,8 @@ function getRoutesForPreset(presetType: string, resolved: ResolvedPreset): LazyR
           },
           {
             path: '/popular',
-            importPath: './pages/ContentListPage',
-            componentName: 'ContentListPage',
+            importPath: './pages/PopularPage',
+            componentName: 'PopularPage',
             label: 'Popular',
           },
           {
