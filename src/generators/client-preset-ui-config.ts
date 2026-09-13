@@ -197,6 +197,12 @@ function getRoutesForPreset(presetType: string, resolved: ResolvedPreset): LazyR
             importPath: './pages/DeveloperDashboardPage',
             componentName: 'DeveloperDashboardPage',
             label: 'Developer',
+          },
+          {
+            path: '/installed',
+            importPath: './pages/MyInstallsPage',
+            componentName: 'MyInstallsPage',
+            label: 'My Installs',
           }
         )
       }
@@ -405,6 +411,7 @@ function getNavConfigForPreset(
           "{ label: 'Search', icon: 'Search', path: '/search' }",
           "{ label: 'Publish', icon: 'PlusCircle', path: '/publish' }",
           "{ label: 'Developer', icon: 'Code', path: '/developer' }",
+          "{ label: '我的安装', icon: 'Download', path: '/installed' }",
         ],
         mobileTabs: [
           "{ label: 'Discover', icon: 'Compass', path: '/plugins' }",
@@ -412,6 +419,7 @@ function getNavConfigForPreset(
           "{ label: 'Categories', icon: 'Tags', path: '/categories' }",
           "{ label: 'Search', icon: 'Search', path: '/search' }",
           "{ label: 'My', icon: 'User', path: '/developer' }",
+          "{ label: '我的安装', icon: 'Package', path: '/installed' }",
         ],
         defaultRoute: '/plugins',
       }
@@ -504,7 +512,8 @@ function filterNavByModules(navItems: string[], resolved: ResolvedPreset): strin
       path === '/categories' ||
       path === '/search' ||
       path === '/publish' ||
-      path === '/developer'
+      path === '/developer' ||
+      path === '/installed'
     )
       return resolved.modules.has('plugin')
     if (path === '/cart' || path === '/orders') return resolved.modules.has('order')

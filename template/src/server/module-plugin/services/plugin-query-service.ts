@@ -5,6 +5,7 @@ import type {
   Category,
   MarketplaceStats,
   PluginListResponse,
+  InstalledPlugin,
 } from '@shared/schemas'
 import { getDb } from '@server/db'
 import {
@@ -12,6 +13,7 @@ import {
   pluginVersions,
   pluginCategories,
   pluginCategoryMappings,
+  pluginInstalls,
 } from '@server/db/schema'
 import { NotFoundError } from '@server/utils/app-error'
 import { mapRow } from './plugin-service'
@@ -338,6 +340,43 @@ export async function listMyPlugins(userId: string): Promise<Plugin[]> {
     return rows.map(mapRow)
   } catch (error) {
     console.error('[PluginQueryService] getRecentPlugins failed:', error)
+    return []
+  }
+}
+
+export async function listInstalledPlugins(userId: string): Promise<InstalledPlugin[]> {
+  try {
+    const db = await getDb()
+    const installRows = await db
+      .select()
+      .from(pluginInstalls)
+      .where(eq(pluginInstalls.userId, userId))
+      .orderBy(desc(pluginInstalls.createdAt))
+    if (installRows.length === 0) {
+      return []
+    }
+
+    const ids = installRows.map(r => r.pluginId)
+    const pluginRows = await db
+      .select()
+      .from(plugins)
+      .where(
+        sql`${plugins.id} IN (${sql.join(
+          ids.map(id => sql`${id}`),
+          sql`, `
+        )})`
+      )
+
+    const byId = new Map(pluginRows.map(p => [p.id, p]))
+    const installed: InstalledPlugin[] = []
+    for (const install of installRows) {
+      const plugin = byId.get(install.pluginId)
+      if (!plugin) continue
+      installed.push({ ...mapRow(plugin), installedAt: install.createdAt.getTime() })
+    }
+    return installed
+  } catch (error) {
+    console.error('[PluginQueryService] listInstalledPlugins failed:', error)
     return []
   }
 }

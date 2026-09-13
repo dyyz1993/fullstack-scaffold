@@ -1,5 +1,10 @@
-import { eq, asc } from 'drizzle-orm'
-import type { ContentComment, CreateContentCommentInput } from '@shared/modules/content'
+import { eq, and, asc } from 'drizzle-orm'
+import type {
+  ContentComment,
+  ContentCommentListQuery,
+  ContentCommentListResponse,
+  CreateContentCommentInput,
+} from '@shared/modules/content'
 import { getDb } from '@server/db'
 import { contents, contentComments, type ContentCommentTable } from '@server/db/schema'
 import { toISOString } from '@server/utils/date'
@@ -16,17 +21,46 @@ function mapCommentRow(row: ContentCommentTable): ContentComment {
   }
 }
 
-export async function getComments(contentId: string): Promise<ContentComment[]> {
+export async function getComments(
+  contentId: string,
+  query: ContentCommentListQuery = { page: 1, limit: 20 }
+): Promise<ContentCommentListResponse> {
   const db = await getDb()
   const numId = parseModuleId('content', contentId)
-  if (numId === -1) return []
+  if (numId === -1) return { comments: [], total: 0, page: query.page, limit: query.limit }
 
+  const total = await db.$count(contentComments, eq(contentComments.contentId, numId))
   const rows = await db
     .select()
     .from(contentComments)
     .where(eq(contentComments.contentId, numId))
     .orderBy(asc(contentComments.createdAt))
-  return rows.map(mapCommentRow)
+    .limit(query.limit)
+    .offset((query.page - 1) * query.limit)
+
+  return {
+    comments: rows.map(mapCommentRow),
+    total,
+    page: query.page,
+    limit: query.limit,
+  }
+}
+
+export async function getComment(
+  contentId: string,
+  commentId: string
+): Promise<ContentComment | null> {
+  const db = await getDb()
+  const numId = parseModuleId('content', contentId)
+  const numCommentId = parseModuleId('comment', commentId)
+  if (numId === -1 || numCommentId === -1) return null
+
+  const rows = await db
+    .select()
+    .from(contentComments)
+    .where(and(eq(contentComments.id, numCommentId), eq(contentComments.contentId, numId)))
+    .limit(1)
+  return rows[0] ? mapCommentRow(rows[0]) : null
 }
 
 export async function createComment(
@@ -54,4 +88,16 @@ export async function createComment(
     .returning()
 
   return mapCommentRow(result[0])
+}
+
+export async function deleteComment(commentId: string): Promise<boolean> {
+  const db = await getDb()
+  const numCommentId = parseModuleId('comment', commentId)
+  if (numCommentId === -1) return false
+
+  const result = await db
+    .delete(contentComments)
+    .where(eq(contentComments.id, numCommentId))
+    .returning()
+  return result.length > 0
 }

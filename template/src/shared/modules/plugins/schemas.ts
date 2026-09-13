@@ -115,6 +115,10 @@ export const PluginListResponseSchema = z.object({
   limit: z.number(),
 })
 
+export const InstalledPluginSchema = PluginSchema.extend({
+  installedAt: z.number(),
+})
+
 export const AdminPluginSchema = PluginSchema.extend({
   avgRating: z.number().nullish(),
   reviewCount: z.number().nullish(),
@@ -225,3 +229,4 @@ export type PluginListResponse = z.infer<typeof PluginListResponseSchema>
 export type AdminPlugin = z.infer<typeof AdminPluginSchema>
 export type AdminDashboardStats = z.infer<typeof AdminDashboardStatsSchema>
 export type PluginListQuery = z.infer<typeof PluginListQuerySchema>
+export type InstalledPlugin = z.infer<typeof InstalledPluginSchema>

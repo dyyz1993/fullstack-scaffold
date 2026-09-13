@@ -5,6 +5,7 @@ import * as queryService from '../services/plugin-query-service'
 import * as reviewService from '../services/plugin-review-service'
 import {
   PluginSchema,
+  InstalledPluginSchema,
   CreatePluginSchema,
   UpdatePluginSchema,
   PluginSlugSchema,
@@ -25,6 +26,7 @@ import {
 import { successResponse, errorResponse, success, created } from '@server/utils/route-helpers'
 import { getAuthUser } from '@server/utils/auth'
 import { authMiddleware } from '@server/middleware/auth'
+import { optionalAuthMiddleware } from '@server/middleware/optional-auth'
 import { NotFoundError, ConflictError } from '@server/utils/app-error'
 
 const listRoute = createRoute({
@@ -165,6 +167,8 @@ const trackInstallRoute = createRoute({
   method: 'post',
   path: '/plugins/{slug}/install',
   tags: ['plugins'],
+  security: [{ Bearer: [] }],
+  middleware: [optionalAuthMiddleware()],
   request: { params: PluginSlugSchema },
   responses: {
     200: successResponse(PluginDeleteResponseSchema, 'Install tracked'),
@@ -215,6 +219,32 @@ const listMyPluginsRoute = createRoute({
   },
 })
 
+// 注意：/plugins/installed 必须注册在 /plugins/{slug} 之前，
+// 否则会被 slug 路由遮蔽（Hono 按注册顺序匹配）
+const listInstalledRoute = createRoute({
+  method: 'get',
+  path: '/plugins/installed',
+  tags: ['plugins'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(z.array(InstalledPluginSchema), 'List installed plugins'),
+  },
+})
+
+const uninstallRoute = createRoute({
+  method: 'delete',
+  path: '/plugins/installed/{slug}',
+  tags: ['plugins'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: { params: PluginSlugSchema },
+  responses: {
+    200: successResponse(PluginDeleteResponseSchema, 'Uninstall plugin'),
+    404: errorResponse('Plugin not found'),
+  },
+})
+
 export const pluginRoutes = new OpenAPIHono()
   .openapi(listMyPluginsRoute, async c => {
     const user = getAuthUser(c)
@@ -227,6 +257,20 @@ export const pluginRoutes = new OpenAPIHono()
     } catch {
       return c.json(success([]), 200)
     }
+  })
+  .openapi(listInstalledRoute, async c => {
+    const user = getAuthUser(c)
+    if (!user) {
+      return c.json({ success: false as const, error: 'Unauthorized' }, 401)
+    }
+    const installed = await queryService.listInstalledPlugins(user.id)
+    return c.json(success(installed), 200)
+  })
+  .openapi(uninstallRoute, async c => {
+    const { slug } = c.req.valid('param')
+    const user = getAuthUser(c)
+    await pluginService.uninstallPlugin(slug, user.id)
+    return c.json(success({ slug }), 200)
   })
   .openapi(listRoute, async c => {
     const query = c.req.valid('query')
@@ -340,8 +384,10 @@ export const pluginRoutes = new OpenAPIHono()
   })
   .openapi(trackInstallRoute, async c => {
     const { slug } = c.req.valid('param')
+    // 游客仅累加下载计数，登录用户额外记录 plugin_installs 安装行（幂等去重）
+    const user = getAuthUser(c)
     try {
-      await pluginService.trackInstall(slug)
+      await pluginService.trackInstall(slug, user?.id)
       return c.json(success({ slug }), 200)
     } catch {
       return c.json(success({ slug }), 200)

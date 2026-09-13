@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { Plugin, CreatePluginInput } from '@shared/schemas'
 import { getDb } from '@server/db'
-import { plugins, type PluginTable } from '@server/db/schema'
+import { plugins, pluginInstalls, type PluginTable } from '@server/db/schema'
 import { generateUUID } from '@server/utils/uuid'
 import { NotFoundError, AuthorizationError, ConflictError } from '@server/utils/app-error'
 import { parseJsonField, serializeJsonField } from '@server/utils/json'
@@ -146,7 +146,7 @@ export async function deletePlugin(slug: string, userId: string): Promise<void> 
   await db.delete(plugins).where(eq(plugins.slug, slug))
 }
 
-export async function trackInstall(slug: string): Promise<void> {
+export async function trackInstall(slug: string, userId?: string): Promise<void> {
   const db = await getDb()
 
   const rows = await db.select().from(plugins).where(eq(plugins.slug, slug))
@@ -158,6 +158,27 @@ export async function trackInstall(slug: string): Promise<void> {
     .update(plugins)
     .set({ downloadCount: rows[0].downloadCount + 1, updatedAt: new Date() })
     .where(eq(plugins.slug, slug))
+
+  // 登录用户额外落一条安装记录（匿名安装仅累加计数）；重复安装幂等忽略
+  if (userId) {
+    await db
+      .insert(pluginInstalls)
+      .values({ id: generateUUID(), pluginId: rows[0].id, userId })
+      .onConflictDoNothing()
+  }
+}
+
+export async function uninstallPlugin(slug: string, userId: string): Promise<void> {
+  const db = await getDb()
+
+  const rows = await db.select().from(plugins).where(eq(plugins.slug, slug))
+  if (rows.length === 0) {
+    throw new NotFoundError('Plugin', slug)
+  }
+
+  await db
+    .delete(pluginInstalls)
+    .where(and(eq(pluginInstalls.pluginId, rows[0].id), eq(pluginInstalls.userId, userId)))
 }
 
 export { mapRow, parseJsonField, serializeJsonField }

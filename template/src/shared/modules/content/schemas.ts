@@ -72,13 +72,21 @@ export const CreateContentCommentSchema = z.object({
 
 export const ContentCommentListSchema = z.array(ContentCommentSchema)
 
+export const ContentCommentListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+})
+
 export const ContentCommentListResponseSchema = z.object({
   comments: ContentCommentListSchema,
   total: z.number(),
+  page: z.number(),
+  limit: z.number(),
 })
 
 export type ContentComment = z.infer<typeof ContentCommentSchema>
 export type CreateContentCommentInput = z.infer<typeof CreateContentCommentSchema>
+export type ContentCommentListQuery = z.infer<typeof ContentCommentListQuerySchema>
 export type ContentCommentListResponse = z.infer<typeof ContentCommentListResponseSchema>
 
 export type ContentCategory = z.infer<typeof ContentCategorySchema>

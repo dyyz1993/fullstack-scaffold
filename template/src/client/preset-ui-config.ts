@@ -198,6 +198,7 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
       { label: 'Search', icon: 'Search', path: '/search' },
       { label: 'Publish', icon: 'PlusCircle', path: '/publish' },
       { label: 'Developer', icon: 'Code', path: '/developer' },
+      { label: '我的安装', icon: 'Download', path: '/installed' },
     ],
     mobileTabs: [
       { label: 'Discover', icon: 'Compass', path: '/plugins' },
@@ -205,6 +206,7 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
       { label: 'Categories', icon: 'Tags', path: '/categories' },
       { label: 'Search', icon: 'Search', path: '/search' },
       { label: 'My', icon: 'User', path: '/developer' },
+      { label: '我的安装', icon: 'Package', path: '/installed' },
     ],
     defaultRoute: '/plugins',
     routes: [
@@ -268,6 +270,13 @@ export const PRESET_UI_CONFIGS: Record<PresetType, PresetUIConfig> = {
           }))
         ),
         label: 'Developer',
+      },
+      {
+        path: '/installed',
+        component: lazy(() =>
+          import('./pages/MyInstallsPage').then(m => ({ default: m.MyInstallsPage }))
+        ),
+        label: 'My Installs',
       },
       {
         path: '/notifications',

@@ -8,6 +8,7 @@ import type {
   CreatePluginInput,
   CreateReviewInput,
   PluginListResponse,
+  InstalledPlugin,
 } from '@shared/schemas'
 
 type Pagination = Pick<PluginListResponse, 'page' | 'limit' | 'total'>
@@ -17,6 +18,7 @@ interface PluginState {
   currentPlugin: Plugin | null
   reviews: Review[]
   myPlugins: Plugin[]
+  installedPlugins: InstalledPlugin[]
   categories: Category[]
   stats: MarketplaceStats | null
   searchQuery: string
@@ -33,6 +35,8 @@ interface PluginState {
   fetchCategories: () => Promise<void>
   fetchStats: () => Promise<void>
   fetchMyPlugins: () => Promise<void>
+  fetchInstalledPlugins: () => Promise<void>
+  uninstallPlugin: (slug: string) => Promise<boolean>
   createPlugin: (data: CreatePluginInput) => Promise<string | null>
   deletePlugin: (slug: string) => Promise<void>
   submitReview: (slug: string, data: CreateReviewInput) => Promise<void>
@@ -53,6 +57,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
   currentPlugin: null,
   reviews: [],
   myPlugins: [],
+  installedPlugins: [],
   categories: [],
   stats: null,
   searchQuery: '',
@@ -194,6 +199,54 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
+    }
+  },
+
+  fetchInstalledPlugins: async () => {
+    set({ loading: true, error: null })
+    try {
+      const response = await apiClient.api.plugins.installed.$get()
+      const result = await response.json()
+      if (result.success) {
+        const installedSlugs: Record<string, boolean> = {}
+        for (const item of result.data) {
+          installedSlugs[item.slug] = true
+        }
+        set({ installedPlugins: result.data, installedSlugs, loading: false })
+      } else {
+        set({
+          loading: false,
+          error: (result as { error?: string }).error ?? 'Failed to fetch installed plugins',
+        })
+      }
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false })
+    }
+  },
+
+  uninstallPlugin: async (slug: string) => {
+    set({ loading: true, error: null })
+    try {
+      const response = await apiClient.api.plugins.installed[':slug'].$delete({ param: { slug } })
+      const result = await response.json()
+      if (result.success) {
+        set(state => ({
+          installedPlugins: state.installedPlugins.filter(p => p.slug !== slug),
+          installedSlugs: Object.fromEntries(
+            Object.entries(state.installedSlugs).filter(([key]) => key !== slug)
+          ),
+          loading: false,
+        }))
+        return true
+      }
+      set({
+        loading: false,
+        error: (result as { error?: string }).error ?? 'Failed to uninstall plugin',
+      })
+      return false
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false })
+      return false
     }
   },
 

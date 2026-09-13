@@ -267,6 +267,15 @@ export async function setupTestDatabase(): Promise<void> {
       UNIQUE(plugin_id, user_id)
     );
 
+    CREATE TABLE IF NOT EXISTS plugin_installs (
+      id TEXT PRIMARY KEY NOT NULL,
+      plugin_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
+      FOREIGN KEY (plugin_id) REFERENCES plugins(id) ON DELETE CASCADE,
+      UNIQUE(plugin_id, user_id)
+    );
+
     CREATE TABLE IF NOT EXISTS plugin_categories (
       id TEXT PRIMARY KEY NOT NULL,
       name TEXT NOT NULL UNIQUE,
@@ -1097,6 +1106,7 @@ export async function cleanupTestDatabase(): Promise<void> {
     try {
       await client.execute('DELETE FROM plugin_category_mappings')
       await client.execute('DELETE FROM plugin_reviews')
+      await client.execute('DELETE FROM plugin_installs')
       await client.execute('DELETE FROM plugin_versions')
       await client.execute('DELETE FROM plugins')
       await client.execute('DELETE FROM plugin_categories')

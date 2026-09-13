@@ -15,6 +15,7 @@ import {
   Globe,
 } from 'lucide-react'
 import { usePluginStore } from '@client/stores/pluginStore'
+import { useAuthStore } from '@client/stores/authStore'
 import { LoadingSpinner, StatusBadge } from '@client/components'
 import type { CreateReviewInput } from '@shared/schemas'
 
@@ -28,6 +29,8 @@ export const PluginDetailPage: React.FC = () => {
   const fetchReviews = usePluginStore(state => state.fetchReviews)
   const trackInstall = usePluginStore(state => state.trackInstall)
   const installedSlugs = usePluginStore(state => state.installedSlugs)
+  const fetchInstalledPlugins = usePluginStore(state => state.fetchInstalledPlugins)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const submitReview = usePluginStore(state => state.submitReview)
   const clearCurrentPlugin = usePluginStore(state => state.clearCurrentPlugin)
 
@@ -47,11 +50,22 @@ export const PluginDetailPage: React.FC = () => {
     return () => clearCurrentPlugin()
   }, [slug, fetchPlugin, fetchReviews, clearCurrentPlugin])
 
+  // 登录用户的安装状态以服务端 plugin_installs 为准（游客保持本地状态）
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchInstalledPlugins()
+    }
+  }, [isAuthenticated, fetchInstalledPlugins])
+
   const handleInstall = async () => {
     if (!slug || installing) return
     setInstalling(true)
-    await trackInstall(slug)
+    const ok = await trackInstall(slug)
     setInstalling(false)
+    if (ok && isAuthenticated) {
+      // 安装已落库，拉取服务端状态保证与"我的安装"页一致
+      await fetchInstalledPlugins()
+    }
   }
 
   const handleSubmitReview = async (e: React.FormEvent) => {

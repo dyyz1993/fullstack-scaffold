@@ -28,6 +28,9 @@ function readAuthSnapshot(): { authed: boolean; username: string | null } {
   }
 }
 
+// 评论分页大小：与后端 GET comments 默认 limit 保持一致
+const COMMENT_PAGE_SIZE = 20
+
 export const ContentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const preset = usePreset()
@@ -42,7 +45,10 @@ export const ContentDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(() => ssrInitialContent(id) === null)
   const [error, setError] = useState<string | null>(null)
   const [comments, setComments] = useState<ContentComment[]>([])
+  const [commentsTotal, setCommentsTotal] = useState(0)
+  const [commentPage, setCommentPage] = useState(1)
   const [commentsLoading, setCommentsLoading] = useState(false)
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
   const [commentBody, setCommentBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState<string | null>(null)
@@ -79,16 +85,19 @@ export const ContentDetailPage: React.FC = () => {
     if (id) fetchContent(id)
   }, [id, fetchContent])
 
-  const fetchComments = useCallback(async (contentId: string) => {
+  const fetchComments = useCallback(async (contentId: string, page: number) => {
     setCommentsLoading(true)
     try {
       const res = await apiClient.api.contents[':id'].comments.$get({
         param: { id: contentId },
+        query: { page, limit: COMMENT_PAGE_SIZE },
       })
       if (res.ok) {
         const result = await res.json()
         if (result.success) {
           setComments(result.data?.comments ?? [])
+          setCommentsTotal(result.data?.total ?? 0)
+          setCommentPage(result.data?.page ?? page)
         }
       }
     } catch {
@@ -99,8 +108,8 @@ export const ContentDetailPage: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (id) fetchComments(id)
-  }, [id, fetchComments])
+    if (id) fetchComments(id, commentPage)
+  }, [id, commentPage, fetchComments])
 
   // 登录/登出后同步评论区身份（轮询轻同步，与 MobileAuthBar 一致）
   useEffect(() => {
@@ -124,7 +133,13 @@ export const ContentDetailPage: React.FC = () => {
       }
       const result = await res.json()
       if (result.success && result.data) {
-        setComments(prev => [...prev, result.data])
+        // 评论按时间升序：新评论落在最后一页，跳过去让用户立即看到
+        const lastPage = Math.floor(commentsTotal / COMMENT_PAGE_SIZE) + 1
+        if (lastPage !== commentPage) {
+          setCommentPage(lastPage)
+        } else {
+          fetchComments(id, commentPage)
+        }
         setCommentBody('')
       } else {
         setCommentError('评论发布失败，请重试')
@@ -134,7 +149,37 @@ export const ContentDetailPage: React.FC = () => {
     } finally {
       setSubmitting(false)
     }
-  }, [id, commentBody, submitting])
+  }, [id, commentBody, submitting, commentPage, commentsTotal, fetchComments])
+
+  const deleteComment = useCallback(
+    async (commentId: string) => {
+      if (!id || deletingCommentId) return
+      setDeletingCommentId(commentId)
+      setCommentError(null)
+      try {
+        const res = await apiClient.api.contents[':id'].comments[':commentId'].$delete({
+          param: { id, commentId },
+        })
+        if (res.ok) {
+          const result = await res.json()
+          if (result.success) {
+            const remaining = comments.filter(c => c.id !== commentId)
+            setComments(remaining)
+            setCommentsTotal(prev => Math.max(0, prev - 1))
+            // 当前页删空且不在第一页时回退一页（useEffect 触发重新拉取）
+            if (remaining.length === 0 && commentPage > 1) {
+              setCommentPage(commentPage - 1)
+            }
+          }
+        }
+      } catch {
+        // 删除失败不阻塞评论区展示
+      } finally {
+        setDeletingCommentId(null)
+      }
+    },
+    [id, comments, commentPage, deletingCommentId]
+  )
 
   const formatCommentDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('zh-CN', {
@@ -283,7 +328,7 @@ export const ContentDetailPage: React.FC = () => {
         >
           <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-6">
             <MessageCircle className="w-5 h-5" />
-            评论 ({comments.length})
+            评论 ({commentsTotal})
           </h2>
 
           {isAuthenticated ? (
@@ -336,25 +381,73 @@ export const ContentDetailPage: React.FC = () => {
             </div>
           ) : (
             <ul className="space-y-6" data-testid="comment-list">
-              {comments.map(comment => (
-                <li key={comment.id} className="flex gap-3" data-testid="comment-item">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                    {comment.userName.slice(0, 1).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900">{comment.userName}</span>
-                      <span className="text-xs text-gray-400">
-                        {formatCommentDate(comment.createdAt)}
-                      </span>
+              {comments.map(comment => {
+                // 最小实现：仅作者本人可见删除（游客态 isAuthenticated=false 不显示）
+                const isOwnComment =
+                  isAuthenticated && comment.userName === (currentUser?.username ?? null)
+                return (
+                  <li key={comment.id} className="flex gap-3" data-testid="comment-item">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                      {comment.userName.slice(0, 1).toUpperCase()}
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">
-                      {comment.body}
-                    </p>
-                  </div>
-                </li>
-              ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {comment.userName}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {formatCommentDate(comment.createdAt)}
+                        </span>
+                        {isOwnComment && (
+                          <button
+                            onClick={() => deleteComment(comment.id)}
+                            disabled={deletingCommentId === comment.id}
+                            data-testid="comment-delete"
+                            className="ml-auto text-xs text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                          >
+                            {deletingCommentId === comment.id ? '删除中...' : '删除'}
+                          </button>
+                        )}
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700">
+                        {comment.body}
+                      </p>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
+          )}
+
+          {commentsTotal > COMMENT_PAGE_SIZE && (
+            <div
+              className="mt-6 flex items-center justify-center gap-4"
+              data-testid="comment-pagination"
+            >
+              <button
+                onClick={() => setCommentPage(p => Math.max(1, p - 1))}
+                disabled={commentPage <= 1 || commentsLoading}
+                data-testid="comment-prev-page"
+                className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                上一页
+              </button>
+              <span className="text-sm text-gray-500">
+                {commentPage} / {Math.max(1, Math.ceil(commentsTotal / COMMENT_PAGE_SIZE))}
+              </span>
+              <button
+                onClick={() =>
+                  setCommentPage(p => Math.min(Math.ceil(commentsTotal / COMMENT_PAGE_SIZE), p + 1))
+                }
+                disabled={
+                  commentPage >= Math.ceil(commentsTotal / COMMENT_PAGE_SIZE) || commentsLoading
+                }
+                data-testid="comment-next-page"
+                className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                下一页
+              </button>
+            </div>
           )}
         </section>
 

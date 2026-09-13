@@ -87,6 +87,25 @@ export const pluginReviews = sqliteTable(
   })
 )
 
+export const pluginInstalls = sqliteTable(
+  'plugin_installs',
+  {
+    id: text('id').primaryKey(),
+    pluginId: text('plugin_id')
+      .notNull()
+      .references(() => plugins.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull(),
+    // 秒语义默认值（unixepoch）——严禁毫秒默认，历史上曾因毫秒默认产生 58670 年时间戳
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  table => ({
+    pluginUserUnique: uniqueIndex('plugin_install_user_unique').on(table.pluginId, table.userId),
+    pluginIdIdx: index('plugin_installs_plugin_id_idx').on(table.pluginId),
+  })
+)
+
 export const pluginCategories = sqliteTable(
   'plugin_categories',
   {
@@ -130,3 +149,5 @@ export type PluginReviewTable = typeof pluginReviews.$inferSelect
 export type NewPluginReview = typeof pluginReviews.$inferInsert
 export type PluginCategoryTable = typeof pluginCategories.$inferSelect
 export type NewPluginCategory = typeof pluginCategories.$inferInsert
+export type PluginInstallTable = typeof pluginInstalls.$inferSelect
+export type NewPluginInstall = typeof pluginInstalls.$inferInsert
