@@ -201,6 +201,18 @@ CREATE TABLE `contents` (
 CREATE INDEX `contents_status_idx` ON `contents` (`status`);--> statement-breakpoint
 CREATE INDEX `contents_category_idx` ON `contents` (`category`);--> statement-breakpoint
 CREATE INDEX `contents_created_at_idx` ON `contents` (`created_at`);--> statement-breakpoint
+CREATE TABLE `content_comments` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`content_id` integer NOT NULL,
+	`user_id` text NOT NULL,
+	`user_name` text NOT NULL,
+	`body` text NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`content_id`) REFERENCES `contents`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+);
+--> statement-breakpoint
+CREATE INDEX `content_comments_content_id_idx` ON `content_comments` (`content_id`);--> statement-breakpoint
+CREATE INDEX `content_comments_created_at_idx` ON `content_comments` (`created_at`);--> statement-breakpoint
 CREATE TABLE `developers` (
 	`id` text PRIMARY KEY NOT NULL,
 	`username` text NOT NULL,

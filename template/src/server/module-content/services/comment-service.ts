@@ -48,6 +48,8 @@ export async function createComment(
       userId: author.userId,
       userName: author.userName,
       body: data.body,
+      // 显式提供：绕开 DB 毫秒默认与 drizzle 秒语义的不一致
+      createdAt: new Date(),
     })
     .returning()
 

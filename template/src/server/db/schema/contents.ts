@@ -45,9 +45,11 @@ export const contentComments = sqliteTable(
     userId: text('user_id').notNull(),
     userName: text('user_name').notNull(),
     body: text('body').notNull(),
+    // 默认值用秒（unixepoch()）：与 drizzle mode:'timestamp' 的读写语义一致，
+    // 毫秒默认会让 drizzle 读成 58670 年
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+      .default(sql`(unixepoch())`),
   },
   table => ({
     contentIdIdx: index('content_comments_content_id_idx').on(table.contentId),
