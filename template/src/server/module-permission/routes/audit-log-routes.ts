@@ -2,6 +2,7 @@ import { createRoute } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { z } from '@hono/zod-openapi'
 import { authMiddleware } from '@server/middleware/auth'
+import { Role } from '@shared/modules/permission'
 import { auditLogService } from '../services/audit-log-service'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
 import { AuditLogSchema, ResourceTypeSchema, ActionTypeSchema } from '@shared/modules/audit'
@@ -11,7 +12,7 @@ const getAuditLogsRoute = createRoute({
   path: '/audit-logs',
   tags: ['audit-logs'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     query: z.object({
       limit: z.string().optional(),
@@ -32,7 +33,7 @@ const getAuditLogRoute = createRoute({
   path: '/audit-logs/:id',
   tags: ['audit-logs'],
   security: [{ Bearer: [] }],
-  middleware: [authMiddleware()],
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: z.object({
       id: z.string(),

@@ -175,13 +175,15 @@ export function authMiddleware(options: AuthMiddlewareOptions = {}): MiddlewareH
     log.info({ userId: user.id, role: user.role, path: c.req.path }, 'User authenticated')
 
     if (options.requiredRole) {
-      const roleHierarchy = {
+      const roleHierarchy: Record<string, number> = {
         [Role.SUPER_ADMIN]: 3,
         [Role.CUSTOMER_SERVICE]: 2,
         [Role.USER]: 1,
       }
-      const userLevel = roleHierarchy[user.role]
-      const requiredLevel = roleHierarchy[options.requiredRole]
+      // 未知角色（如注册链路写入的非法 role）一律按最低权限处理：
+      // undefined 参与比较恒为 false，会导致越权角色被放行
+      const userLevel = roleHierarchy[user.role] ?? 0
+      const requiredLevel = roleHierarchy[options.requiredRole] ?? 3
 
       if (userLevel < requiredLevel) {
         log.warn(
