@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet-async'
 import { ShoppingCart, Check, MessageCircle, Send } from 'lucide-react'
 import type { Content, ContentComment } from '@shared/modules/content'
 import { apiClient } from '@client/services/apiClient'
-import { useAuthStore } from '../stores/authStore'
 import { usePreset } from '../contexts/PresetContext'
 import { useCartStore, demoPriceFor } from '../stores/cartStore'
 
@@ -19,12 +18,25 @@ function ssrInitialContent(id?: string): Content | null {
   }
 }
 
+function readAuthSnapshot(): { authed: boolean; username: string | null } {
+  try {
+    const raw = localStorage.getItem('auth-token')
+    const state = raw ? JSON.parse(raw)?.state : null
+    return { authed: !!state?.isAuthenticated, username: state?.user?.username ?? null }
+  } catch {
+    return { authed: false, username: null }
+  }
+}
+
 export const ContentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const preset = usePreset()
   const addItem = useCartStore(state => state.addItem)
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
-  const currentUser = useAuthStore(state => state.user)
+  // 登录态零依赖读取（与 MobileAuthBar 同模式）：本页在无 auth 模块的
+  // preset（如 ecommerce）也会生成，authStore 不存在，不能静态 import
+  const [auth, setAuth] = useState(() => readAuthSnapshot())
+  const isAuthenticated = auth.authed
+  const currentUser = auth.authed ? { username: auth.username ?? 'User' } : null
   const [addedToCart, setAddedToCart] = useState(false)
   const [content, setContent] = useState<Content | null>(() => ssrInitialContent(id))
   const [loading, setLoading] = useState(() => ssrInitialContent(id) === null)
@@ -89,6 +101,12 @@ export const ContentDetailPage: React.FC = () => {
   useEffect(() => {
     if (id) fetchComments(id)
   }, [id, fetchComments])
+
+  // 登录/登出后同步评论区身份（轮询轻同步，与 MobileAuthBar 一致）
+  useEffect(() => {
+    const timer = window.setInterval(() => setAuth(readAuthSnapshot()), 1200)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const submitComment = useCallback(async () => {
     if (!id || !commentBody.trim() || submitting) return

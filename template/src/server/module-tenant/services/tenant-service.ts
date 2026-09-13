@@ -491,7 +491,8 @@ function rowToMember(row: TenantMemberTable, role: TenantRole | null): TenantMem
     status: row.status as 'active' | 'pending' | 'suspended' | 'left',
     invitedBy: row.invitedBy,
     invitedAt: normalizeTimestamp(row.invitedAt),
-    joinedAt: normalizeTimestamp(row.joinedAt),
+    // joined_at 为 notNull 列：归一化结果为 null 时回退原值满足非空契约
+    joinedAt: normalizeTimestamp(row.joinedAt) ?? row.joinedAt,
     lastActiveAt: normalizeTimestamp(row.lastActiveAt),
   }
 }

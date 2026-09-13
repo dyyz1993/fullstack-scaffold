@@ -71,6 +71,7 @@ interface TenantSubscription {
 export const useTenantStore = create<TenantState>((set, getState) => ({
   isAuthenticated: !!getToken(),
   currentTenant: null,
+  account: null,
   loading: false,
   users: [],
   roles: [],
