@@ -61,34 +61,26 @@ describe('Todos Module ISR', () => {
   })
 
   describe('data fetching', () => {
-    it('should fetch todos from service', async () => {
-      vi.mocked(listTodos).mockResolvedValue({ todos: mockTodosData, total: 3, page: 1, limit: 20 })
-
+    // ISR HTML 是匿名共享缓存：嵌入任何租户/用户的待办都会跨租户泄漏，
+    // 因此 fetch 恒返回空列表（meta-only），数据由 SPA 按身份拉取
+    it('should always return empty todos (meta-only, no cross-tenant leak)', async () => {
       const { isrRegistry } = await import('@server/core/isr-registry')
       const entry = isrRegistry.match('/todos')!
-      const data = (await entry.fetch('/todos', {})) as { todos: MockTodo[] }
-
-      expect(data.todos).toHaveLength(3)
-      expect(data.todos[0].title).toBe('Task A')
-    })
-
-    it('should handle empty todos', async () => {
-      vi.mocked(listTodos).mockResolvedValue({ todos: [], total: 0, page: 1, limit: 20 })
-
-      const { isrRegistry } = await import('@server/core/isr-registry')
-      const entry = isrRegistry.match('/todos')!
-      const data = (await entry.fetch('/todos', {})) as { todos: MockTodo[] }
+      const data = (await entry.fetch('/todos', { isAuthenticated: false })) as {
+        todos: MockTodo[]
+      }
 
       expect(data.todos).toHaveLength(0)
     })
 
-    it('should handle DB error gracefully', async () => {
-      vi.mocked(listTodos).mockRejectedValue(new Error('DB connection failed'))
-
+    it('should return empty todos even when authenticated', async () => {
       const { isrRegistry } = await import('@server/core/isr-registry')
       const entry = isrRegistry.match('/todos')!
+      const data = (await entry.fetch('/todos', { isAuthenticated: true })) as {
+        todos: MockTodo[]
+      }
 
-      await expect(entry.fetch('/todos', {})).rejects.toThrow('DB connection failed')
+      expect(data.todos).toHaveLength(0)
     })
   })
 
