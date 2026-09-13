@@ -11,7 +11,7 @@ interface TodoData {
   todos: Array<{ id: number; title: string; status: string }>
 }
 
-async function fetchTodos(pathname: string, ctx?: ISRRouterContext): Promise<TodoData> {
+async function fetchTodos(_pathname: string, ctx?: ISRRouterContext): Promise<TodoData> {
   // 已认证请求：ISR HTML 是匿名共享缓存，嵌入任何用户的待办都会跨租户泄漏。
   // 返回空列表，SPA 水合后按请求者身份从 /api/todos 拉取。
   if (ctx?.isAuthenticated) {

@@ -109,7 +109,7 @@ export class PermissionService {
     return rows.map(row => row.permissions)
   }
 
-  async getUserPermissions(_userId: string, roleCode?: string): Promise<Permission[]> {
+  async getUserPermissions(_userId: string, roleCode?: string): Promise<Array<{ code: string }>> {
     if (!roleCode) {
       return []
     }
@@ -141,7 +141,7 @@ export class PermissionService {
       )
     }
 
-    return getStaticPermissionsByRoleCode(roleCode)
+    return getStaticPermissionsByRoleCode(roleCode).map(code => ({ code }))
   }
 
   async hasPermission(
