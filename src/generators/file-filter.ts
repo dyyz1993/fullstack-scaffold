@@ -146,6 +146,15 @@ export function getExcludePatterns(
   // Include when:
   // 1. A module in the preset declares the relevant client page, OR
   // 2. A server module that imports their schemas is present (e.g., content needs community).
+  // orderStore（本地下单闭环）依赖 order schema 且仅被 CartPage/OrdersPage
+  // 引用——无这两页的 preset 裁掉
+  const hasShopPages = [...resolved.modules.values()].some(
+    m => m.clientPages?.some(p => ['CartPage', 'OrdersPage'].includes(p.name)) ?? false
+  )
+  if (!hasShopPages) {
+    excludes.push('src/client/stores/orderStore.ts')
+  }
+
   // cart 不在此裁剪：cartStore（ContentDetailPage 静态引用）依赖其 schema，
   // 且 schema 为纯 zod 定义，对所有 client preset 常驻无害
   const standaloneSharedModules: Record<string, { pages?: string[]; serverModules?: string[] }> = {
