@@ -262,6 +262,16 @@ CREATE TABLE `plugin_reviews` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `plugin_review_user_unique` ON `plugin_reviews` (`plugin_id`,`user_id`);--> statement-breakpoint
+CREATE TABLE `plugin_installs` (
+	`id` text PRIMARY KEY NOT NULL,
+	`plugin_id` text NOT NULL,
+	`user_id` text NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`plugin_id`) REFERENCES `plugins`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `plugin_install_user_unique` ON `plugin_installs` (`plugin_id`,`user_id`);--> statement-breakpoint
+CREATE INDEX `plugin_installs_plugin_id_idx` ON `plugin_installs` (`plugin_id`);--> statement-breakpoint
 CREATE TABLE `plugin_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`plugin_id` text NOT NULL,
