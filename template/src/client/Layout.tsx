@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { Navigation } from './components/Navigation'
 import { Footer } from './components/Footer'
 import { BottomTabBar } from './components/BottomTabBar'
+import { MobileAuthBar } from './components/MobileAuthBar'
 import type {
   PresetTheme,
   ClientNavItem,
@@ -61,6 +62,13 @@ export const Layout: React.FC<LayoutProps> = ({
     >
       {navVisible && layout === 'top-nav' && (
         <Navigation preset={preset} items={desktopNav} theme={theme} navigation={navigation} />
+      )}
+
+      {/* 移动端登录入口：桌面导航 md 起才显示，此前移动端（含底部 tab）无任何
+          登录/登出途径。仅对含 auth 模块的 preset 渲染；MobileAuthBar 零 store
+          依赖，无 auth 的 preset（如 ecommerce）也能编译 */}
+      {navVisible && layout === 'top-nav' && mobileTabs && mobileTabs.length > 0 && (
+        <MobileAuthBar />
       )}
 
       {layout === 'minimal' ? (

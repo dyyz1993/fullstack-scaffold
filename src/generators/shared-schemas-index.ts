@@ -506,7 +506,8 @@ const ADDITIONAL_PATHS_MAP: Record<string, string[]> = {
 // 1. The preset has client pages that import their schemas, OR
 // 2. The preset has server modules whose routes import their schemas.
 const STANDALONE_SHARED_MODULES: Record<string, { pages?: string[]; serverModules?: string[] }> = {
-  cart: { pages: ['CartPage.tsx'] },
+  // ContentDetailPage（购买条 → cartStore → CartItem）也依赖 cart schema
+  cart: { pages: ['CartPage.tsx', 'ContentDetailPage.tsx'] },
   community: { pages: ['TopicsPage.tsx', 'ProfilePage.tsx'], serverModules: ['content'] },
   dashboard: { pages: ['DashboardPage.tsx'] },
 }

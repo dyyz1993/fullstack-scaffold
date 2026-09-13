@@ -133,7 +133,9 @@ export function getExcludePatterns(
   // 1. A module in the preset declares the relevant client page, OR
   // 2. A server module that imports their schemas is present (e.g., content needs community).
   const standaloneSharedModules: Record<string, { pages?: string[]; serverModules?: string[] }> = {
-    cart: { pages: ['CartPage'] },
+    // cart schema 随 CartPage（购物车页）或 ContentDetailPage（详情页购买条 →
+    // cartStore → CartItem 类型依赖链）保留
+    cart: { pages: ['CartPage', 'ContentDetailPage'] },
     community: { pages: ['TopicsPage', 'ProfilePage'], serverModules: ['content'] },
     dashboard: { pages: ['DashboardPage'] },
   }

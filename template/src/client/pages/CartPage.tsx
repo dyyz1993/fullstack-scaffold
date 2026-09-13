@@ -1,31 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { Package, Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
-import { apiClient } from '@client/services/apiClient'
-import { LoadingSpinner } from '@client/components'
-import type { CartItem } from '@shared/schemas'
+import { useCartStore } from '@client/stores/cartStore'
 
 const SHIPPING_THRESHOLD = 50
 const TAX_RATE = 0.08
 
 export const CartPage: React.FC = () => {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchCart() {
-      try {
-        const res = await apiClient.api.cart.$get()
-        const result = await res.json()
-        if (result.success) {
-          setItems(result.data.items)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchCart()
-  }, [])
+  // 购物车数据源 = 本地 cartStore（详情页加购写入，persist 持久化）；
+  // 原 /api/cart 为演示 mock，与真实加购脱节，已下线
+  const items = useCartStore(state => state.items)
+  const updateQuantityStore = useCartStore(state => state.updateQuantity)
+  const removeItemStore = useCartStore(state => state.removeItem)
+  const clearCart = useCartStore(state => state.clearCart)
+  const [ordered, setOrdered] = useState(false)
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : 5.99
@@ -34,25 +23,11 @@ export const CartPage: React.FC = () => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const updateQuantity = (id: number, delta: number) => {
-    setItems(prev =>
-      prev
-        .map(item =>
-          item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
-        )
-        .filter(item => item.quantity > 0)
-    )
+    updateQuantityStore(id, delta)
   }
 
   const removeItem = (id: number) => {
-    setItems(prev => prev.filter(item => item.id !== id))
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20" data-testid="cart-loading">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
+    removeItemStore(id)
   }
 
   return (
@@ -211,20 +186,35 @@ export const CartPage: React.FC = () => {
               </div>
 
               <button
-                className="w-full mt-6 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors"
+                onClick={() => {
+                  if (items.length === 0) return
+                  clearCart()
+                  setOrdered(true)
+                }}
+                className="w-full mt-6 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50"
                 data-testid="cart-checkout-button"
               >
                 Checkout
               </button>
 
+              {ordered && (
+                <p
+                  className="mt-3 text-sm text-emerald-600 text-center"
+                  data-testid="cart-order-done"
+                >
+                  ✓ 订单已提交（演示闭环，未产生真实扣款）
+                </p>
+              )}
+
               <div className="mt-4 text-center">
-                <button
+                <Link
+                  to="/"
                   className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium transition-colors"
                   data-testid="cart-continue-shopping"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Continue Shopping
-                </button>
+                </Link>
               </div>
 
               {subtotal < SHIPPING_THRESHOLD && subtotal > 0 && (
