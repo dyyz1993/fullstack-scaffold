@@ -236,6 +236,17 @@ minimal：输入态按钮可用性/新增置顶/完成态/删除/移动端 5 案
 
 **架构沉淀**：并发多 agent 同仓库并行开发可行——按文件边界划分（A 评论区/content 模块、B topics/popular/路由配置、主线程 saas），零冲突合并；组合态以 scaffold tsc + 全量 vitest + validate-all 收口。静态依赖链（ContentDetailPage → authStore）在无 auth preset 断链，统一采用 localStorage 零依赖读模式（MobileAuthBar 先例）。
 
+### 第六轮：最后两个功能缺口清零（2026-09-13，2 并发智能体）
+
+| 项                          | 状态    | 说明                                                                                                                                                                                |
+| --------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~market"我的安装"页缺失~~  | ✅ 已建 | plugin_installs 表（秒语义+UNIQUE 幂等）+ GET /plugins/installed + DELETE 卸载 + MyInstallsPage（桌面导航/移动 tab 双入口，安装状态服务端驱动）。终验：列表/卸载/重装/移动端全 PASS |
+| ~~forum 评论删除/分页缺失~~ | ✅ 已建 | DELETE 评论（作者本人/super_admin，他人 403）+ 分页（page/limit 上限 100）+ 前端删自己的评论按钮与翻页控件。终验：删除/权限/持久化/游客态全 PASS                                    |
+
+**工程质量**：e2e 290/290、全量 vitest 1601 passed、validate-all 17 项、scaffold 双环境（market+todo/forum+ecommerce）tsc 全过。新增路由测试按 local-rules 用 createTestClient 类型安全客户端（可选鉴权中间件沉淀至 server/middleware/optional-auth.ts）。
+
+**至此全部已知缺陷与功能缺口清零。**
+
 ### 第二轮通用发现
 
 - **登录后跳转路由硬编码为 /todos** 在 forum 与 market 两个 preset 同时复现 404——模板级 bug（登录成功后的 redirect 目标未按 preset 配置），修复一处应全局生效
