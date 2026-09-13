@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { Package, Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { useCartStore } from '@client/stores/cartStore'
+import { useOrderStore } from '@client/stores/orderStore'
 
 const SHIPPING_THRESHOLD = 50
 const TAX_RATE = 0.08
@@ -14,6 +15,7 @@ export const CartPage: React.FC = () => {
   const updateQuantityStore = useCartStore(state => state.updateQuantity)
   const removeItemStore = useCartStore(state => state.removeItem)
   const clearCart = useCartStore(state => state.clearCart)
+  const placeOrder = useOrderStore(state => state.placeOrder)
   const [ordered, setOrdered] = useState(false)
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -196,6 +198,7 @@ export const CartPage: React.FC = () => {
               <button
                 onClick={() => {
                   if (items.length === 0) return
+                  placeOrder(items, total)
                   clearCart()
                   setOrdered(true)
                 }}

@@ -1,10 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Package, Truck, Clock, CheckCircle, XCircle, RotateCcw, Search } from 'lucide-react'
-import { apiClient } from '@client/services/apiClient'
-import { LoadingSpinner } from '@client/components'
-
-import type { ECommerceOrder } from '@shared/schemas'
+import { useOrderStore } from '@client/stores/orderStore'
 
 type ECommerceOrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled'
 
@@ -30,34 +27,12 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
 
 export const OrdersPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
-  const [orders, setOrders] = useState<ECommerceOrder[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchOrders() {
-      try {
-        const res = await apiClient.api['orders-mock'].$get()
-        const result = await res.json()
-        if (result.success) {
-          setOrders(result.data)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchOrders()
-  }, [])
+  // 订单数据源 = 本地 orderStore（CartPage checkout 写入，persist 持久化）；
+  // 原 /api/orders-mock 为演示 mock，与真实下单脱节，已下线
+  const orders = useOrderStore(state => state.orders)
 
   const filteredOrders =
     activeFilter === 'all' ? orders : orders.filter(order => order.status === activeFilter)
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20" data-testid="orders-loading">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6" data-testid="orders-page">
