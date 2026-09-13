@@ -7,6 +7,7 @@
 
 const TOKEN_KEY = 'tenant-token'
 const SLUG_KEY = 'current-tenant-slug'
+const ACCOUNT_KEY = 'tenant-account'
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -24,6 +25,15 @@ export function getSlug(): string | null {
 export function setSlug(slug: string | null): void {
   if (slug) localStorage.setItem(SLUG_KEY, slug)
   else localStorage.removeItem(SLUG_KEY)
+}
+
+export function getAccount(): string | null {
+  return localStorage.getItem(ACCOUNT_KEY)
+}
+
+export function setAccount(account: string | null): void {
+  if (account) localStorage.setItem(ACCOUNT_KEY, account)
+  else localStorage.removeItem(ACCOUNT_KEY)
 }
 
 function headers(json = true): Record<string, string> {

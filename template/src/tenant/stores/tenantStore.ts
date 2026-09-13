@@ -11,7 +11,7 @@ import type {
   TenantMyMembership,
   TenantStatsResponse,
 } from '@shared/schemas'
-import { api, setToken, setSlug, getToken } from '../services/tenantApi'
+import { api, setToken, setSlug, getToken, getAccount, setAccount } from '../services/tenantApi'
 
 interface TenantState {
   isAuthenticated: boolean
@@ -109,6 +109,7 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
       const mineRes = await api<Tenant[]>('/tenants/mine')
       // 认证已成功——无租户账号保留 token（受邀新用户需登录态接受邀请），
       // 由调用方引导回邀请落地页而非硬拒
+      setAccount(account)
       if (!mineRes.success || !mineRes.data || mineRes.data.length === 0) {
         set({ account })
         return { ok: true, hasTenant: false }
@@ -125,6 +126,9 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
 
   restoreFromToken: async () => {
     if (!getToken()) return
+    // account 持久化在 localStorage：硬刷新后恢复欢迎语（否则回退默认文案）
+    const savedAccount = getAccount()
+    if (savedAccount) set({ account: savedAccount })
     const mineRes = await api<Tenant[]>('/tenants/mine')
     if (mineRes.success && mineRes.data && mineRes.data.length > 0) {
       const tenant = mineRes.data[0]
@@ -136,6 +140,7 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
   logout: () => {
     setToken(null)
     setSlug(null)
+    setAccount(null)
     set({
       isAuthenticated: false,
       currentTenant: null,
