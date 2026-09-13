@@ -10,7 +10,7 @@
 
 **凭据**: `通过 CLI 登录`
 
-**案例数**: 2
+**案例数**: 4
 
 ### CLI 命令
 
@@ -28,5 +28,21 @@
 1. curl http://localhost:3010/api/todos
 
 **验证**: API 返回 JSON 数据
+
+### 未知命令报错（逆向）
+
+**步骤**:
+
+1. npm run cli -- not-a-real-command
+
+**验证**: 输出未知命令错误与用法提示，非静默成功
+
+### 访问不存在 API（逆向）
+
+**步骤**:
+
+1. curl http://localhost:3010/api/not-exist
+
+**验证**: 返回 404，不泄露堆栈
 
 ---

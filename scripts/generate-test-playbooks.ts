@@ -146,6 +146,21 @@ const PRESETS: Array<{
             shot: 'matrix/fullstack/super-admin/fa-admin-logs.png',
             selectors: { 系统日志侧栏链接: "a[href='/admin/system/logs']" },
           },
+          {
+            title: '验证码限流触发（逆向防御验证）',
+            steps: ['打开 /admin/test/captcha 验证码测试页', '点击"连续请求 20 次"'],
+            verify: '真实弹出验证码 Modal；输入正确码提交后弹窗关闭（响应链闭环）',
+          },
+          {
+            title: '空标题内容创建被拒（逆向）',
+            steps: ['内容管理 → 新建内容', '不填标题直接提交'],
+            verify: '表单/zod 校验拦截并提示必填，不产生脏数据',
+          },
+          {
+            title: '未登录访问管理 API（逆向）',
+            steps: ['不带 Authorization 请求 /api/admin/stats'],
+            verify: '返回 401，不泄露任何统计',
+          },
         ],
       },
       {
@@ -315,6 +330,23 @@ const PRESETS: Array<{
             verify: '⚠ P2：三路由全回退壳无内容；API 仅全局 /api/audit-logs 可达',
             shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
           },
+          {
+            title: '平台租户列表查看',
+            steps: ['超管登录后侧栏点击"平台租户"（/tenant/tenants）'],
+            verify: '租户表格渲染全部租户（名称/套餐/状态 Tag）',
+            shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
+          },
+          {
+            title: '平台审计日志查看',
+            steps: ['侧栏点击"审计日志"（/tenant/audit）'],
+            verify: '审计表格渲染（时间/用户/操作/资源/IP），分页可用',
+            shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
+          },
+          {
+            title: '邀请无效邮箱被拒（逆向）',
+            steps: ['Invite member 填入非法格式邮箱提交'],
+            verify: '表单/后端校验拦截，提示格式错误，不产生邀请',
+          },
         ],
       },
       {
@@ -366,6 +398,16 @@ const PRESETS: Array<{
             verify: '⚠ P2 BUG：Tenant Name 可编辑可保存（成员可改租户名）',
             shot: 'matrix/saas/member/m-13-settings.png',
           },
+          {
+            title: '成员视角无成员管理按钮（RBAC 收敛验证）',
+            steps: ['成员身份进入 Users 页'],
+            verify: '无 Invite member 按钮、成员行无 Role/Remove 操作控件，Role 仅只读徽章',
+          },
+          {
+            title: '成员越权访问平台 API（逆向）',
+            steps: ['成员 token 直接请求 GET /api/tenants 与 /api/audit-logs'],
+            verify: '均返回 403，不泄露平台级数据',
+          },
         ],
       },
       {
@@ -413,6 +455,11 @@ const PRESETS: Array<{
             verify: '纵向堆叠正常；⚠ P3：375px 页头隐藏，游客看不到登录入口',
             shot: 'matrix/saas/guest/g-15-home-mobile.png',
           },
+          {
+            title: '未登录访问平台 API（逆向）',
+            steps: ['无 token 请求 GET /api/tenants'],
+            verify: '返回 401，不泄露租户清单',
+          },
         ],
       },
     ],
@@ -458,6 +505,16 @@ const PRESETS: Array<{
             verify: 'Status 变 Open，ECHO REQUEST/RESPONSE 往返',
             shot: 'matrix/todo/09-websocket.png',
           },
+          {
+            title: '空标题提交无效（逆向）',
+            steps: ['打开 /todos', '不输入标题直接点击 Add Todo'],
+            verify: '提交被拦截，Total 计数不变',
+          },
+          {
+            title: 'WebSocket 未连接发消息（逆向）',
+            steps: ['打开 /websocket', '不点 Connect 直接在输入框发送'],
+            verify: '提示未连接或消息不发出，无假成功',
+          },
         ],
       },
       {
@@ -469,6 +526,11 @@ const PRESETS: Array<{
             steps: ['直接打开 /todos'],
             verify: '自动登录为 Demo User，可直接增删改',
             shot: 'matrix/todo/01-home.png',
+          },
+          {
+            title: '登出态访问受保护接口（逆向）',
+            steps: ['清空 localStorage 后无 token 请求 /api/todos 写接口'],
+            verify: '返回 401，REST 层要求认证（页面自动登录为 demo 特性，接口层不放松）',
           },
         ],
       },
@@ -516,6 +578,16 @@ const PRESETS: Array<{
             steps: ['进入内容列表'],
             verify: '2 条种子内容 + 编辑操作正常',
             shot: 'matrix/market/market-21c-admin-content-list.png',
+          },
+          {
+            title: '下架不存在的插件（逆向）',
+            steps: ['管理后台对未知 slug 执行下架操作'],
+            verify: '返回 404，不产生副作用',
+          },
+          {
+            title: '缺名称的插件表单被拒（逆向）',
+            steps: ['发布/编辑表单不填名称直接提交'],
+            verify: '校验拦截并提示必填',
           },
         ],
       },
@@ -627,6 +699,28 @@ const PRESETS: Array<{
             steps: ['访问 /profile', '探测 /account /me /installed /my-plugins'],
             verify: '⚠ P2：profile 硬编码 Jane Doe；全站无"我的安装"页',
             shot: 'matrix/market/market-19-profile-janedoe-hardcoded.png',
+          },
+          {
+            title: '我的安装页列表',
+            steps: ['登录后导航点击"我的安装"（/installed）'],
+            verify: '列出当前用户已安装插件（名称/版本/安装时间），无旧 mock 数据',
+            shot: 'matrix/market/market-16b-logged-in-home.png',
+          },
+          {
+            title: '卸载已安装插件',
+            steps: ['在 /installed 点击卸载', '回详情页重新 Install'],
+            verify: '卸载后列表移除、重装恢复，installed 状态服务端驱动',
+          },
+          {
+            title: '未登录访问我的安装（逆向）',
+            steps: ['登出后直接访问 /installed'],
+            verify: '401 由 apiClient 统一跳转 /login，不泄露安装数据',
+          },
+
+          {
+            title: '重复安装幂等（逆向）',
+            steps: ['同一插件连续点击 Install 两次'],
+            verify: '安装记录唯一（UNIQUE 约束幂等），计数仅累加、不产生重复安装行',
           },
         ],
       },
@@ -746,6 +840,16 @@ const PRESETS: Array<{
             steps: ['进入系统设置页'],
             verify: '表单带出真实配置值',
           },
+          {
+            title: '空标题内容创建被拒（逆向）',
+            steps: ['登录管理后台内容管理', '新建内容不填标题直接提交'],
+            verify: '校验拦截并提示必填，不产生脏数据',
+          },
+          {
+            title: '未登录访问管理 API（逆向）',
+            steps: ['不带 Authorization 请求管理端接口'],
+            verify: '返回 401',
+          },
         ],
       },
       {
@@ -818,6 +922,22 @@ const PRESETS: Array<{
             steps: ['点击 Sign Out'],
             verify: 'navbar 变 Login，列表内容不受影响',
             shot: 'matrix/forum/forum-28.png',
+          },
+          {
+            title: '发表评论',
+            steps: ['登录态打开内容详情', '输入评论并发布'],
+            verify: '评论出现在列表且计数 +1，F5 后持久',
+            shot: 'matrix/forum/forum-13.png',
+          },
+          {
+            title: '删除自己的评论',
+            steps: ['在自己评论旁点击删除'],
+            verify: '评论移除、计数 -1，他人评论不受影响',
+          },
+          {
+            title: '删除他人评论被拒（逆向）',
+            steps: ['尝试删除他人评论（UI 无按钮；API 层 DELETE 他人评论）'],
+            verify: 'UI 无入口；API 层 403，仅作者与 super_admin 可删',
           },
         ],
       },
@@ -927,6 +1047,11 @@ const PRESETS: Array<{
             steps: ['点击"公告"胶囊'],
             verify: '显示"暂无内容"空态文案',
             shot: 'matrix/forum/forum-31.png',
+          },
+          {
+            title: '游客态无评论管理按钮（逆向）',
+            steps: ['登出后打开内容详情评论区'],
+            verify: '可见评论列表但无任何删除按钮，显示"登录后参与讨论"引导',
           },
         ],
       },
@@ -1073,6 +1198,22 @@ const PRESETS: Array<{
             shot: 'matrix/shop/shop-25-nav-mobile.png',
             selectors: { 底部tab订单: "[data-testid='bottom-tab-orders']" },
           },
+          {
+            title: '加购→下单→订单生成（正向闭环）',
+            steps: ['详情页加入购物车', 'Cart 页点击 Checkout', '导航切换到 Orders'],
+            verify:
+              '生成 ORD-2026-xxxxxx 新订单（Processing 状态），购物车清空，旧 ORD-2024 mock 全部下线',
+          },
+          {
+            title: '订单状态筛选',
+            steps: ['Orders 页点击 Processing 筛选 chip'],
+            verify: '新订单在 Processing 下可见，Delivered 筛选下隐藏并显示空态',
+          },
+          {
+            title: '空购物车 Checkout 无效（逆向）',
+            steps: ['清空购物车后尝试 Checkout'],
+            verify: '无 Checkout 入口或点击无效果，不产生空订单',
+          },
         ],
       },
     ],
@@ -1133,6 +1274,11 @@ const PRESETS: Array<{
             verify: '无横向溢出；已知 P3：过滤 chips 右缘截断',
             shot: 'matrix/minimal/minimal-10-home-mobile.png',
           },
+          {
+            title: '空标题提交无效（逆向）',
+            steps: ['不输入任何内容直接点击 Add'],
+            verify: '按钮禁用或提交无效果，不产生空标题条目',
+          },
         ],
       },
     ],
@@ -1156,6 +1302,16 @@ const PRESETS: Array<{
             title: 'API 调用',
             steps: ['curl http://localhost:3010/api/todos'],
             verify: 'API 返回 JSON 数据',
+          },
+          {
+            title: '未知命令报错（逆向）',
+            steps: ['npm run cli -- not-a-real-command'],
+            verify: '输出未知命令错误与用法提示，非静默成功',
+          },
+          {
+            title: '访问不存在 API（逆向）',
+            steps: ['curl http://localhost:3010/api/not-exist'],
+            verify: '返回 404，不泄露堆栈',
           },
         ],
       },

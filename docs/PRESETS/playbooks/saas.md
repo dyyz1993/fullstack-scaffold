@@ -10,7 +10,7 @@
 
 **凭据**: `superadmin / admin123（/tenant/login）`
 
-**案例数**: 9
+**案例数**: 12
 
 ### 登录租户控制台
 
@@ -129,13 +129,41 @@
 
 **截图**: ![审计日志页（逆向：无 UI 无租户维度）](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
 
+### 平台租户列表查看
+
+**步骤**:
+
+1. 超管登录后侧栏点击"平台租户"（/tenant/tenants）
+
+**验证**: 租户表格渲染全部租户（名称/套餐/状态 Tag）
+
+**截图**: ![平台租户列表查看](../screenshots/matrix/saas/tadmin/t-12-tenants-list-missing.png)
+
+### 平台审计日志查看
+
+**步骤**:
+
+1. 侧栏点击"审计日志"（/tenant/audit）
+
+**验证**: 审计表格渲染（时间/用户/操作/资源/IP），分页可用
+
+**截图**: ![平台审计日志查看](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
+
+### 邀请无效邮箱被拒（逆向）
+
+**步骤**:
+
+1. Invite member 填入非法格式邮箱提交
+
+**验证**: 表单/后端校验拦截，提示格式错误，不产生邀请
+
 ---
 
 ## 租户成员
 
 **凭据**: `member-matrix@demo.io（/tenant/login UI 登录）`
 
-**案例数**: 6
+**案例数**: 8
 
 ### 接受邀请加入租户
 
@@ -207,13 +235,29 @@
 
 **截图**: ![成员访问租户设置（逆向：越权可写）](../screenshots/matrix/saas/member/m-13-settings.png)
 
+### 成员视角无成员管理按钮（RBAC 收敛验证）
+
+**步骤**:
+
+1. 成员身份进入 Users 页
+
+**验证**: 无 Invite member 按钮、成员行无 Role/Remove 操作控件，Role 仅只读徽章
+
+### 成员越权访问平台 API（逆向）
+
+**步骤**:
+
+1. 成员 token 直接请求 GET /api/tenants 与 /api/audit-logs
+
+**验证**: 均返回 403，不泄露平台级数据
+
 ---
 
 ## 访客（未登录）
 
 **凭据**: `无需登录`
 
-**案例数**: 7
+**案例数**: 8
 
 ### 直访受保护页被拦截
 
@@ -282,5 +326,13 @@
 **验证**: 纵向堆叠正常；⚠ P3：375px 页头隐藏，游客看不到登录入口
 
 **截图**: ![游客首页移动版（375px）](../screenshots/matrix/saas/guest/g-15-home-mobile.png)
+
+### 未登录访问平台 API（逆向）
+
+**步骤**:
+
+1. 无 token 请求 GET /api/tenants
+
+**验证**: 返回 401，不泄露租户清单
 
 ---
