@@ -20,6 +20,12 @@ export class RequestInterceptor {
   async intercept(url: string, init: RequestInit): Promise<Response> {
     const request = () => this.executeRequest(url, init)
 
+    // 验证码自身端点不走拦截：弹窗打开期间（isShowingCaptcha=true）拉取
+    // 验证码的请求会被排队等待自己完成，形成死锁（图永不加载、提交恒禁用）
+    if (url.includes('/api/captcha')) {
+      return request()
+    }
+
     if (this.isShowingCaptcha) {
       return new Promise((resolve, reject) => {
         this.pendingRequests.push({ resolve, reject, request })

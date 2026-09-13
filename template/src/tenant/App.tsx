@@ -7,6 +7,8 @@ import { SubscriptionPage } from './pages/SubscriptionPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { TodosPage } from './pages/TodosPage'
 import { ContentPage } from './pages/ContentPage'
+import { TenantsPage } from './pages/TenantsPage'
+import { AuditLogsPage } from './pages/AuditLogsPage'
 import { LoginPage } from './pages/LoginPage'
 import { InviteAcceptPage } from './pages/InviteAcceptPage'
 import { TenantGuard } from './components/TenantGuard'
@@ -39,6 +41,8 @@ export const App: React.FC = () => {
                       <Route path="/settings" element={<SettingsPage />} />
                       <Route path="/todos" element={<TodosPage />} />
                       <Route path="/content" element={<ContentPage />} />
+                      <Route path="/tenants" element={<TenantsPage />} />
+                      <Route path="/audit" element={<AuditLogsPage />} />
                     </Routes>
                   </Layout>
                 </TenantGuard>

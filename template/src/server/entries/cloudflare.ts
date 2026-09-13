@@ -205,7 +205,11 @@ async function renderISRForRoute(
     throw new Error(`No ISR handler for ${pathname}`)
   }
 
-  const ctx: ISRRouterContext = { db: env.DB, env }
+  const ctx: ISRRouterContext = {
+    db: env.DB,
+    env,
+    isAuthenticated: !!request.headers.get('Authorization'),
+  }
   let data: unknown = {}
   let meta = { title: 'Biomimic App', description: 'A full-stack application template' }
 

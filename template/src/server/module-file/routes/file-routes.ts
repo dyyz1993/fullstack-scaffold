@@ -266,12 +266,28 @@ export const fileRoutes = new OpenAPIHono()
     const namespace = typeof body['namespace'] === 'string' ? body['namespace'] : 'uploads'
 
     const arrayBuffer = await file.arrayBuffer()
-    const uploaded = await saveFile(namespace, {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      data: arrayBuffer,
-    })
+    let uploaded
+    try {
+      uploaded = await saveFile(namespace, {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: arrayBuffer,
+      })
+    } catch (error) {
+      // Cloudflare 环境未配置 R2：给部署者可操作的提示而非裸 500
+      if (error instanceof Error && error.message.includes('R2')) {
+        return c.json(
+          {
+            success: false as const,
+            error:
+              '文件上传不可用：Cloudflare 部署需要配置 R2 存储桶。请在 wrangler.toml 绑定 R2 bucket 后重新部署，或改用支持本地存储的 Node.js 部署方式。',
+          },
+          503
+        )
+      }
+      throw error
+    }
 
     const url = getPublicFileUrl(namespace, uploaded.filename)
 

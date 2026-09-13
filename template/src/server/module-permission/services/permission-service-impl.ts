@@ -7,6 +7,17 @@ import { permissions, rolePermissions, roles } from '@server/db/schema'
 import { roleService } from './role-service'
 import { logger } from '@server/utils/logger'
 import { MENU_CONFIG, PAGE_PERMISSIONS, type PagePermissionConfig } from './permission-service'
+import { getPermissionsByRole } from '@shared/modules/permission'
+
+const STATIC_PERMISSIONS_BY_ROLE: Record<string, PermissionEnum[]> = {
+  [Role.SUPER_ADMIN]: getPermissionsByRole(Role.SUPER_ADMIN),
+  [Role.CUSTOMER_SERVICE]: getPermissionsByRole(Role.CUSTOMER_SERVICE),
+  [Role.USER]: getPermissionsByRole(Role.USER),
+}
+
+function getStaticPermissionsByRoleCode(roleCode: string): PermissionEnum[] {
+  return STATIC_PERMISSIONS_BY_ROLE[roleCode] ?? []
+}
 
 const log = logger.api()
 
@@ -103,22 +114,34 @@ export class PermissionService {
       return []
     }
 
-    const role = await roleService.getByCode(roleCode)
-    if (!role) {
-      return []
+    // DB（roles/role_permissions/permissions 表）有种子数据时以 DB 为准；
+    // 共享演示库可能未跑种子——此时回退静态角色权限，
+    // 保证 /permissions/init 与登录响应（静态 ROLE_PERMISSIONS）同源一致
+    try {
+      const role = await roleService.getByCode(roleCode)
+
+      // 超级管理员拥有所有权限
+      if (role && roleCode === 'super_admin') {
+        const db = await getDb()
+        const allPermissions = await db
+          .select()
+          .from(permissions)
+          .where(eq(permissions.isActive, true))
+        if (allPermissions.length > 0) return allPermissions
+      }
+
+      if (role) {
+        const rolePerms = await this.getRolePermissions(role.id)
+        if (rolePerms.length > 0) return rolePerms
+      }
+    } catch (error) {
+      log.warn(
+        { roleCode, error },
+        'DB permission lookup failed, falling back to static permissions'
+      )
     }
 
-    // 超级管理员拥有所有权限
-    if (roleCode === 'super_admin') {
-      const db = await getDb()
-      const allPermissions = await db
-        .select()
-        .from(permissions)
-        .where(eq(permissions.isActive, true))
-      return allPermissions
-    }
-
-    return this.getRolePermissions(role.id)
+    return getStaticPermissionsByRoleCode(roleCode)
   }
 
   async hasPermission(

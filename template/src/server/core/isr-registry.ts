@@ -20,6 +20,9 @@ export interface ISRRouterContext {
   db?: unknown
   /** Raw env object (for module-specific needs) */
   env?: unknown
+  /** 请求携带鉴权头时为 true：ISR HTML 是匿名共享缓存，嵌入按身份过滤的数据会跨租户泄漏，
+   *  已认证路由的 fetch 必须返回空数据，让 SPA 水合后按身份拉取 */
+  isAuthenticated?: boolean
 }
 
 export interface ISRRouteEntry {

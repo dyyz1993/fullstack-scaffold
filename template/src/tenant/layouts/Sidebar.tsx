@@ -7,6 +7,8 @@ import {
   SettingOutlined,
   CheckSquareOutlined,
   FileTextOutlined,
+  TeamOutlined,
+  AuditOutlined,
 } from '@ant-design/icons'
 
 interface SidebarProps {
@@ -47,6 +49,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       key: '/settings',
       icon: <SettingOutlined />,
       label: <a href="/tenant/settings">Settings</a>,
+    },
+    {
+      key: '/tenants',
+      icon: <TeamOutlined />,
+      label: <a href="/tenant/tenants">平台租户</a>,
+    },
+    {
+      key: '/audit',
+      icon: <AuditOutlined />,
+      label: <a href="/tenant/audit">审计日志</a>,
     },
   ]
 

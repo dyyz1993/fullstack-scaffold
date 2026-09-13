@@ -4,14 +4,19 @@
  * Fetches data for SEO meta tags — body rendering handled by React SPA.
  */
 
-import { isrRegistry, type ISRRouteEntry } from '@server/core/isr-registry'
+import { isrRegistry, type ISRRouteEntry, type ISRRouterContext } from '@server/core/isr-registry'
 import { listTodos } from './services/todo-service'
 
 interface TodoData {
   todos: Array<{ id: number; title: string; status: string }>
 }
 
-async function fetchTodos(_pathname: string): Promise<TodoData> {
+async function fetchTodos(pathname: string, ctx?: ISRRouterContext): Promise<TodoData> {
+  // 已认证请求：ISR HTML 是匿名共享缓存，嵌入任何用户的待办都会跨租户泄漏。
+  // 返回空列表，SPA 水合后按请求者身份从 /api/todos 拉取。
+  if (ctx?.isAuthenticated) {
+    return { todos: [] }
+  }
   const { todos } = await listTodos({ limit: 20 })
   return { todos }
 }
