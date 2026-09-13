@@ -8,20 +8,36 @@ import type { TenantMember } from '@shared/schemas'
 /**
  * 租户成员管理：列表（含角色）/邀请新成员（邮件+角色）/改角色/移除。
  * 后端在邀请与接受时执行套餐成员数配额（P4）。
+ * RBAC UI 收敛（P2）：仅租户管理员（tenant_admin/平台超管）渲染
+ * Invite/Role/Remove 管理控件——普通成员/访客只读，与后端 403 口径一致。
  */
 export const UsersPage: React.FC = () => {
-  const { users, roles, loading, fetchUsers, fetchRoles, inviteUser, updateUser, deleteUser } =
-    useTenantStore()
+  const {
+    users,
+    roles,
+    loading,
+    fetchUsers,
+    fetchRoles,
+    fetchMyMembership,
+    myMembership,
+    inviteUser,
+    updateUser,
+    deleteUser,
+  } = useTenantStore()
   const { message } = App.useApp()
   const [inviteOpen, setInviteOpen] = useState(false)
   const [roleTarget, setRoleTarget] = useState<TenantMember | null>(null)
   const [inviteForm] = Form.useForm()
   const [roleForm] = Form.useForm()
 
+  // 默认视为无管理权：身份未确认前不闪现管理按钮（宁缺勿滥）
+  const canManageMembers = myMembership?.isTenantAdmin === true
+
   useEffect(() => {
     fetchUsers()
     fetchRoles()
-  }, [fetchUsers, fetchRoles])
+    fetchMyMembership()
+  }, [fetchUsers, fetchRoles, fetchMyMembership])
 
   const handleInvite = async () => {
     try {
@@ -96,32 +112,37 @@ export const UsersPage: React.FC = () => {
       key: 'joinedAt',
       render: (v: string) => (v ? new Date(v).toLocaleDateString() : '-'),
     },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => {
-              setRoleTarget(record)
-              roleForm.setFieldsValue({ roleId: record.roleId })
-            }}
-          >
-            Role
-          </Button>
-          <Button
-            icon={<DeleteOutlined />}
-            size="small"
-            danger
-            onClick={() => handleRemove(record)}
-          >
-            Remove
-          </Button>
-        </Space>
-      ),
-    },
+    // 管理操作列仅租户管理员可见（与后端 MEMBER_ROLE_ASSIGN/MEMBER_REMOVE 对齐）
+    ...(canManageMembers
+      ? [
+          {
+            title: 'Actions',
+            key: 'actions',
+            render: (_: unknown, record: TenantMember) => (
+              <Space size="middle">
+                <Button
+                  icon={<EditOutlined />}
+                  size="small"
+                  onClick={() => {
+                    setRoleTarget(record)
+                    roleForm.setFieldsValue({ roleId: record.roleId })
+                  }}
+                >
+                  Role
+                </Button>
+                <Button
+                  icon={<DeleteOutlined />}
+                  size="small"
+                  danger
+                  onClick={() => handleRemove(record)}
+                >
+                  Remove
+                </Button>
+              </Space>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -130,9 +151,11 @@ export const UsersPage: React.FC = () => {
         <Typography.Title level={5} className="!mb-0">
           Members
         </Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setInviteOpen(true)}>
-          Invite member
-        </Button>
+        {canManageMembers && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setInviteOpen(true)}>
+            Invite member
+          </Button>
+        )}
       </div>
       <Table columns={columns} dataSource={users} loading={loading} rowKey="id" />
 

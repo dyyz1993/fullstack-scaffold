@@ -237,3 +237,120 @@ describe('membership & invitation routes (P1)', () => {
     }
   })
 })
+
+describe('tenant stats & my membership routes (P2 RBAC UI / P3 口径统一)', () => {
+  const authHeaders = { Authorization: 'Bearer test-super-admin-1' }
+  const memberHeaders = { Authorization: 'Bearer test-user-2' }
+  const strangerHeaders = { Authorization: 'Bearer test-user-3' }
+
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
+  /** 建租户（owner=超管）+ 邀请 test-user-2 为 tenant_member，返回 tenantId */
+  async function provisionTenantWithMember(): Promise<string> {
+    const owner = createTestClient(undefined, { headers: authHeaders })
+    const createRes = await owner.api.tenants.$post({
+      json: {
+        name: 'Stats Route',
+        slug: `stats-route-${Date.now()}`,
+        plan: 'pro',
+        maxUsers: 10,
+        settings: null,
+      },
+    })
+    expect(createRes.status).toBe(201)
+    const created = await createRes.json()
+    if (!created.success) throw new Error('create tenant failed')
+    const tenantId = String(created.data.id)
+
+    const rolesRes = await owner.api.tenants[':tenantId'].roles.$get({ param: { tenantId } })
+    const rolesData = await rolesRes.json()
+    if (!rolesData.success) throw new Error('roles failed')
+    const memberRole = rolesData.data.find((r: { code: string }) => r.code === 'tenant_member')!
+
+    const inviteRes = await owner.api.tenants[':tenantId'].members.invite.$post({
+      param: { tenantId },
+      json: { email: 'stats-member@example.com', roleId: memberRole.id },
+    })
+    expect(inviteRes.status).toBe(201)
+    const inviteData = await inviteRes.json()
+    if (!inviteData.success) throw new Error('invite failed')
+
+    const member = createTestClient(undefined, { headers: memberHeaders })
+    const acceptRes = await member.api.tenants.invitations[':token'].accept.$post({
+      param: { token: inviteData.data.token },
+    })
+    expect(acceptRes.status).toBe(200)
+    return tenantId
+  }
+
+  it('GET /tenants/:tenantId/stats 对 admin 与 member 返回同值（租户级口径）', async () => {
+    const tenantId = await provisionTenantWithMember()
+    const owner = createTestClient(undefined, { headers: authHeaders })
+    const member = createTestClient(undefined, { headers: memberHeaders })
+
+    const adminRes = await owner.api.tenants[':tenantId'].stats.$get({ param: { tenantId } })
+    expect(adminRes.status).toBe(200)
+    const memberRes = await member.api.tenants[':tenantId'].stats.$get({ param: { tenantId } })
+    expect(memberRes.status).toBe(200)
+
+    const adminData = await adminRes.json()
+    const memberData = await memberRes.json()
+    if (!adminData.success || !memberData.success) throw new Error('stats failed')
+    expect(adminData.data.totalUsers).toBe(2)
+    expect(memberData.data.totalUsers).toBe(adminData.data.totalUsers)
+  })
+
+  it('非成员访问 stats 403', async () => {
+    const tenantId = await provisionTenantWithMember()
+    const stranger = createTestClient(undefined, { headers: strangerHeaders })
+    const res = await stranger.api.tenants[':tenantId'].stats.$get({ param: { tenantId } })
+    expect(res.status).toBe(403)
+  })
+
+  it('GET /tenants/:tenantId/members/me 返回本人身份与管理员标记', async () => {
+    const tenantId = await provisionTenantWithMember()
+    const owner = createTestClient(undefined, { headers: authHeaders })
+    const member = createTestClient(undefined, { headers: memberHeaders })
+    const stranger = createTestClient(undefined, { headers: strangerHeaders })
+
+    const adminMe = await (
+      await owner.api.tenants[':tenantId'].members.me.$get({
+        param: { tenantId },
+      })
+    ).json()
+    expect(adminMe.success).toBe(true)
+    if (adminMe.success) {
+      expect(adminMe.data.isTenantAdmin).toBe(true)
+      expect(adminMe.data.member?.role?.code).toBe('tenant_admin')
+    }
+
+    const memberMe = await (
+      await member.api.tenants[':tenantId'].members.me.$get({
+        param: { tenantId },
+      })
+    ).json()
+    expect(memberMe.success).toBe(true)
+    if (memberMe.success) {
+      // tenant_member/tenant_guest 不是管理员——前端据此收敛管理按钮
+      expect(memberMe.data.isTenantAdmin).toBe(false)
+      expect(memberMe.data.member?.role?.code).toBe('tenant_member')
+    }
+
+    const strangerMe = await (
+      await stranger.api.tenants[':tenantId'].members.me.$get({
+        param: { tenantId },
+      })
+    ).json()
+    expect(strangerMe.success).toBe(true)
+    if (strangerMe.success) {
+      expect(strangerMe.data.member).toBeNull()
+      expect(strangerMe.data.isTenantAdmin).toBe(false)
+    }
+  })
+})

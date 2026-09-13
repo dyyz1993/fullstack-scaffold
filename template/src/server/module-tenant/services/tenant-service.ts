@@ -6,6 +6,7 @@ import type {
   TenantRole,
   TenantMember,
   TenantInvitation,
+  TenantStatsResponse,
 } from '@shared/schemas'
 import {
   TenantPermission,
@@ -638,6 +639,29 @@ export async function hasTenantPermission(
 ): Promise<boolean> {
   const permissions = await getUserTenantPermissions(userId, tenantId)
   return permissions.includes(permission)
+}
+
+// ============ 租户统计 / 当前身份 ============
+
+/**
+ * 租户级口径统计（P3 口径统一）：totalUsers = 该租户成员行总数，
+ * 与 Members 列表行数同源同值——不按当前用户过滤，对同租户所有角色一致
+ */
+export async function getTenantStats(tenantId: number): Promise<TenantStatsResponse> {
+  const db = await getDb()
+  const rows = await db.select().from(tenantMembers).where(eq(tenantMembers.tenantId, tenantId))
+  return { totalUsers: rows.length }
+}
+
+/** 当前用户在本租户的成员身份（含角色）；非成员或非 active 返回 null */
+export async function getMyMembership(
+  userId: string,
+  tenantId: number
+): Promise<TenantMember | null> {
+  const membership = await getMembership(userId, tenantId)
+  if (!membership || membership.status !== 'active') return null
+  const members = await getTenantMembers(tenantId)
+  return members.find(m => m.id === membership.id) ?? null
 }
 
 // ============ 租户邀请 ============

@@ -8,6 +8,8 @@ import type {
   Topic,
   TenantMember,
   TenantRole,
+  TenantMyMembership,
+  TenantStatsResponse,
 } from '@shared/schemas'
 import { api, setToken, setSlug, getToken } from '../services/tenantApi'
 
@@ -19,6 +21,8 @@ interface TenantState {
   loading: boolean
   users: TenantMember[]
   roles: TenantRole[]
+  /** 当前用户在本租户的成员身份 + 是否租户管理员（RBAC UI 收敛依据，P2） */
+  myMembership: TenantMyMembership | null
   todos: Todo[]
   topics: Topic[]
   stats: TenantStats
@@ -38,6 +42,7 @@ interface TenantState {
   updateUser: (userId: string, data: { roleId: string }) => Promise<boolean>
   deleteUser: (userId: string) => Promise<boolean>
   fetchRoles: () => Promise<void>
+  fetchMyMembership: () => Promise<void>
   fetchTodos: () => Promise<void>
   createTodo: (data: CreateTodoInput) => Promise<boolean>
   updateTodo: (todoId: number, data: UpdateTodoInput) => Promise<boolean>
@@ -75,6 +80,7 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
   loading: false,
   users: [],
   roles: [],
+  myMembership: null,
   todos: [],
   topics: [],
   stats: {
@@ -130,10 +136,18 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
   logout: () => {
     setToken(null)
     setSlug(null)
-    set({ isAuthenticated: false, currentTenant: null, account: null, users: [], todos: [] })
+    set({
+      isAuthenticated: false,
+      currentTenant: null,
+      account: null,
+      users: [],
+      todos: [],
+      myMembership: null,
+    })
   },
 
-  setCurrentTenant: tenant => set({ currentTenant: tenant }),
+  // 切租户必须丢掉旧身份缓存，否则上一个租户的管理员标记会串台
+  setCurrentTenant: tenant => set({ currentTenant: tenant, myMembership: null }),
 
   setLoading: loading => set({ loading }),
 
@@ -144,7 +158,7 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
     }
     const res = await api<Tenant>(`/tenants/slug/${slug}`)
     if (res.success && res.data) {
-      set({ isAuthenticated: true, currentTenant: res.data })
+      set({ isAuthenticated: true, currentTenant: res.data, myMembership: null })
       return
     }
     // 仅认证确实失效（401）才回登录；429/网络错误按瞬态跳过，
@@ -152,6 +166,13 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
     if (res.status === 401) {
       set({ isAuthenticated: false })
     }
+  },
+
+  fetchMyMembership: async () => {
+    const tenant = getState().currentTenant
+    if (!tenant) return
+    const res = await api<TenantMyMembership>(`/tenants/${tenant.id}/members/me`)
+    if (res.success && res.data) set({ myMembership: res.data })
   },
 
   fetchRoles: async () => {
@@ -254,14 +275,16 @@ export const useTenantStore = create<TenantState>((set, getState) => ({
   fetchStats: async () => {
     const tenant = getState().currentTenant
     if (!tenant) return
-    const [members, todos] = await Promise.all([
-      api<TenantMember[]>(`/tenants/${tenant.id}/members`),
+    // Total Users 走服务端租户级统计（P3 口径统一）：同租户所有角色同值，
+    // 不再由前端用成员列表长度推导（超管/成员视角曾出现 1 vs 4 的矛盾）
+    const [statsRes, todos] = await Promise.all([
+      api<TenantStatsResponse>(`/tenants/${tenant.id}/stats`),
       api<{ todos: Todo[]; total: number }>('/todos?limit=100'),
     ])
     const activeTodos = (todos.data?.todos ?? []).filter(t => t.status !== 'completed').length
     set({
       stats: {
-        totalUsers: members.data?.length ?? 0,
+        totalUsers: statsRes.data?.totalUsers ?? 0,
         activeTodos,
         contentCount: 0,
         monthlyRevenue: 0,

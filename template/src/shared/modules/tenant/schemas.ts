@@ -198,3 +198,20 @@ export type StringIdResponse = z.infer<typeof StringIdResponseSchema>
 export const TenantArrayResponseSchema = z.array(TenantSchema)
 export const TenantRoleArrayResponseSchema = z.array(TenantRoleSchema)
 export const TenantMemberArrayResponseSchema = z.array(TenantMemberSchema)
+
+// ============ 租户统计 ============
+/** 租户级口径统计：totalUsers 为该租户成员行总数（对所有角色一致，不按当前用户过滤） */
+export const TenantStatsResponseSchema = z.object({
+  totalUsers: z.number().int().nonnegative(),
+})
+
+export type TenantStatsResponse = z.infer<typeof TenantStatsResponseSchema>
+
+// ============ 当前用户成员身份 ============
+/** member 为当前登录用户在本租户的成员身份（非成员/非 active 为 null）；isTenantAdmin 供前端收敛管理按钮 */
+export const TenantMyMembershipSchema = z.object({
+  member: TenantMemberSchema.nullish(),
+  isTenantAdmin: z.boolean(),
+})
+
+export type TenantMyMembership = z.infer<typeof TenantMyMembershipSchema>

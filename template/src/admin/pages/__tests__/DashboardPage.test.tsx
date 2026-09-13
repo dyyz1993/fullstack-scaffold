@@ -131,7 +131,8 @@ describe('DashboardPage', () => {
       expect(screen.getByText('已完成')).toBeInTheDocument()
       expect(screen.getByText('32')).toBeInTheDocument()
       expect(screen.getByText('最后更新')).toBeInTheDocument()
-      expect(screen.getByText('2025-01-01')).toBeInTheDocument()
+      // lastUpdated 经 useLanguage().formatDate 本地化，与实现同等逻辑计算期望值
+      expect(screen.getByText(new Date('2025-01-01').toLocaleString('zh-CN'))).toBeInTheDocument()
     })
   })
 

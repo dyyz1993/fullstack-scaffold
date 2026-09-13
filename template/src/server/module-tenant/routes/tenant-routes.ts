@@ -18,11 +18,14 @@ import {
   TenantArrayResponseSchema,
   TenantRoleArrayResponseSchema,
   TenantMemberArrayResponseSchema,
+  TenantStatsResponseSchema,
+  TenantMyMembershipSchema,
   CreateTenantRoleSchema,
   UpdateTenantRoleSchema,
   InviteMemberSchema,
   UpdateMemberRoleSchema,
   TenantPermission,
+  TenantRoleCode,
   type PublicInvitation,
 } from '@shared/schemas'
 import { successResponse, errorResponse, success } from '@server/utils/route-helpers'
@@ -231,6 +234,35 @@ const tenantMembersListRoute = createRoute({
   responses: {
     200: successResponse(TenantMemberArrayResponseSchema, 'List tenant members with roles'),
     403: errorResponse('Not a member of this tenant'),
+  },
+})
+
+const tenantStatsRoute = createRoute({
+  method: 'get',
+  path: '/tenants/{tenantId}/stats',
+  tags: ['tenants'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({ tenantId: z.coerce.number().int().positive() }),
+  },
+  responses: {
+    200: successResponse(TenantStatsResponseSchema, 'Tenant-level stats (consistent across roles)'),
+    403: errorResponse('Not a member of this tenant'),
+  },
+})
+
+const myMembershipRoute = createRoute({
+  method: 'get',
+  path: '/tenants/{tenantId}/members/me',
+  tags: ['tenants'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  request: {
+    params: z.object({ tenantId: z.coerce.number().int().positive() }),
+  },
+  responses: {
+    200: successResponse(TenantMyMembershipSchema, "Current user's membership and admin flag"),
   },
 })
 
@@ -451,6 +483,23 @@ export const apiRoutes = new OpenAPIHono()
     await requireTenantPerm(c, tenantId, TenantPermission.MEMBER_VIEW)
     const members = await tenantService.getTenantMembers(tenantId)
     return c.json(success(members), 200)
+  })
+  .openapi(tenantStatsRoute, async c => {
+    const { tenantId } = c.req.valid('param')
+    // 租户级口径：所有持有 MEMBER_VIEW 的角色（admin/member/guest、超管 bypass）
+    // 拿到同一个数字——统计在服务端按租户计算，不按当前用户过滤
+    await requireTenantPerm(c, tenantId, TenantPermission.MEMBER_VIEW)
+    const stats = await tenantService.getTenantStats(tenantId)
+    return c.json(success(stats), 200)
+  })
+  .openapi(myMembershipRoute, async c => {
+    const { tenantId } = c.req.valid('param')
+    // 供前端 RBAC UI 收敛：只返回调用者自己的成员身份，无需 MEMBER_VIEW 门禁
+    const user = c.get('authUser')
+    const member = await tenantService.getMyMembership(user.id, tenantId)
+    const isTenantAdmin =
+      user.role === Role.SUPER_ADMIN || member?.role?.code === TenantRoleCode.ADMIN
+    return c.json(success({ member, isTenantAdmin }), 200)
   })
   .openapi(memberInviteRoute, async c => {
     const { tenantId } = c.req.valid('param')

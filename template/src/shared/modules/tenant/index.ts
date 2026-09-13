@@ -35,6 +35,8 @@ export {
   TenantArrayResponseSchema,
   TenantRoleArrayResponseSchema,
   TenantMemberArrayResponseSchema,
+  TenantStatsResponseSchema,
+  TenantMyMembershipSchema,
   type TenantRole,
   type CreateTenantRoleInput,
   type UpdateTenantRoleInput,
@@ -44,6 +46,8 @@ export {
   type InviteMemberInput,
   type PublicInvitation,
   type StringIdResponse,
+  type TenantStatsResponse,
+  type TenantMyMembership,
 } from './schemas'
 export { TenantPermission, TENANT_PERMISSION_VALUES, TENANT_PERMISSION_LABELS } from './permissions'
 export {

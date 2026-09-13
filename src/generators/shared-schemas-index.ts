@@ -340,6 +340,8 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'TenantArrayResponseSchema',
       'TenantRoleArrayResponseSchema',
       'TenantMemberArrayResponseSchema',
+      'TenantStatsResponseSchema',
+      'TenantMyMembershipSchema',
       'TenantPermission',
       'TENANT_PERMISSION_VALUES',
       'TENANT_PERMISSION_LABELS',
@@ -367,6 +369,8 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'type PublicInvitation',
 
       'type StringIdResponse',
+      'type TenantStatsResponse',
+      'type TenantMyMembership',
       'type TenantRoleTemplate',
     ],
   },

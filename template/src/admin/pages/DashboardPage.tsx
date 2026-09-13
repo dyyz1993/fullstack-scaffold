@@ -7,7 +7,7 @@ import type { SystemStats } from '@shared/modules/admin'
 import type { NotificationType } from '@shared/schemas'
 
 export const DashboardPage: React.FC = () => {
-  const { t } = useLanguage()
+  const { t, formatDate } = useLanguage()
   const { token } = theme.useToken()
   const [stats, setStats] = useState<SystemStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,7 +61,7 @@ export const DashboardPage: React.FC = () => {
     },
     {
       title: t('dashboard.lastUpdated'),
-      value: stats?.lastUpdated || '-',
+      value: stats?.lastUpdated ? formatDate(stats.lastUpdated) : '-',
       icon: Activity,
       color: 'bg-purple-500',
     },

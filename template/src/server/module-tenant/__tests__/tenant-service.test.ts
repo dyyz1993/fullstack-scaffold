@@ -18,6 +18,8 @@ import {
   getInvitationByToken,
   acceptInvitation,
   removeMember,
+  getTenantStats,
+  getMyMembership,
 } from '../services/tenant-service'
 import { TenantPermission } from '@shared/schemas'
 import type { CreateTenantInput } from '@shared/schemas'
@@ -327,5 +329,49 @@ describe('provisioning & membership (P1)', () => {
     expect(mine.length).toBeGreaterThanOrEqual(2) // demo 种子 + 本组新建
     expect(mine.every(t => t.slug)).toBe(true)
     expect((await getUserTenants('test-user-2')).length).toBe(0)
+  })
+})
+
+describe('tenant stats & my membership (P2 RBAC UI / P3 口径统一)', () => {
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
+  it('getTenantStats 返回租户成员行总数，与成员列表同源（不按当前用户过滤）', async () => {
+    const tenant = await createTenant(
+      { name: '统计验证', slug: 'stats-check', plan: 'free', maxUsers: 5, settings: {} },
+      'test-super-admin-1'
+    )
+    expect((await getTenantStats(tenant.id)).totalUsers).toBe(1)
+
+    const memberRole = (await getTenantRoles(tenant.id)).find(r => r.code === 'tenant_member')!
+    const invitation = await inviteMember(
+      tenant.id,
+      'stats-member@example.com',
+      memberRole.id,
+      'test-super-admin-1'
+    )
+    await acceptInvitation(invitation.token, 'test-user-2')
+
+    const stats = await getTenantStats(tenant.id)
+    const members = await getTenantMembers(tenant.id)
+    expect(stats.totalUsers).toBe(2)
+    expect(stats.totalUsers).toBe(members.length)
+  })
+
+  it('getMyMembership 返回本人身份（含角色）；非成员/非 active 返回 null', async () => {
+    const tenant = await createTenant(
+      { name: '身份验证', slug: 'me-check', plan: 'free', maxUsers: 5, settings: {} },
+      'test-super-admin-1'
+    )
+    const mine = await getMyMembership('test-super-admin-1', tenant.id)
+    expect(mine?.userId).toBe('test-super-admin-1')
+    expect(mine?.role?.code).toBe('tenant_admin')
+
+    expect(await getMyMembership('test-user-2', tenant.id)).toBeNull()
   })
 })

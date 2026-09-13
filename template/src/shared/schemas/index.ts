@@ -237,6 +237,8 @@ export {
   TenantArrayResponseSchema,
   TenantRoleArrayResponseSchema,
   TenantMemberArrayResponseSchema,
+  TenantStatsResponseSchema,
+  TenantMyMembershipSchema,
   TenantPermission,
   TENANT_PERMISSION_VALUES,
   TENANT_PERMISSION_LABELS,
@@ -263,6 +265,8 @@ export {
   type InviteMemberInput,
   type PublicInvitation,
   type StringIdResponse,
+  type TenantStatsResponse,
+  type TenantMyMembership,
   type TenantRoleTemplate,
 } from '../modules/tenant'
 export {

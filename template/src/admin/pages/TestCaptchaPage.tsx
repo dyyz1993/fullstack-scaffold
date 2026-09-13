@@ -24,7 +24,7 @@ export const TestCaptchaPage: React.FC = () => {
   const testCaptchaTrigger = async () => {
     setLoading(true)
     try {
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 20; i++) {
         await apiClient.api.admin.stats.$get()
       }
       setResult('✅ 触发限流验证码测试完成')
@@ -72,7 +72,7 @@ export const TestCaptchaPage: React.FC = () => {
                   <strong>正常请求</strong>：不触发任何拦截
                 </li>
                 <li>
-                  <strong>限流触发</strong>：连续请求 15 次触发验证码
+                  <strong>限流触发</strong>：连续请求 20 次触发验证码
                 </li>
                 <li>
                   <strong>并发请求</strong>：同时发送多个请求测试排队
@@ -93,7 +93,7 @@ export const TestCaptchaPage: React.FC = () => {
           </Button>
 
           <Button type="default" onClick={testCaptchaTrigger} loading={loading} block size="large">
-            🔐 测试限流触发验证码（连续请求 15 次）
+            🔐 测试限流触发验证码（连续请求 20 次）
           </Button>
 
           <Divider orientation="left">高级测试</Divider>
