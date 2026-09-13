@@ -224,6 +224,18 @@ minimal：输入态按钮可用性/新增置顶/完成态/删除/移动端 5 案
 | ~~验证码提交响应链~~                | ✅ 终验通过 | 正确码提交：弹窗 <1s 关闭 + 绿色 toast + POST 200；错误码路径的 60-90s 刷图为后端限流冷却（预期行为，非缺陷）                              |
 | cartStore 裁剪架构                  | 沉淀        | cart schema 对所有含 client preset 常驻导出（cartStore 被 ContentDetailPage 静态引用，纯 zod 定义零风险）——c917bbd，8 preset e2e 290/290   |
 
+### 第五轮功能补全（2026-09-13，forum 生态补齐，3 并发智能体并行实现）
+
+| 项                                     | 状态    | 说明                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ~~forum 评论区缺失~~                   | ✅ 已建 | 全栈新功能：content_comments 表 + GET/POST /api/contents/{id}/comments（公开读/鉴权写）+ 详情页评论区 UI（游客引导登录）。终验 PASS：发布/持久化/计数全通；时间戳秒语义一并修复（首条评论曾现 58670 年，根因 drizzle 把 schema 默认值内联进 INSERT，毫秒默认与 mode:'timestamp' 秒语义冲突——已三重统一为秒） |
+| ~~forum /topics 占位页~~               | ✅ 已建 | 话题聚合视图：按分类分组卡片 + 标签云过滤（种子数据已补 tags）+ 组内可点进详情。终验分组/进详情 PASS                                                                                                                                                                                                         |
+| ~~forum /popular 占位页~~              | ✅ 已建 | 热度排行视图：排名徽章（前三高亮）+ 热度条（likeCount+viewCount 降序）。终验 PASS                                                                                                                                                                                                                            |
+| ~~saas "Welcome, Tenant Admin" 写死~~  | ✅ 已修 | tenantStore 记录登录账号，Header 显示 Welcome, superadmin。终验 PASS                                                                                                                                                                                                                                         |
+| ~~saas Members Joined='Invalid Date'~~ | ✅ 已修 | joined_at TEXT 列历史双形态（毫秒数字串/ISO 串），normalizeTimestamp 归一化输出                                                                                                                                                                                                                              |
+
+**架构沉淀**：并发多 agent 同仓库并行开发可行——按文件边界划分（A 评论区/content 模块、B topics/popular/路由配置、主线程 saas），零冲突合并；组合态以 scaffold tsc + 全量 vitest + validate-all 收口。静态依赖链（ContentDetailPage → authStore）在无 auth preset 断链，统一采用 localStorage 零依赖读模式（MobileAuthBar 先例）。
+
 ### 第二轮通用发现
 
 - **登录后跳转路由硬编码为 /todos** 在 forum 与 market 两个 preset 同时复现 404——模板级 bug（登录成功后的 redirect 目标未按 preset 配置），修复一处应全局生效
