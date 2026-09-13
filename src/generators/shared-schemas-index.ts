@@ -506,8 +506,6 @@ const ADDITIONAL_PATHS_MAP: Record<string, string[]> = {
 // 1. The preset has client pages that import their schemas, OR
 // 2. The preset has server modules whose routes import their schemas.
 const STANDALONE_SHARED_MODULES: Record<string, { pages?: string[]; serverModules?: string[] }> = {
-  // ContentDetailPage（购买条 → cartStore → CartItem）也依赖 cart schema
-  cart: { pages: ['CartPage.tsx', 'ContentDetailPage.tsx'] },
   community: { pages: ['TopicsPage.tsx', 'ProfilePage.tsx'], serverModules: ['content'] },
   dashboard: { pages: ['DashboardPage.tsx'] },
 }
@@ -604,6 +602,10 @@ export {
 
 function shouldIncludeModule(moduleName: string, resolved: ResolvedPreset): boolean {
   if (resolved.modules.has(moduleName)) return true
+
+  // cart schema 常驻：cartStore（ContentDetailPage 静态引用链）依赖 CartItem，
+  // 且 schema 为纯 zod 定义，对所有含 client 的 preset 导出无害
+  if (moduleName === 'cart' && resolved.hasClient) return true
 
   // Standalone shared modules: include when a module in the preset
   // declares client pages that use their schemas OR server modules that import them
