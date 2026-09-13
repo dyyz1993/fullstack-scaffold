@@ -245,7 +245,14 @@ minimal：输入态按钮可用性/新增置顶/完成态/删除/移动端 5 案
 
 **工程质量**：e2e 290/290、全量 vitest 1601 passed、validate-all 17 项、scaffold 双环境（market+todo/forum+ecommerce）tsc 全过。新增路由测试按 local-rules 用 createTestClient 类型安全客户端（可选鉴权中间件沉淀至 server/middleware/optional-auth.ts）。
 
-**至此全部已知缺陷与功能缺口清零。**
+### 第七轮：shop 下单真实闭环（2026-09-13）
+
+| 项                        | 状态      | 说明                                                                                                                                                                                |
+| ------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~shop 订单仍是演示数据~~ | ✅ 已建   | checkout 生成真实订单（orderStore 持久化，ORD-2026-xxxxxx）→ OrdersPage 读真实订单替代 mock（旧 ORD-2024 mock 全部下线）。终验 6/6：加购→下单→订单可见→筛选→F5 持久→移动端全链 PASS |
+| xbrowser 工具仓三修复     | ✅ 已入库 | study-node-ts/xbrowser 9abddbb：链式 screenshot --output 丢参 / -e 命令嗅探 / mouse --action 坐标，4074 测试全过（是否发布 npm 由维护者定）                                         |
+
+**至此全部已知缺陷、功能缺口、mock 链清零。**
 
 ### 第二轮通用发现
 
