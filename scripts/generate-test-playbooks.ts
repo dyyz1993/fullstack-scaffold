@@ -1927,6 +1927,63 @@ const PRESETS: Array<{
 function main() {
   if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true })
 
+  const NEG_KEYWORDS = [
+    '逆向',
+    '被拒',
+    '403',
+    '401',
+    '404',
+    '无权限',
+    '越权',
+    '错误',
+    '异常',
+    '失败',
+    '不存在',
+    '无效',
+    '未登录',
+    '游客',
+    '拒绝',
+    '静默',
+    '假',
+    '死路',
+    '缺失',
+    '泄漏',
+    'Invalid',
+    'denied',
+    'permission',
+    '未配置',
+    '兜底',
+    '占位',
+    '硬编码',
+    '写死',
+    '恒高亮',
+    '错乱',
+    '矛盾',
+    '限流',
+    '幂等',
+    '校验拦截',
+    '不放',
+    '下架入口',
+    'IDOR',
+    '注入',
+    '伪造',
+    '超长',
+    '空格',
+    '重复提交',
+    '越界',
+  ]
+  const PORTAL_META: Record<string, { zh: string; portalId: string }> = {
+    'fullstack-admin': { zh: '全模块管理后台', portalId: 'fullstack' },
+    saas: { zh: '多租户 SaaS', portalId: 'saas' },
+    'todo-app': { zh: '经典全栈', portalId: 'todo' },
+    'xbrowser-marketplace': { zh: '插件市场', portalId: 'market' },
+    ecommerce: { zh: '电商交易', portalId: 'shop' },
+    forum: { zh: '社区论坛', portalId: 'forum' },
+    minimal: { zh: '极简骨架', portalId: 'minimal' },
+    'cli-only': { zh: 'CLI 工具', portalId: 'cli' },
+  }
+  const playbookData: Array<Record<string, unknown>> = []
+
   for (const preset of PRESETS) {
     const sel = parseSelectors(join(KB, preset.kbModule, 'selectors.yml'))
     let md = `# ${preset.name} — Test Playbook\n\n`
@@ -1937,6 +1994,9 @@ function main() {
       // 合并扩充案例链（scripts/playbook-chains-forum-market.ts）：生成正文与计数使用同一合并列表
       const extra = EXTRA_CHAINS[`${preset.id}:${identity.name}`] ?? []
       const allCases = [...identity.cases, ...extra]
+      const negCount = allCases.filter(c =>
+        NEG_KEYWORDS.some(k => c.title.toLowerCase().includes(k.toLowerCase()))
+      ).length
       md += `## ${identity.name}\n\n`
       md += `**凭据**: \`${identity.cred}\`\n\n`
       md += `**案例数**: ${allCases.length}\n\n`
@@ -1957,6 +2017,23 @@ function main() {
         }
       }
       md += '---\n\n'
+
+      playbookData.push({
+        portalId: PORTAL_META[preset.id]?.portalId ?? preset.id,
+        zh: PORTAL_META[preset.id]?.zh ?? preset.name,
+        name: preset.name,
+        site: preset.site,
+        identity: identity.name,
+        pos: allCases.length - negCount,
+        neg: negCount,
+        cases: allCases.map(c => ({
+          t: c.title,
+          s: c.steps,
+          v: c.verify,
+          shot: c.shot ?? null,
+          neg: NEG_KEYWORDS.some(k => c.title.toLowerCase().includes(k.toLowerCase())),
+        })),
+      })
     }
 
     // 附：该模块全部已知选择器
@@ -1974,6 +2051,16 @@ function main() {
     )
     console.log(`✓ playbooks/${preset.id}.md（${preset.identities.length} 身份, ${total} 案例）`)
   }
+
+  const pbTotal = playbookData.reduce((a, p) => a + p.cases.length, 0)
+  // safe-embed：数据含 <script>alert(1)</script> 类注入测试串，
+  // </ 转义为 <\/ 防止内联 <script> 标签被提前截断（JSON 语义不变）
+  const safe = JSON.stringify(playbookData).replace(/<\//g, '<\\/')
+  writeFileSync(
+    join(ROOT, 'portal', 'playbook-data.js'),
+    '// 自动生成：npx tsx scripts/generate-test-playbooks.ts\nexport const PLAYBOOKS=' + safe + '\n'
+  )
+  console.log(`✓ portal/playbook-data.js（${playbookData.length} preset, ${pbTotal} 链路）`)
 }
 
 main()

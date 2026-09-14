@@ -1,5 +1,7 @@
+import { PLAYBOOKS } from './playbook-data.js'
+
 /**
- * Preset 门户 v2 —— 形态目录 + 身份×旅程故事板（纯客户端渲染 SPA）。
+ * Preset 门户 v2 —— 形态目录 + 身份×旅程故事板 + 测试矩阵（纯客户端渲染 SPA）。
  * Worker 只返回 HTML 壳 + 内嵌数据；浏览器端 JS 处理 hash 路由与渲染。
  */
 const HTML = `<!DOCTYPE html>
@@ -38,9 +40,28 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .step.noimg{border-style:dashed}
 .links{margin-top:34px;display:flex;gap:16px;flex-wrap:wrap;border-top:1px solid #1e293b;padding-top:16px}
 .links a{color:#38bdf8;text-decoration:none;font-size:13px}
+
+.pb-wrap{margin-top:18px}
+.pb-preset{font-size:19px;color:#38bdf8;margin:26px 0 10px;border-bottom:1px solid #1e293b;padding-bottom:8px}
+.pb-preset span{color:#94a3b8;font-size:13px;font-weight:400;margin-left:8px}
+.pb-ident{margin:16px 0 6px}
+.pb-ident h3{font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pb-pos,.pb-neg{border-radius:6px;padding:2px 8px;font-size:11px}
+.pb-pos{background:#064e3b;color:#6ee7b7}
+.pb-neg{background:#7f1d1d;color:#fca5a5}
+.pb-case{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:8px 0}
+.pb-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pb-badge{border-radius:6px;padding:2px 8px;font-size:11px;flex:0 0 auto}
+.pb-badge.pos{background:#064e3b;color:#6ee7b7}
+.pb-badge.neg{background:#7f1d1d;color:#fca5a5}
+.pb-head b{font-size:13px;color:#e2e8f0}
+.pb-steps{color:#cbd5e1;font-size:12px;margin:8px 0 6px 20px;line-height:1.6}
+.pb-verify{color:#6ee7b7;font-size:12px}
+.pb-case img{max-width:640px;width:100%;border-radius:8px;margin-top:8px;border:1px solid #334155}
 </style></head><body>
 <div id="app"></div>
 <script>
+var PLAYBOOKS=${JSON.stringify(PLAYBOOKS).replace(/<\//g, '<\\/')};
 var RAW='https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/journeys';
 var DOC='https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS';
 var PRESETS=[
@@ -55,9 +76,11 @@ var PRESETS=[
 function findPreset(h){for(var i=0;i<PRESETS.length;i++){if(PRESETS[i].id===h)return PRESETS[i]}return PRESETS[0]}
 function render(){
   var hash=(location.hash||'').replace('#','');
+  if(hash==='playbook'){renderPlaybook();return}
   var c=findPreset(hash);
   var chips='';for(var i=0;i<PRESETS.length;i++){var p=PRESETS[i];chips+='<button class="chip'+(p.id===c.id?' on':'')+'" onclick="location.hash=\\''+p.id+'\\'">'+p.zh+'</button>'}
   var mods='';for(var i=0;i<c.modules.length;i++){mods+='<span class="mod">'+c.modules[i]+'</span>'}
+  chips+='<button class="chip" onclick="location.hash=&quot;playbook&quot;">🧪 测试矩阵 344</button>'
   var js='';
   for(var ji=0;ji<c.journeys.length;ji++){
     var j=c.journeys[ji];
@@ -70,6 +93,28 @@ function render(){
     '<div class="btns"><a class="btn" href="https://'+c.sub+'.lpm1.top" target="_blank" rel="noopener">进入在线站点 →</a>'+
     '<a class="btn ghost" href="'+DOC+'/'+(c.id==='fullstack'?'fullstack-admin':c.id)+'.md" target="_blank" rel="noopener">形态文档（含验证清单）</a></div>'+
     '<div class="mods">'+mods+'</div></div>'+js
+}
+function esc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function renderPlaybook(){
+  var chips='<button class="chip" onclick="location.hash=&quot;&quot;">← 返回目录</button>';
+  var groups='';
+  var cur=null;
+  var tot=0,pos=0,neg=0;
+  for(var i=0;i<PLAYBOOKS.length;i++){
+    var e=PLAYBOOKS[i];
+    pos+=e.pos;neg+=e.neg;tot+=e.cases.length;
+    if(e.portalId!==cur){cur=e.portalId;groups+='<h2 class="pb-preset">'+e.zh+' <span>'+e.name+'</span></h2>'}
+    groups+='<div class="pb-ident"><h3>'+esc(e.identity)+'<span class="pb-pos">'+e.pos+' 正向</span><span class="pb-neg">'+e.neg+' 逆向</span></h3>';
+    for(var ci=0;ci<e.cases.length;ci++){
+      var c=e.cases[ci];
+      var steps='';
+      for(var si=0;si<c.s.length;si++){steps+='<li>'+esc(c.s[si])+'</li>'}
+      var img=c.shot?'<img loading="lazy" src="https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/'+c.shot+'" alt="" onerror="this.remove()">':'';
+      groups+='<div class="pb-case"><div class="pb-head"><span class="pb-badge '+(c.neg?'neg':'pos')+'">'+(c.neg?'逆向':'正向')+'</span><b>'+esc(c.t)+'</b></div><ol class="pb-steps">'+steps+'</ol><div class="pb-verify">✓ 预期：'+esc(c.v)+'</div>'+img+'</div>';
+    }
+    groups+='</div>';
+  }
+  document.getElementById('app').innerHTML='<nav>'+chips+'</nav><div class="hero"><h2>测试矩阵 <span>'+tot+' 条链路 · '+PLAYBOOKS.length+' 身份 · 8 形态</span></h2><p class="sub">每条链路 = 功能说明（标题）+ 操作步骤 + 预期结果 + 实拍截图。正向=正常操作链，逆向=异常/越权/边界防御链。</p></div><div class="pb-wrap"><div class="pb-ident"><span class="pb-pos">'+pos+' 正向</span> <span class="pb-neg">'+neg+' 逆向</span> <span style="color:#94a3b8;font-size:12px">共 '+tot+' 条</span></div>'+groups+'</div>';
 }
 window.addEventListener('hashchange',render);
 render();
@@ -86,6 +131,12 @@ render();
 
 export default {
   async fetch() {
-    return new Response(HTML, { headers: { 'content-type': 'text/html;charset=utf-8' } })
+    return new Response(HTML, {
+      headers: {
+        'content-type': 'text/html;charset=utf-8',
+        'cache-control': 'no-store',
+        'x-portal-version': 'playbook-v2',
+      },
+    })
   },
 }
