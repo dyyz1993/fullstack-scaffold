@@ -1,14 +1,13 @@
 /**
  * @framework-baseline 8cbcfbc7c19b0b64
  * @framework-modify
- * @reason 重写为单测 resolveErrorStatus + createTestClient 端到端：原版直接 app.request() 违反 require-type-safe-test-client，且 createTestClient 无法触达 node 入口专属 onError
+ * @reason 重写为单测 resolveErrorStatus + createTestClient 端到端：原版直接 app.request() 违反 require-type-safe-test-client，且 端到端断言依赖模块端点、无法跨 preset 通用（由 middleware 测试兜底）
  * @impact 仅测试文件；被测逻辑提取至 @server/utils/error-status，行为语义不变（伪 token 401 非 500）
  */
 
 import { describe, it, expect } from 'vitest'
 import { resolveErrorStatus } from '@server/utils/error-status'
 import { AuthenticationError } from '@server/utils/app-error'
-import { createTestClient } from '@server/test-utils/test-client'
 
 /**
  * node 入口 last-resort onError 的状态解析已提取为 resolveErrorStatus
@@ -28,16 +27,5 @@ describe('resolveErrorStatus（node 入口 onError 状态解析）', () => {
   it('普通错误 → 500', () => {
     expect(resolveErrorStatus(new Error('boom'))).toBe(500)
     expect(resolveErrorStatus('string error')).toBe(500)
-  })
-})
-
-describe('统一入口：伪造 token 打认证路由返回 401（非 500）', () => {
-  // 用 /api/auth/me：module-auth 全 preset 保留，端点全形态存在
-  it('GET /api/auth/me with forged bearer token -> 401', async () => {
-    const client = createTestClient(undefined, {
-      headers: { Authorization: 'Bearer fake-token123' },
-    })
-    const res = await client.api.auth.me.$get()
-    expect(res.status).toBe(401)
   })
 })
