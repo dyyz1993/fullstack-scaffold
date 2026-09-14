@@ -32,13 +32,12 @@ describe('resolveErrorStatus（node 入口 onError 状态解析）', () => {
 })
 
 describe('统一入口：伪造 token 打认证路由返回 401（非 500）', () => {
-  it('POST /api/todos with forged bearer token -> 401', async () => {
+  // 用 /api/auth/me：module-auth 全 preset 保留，端点全形态存在
+  it('GET /api/auth/me with forged bearer token -> 401', async () => {
     const client = createTestClient(undefined, {
       headers: { Authorization: 'Bearer fake-token123' },
     })
-    const res = await client.api.todos.$post({
-      json: { title: 'x' },
-    })
+    const res = await client.api.auth.me.$get()
     expect(res.status).toBe(401)
   })
 })
