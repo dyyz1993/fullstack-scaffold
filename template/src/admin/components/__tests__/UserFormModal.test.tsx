@@ -74,10 +74,14 @@ describe('UserFormModal', () => {
     if (okButtons.length > 0) {
       fireEvent.click(okButtons[0])
 
-      await waitFor(() => {
-        const errorEl = screen.queryByText(/required/i)
-        expect(errorEl).toBeInTheDocument()
-      })
+      // 全量并发跑时 antd form 异步校验可能晚于默认 waitFor 窗口（曾致
+      // xbrowser-marketplace 全量测试间歇性失败、单跑通过）——加宽超时
+      await waitFor(
+        () => {
+          expect(screen.queryByText(/required/i)).toBeInTheDocument()
+        },
+        { timeout: 5000 }
+      )
     }
   })
 
