@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { MessageSquare, FileText, ThumbsUp, Pencil } from 'lucide-react'
+import { MessageSquare, FileText, ThumbsUp, Pencil, LogIn } from 'lucide-react'
 import { apiClient } from '@client/services/apiClient'
 import { useAuthStore } from '@client/stores/authStore'
 import { LoadingSpinner } from '@client/components'
@@ -15,20 +16,13 @@ interface ProfileData {
   bio: string
 }
 
-const DEFAULT_PROFILE: ProfileData = {
-  name: 'Jane Doe',
-  initials: 'JD',
-  joinedDate: 'March 2025',
-  bio: 'Full-stack developer passionate about real-time web apps, type safety, and building developer tools.',
-}
-
 function profileFromUsername(username: string): ProfileData {
   const name = username || 'Guest User'
   return {
     name,
     initials: name.slice(0, 2).toUpperCase(),
-    joinedDate: DEFAULT_PROFILE.joinedDate,
-    bio: DEFAULT_PROFILE.bio,
+    joinedDate: 'March 2025',
+    bio: 'Full-stack developer passionate about real-time web apps, type safety, and building developer tools.',
   }
 }
 
@@ -69,14 +63,19 @@ const activityColor = (type: ProfileActivity['type']) => {
 export const ProfilePage: React.FC = () => {
   const user = useAuthStore(state => state.user)
   const [activeTab, setActiveTab] = useState<ProfileTab>('activity')
-  const [profile, setProfile] = useState<ProfileData>(() =>
-    user ? profileFromUsername(user.username) : DEFAULT_PROFILE
+  const [profile, setProfile] = useState<ProfileData | null>(() =>
+    user ? profileFromUsername(user.username) : null
   )
   const [stats, setStats] = useState<ProfileStats>(DEFAULT_STATS)
   const [activity, setActivity] = useState<ProfileActivity[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // 游客不请求受保护的 /profile 接口（401 会触发全局跳转 /login）
+    if (!user) {
+      setLoading(false)
+      return
+    }
     async function fetchProfile() {
       try {
         const res = await apiClient.api.profile.$get()
@@ -86,8 +85,11 @@ export const ProfilePage: React.FC = () => {
           if (d.profile) {
             setProfile(d.profile as ProfileData)
           }
-          if (d.stats) {
-            setStats(d.stats as ProfileStats)
+          // stats 形状守卫：identity 版 /profile 返回 posts/followers/following，
+          // 与本页 topics/replies/likes 口径不同时不覆盖本地默认值
+          const maybeStats = d.stats as ProfileStats | undefined
+          if (maybeStats && typeof maybeStats.topics === 'number') {
+            setStats(maybeStats)
           }
           if (d.activity) {
             setActivity(d.activity as ProfileActivity[])
@@ -98,7 +100,47 @@ export const ProfilePage: React.FC = () => {
       }
     }
     fetchProfile()
-  }, [])
+  }, [user])
+
+  // 游客态：登录引导卡，不渲染任何模拟档案数据
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white" data-testid="profile-page">
+        <Helmet>
+          <title>Profile — Community</title>
+          <meta name="description" content="Community user profile" />
+        </Helmet>
+        <div className="flex flex-col items-center justify-center py-24 px-4">
+          <div
+            className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mb-6"
+            data-testid="profile-login-guide"
+          >
+            <LogIn className="w-10 h-10 text-emerald-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">登录后查看个人主页</h2>
+          <p className="text-gray-500 mb-6 text-center max-w-sm">
+            登录以查看你的资料、动态与互动记录。当前尚未登录，暂无可展示的个人数据。
+          </p>
+          <div className="flex gap-3">
+            <Link
+              to="/login"
+              className="px-6 py-3 bg-emerald-500 text-white font-medium rounded-xl hover:bg-emerald-600 transition-colors"
+              data-testid="profile-login-button"
+            >
+              去登录
+            </Link>
+            <Link
+              to="/register"
+              className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+              data-testid="profile-register-button"
+            >
+              注册账号
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const filteredActivity =
     activeTab === 'activity'
@@ -128,12 +170,12 @@ export const ProfilePage: React.FC = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <div className="w-20 h-20 rounded-full bg-emerald-500 text-white text-2xl font-bold flex items-center justify-center shadow-lg shadow-emerald-500/25 shrink-0">
-              {profile.initials}
+              {profile?.initials}
             </div>
             <div className="text-center sm:text-left flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{profile.name}</h1>
-              <p className="text-sm text-gray-500 mt-0.5">Joined {profile.joinedDate}</p>
-              <p className="text-gray-600 mt-2 text-sm leading-relaxed max-w-md">{profile.bio}</p>
+              <h1 className="text-2xl font-bold text-gray-900">{profile?.name}</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Joined {profile?.joinedDate}</p>
+              <p className="text-gray-600 mt-2 text-sm leading-relaxed max-w-md">{profile?.bio}</p>
             </div>
             <button className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-xl shadow-sm shadow-emerald-500/25 transition-colors self-center sm:self-start shrink-0">
               <Pencil className="w-3.5 h-3.5" />

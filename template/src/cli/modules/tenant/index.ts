@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerTenantCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('tenants')
+  mod.command('list', {
     description: 'List all tenants',
     parameters: z.object({
       page: z.coerce.number().default(1).describe('Page number'),
@@ -31,7 +33,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get', {
+  mod.command('get', {
     description: 'Get tenant by ID',
     parameters: z.object({
       id: z.string().describe('Tenant ID'),
@@ -49,7 +51,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get-by-slug', {
+  mod.command('get-by-slug', {
     description: 'Get tenant by slug',
     parameters: z.object({
       slug: z.string().describe('Tenant slug'),
@@ -67,7 +69,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create', {
+  mod.command('create', {
     description: 'Create a new tenant',
     parameters: z.object({
       name: z.string().min(1).describe('Tenant name'),
@@ -96,7 +98,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update', {
+  mod.command('update', {
     description: 'Update a tenant',
     parameters: z.object({
       id: z.string().describe('Tenant ID'),
@@ -122,7 +124,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete', {
+  mod.command('delete', {
     description: 'Delete a tenant',
     parameters: z.object({
       id: z.string().describe('Tenant ID'),
@@ -140,7 +142,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('members', {
+  mod.command('members', {
     description: 'List members of a tenant',
     parameters: z.object({
       id: z.string().describe('Tenant ID'),
@@ -160,7 +162,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('roles', {
+  mod.command('roles', {
     description: 'List roles of a tenant',
     parameters: z.object({
       id: z.string().describe('Tenant ID'),
@@ -180,7 +182,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('invite', {
+  mod.command('invite', {
     description: 'Invite a member to a tenant (returns a 7-day invitation link)',
     parameters: z.object({
       id: z.string().describe('Tenant ID'),
@@ -209,7 +211,7 @@ export function registerTenantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('invitation', {
+  mod.command('invitation', {
     description: 'Show invitation detail by token (public)',
     parameters: z.object({
       token: z.string().describe('Invitation token'),

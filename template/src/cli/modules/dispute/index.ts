@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerDisputeCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('disputes')
+  mod.command('list', {
     description: 'List all disputes',
     parameters: z.object({
       limit: z.coerce.number().default(20).describe('Limit results'),
@@ -25,7 +27,7 @@ export function registerDisputeCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get', {
+  mod.command('get', {
     description: 'Get dispute by ID',
     parameters: z.object({
       id: z.string().describe('Dispute ID'),
@@ -43,7 +45,7 @@ export function registerDisputeCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create', {
+  mod.command('create', {
     description: 'Create a new dispute',
     parameters: z.object({
       'order-id': z.string().describe('Order ID'),
@@ -88,7 +90,7 @@ export function registerDisputeCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update', {
+  mod.command('update', {
     description: 'Update a dispute status',
     parameters: z.object({
       id: z.string().describe('Dispute ID'),
@@ -113,7 +115,7 @@ export function registerDisputeCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete', {
+  mod.command('delete', {
     description: 'Delete a dispute',
     parameters: z.object({
       id: z.string().describe('Dispute ID'),
@@ -131,7 +133,7 @@ export function registerDisputeCommands(site: SiteInstance) {
     },
   })
 
-  site.command('resolve', {
+  mod.command('resolve', {
     description: 'Resolve a dispute',
     parameters: z.object({
       id: z.string().describe('Dispute ID'),

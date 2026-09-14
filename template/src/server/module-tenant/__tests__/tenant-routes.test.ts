@@ -354,3 +354,77 @@ describe('tenant stats & my membership routes (P2 RBAC UI / P3 口径统一)', (
     }
   })
 })
+
+describe('invite email max length (P2：255 字符邮箱前后端均放行落库)', () => {
+  const authHeaders = { Authorization: 'Bearer test-super-admin-1' }
+  /** 边界内：242 local + '@example.com'(12) = 254 */
+  const email254 = `${'a'.repeat(242)}@example.com`
+  /** 超限：255 字符（格式合法，此前 .email() 放行落库） */
+  const email255 = `${'a'.repeat(243)}@example.com`
+
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
+
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
+
+  async function provisionTenantWithGuestRole(): Promise<{
+    tenantId: string
+    guestRoleId: string
+  }> {
+    const client = createTestClient(undefined, { headers: authHeaders })
+    const createRes = await client.api.tenants.$post({
+      json: {
+        name: 'Email Limit',
+        slug: `email-limit-${Date.now()}`,
+        plan: 'free',
+        maxUsers: 5,
+        settings: null,
+      },
+    })
+    expect(createRes.status).toBe(201)
+    const created = (await createRes.json()) as {
+      success: boolean
+      data: { id: number }
+    }
+    if (!created.success) throw new Error('create tenant failed')
+    const tenantId = String(created.data.id)
+
+    const rolesRes = await client.api.tenants[':tenantId'].roles.$get({ param: { tenantId } })
+    const rolesData = (await rolesRes.json()) as {
+      success: boolean
+      data: Array<{ id: string; code: string }>
+    }
+    if (!rolesData.success) throw new Error('roles failed')
+    const guestRole = rolesData.data.find(r => r.code === 'tenant_guest')!
+    return { tenantId, guestRoleId: guestRole.id }
+  }
+
+  it('255 字符邮箱邀请被 400 拒绝，不落库', async () => {
+    const { tenantId, guestRoleId } = await provisionTenantWithGuestRole()
+    const client = createTestClient(undefined, { headers: authHeaders })
+
+    const res = await client.api.tenants[':tenantId'].members.invite.$post({
+      param: { tenantId },
+      json: { email: email255, roleId: guestRoleId },
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('254 字符邮箱（边界值）仍可创建邀请', async () => {
+    const { tenantId, guestRoleId } = await provisionTenantWithGuestRole()
+    const client = createTestClient(undefined, { headers: authHeaders })
+
+    const res = await client.api.tenants[':tenantId'].members.invite.$post({
+      param: { tenantId },
+      json: { email: email254, roleId: guestRoleId },
+    })
+    expect(res.status).toBe(201)
+    const data = (await res.json()) as { success: boolean; data: { email: string } }
+    if (data.success) {
+      expect(data.data.email).toBe(email254)
+    }
+  })
+})

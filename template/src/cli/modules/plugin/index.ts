@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerPluginCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('plugins')
+  mod.command('list', {
     description: 'List all plugins',
     parameters: z.object({
       limit: z.coerce.number().default(20).describe('Limit results'),
@@ -25,7 +27,7 @@ export function registerPluginCommands(site: SiteInstance) {
     },
   })
 
-  site.command('search', {
+  mod.command('search', {
     description: 'Search plugins',
     parameters: z.object({
       query: z.string().min(1).describe('Search query'),
@@ -43,7 +45,7 @@ export function registerPluginCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get', {
+  mod.command('get', {
     description: 'Get plugin details',
     parameters: z.object({
       slug: z.string().describe('Plugin slug'),
@@ -61,7 +63,7 @@ export function registerPluginCommands(site: SiteInstance) {
     },
   })
 
-  site.command('install', {
+  mod.command('install', {
     description: 'Track plugin install',
     parameters: z.object({
       slug: z.string().describe('Plugin slug'),
@@ -79,7 +81,7 @@ export function registerPluginCommands(site: SiteInstance) {
     },
   })
 
-  site.command('categories', {
+  mod.command('categories', {
     description: 'List plugin categories',
     parameters: z.object({}),
     handler: async () => {
@@ -94,7 +96,7 @@ export function registerPluginCommands(site: SiteInstance) {
     },
   })
 
-  site.command('stats', {
+  mod.command('stats', {
     description: 'Show marketplace statistics',
     parameters: z.object({}),
     handler: async () => {

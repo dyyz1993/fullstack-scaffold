@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useTodoStore } from '../stores/todoStore'
 import { LoadingSpinner, EmptyState } from '@client/components'
+import { TODO_DESCRIPTION_MAX, TODO_TITLE_MAX } from '@client/services/form-limits'
 import type { Todo } from '@shared/schemas'
 
 type FilterType = 'all' | 'pending' | 'in_progress' | 'completed'
@@ -47,6 +48,7 @@ export const TodoPage: React.FC = () => {
   const uploadAttachment = useTodoStore(state => state.uploadAttachment)
   const fetchAttachments = useTodoStore(state => state.fetchAttachments)
   const deleteAttachment = useTodoStore(state => state.deleteAttachment)
+  const setError = useTodoStore(state => state.setError)
 
   const [newTodoTitle, setNewTodoTitle] = useState('')
   const [newTodoDescription, setNewTodoDescription] = useState('')
@@ -64,6 +66,17 @@ export const TodoPage: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTodoTitle.trim()) return
+
+    // 提交前长度校验：与服务端 CreateTodoSchema 上限一致，超长不再发请求，
+    // 避免后端 400 后错误对象渲染导致白屏（同时保留 api-error.ts 治本解析）
+    if (newTodoTitle.length > TODO_TITLE_MAX) {
+      setError(`Title must be at most ${TODO_TITLE_MAX} characters`)
+      return
+    }
+    if (newTodoDescription.length > TODO_DESCRIPTION_MAX) {
+      setError(`Description must be at most ${TODO_DESCRIPTION_MAX} characters`)
+      return
+    }
 
     await createTodo({
       title: newTodoTitle,
@@ -157,6 +170,7 @@ export const TodoPage: React.FC = () => {
             value={newTodoTitle}
             onChange={e => setNewTodoTitle(e.target.value)}
             placeholder="Todo title..."
+            maxLength={TODO_TITLE_MAX}
             data-testid="todo-title-input"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
           />
@@ -166,6 +180,7 @@ export const TodoPage: React.FC = () => {
             value={newTodoDescription}
             onChange={e => setNewTodoDescription(e.target.value)}
             placeholder="Description (optional)..."
+            maxLength={TODO_DESCRIPTION_MAX}
             data-testid="todo-description-input"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none min-h-[100px]"
           />

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
+import { parseApiError } from '@client/services/api-error'
 import type { Todo, CreateTodoInput, UpdateTodoInput, TodoAttachment } from '@shared/schemas'
 
 interface TodoState {
@@ -32,7 +33,7 @@ export const useTodoStore = create<TodoState>(set => ({
       if (result.success) {
         set({ todos: result.data.todos, loading: false })
       } else {
-        set({ error: result.error, loading: false })
+        set({ error: parseApiError(result, 'Failed to fetch todos'), loading: false })
       }
     } catch (error) {
       set({
@@ -55,7 +56,7 @@ export const useTodoStore = create<TodoState>(set => ({
           loading: false,
         }))
       } else {
-        set({ error: result.error, loading: false })
+        set({ error: parseApiError(result, 'Failed to create todo'), loading: false })
       }
     } catch (error) {
       set({
@@ -79,7 +80,7 @@ export const useTodoStore = create<TodoState>(set => ({
           loading: false,
         }))
       } else {
-        set({ error: result.error, loading: false })
+        set({ error: parseApiError(result, 'Failed to update todo'), loading: false })
       }
     } catch (error) {
       set({
@@ -107,7 +108,7 @@ export const useTodoStore = create<TodoState>(set => ({
           }
         })
       } else {
-        set({ error: result.error, loading: false })
+        set({ error: parseApiError(result, 'Failed to delete todo'), loading: false })
       }
     } catch (error) {
       set({
@@ -139,7 +140,7 @@ export const useTodoStore = create<TodoState>(set => ({
         })
         return result.data
       } else {
-        set({ error: result.error || 'Upload failed', loading: false })
+        set({ error: parseApiError(result, 'Upload failed'), loading: false })
         return null
       }
     } catch (error) {
@@ -187,7 +188,7 @@ export const useTodoStore = create<TodoState>(set => ({
           return { attachments: newAttachments, loading: false }
         })
       } else {
-        set({ error: result.error, loading: false })
+        set({ error: parseApiError(result, 'Failed to delete attachment'), loading: false })
       }
     } catch (error) {
       set({

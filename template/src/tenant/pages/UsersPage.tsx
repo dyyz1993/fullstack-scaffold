@@ -3,7 +3,7 @@ import { Table, Button, Space, Modal, Form, Input, Select, Typography, App } fro
 import type { ColumnsType } from 'antd/es/table'
 import { EditOutlined, DeleteOutlined, PlusOutlined, UserAddOutlined } from '@ant-design/icons'
 import { useTenantStore } from '../stores/tenantStore'
-import type { TenantMember } from '@shared/schemas'
+import { EMAIL_MAX_LENGTH, type TenantMember } from '@shared/schemas'
 
 /**
  * 租户成员管理：列表（含角色）/邀请新成员（邮件+角色）/改角色/移除。
@@ -180,9 +180,15 @@ export const UsersPage: React.FC = () => {
             rules={[
               { required: true, message: 'Please input email' },
               { type: 'email', message: 'Invalid email' },
+              {
+                max: EMAIL_MAX_LENGTH,
+                message: `Email must be at most ${EMAIL_MAX_LENGTH} characters`,
+              },
             ]}
           >
-            <Input placeholder="teammate@example.com" />
+            {/* maxLength 与 InviteMemberSchema 的 .max(EMAIL_MAX_LENGTH) 同步，
+                从源头挡住超长邮箱（历史 P2：255 字符邮箱前后端均放行落库） */}
+            <Input placeholder="teammate@example.com" maxLength={EMAIL_MAX_LENGTH} />
           </Form.Item>
           <Form.Item
             name="roleId"

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { Package, Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
@@ -17,6 +17,9 @@ export const CartPage: React.FC = () => {
   const clearCart = useCartStore(state => state.clearCart)
   const placeOrder = useOrderStore(state => state.placeOrder)
   const [ordered, setOrdered] = useState(false)
+  // 双击防重锁：两次 click 可能共享同一渲染闭包（state 尚未 flush），
+  // 仅靠 ordered/disabled 挡不住同帧内的第二次提交，必须用同步 ref
+  const checkoutLockedRef = useRef(false)
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = subtotal >= SHIPPING_THRESHOLD ? 0 : 5.99
@@ -30,6 +33,14 @@ export const CartPage: React.FC = () => {
 
   const removeItem = (id: number) => {
     removeItemStore(id)
+  }
+
+  const handleCheckout = () => {
+    if (checkoutLockedRef.current || items.length === 0) return
+    checkoutLockedRef.current = true
+    placeOrder(items, total)
+    clearCart()
+    setOrdered(true)
   }
 
   return (
@@ -196,13 +207,9 @@ export const CartPage: React.FC = () => {
               </div>
 
               <button
-                onClick={() => {
-                  if (items.length === 0) return
-                  placeOrder(items, total)
-                  clearCart()
-                  setOrdered(true)
-                }}
-                className="w-full mt-6 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50"
+                onClick={handleCheckout}
+                disabled={ordered}
+                className="w-full mt-6 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="cart-checkout-button"
               >
                 Checkout

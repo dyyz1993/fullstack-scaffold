@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerAuthCommands(site: SiteInstance) {
-  site.command('register', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('auth')
+  mod.command('register', {
     description: 'Register a new developer account',
     parameters: z.object({
       username: z.string().min(2).max(50).describe('Username'),
@@ -24,7 +26,7 @@ export function registerAuthCommands(site: SiteInstance) {
     },
   })
 
-  site.command('login', {
+  mod.command('login', {
     description: 'Login to get API key',
     parameters: z.object({
       account: z.string().describe('Email or username'),
@@ -43,7 +45,7 @@ export function registerAuthCommands(site: SiteInstance) {
     },
   })
 
-  site.command('verify', {
+  mod.command('verify', {
     description: 'Verify API key',
     parameters: z.object({
       token: z.string().describe('API key to verify'),

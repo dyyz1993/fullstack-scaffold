@@ -19,7 +19,9 @@ const updateUserParams = z.object({
 })
 
 export function registerAdminCommands(site: SiteInstance) {
-  site.command('dashboard', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('admin')
+  mod.command('dashboard', {
     description: 'Get dashboard statistics',
     parameters: z.object({}),
     handler: async () => {
@@ -34,7 +36,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('stats', {
+  mod.command('stats', {
     description: 'Get system statistics',
     parameters: z.object({}),
     handler: async () => {
@@ -49,7 +51,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('health', {
+  mod.command('health', {
     description: 'Check system health',
     parameters: z.object({}),
     handler: async () => {
@@ -64,7 +66,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('list-users', {
+  mod.command('list-users', {
     description: 'List all users',
     parameters: z.object({}),
     handler: async () => {
@@ -79,7 +81,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get-user', {
+  mod.command('get-user', {
     description: 'Get a user by ID',
     parameters: z.object({
       id: z.string().describe('User ID'),
@@ -97,7 +99,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create-user', {
+  mod.command('create-user', {
     description: 'Create a new user',
     parameters: createUserParams,
     handler: async params => {
@@ -123,7 +125,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update-user', {
+  mod.command('update-user', {
     description: 'Update a user',
     parameters: updateUserParams,
     handler: async params => {
@@ -145,7 +147,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete-user', {
+  mod.command('delete-user', {
     description: 'Delete a user',
     parameters: z.object({
       id: z.string().describe('User ID'),
@@ -163,7 +165,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('activity', {
+  mod.command('activity', {
     description: 'Get recent activity',
     parameters: z.object({
       limit: z.coerce.number().default(10).describe('Limit results'),
@@ -181,7 +183,7 @@ export function registerAdminCommands(site: SiteInstance) {
     },
   })
 
-  site.command('clear-todos', {
+  mod.command('clear-todos', {
     description: 'Clear all todos (dangerous)',
     parameters: z.object({}),
     handler: async () => {

@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerFileCommands(site: SiteInstance) {
-  site.command('generate-url', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('file')
+  mod.command('generate-url', {
     description: 'Generate a file URL',
     parameters: z.object({
       namespace: z.string().describe('File namespace'),
@@ -37,7 +39,7 @@ export function registerFileCommands(site: SiteInstance) {
     },
   })
 
-  site.command('info', {
+  mod.command('info', {
     description: 'Check if a public file exists',
     parameters: z.object({
       namespace: z.string().describe('File namespace'),

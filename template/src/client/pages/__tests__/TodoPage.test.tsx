@@ -16,6 +16,7 @@ interface MockTodoStore {
   uploadAttachment: ReturnType<typeof vi.fn>
   fetchAttachments: ReturnType<typeof vi.fn>
   deleteAttachment: ReturnType<typeof vi.fn>
+  setError: ReturnType<typeof vi.fn>
 }
 
 const mockStore: MockTodoStore = {
@@ -30,6 +31,7 @@ const mockStore: MockTodoStore = {
   uploadAttachment: vi.fn().mockResolvedValue(null),
   fetchAttachments: vi.fn().mockResolvedValue(undefined),
   deleteAttachment: vi.fn().mockResolvedValue(undefined),
+  setError: vi.fn(),
 }
 
 vi.mock('@client/stores/todoStore', () => ({
@@ -113,7 +115,9 @@ describe('TodoPage', () => {
     it('should create todo on form submit', async () => {
       render(<TodoPage />)
       fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'New Todo' } })
-      fireEvent.change(screen.getByTestId('todo-description-input'), { target: { value: 'New Desc' } })
+      fireEvent.change(screen.getByTestId('todo-description-input'), {
+        target: { value: 'New Desc' },
+      })
       fireEvent.click(screen.getByTestId('add-todo-button'))
 
       await waitFor(() => {
@@ -163,6 +167,56 @@ describe('TodoPage', () => {
       render(<TodoPage />)
       fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'Test' } })
       expect(screen.getByTestId('add-todo-button')).toBeDisabled()
+    })
+  })
+
+  describe('Overlong Input Guard (P1: 超长标题白屏回归)', () => {
+    it('should cap title input at 200 chars via maxLength', () => {
+      render(<TodoPage />)
+      expect(screen.getByTestId('todo-title-input')).toHaveAttribute('maxLength', '200')
+      expect(screen.getByTestId('todo-description-input')).toHaveAttribute('maxLength', '1000')
+    })
+
+    it('should not create todo with 291-char title and show error instead of crashing', async () => {
+      render(<TodoPage />)
+      // 291 字符：对应实测 minimal/todo preset 白屏的超长标题
+      const longTitle = 'a'.repeat(291)
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: longTitle } })
+      fireEvent.click(screen.getByTestId('add-todo-button'))
+
+      await waitFor(() => {
+        expect(mockStore.setError).toHaveBeenCalledWith('Title must be at most 200 characters')
+      })
+      expect(mockStore.createTodo).not.toHaveBeenCalled()
+      // 页面未被卸载（无 ErrorBoundary 时代这里会白屏）
+      expect(screen.getByTestId('todo-page')).toBeInTheDocument()
+      expect(screen.getByTestId('todo-title-input')).toBeInTheDocument()
+    })
+
+    it('should not create todo with overlong description and show error instead', async () => {
+      render(<TodoPage />)
+      const longDescription = 'b'.repeat(1001)
+      fireEvent.change(screen.getByTestId('todo-title-input'), { target: { value: 'Valid' } })
+      fireEvent.change(screen.getByTestId('todo-description-input'), {
+        target: { value: longDescription },
+      })
+      fireEvent.click(screen.getByTestId('add-todo-button'))
+
+      await waitFor(() => {
+        expect(mockStore.setError).toHaveBeenCalledWith(
+          'Description must be at most 1000 characters'
+        )
+      })
+      expect(mockStore.createTodo).not.toHaveBeenCalled()
+      expect(screen.getByTestId('todo-page')).toBeInTheDocument()
+    })
+
+    it('should still render store error string in error banner', () => {
+      mockStore.error = 'title: Title too long'
+      render(<TodoPage />)
+      expect(screen.getByTestId('error-message')).toBeInTheDocument()
+      expect(screen.getByText('title: Title too long')).toBeInTheDocument()
+      expect(screen.getByTestId('todo-page')).toBeInTheDocument()
     })
   })
 

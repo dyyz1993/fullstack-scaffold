@@ -17,6 +17,7 @@ import { publicContentRoutes } from './module-content/routes/public-content-rout
 import { commentRoutes } from './module-content/routes/comment-routes'
 import { fileRoutes } from './module-file/routes/file-routes'
 import { authRoutes } from './module-auth/routes/auth-routes'
+import { profileRoutes } from './module-auth/routes/profile-routes'
 import { pluginRoutes } from './module-plugin/routes/plugin-routes'
 import { pluginAdminRoutes } from './module-plugin/routes/plugin-admin-routes'
 import { dashboardRoutes } from './module-admin/routes/dashboard-routes'
@@ -36,6 +37,9 @@ export const clientApiRoutes = new OpenAPIHono()
   .use('*', apiRateLimit)
   .route('/api', clientAuthRoutes)
   .route('/api', authRoutes)
+  // auth 模块清单声明的 client 路由与 generator 输出保持一致（须在 content 的
+  // topicsRoutes 之前挂载，/api/profile 才解析为鉴权版身份接口）
+  .route('/api', profileRoutes)
   .route('/api', chatRoutes)
   .route('/api', notificationRoutes)
   .route('/api', apiRoutes)

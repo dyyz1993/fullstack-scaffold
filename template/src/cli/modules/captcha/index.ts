@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerCaptchaCommands(site: SiteInstance) {
-  site.command('get', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('captcha')
+  mod.command('get', {
     description: 'Get a new captcha',
     parameters: z.object({}),
     handler: async () => {
@@ -19,7 +21,7 @@ export function registerCaptchaCommands(site: SiteInstance) {
     },
   })
 
-  site.command('verify', {
+  mod.command('verify', {
     description: 'Verify a captcha code',
     parameters: z.object({
       id: z.string().describe('Captcha ID'),

@@ -1,93 +1,93 @@
 // @vitest-environment node
-import { describe, it, expect } from 'vitest'
-import { profileRoutes } from '../routes/profile-routes'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createTestClient } from '@server/test-utils/test-client'
+import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
+import { authRoutes } from '../routes/auth-routes'
 
-interface ProfileResponse {
-  success: boolean
-  data: {
-    id: string
-    username: string
-    email: string
-    bio: string
-    joinDate: string
-    stats: { posts: number; followers: number; following: number }
-  }
-  timestamp: string
-}
+/**
+ * P2 复现背景：/api/profile 此前免鉴权且恒 200 返回硬编码模拟身份
+ * （user-1 / Demo User / demo@example.com）。现挂 authMiddleware，
+ * 游客 401，登录后返回当前用户真实身份。
+ */
+describe('Profile Routes (authMiddleware)', () => {
+  beforeAll(async () => {
+    await setupTestDatabase()
+  })
 
-async function fetchProfile(): Promise<ProfileResponse> {
-  const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
-  return (await res.json()) as ProfileResponse
-}
+  afterAll(async () => {
+    await cleanupTestDatabase()
+  })
 
-describe('Profile Routes', () => {
-  describe('GET /profile', () => {
-    it('should return profile with 200', async () => {
-      const res = await profileRoutes.fetch(new Request('http://localhost/profile'))
+  it('游客（无 Authorization 头）请求 401，不再泄漏模拟身份', async () => {
+    const client = createTestClient(undefined)
+    const res = await client.api.profile.$get()
+    expect(res.status).toBe(401)
 
-      expect(res.status).toBe(200)
-      const data = await fetchProfile()
-      expect(data.success).toBe(true)
+    const data = (await res.json()) as { success: boolean }
+    expect(data.success).toBe(false)
+  })
+
+  it('无效 token 请求 401', async () => {
+    const client = createTestClient(undefined, {
+      headers: { Authorization: 'Bearer not-a-real-token' },
     })
+    const res = await client.api.profile.$get()
+    expect(res.status).toBe(401)
+  })
 
-    it('should return profile with required fields', async () => {
-      const data = await fetchProfile()
-
-      expect(data.success).toBe(true)
-      expect(data.data.id).toBeDefined()
-      expect(data.data.username).toBeDefined()
-      expect(data.data.email).toBeDefined()
-      expect(data.data.joinDate).toBeDefined()
-      expect(data.data.stats).toBeDefined()
+  it('dev token 登录后返回当前用户身份（claims 兜底，而非 Demo User）', async () => {
+    const client = createTestClient(undefined, {
+      headers: { Authorization: 'Bearer user-token' },
     })
+    const res = await client.api.profile.$get()
+    expect(res.status).toBe(200)
 
-    it('should return valid email format', async () => {
-      const data = await fetchProfile()
+    const data = (await res.json()) as unknown as {
+      success: boolean
+      data: { id: string; username: string; email: string; joinDate: string; stats: unknown }
+    }
+    expect(data.success).toBe(true)
+    expect(data.data.id).toBe('user-1')
+    expect(data.data.username).toBe('user')
+    expect(data.data.email).toBe('user@example.com')
+    expect(data.data.joinDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(data.data.stats).toBeDefined()
+    expect(JSON.stringify(data.data)).not.toContain('Demo User')
+  })
 
-      expect(data.success).toBe(true)
-      expect(data.data.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+  it('注册用户登录后返回注册身份（真实数据，非模拟身份）', async () => {
+    // 注册走模块级 authRoutes（全量 app 的 /auth/register 被 admin 模块
+    // clientAuthRoutes 遮蔽，返回体不含 token），token 再经 createTestClient 验证
+    const registerRes = await authRoutes.fetch(
+      new Request('http://localhost/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: 'profileuser',
+          email: 'profileuser@example.com',
+          password: 'password123',
+        }),
+      })
+    )
+    expect(registerRes.status).toBe(201)
+    const registerData = (await registerRes.json()) as {
+      success: boolean
+      data: { token: string }
+    }
+    const token = registerData.data.token
+
+    const authed = createTestClient(undefined, {
+      headers: { Authorization: `Bearer ${token}` },
     })
+    const res = await authed.api.profile.$get()
+    expect(res.status).toBe(200)
 
-    it('should return stats with numeric values', async () => {
-      const data = await fetchProfile()
-
-      expect(data.success).toBe(true)
-      expect(typeof data.data.stats.posts).toBe('number')
-      expect(typeof data.data.stats.followers).toBe('number')
-      expect(typeof data.data.stats.following).toBe('number')
-    })
-
-    it('should return a valid ISO date for joinDate', async () => {
-      const data = await fetchProfile()
-
-      expect(data.success).toBe(true)
-      expect(data.data.joinDate).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    })
-
-    it('should return consistent data across requests', async () => {
-      const data1 = await fetchProfile()
-      const data2 = await fetchProfile()
-
-      expect(data1.success).toBe(true)
-      expect(data2.success).toBe(true)
-      expect(data1.data.id).toBe(data2.data.id)
-      expect(data1.data.username).toBe(data2.data.username)
-      expect(data1.data.email).toBe(data2.data.email)
-    })
-
-    it('should include timestamp in response', async () => {
-      const data = await fetchProfile()
-
-      expect(data.success).toBe(true)
-      expect(data.timestamp).toBeDefined()
-      expect(data.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    })
-
-    it('should return bio field', async () => {
-      const data = await fetchProfile()
-
-      expect(data.success).toBe(true)
-      expect(data.data.bio).toBeDefined()
-    })
+    const data = (await res.json()) as unknown as {
+      success: boolean
+      data: { id: string; username: string; email: string }
+    }
+    expect(data.success).toBe(true)
+    expect(data.data.username).toBe('profileuser')
+    expect(data.data.email).toBe('profileuser@example.com')
   })
 })

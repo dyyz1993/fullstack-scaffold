@@ -5,6 +5,7 @@ import { setupTestDatabase, cleanupTestDatabase } from '@server/db/test-setup'
 import { hashSync } from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { authRoutes } from '../routes/auth-routes'
+import { createTestClient } from '@server/test-utils/test-client'
 
 const secretKey = process.env.AUTH_SECRET_KEY || 'dev-secret-key-change-in-production'
 
@@ -77,7 +78,13 @@ describe('Auth Routes', () => {
       const res = await registerUser('newdev', 'newdev@example.com', 'password123')
 
       expect(res.status).toBe(201)
-      const data = (await res.json()) as { success: boolean; data: { token: string; profile: { username: string; email: string; role: string; id: string } } }
+      const data = (await res.json()) as {
+        success: boolean
+        data: {
+          token: string
+          profile: { username: string; email: string; role: string; id: string }
+        }
+      }
       expect(data.success).toBe(true)
       expect(data.data.token).toBeDefined()
       expect(typeof data.data.token).toBe('string')
@@ -165,7 +172,10 @@ describe('Auth Routes', () => {
 
     it('should return profile with createdAt timestamp', async () => {
       const res = await registerUser('tsuser', 'ts@example.com', 'password123')
-      const data = (await res.json()) as { success: boolean; data: { profile: { createdAt: string } } }
+      const data = (await res.json()) as {
+        success: boolean
+        data: { profile: { createdAt: string } }
+      }
       expect(data.success).toBe(true)
       expect(data.data.profile.createdAt).toBeDefined()
       expect(data.data.profile.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
@@ -179,7 +189,10 @@ describe('Auth Routes', () => {
       const res = await loginUser({ email: 'login@example.com', password: 'password123' })
 
       expect(res.status).toBe(200)
-      const data = (await res.json()) as { success: boolean; data: { token: string; profile: { email: string; username: string } } }
+      const data = (await res.json()) as {
+        success: boolean
+        data: { token: string; profile: { email: string; username: string } }
+      }
       expect(data.success).toBe(true)
       expect(data.data.token).toBeDefined()
       expect(data.data.profile.email).toBe('login@example.com')
@@ -192,7 +205,10 @@ describe('Auth Routes', () => {
       const res = await loginUser({ account: 'acctuser', password: 'password123' })
 
       expect(res.status).toBe(200)
-      const data = (await res.json()) as { success: boolean; data: { profile: { username: string } } }
+      const data = (await res.json()) as {
+        success: boolean
+        data: { profile: { username: string } }
+      }
       expect(data.success).toBe(true)
       expect(data.data.profile.username).toBe('acctuser')
     })
@@ -252,7 +268,10 @@ describe('Auth Routes', () => {
       await insertTestDeveloper({ email: 'safe@example.com', username: 'safeuser' })
 
       const res = await loginUser({ email: 'safe@example.com', password: 'password123' })
-      const data = (await res.json()) as { success: boolean; data: { profile: Record<string, unknown> } }
+      const data = (await res.json()) as {
+        success: boolean
+        data: { profile: Record<string, unknown> }
+      }
       expect(data.success).toBe(true)
 
       const profile = data.data.profile as Record<string, unknown>
@@ -269,7 +288,10 @@ describe('Auth Routes', () => {
       const loginRes = await loginUser({ email: 'flow@example.com', password: 'password123' })
       expect(loginRes.status).toBe(200)
 
-      const loginData = (await loginRes.json()) as { success: boolean; data: { profile: { username: string; email: string } } }
+      const loginData = (await loginRes.json()) as {
+        success: boolean
+        data: { profile: { username: string; email: string } }
+      }
       expect(loginData.success).toBe(true)
       expect(loginData.data.profile.username).toBe('flowuser')
       expect(loginData.data.profile.email).toBe('flow@example.com')
@@ -290,8 +312,14 @@ describe('Auth Routes', () => {
       const res1 = await registerUser('user1', 'user1@example.com', 'password123')
       const res2 = await registerUser('user2', 'user2@example.com', 'password123')
 
-      const data1 = (await res1.json()) as { success: boolean; data: { profile: { id: string }; token: string } }
-      const data2 = (await res2.json()) as { success: boolean; data: { profile: { id: string }; token: string } }
+      const data1 = (await res1.json()) as {
+        success: boolean
+        data: { profile: { id: string }; token: string }
+      }
+      const data2 = (await res2.json()) as {
+        success: boolean
+        data: { profile: { id: string }; token: string }
+      }
       expect(data1.success).toBe(true)
       expect(data2.success).toBe(true)
       expect(data1.data.profile.id).not.toBe(data2.data.profile.id)
@@ -300,16 +328,111 @@ describe('Auth Routes', () => {
 
     it('should register, login, and get matching profile data', async () => {
       const regRes = await registerUser('matchuser', 'match@example.com', 'password123')
-      const regData = (await regRes.json()) as { success: boolean; data: { profile: { id: string; username: string; email: string } } }
+      const regData = (await regRes.json()) as {
+        success: boolean
+        data: { profile: { id: string; username: string; email: string } }
+      }
       const regProfile = regData.data.profile
 
       const loginRes = await loginUser({ email: 'match@example.com', password: 'password123' })
-      const loginData = (await loginRes.json()) as { success: boolean; data: { profile: { id: string; username: string; email: string } } }
+      const loginData = (await loginRes.json()) as {
+        success: boolean
+        data: { profile: { id: string; username: string; email: string } }
+      }
       const loginProfile = loginData.data.profile
 
       expect(regProfile.id).toBe(loginProfile.id)
       expect(regProfile.username).toBe(loginProfile.username)
       expect(regProfile.email).toBe(loginProfile.email)
+    })
+  })
+
+  describe('GET /auth/me（P2：saas 站 404 → 现挂 authMiddleware 返回当前用户）', () => {
+    it('游客（无 Authorization 头）请求 401', async () => {
+      const client = createTestClient(undefined)
+      const res = await client.api.auth.me.$get()
+      expect(res.status).toBe(401)
+    })
+
+    it('无效 token 请求 401', async () => {
+      const client = createTestClient(undefined, {
+        headers: { Authorization: 'Bearer garbage-token' },
+      })
+      const res = await client.api.auth.me.$get()
+      expect(res.status).toBe(401)
+    })
+
+    it('注册后携带 token 返回当前用户 profile', async () => {
+      // 注册走模块级 authRoutes（全量 app 的 /auth/register 被 admin 模块
+      // clientAuthRoutes 遮蔽，返回体不含 token），token 再经 createTestClient 验证
+      const registerRes = await registerUser('meuser', 'meuser@example.com', 'password123')
+      expect(registerRes.status).toBe(201)
+      const registerData = (await registerRes.json()) as {
+        success: boolean
+        data: { token: string }
+      }
+      const token = registerData.data.token
+
+      const authed = createTestClient(undefined, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const res = await authed.api.auth.me.$get()
+      expect(res.status).toBe(200)
+
+      // 全量 app 中 /api/auth/me 由先挂载的 admin 模块 clientAuthRoutes 响应
+      //（AuthUser 形状）；身份字段口径一致即可，createdAt 由下方模块级用例验证
+      const data = (await res.json()) as {
+        success: boolean
+        data: { id: string; username: string; email: string; role: string }
+      }
+      expect(data.success).toBe(true)
+      expect(data.data.username).toBe('meuser')
+      expect(data.data.email).toBe('meuser@example.com')
+      expect(data.data.role).toBe('developer')
+    })
+
+    it('module-auth 自身 /auth/me（saas 无 admin 模块时的实际服务方）返回含 createdAt 的 profile', async () => {
+      const registerRes = await registerUser('memodule', 'memodule@example.com', 'password123')
+      expect(registerRes.status).toBe(201)
+      const registerData = (await registerRes.json()) as {
+        success: boolean
+        data: { token: string }
+      }
+      const token = registerData.data.token
+
+      const res = await authRoutes.fetch(
+        new Request('http://localhost/auth/me', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      )
+      expect(res.status).toBe(200)
+
+      const data = (await res.json()) as {
+        success: boolean
+        data: { id: string; username: string; email: string; role: string; createdAt: string }
+      }
+      expect(data.success).toBe(true)
+      expect(data.data.username).toBe('memodule')
+      expect(data.data.email).toBe('memodule@example.com')
+      expect(data.data.role).toBe('developer')
+      expect(data.data.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    })
+
+    it('dev token（不落库）返回 claims 兜底 profile 而非报错', async () => {
+      const client = createTestClient(undefined, {
+        headers: { Authorization: 'Bearer user-token' },
+      })
+      const res = await client.api.auth.me.$get()
+      expect(res.status).toBe(200)
+
+      const data = (await res.json()) as {
+        success: boolean
+        data: { id: string; username: string; email: string }
+      }
+      expect(data.success).toBe(true)
+      expect(data.data.id).toBe('user-1')
+      expect(data.data.username).toBe('user')
     })
   })
 })

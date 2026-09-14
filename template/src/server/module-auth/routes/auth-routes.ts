@@ -9,7 +9,8 @@ import {
 } from '@shared/modules/auth'
 import { successResponse, errorResponse } from '@server/utils/route-helpers'
 import { success, created } from '@server/utils/route-helpers'
-import { ValidationError } from '@server/utils/app-error'
+import { authMiddleware } from '@server/middleware/auth'
+import type { AuthUser } from '@server/middleware/auth'
 
 import jwt from 'jsonwebtoken'
 import type { DeveloperProfile } from '@shared/modules/auth'
@@ -65,11 +66,44 @@ const verifyRoute = createRoute({
   method: 'get',
   path: '/auth/verify',
   tags: ['auth'],
+  security: [{ Bearer: [] }],
+  // 此前缺 authMiddleware：c.get('authUser') 恒 undefined，路由必 500
+  middleware: [authMiddleware()],
   responses: {
     200: successResponse(DeveloperProfileSchema, 'Verify token and get profile'),
     401: errorResponse('Unauthorized'),
   },
 })
+
+const meRoute = createRoute({
+  method: 'get',
+  path: '/auth/me',
+  tags: ['auth'],
+  security: [{ Bearer: [] }],
+  middleware: [authMiddleware()],
+  responses: {
+    200: successResponse(DeveloperProfileSchema, 'Get the current authenticated user profile'),
+    401: errorResponse('Unauthorized'),
+  },
+})
+
+/**
+ * 由 authUser 解析当前用户 profile：优先读 developers 表，
+ * dev token（id 不落库）回退 token claims——避免恒 400/404
+ */
+async function resolveDeveloperProfile(user: AuthUser): Promise<DeveloperProfile> {
+  const developer = await authService.getDeveloperById(user.id)
+  if (developer) {
+    return developer
+  }
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    createdAt: new Date().toISOString(),
+  }
+}
 
 export const authRoutes = new OpenAPIHono()
   .openapi(registerRoute, async c => {
@@ -86,10 +120,12 @@ export const authRoutes = new OpenAPIHono()
   })
   .openapi(verifyRoute, async c => {
     const user = c.get('authUser')
-    const profile = await authService.getDeveloperById(user.id)
-    if (!profile) {
-      throw new ValidationError('Developer profile not found')
-    }
+    const profile = await resolveDeveloperProfile(user)
+    return c.json(success(profile), 200)
+  })
+  .openapi(meRoute, async c => {
+    const user = c.get('authUser')
+    const profile = await resolveDeveloperProfile(user)
     return c.json(success(profile), 200)
   })
 

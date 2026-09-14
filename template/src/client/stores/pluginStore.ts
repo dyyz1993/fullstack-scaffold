@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiClient } from '@client/services/apiClient'
+import { parseApiError } from '@client/services/api-error'
 import type {
   Plugin,
   Category,
@@ -44,6 +45,7 @@ interface PluginState {
   setSearchQuery: (query: string) => void
   setSelectedCategory: (category: string | null) => void
   clearError: () => void
+  setError: (error: string | null) => void
   clearCurrentPlugin: () => void
 }
 
@@ -93,7 +95,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       } else {
         set({
           loading: false,
-          error: (result as { error?: string }).error ?? 'Failed to fetch plugins',
+          error: parseApiError(result, 'Failed to fetch plugins'),
         })
       }
     } catch (error) {
@@ -109,7 +111,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       if (result.success) {
         set({ currentPlugin: result.data, loading: false })
       } else {
-        set({ loading: false, error: (result as { error?: string }).error ?? 'Plugin not found' })
+        set({ loading: false, error: parseApiError(result, 'Plugin not found') })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -153,7 +155,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
           loading: false,
         })
       } else {
-        set({ loading: false, error: (result as { error?: string }).error ?? 'Search failed' })
+        set({ loading: false, error: parseApiError(result, 'Search failed') })
       }
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false })
@@ -194,7 +196,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       } else {
         set({
           loading: false,
-          error: (result as { error?: string }).error ?? 'Failed to fetch your plugins',
+          error: parseApiError(result, 'Failed to fetch your plugins'),
         })
       }
     } catch (error) {
@@ -216,7 +218,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       } else {
         set({
           loading: false,
-          error: (result as { error?: string }).error ?? 'Failed to fetch installed plugins',
+          error: parseApiError(result, 'Failed to fetch installed plugins'),
         })
       }
     } catch (error) {
@@ -241,7 +243,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       }
       set({
         loading: false,
-        error: (result as { error?: string }).error ?? 'Failed to uninstall plugin',
+        error: parseApiError(result, 'Failed to uninstall plugin'),
       })
       return false
     } catch (error) {
@@ -264,7 +266,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       }
       set({
         loading: false,
-        error: (result as { error?: string }).error ?? 'Failed to create plugin',
+        error: parseApiError(result, 'Failed to create plugin'),
       })
       return null
     } catch (error) {
@@ -287,7 +289,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       } else {
         set({
           loading: false,
-          error: (result as { error?: string }).error ?? 'Failed to delete plugin',
+          error: parseApiError(result, 'Failed to delete plugin'),
         })
       }
     } catch (error) {
@@ -311,7 +313,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
       } else {
         set({
           loading: false,
-          error: (result as { error?: string }).error ?? 'Failed to submit review',
+          error: parseApiError(result, 'Failed to submit review'),
         })
       }
     } catch (error) {
@@ -333,7 +335,7 @@ export const usePluginStore = create<PluginState>((set, get) => ({
         }))
         return true
       }
-      set({ error: (result as { error?: string }).error ?? 'Failed to install plugin' })
+      set({ error: parseApiError(result, 'Failed to install plugin') })
       return false
     } catch (error) {
       set({ error: getErrorMessage(error) })
@@ -344,5 +346,6 @@ export const usePluginStore = create<PluginState>((set, get) => ({
   setSearchQuery: (query: string) => set({ searchQuery: query }),
   setSelectedCategory: (category: string | null) => set({ selectedCategory: category }),
   clearError: () => set({ error: null }),
+  setError: error => set({ error }),
   clearCurrentPlugin: () => set({ currentPlugin: null, reviews: [] }),
 }))

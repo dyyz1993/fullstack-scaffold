@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerChatCommands(site: SiteInstance) {
-  site.command('status', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('chat')
+  mod.command('status', {
     description: 'Get WebSocket connection status',
     parameters: z.object({}),
     handler: async () => {

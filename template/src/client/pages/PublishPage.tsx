@@ -4,6 +4,11 @@ import { Helmet } from 'react-helmet-async'
 import { Upload, Plus, X, Rocket } from 'lucide-react'
 import { usePluginStore } from '@client/stores/pluginStore'
 import { LoadingSpinner } from '@client/components'
+import {
+  PLUGIN_DESCRIPTION_MAX,
+  PLUGIN_NAME_MAX,
+  PLUGIN_SLUG_MAX,
+} from '@client/services/form-limits'
 import type { CreatePluginInput } from '@shared/schemas'
 
 export const PublishPage: React.FC = () => {
@@ -11,6 +16,7 @@ export const PublishPage: React.FC = () => {
   const error = usePluginStore(state => state.error)
   const createPlugin = usePluginStore(state => state.createPlugin)
   const clearError = usePluginStore(state => state.clearError)
+  const setError = usePluginStore(state => state.setError)
 
   const navigate = useNavigate()
 
@@ -64,6 +70,20 @@ export const PublishPage: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     clearError()
+    // 提交前长度校验：与服务端 CreatePluginSchema 上限一致，超长不发请求，
+    // 避免后端 400 后错误对象渲染导致白屏（api-error.ts 治本解析仍然保留）
+    if (form.name.length > PLUGIN_NAME_MAX) {
+      setError(`Plugin name must be at most ${PLUGIN_NAME_MAX} characters`)
+      return
+    }
+    if (form.slug.length > PLUGIN_SLUG_MAX) {
+      setError(`Slug must be at most ${PLUGIN_SLUG_MAX} characters`)
+      return
+    }
+    if (form.description.length > PLUGIN_DESCRIPTION_MAX) {
+      setError(`Description must be at most ${PLUGIN_DESCRIPTION_MAX} characters`)
+      return
+    }
     const slug = await createPlugin(form)
     if (slug) {
       navigate(`/plugins/${slug}`)
@@ -91,7 +111,10 @@ export const PublishPage: React.FC = () => {
 
       <div className="max-w-2xl mx-auto px-6 -mt-8 pb-16">
         {error && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-2xl">
+          <div
+            className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-600 rounded-2xl"
+            data-testid="publish-error"
+          >
             {error}
           </div>
         )}
@@ -112,6 +135,8 @@ export const PublishPage: React.FC = () => {
                 onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="My Awesome Plugin"
                 required
+                maxLength={PLUGIN_NAME_MAX}
+                data-testid="publish-name"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-sm transition-all"
               />
             </div>
@@ -132,6 +157,8 @@ export const PublishPage: React.FC = () => {
                 placeholder="my-awesome-plugin"
                 required
                 pattern="^[a-z0-9-]+$"
+                maxLength={PLUGIN_SLUG_MAX}
+                data-testid="publish-slug"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-sm font-mono transition-all"
               />
               <p className="text-xs text-gray-400 mt-1.5">
@@ -149,6 +176,8 @@ export const PublishPage: React.FC = () => {
                 placeholder="Describe what your plugin does..."
                 required
                 rows={4}
+                maxLength={PLUGIN_DESCRIPTION_MAX}
+                data-testid="publish-description"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-sm resize-none transition-all"
               />
             </div>
@@ -320,6 +349,7 @@ export const PublishPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !form.name || !form.slug || !form.description}
+            data-testid="publish-submit"
             className="w-full py-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl hover:from-violet-400 hover:to-fuchsia-400 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all font-semibold text-base flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20"
           >
             {loading ? (

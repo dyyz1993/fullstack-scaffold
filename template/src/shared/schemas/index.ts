@@ -235,6 +235,7 @@ export {
   TenantInvitationSchema,
   InviteMemberSchema,
   PublicInvitationSchema,
+  EMAIL_MAX_LENGTH,
   StringIdResponseSchema,
   TenantArrayResponseSchema,
   TenantRoleArrayResponseSchema,

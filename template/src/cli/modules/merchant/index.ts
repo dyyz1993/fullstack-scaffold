@@ -16,7 +16,9 @@ const createProductParams = z.object({
 })
 
 export function registerMerchantCommands(site: SiteInstance) {
-  site.command('login', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('merchant')
+  mod.command('login', {
     description: 'Login as merchant',
     parameters: z.object({
       username: z.string().min(1).describe('Merchant username'),
@@ -37,7 +39,7 @@ export function registerMerchantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('me', {
+  mod.command('me', {
     description: 'Get current merchant profile',
     parameters: z.object({}),
     handler: async () => {
@@ -52,7 +54,7 @@ export function registerMerchantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('stats', {
+  mod.command('stats', {
     description: 'Get merchant statistics',
     parameters: z.object({}),
     handler: async () => {
@@ -67,7 +69,7 @@ export function registerMerchantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('list-products', {
+  mod.command('list-products', {
     description: 'List merchant products',
     parameters: z.object({
       page: z.coerce.number().int().positive().default(1).describe('Page number'),
@@ -95,7 +97,7 @@ export function registerMerchantCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create-product', {
+  mod.command('create-product', {
     description: 'Create a new product',
     parameters: createProductParams,
     handler: async params => {

@@ -7,6 +7,8 @@
 
 import '../config'
 
+import { resolveErrorStatus } from '@server/utils/error-status'
+
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { resolve } from 'path'
@@ -176,11 +178,12 @@ app.get('*', async c => {
 
 // Note: errorHandlerMiddleware (from middleware/error-handler.ts) is the canonical error handler.
 // This onError is kept as a last-resort fallback for errors that escape the middleware chain.
+// Status extraction must mirror entries/cloudflare.ts: AppError carries `statusCode` (not
+// `status`), so checking only `status` demoted every auth/validation error (401/403/400) to 500.
 app.onError((err, c) => {
   log.error({ err, path: c.req.path }, 'server error')
   c.res.headers.set('Content-Type', 'application/json')
-  const statusCode =
-    err instanceof Error && 'status' in err ? (err as { status: number }).status : 500
+  const statusCode = resolveErrorStatus(err)
   const message = err.message || 'Internal server error'
   const responseStatus = statusCode || 500
   return c.json(

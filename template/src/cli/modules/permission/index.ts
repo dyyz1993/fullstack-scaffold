@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerPermissionCommands(site: SiteInstance) {
-  site.command('roles', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('permission')
+  mod.command('roles', {
     description: 'List all roles',
     parameters: z.object({}),
     handler: async () => {
@@ -19,7 +21,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get-role', {
+  mod.command('get-role', {
     description: 'Get role details by ID',
     parameters: z.object({
       id: z.string().describe('Role ID'),
@@ -37,7 +39,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create-role', {
+  mod.command('create-role', {
     description: 'Create a new role',
     parameters: z.object({
       name: z.string().min(1).describe('Role name'),
@@ -58,7 +60,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update-role', {
+  mod.command('update-role', {
     description: 'Update a role',
     parameters: z.object({
       id: z.string().describe('Role ID'),
@@ -79,7 +81,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete-role', {
+  mod.command('delete-role', {
     description: 'Delete a role',
     parameters: z.object({
       id: z.string().describe('Role ID'),
@@ -97,7 +99,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('permissions', {
+  mod.command('permissions', {
     description: 'List all permissions',
     parameters: z.object({}),
     handler: async () => {
@@ -112,7 +114,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('categories', {
+  mod.command('categories', {
     description: 'List permission categories',
     parameters: z.object({}),
     handler: async () => {
@@ -127,7 +129,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('menu-config', {
+  mod.command('menu-config', {
     description: 'Get menu configuration',
     parameters: z.object({}),
     handler: async () => {
@@ -142,7 +144,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('audit-logs', {
+  mod.command('audit-logs', {
     description: 'List audit logs',
     parameters: z.object({
       limit: z.coerce.number().default(50).describe('Limit results'),
@@ -177,7 +179,7 @@ export function registerPermissionCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update-role-permissions', {
+  mod.command('update-role-permissions', {
     description: 'Update permissions for a role',
     parameters: z.object({
       id: z.string().describe('Role ID'),

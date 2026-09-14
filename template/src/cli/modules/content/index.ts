@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerContentCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('content')
+  mod.command('list', {
     description: 'List all contents',
     parameters: z.object({
       limit: z.coerce.number().default(20).describe('Limit results'),
@@ -25,7 +27,7 @@ export function registerContentCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get', {
+  mod.command('get', {
     description: 'Get content by ID',
     parameters: z.object({
       id: z.string().describe('Content ID'),
@@ -43,7 +45,7 @@ export function registerContentCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create', {
+  mod.command('create', {
     description: 'Create new content',
     parameters: z.object({
       title: z.string().min(1).describe('Content title'),
@@ -75,7 +77,7 @@ export function registerContentCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update', {
+  mod.command('update', {
     description: 'Update content',
     parameters: z.object({
       id: z.string().describe('Content ID'),
@@ -96,7 +98,7 @@ export function registerContentCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete', {
+  mod.command('delete', {
     description: 'Delete content',
     parameters: z.object({
       id: z.string().describe('Content ID'),
@@ -114,7 +116,7 @@ export function registerContentCommands(site: SiteInstance) {
     },
   })
 
-  site.command('publish', {
+  mod.command('publish', {
     description: 'Publish content',
     parameters: z.object({
       id: z.string().describe('Content ID'),
@@ -132,7 +134,7 @@ export function registerContentCommands(site: SiteInstance) {
     },
   })
 
-  site.command('archive', {
+  mod.command('archive', {
     description: 'Archive content',
     parameters: z.object({
       id: z.string().describe('Content ID'),

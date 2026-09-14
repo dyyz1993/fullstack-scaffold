@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiClient } from '@client/services/apiClient'
+import { parseApiError } from '@client/services/api-error'
 import type { DeveloperProfile } from '@shared/schemas'
 
 type UserProfile = Pick<DeveloperProfile, 'id' | 'username' | 'role'>
@@ -18,6 +19,7 @@ interface AuthState {
   setToken: (token: string) => void
   logout: () => void
   clearError: () => void
+  setError: (error: string | null) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
               error: null,
             })
           } else {
-            set({ loading: false, error: result.error })
+            set({ loading: false, error: parseApiError(result, 'Login failed') })
           }
         } catch {
           set({ loading: false, error: 'Login failed. Please try again.' })
@@ -67,7 +69,7 @@ export const useAuthStore = create<AuthState>()(
           if (result.success) {
             set({ loading: false, error: null })
           } else {
-            set({ loading: false, error: result.error })
+            set({ loading: false, error: parseApiError(result, 'Registration failed') })
           }
         } catch {
           set({ loading: false, error: 'Registration failed. Please try again.' })
@@ -96,6 +98,7 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       clearError: () => set({ error: null }),
+      setError: error => set({ error }),
     }),
     {
       name: 'auth-token',

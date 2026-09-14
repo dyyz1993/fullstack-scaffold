@@ -3,6 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { UserPlus } from 'lucide-react'
 import { useAuthStore } from '@client/stores/authStore'
+import {
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  USERNAME_MAX,
+  USERNAME_MIN,
+} from '@client/services/form-limits'
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -10,6 +16,7 @@ export const RegisterPage: React.FC = () => {
   const loading = useAuthStore(state => state.loading)
   const error = useAuthStore(state => state.error)
   const clearError = useAuthStore(state => state.clearError)
+  const setError = useAuthStore(state => state.setError)
 
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -17,6 +24,18 @@ export const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    clearError()
+    // 提交前校验：与服务端 RegisterSchema 约束一致。短密码等非法输入不再
+    // 发请求，即使后端仍返回 400 也会经 authStore 的 parseApiError 容错
+    // 解析为字符串，不会白屏
+    if (username.length < USERNAME_MIN || username.length > USERNAME_MAX) {
+      setError(`Username must be between ${USERNAME_MIN} and ${USERNAME_MAX} characters`)
+      return
+    }
+    if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
+      setError(`Password must be between ${PASSWORD_MIN} and ${PASSWORD_MAX} characters`)
+      return
+    }
     await register(username, email, password)
     const state = useAuthStore.getState()
     if (!state.error) {
@@ -55,6 +74,8 @@ export const RegisterPage: React.FC = () => {
                   }}
                   placeholder="Choose a username"
                   required
+                  minLength={USERNAME_MIN}
+                  maxLength={USERNAME_MAX}
                   data-testid="register-username"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -93,7 +114,8 @@ export const RegisterPage: React.FC = () => {
                   }}
                   placeholder="Choose a password (min 6 chars)"
                   required
-                  minLength={6}
+                  minLength={PASSWORD_MIN}
+                  maxLength={PASSWORD_MAX}
                   data-testid="register-password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />

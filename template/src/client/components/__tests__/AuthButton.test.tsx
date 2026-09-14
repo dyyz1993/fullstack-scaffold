@@ -17,6 +17,7 @@ const unauthenticatedState = {
   setAuth: vi.fn(),
   logout: mockLogout,
   clearError: vi.fn(),
+  setError: vi.fn(),
 }
 
 const authenticatedState = {
@@ -31,6 +32,7 @@ const authenticatedState = {
   setAuth: vi.fn(),
   logout: mockLogout,
   clearError: vi.fn(),
+  setError: vi.fn(),
 }
 
 vi.mock('@client/stores/authStore', () => ({
@@ -55,6 +57,7 @@ describe('AuthButton', () => {
         setToken: vi.fn(),
         setAuth: vi.fn(),
         clearError: vi.fn(),
+        setError: vi.fn(),
       }
       return selector ? selector(state) : state
     })
@@ -79,6 +82,7 @@ describe('AuthButton', () => {
         setToken: vi.fn(),
         setAuth: vi.fn(),
         clearError: vi.fn(),
+        setError: vi.fn(),
       }
       return selector ? selector(state) : state
     })
@@ -103,6 +107,7 @@ describe('AuthButton', () => {
         setToken: vi.fn(),
         setAuth: vi.fn(),
         clearError: vi.fn(),
+        setError: vi.fn(),
       }
       return selector ? selector(state) : state
     })

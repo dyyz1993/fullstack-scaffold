@@ -17,6 +17,7 @@ import {
 import { usePluginStore } from '@client/stores/pluginStore'
 import { useAuthStore } from '@client/stores/authStore'
 import { LoadingSpinner, StatusBadge } from '@client/components'
+import { REVIEW_CONTENT_MAX, REVIEW_TITLE_MAX } from '@client/services/form-limits'
 import type { CreateReviewInput } from '@shared/schemas'
 
 export const PluginDetailPage: React.FC = () => {
@@ -33,6 +34,7 @@ export const PluginDetailPage: React.FC = () => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const submitReview = usePluginStore(state => state.submitReview)
   const clearCurrentPlugin = usePluginStore(state => state.clearCurrentPlugin)
+  const setReviewError = usePluginStore(state => state.setError)
 
   const [reviewForm, setReviewForm] = useState<CreateReviewInput>({
     rating: 5,
@@ -71,6 +73,16 @@ export const PluginDetailPage: React.FC = () => {
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!slug) return
+    // 提交前长度校验：与服务端 CreateReviewSchema 上限一致，超长不发请求，
+    // 避免后端 400 后错误对象渲染导致白屏（api-error.ts 治本解析仍然保留）
+    if ((reviewForm.title ?? '').length > REVIEW_TITLE_MAX) {
+      setReviewError(`Review title must be at most ${REVIEW_TITLE_MAX} characters`)
+      return
+    }
+    if ((reviewForm.content ?? '').length > REVIEW_CONTENT_MAX) {
+      setReviewError(`Review content must be at most ${REVIEW_CONTENT_MAX} characters`)
+      return
+    }
     setSubmittingReview(true)
     await submitReview(slug, reviewForm)
     const failed = !!usePluginStore.getState().error
@@ -361,6 +373,8 @@ export const PluginDetailPage: React.FC = () => {
                 value={reviewForm.title ?? ''}
                 onChange={e => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Review title (optional)"
+                maxLength={REVIEW_TITLE_MAX}
+                data-testid="review-title-input"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-sm transition-all"
               />
             </div>
@@ -370,12 +384,15 @@ export const PluginDetailPage: React.FC = () => {
                 onChange={e => setReviewForm(prev => ({ ...prev, content: e.target.value }))}
                 placeholder="Write your review... (optional)"
                 rows={3}
+                maxLength={REVIEW_CONTENT_MAX}
+                data-testid="review-content-input"
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none text-sm resize-none transition-all"
               />
             </div>
             <button
               type="submit"
               disabled={submittingReview}
+              data-testid="review-submit"
               className="px-5 py-2.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-xl hover:from-violet-400 hover:to-fuchsia-400 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all text-sm font-semibold shadow-md shadow-violet-500/15"
             >
               {submittingReview ? <LoadingSpinner size="sm" color="text-white" /> : 'Submit Review'}

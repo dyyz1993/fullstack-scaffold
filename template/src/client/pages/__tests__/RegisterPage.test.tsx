@@ -9,6 +9,7 @@ interface MockAuthStore {
   loading: boolean
   error: string | null
   clearError: ReturnType<typeof vi.fn>
+  setError: ReturnType<typeof vi.fn>
 }
 
 const mockStore: MockAuthStore = {
@@ -16,6 +17,7 @@ const mockStore: MockAuthStore = {
   loading: false,
   error: null,
   clearError: vi.fn(),
+  setError: vi.fn(),
 }
 
 vi.mock('@client/stores/authStore', () => ({
@@ -115,6 +117,47 @@ describe('RegisterPage', () => {
       await waitFor(() => {
         expect(mockStore.register).toHaveBeenCalledWith('newuser', 'new@test.com', 'pass123')
       })
+    })
+  })
+
+  describe('Overlong/Short Input Guard (P2: 短密码白屏回归)', () => {
+    it('should enforce minLength/maxLength attributes on password input', () => {
+      renderRegisterPage()
+      expect(screen.getByTestId('register-password')).toHaveAttribute('minLength', '6')
+      expect(screen.getByTestId('register-password')).toHaveAttribute('maxLength', '100')
+    })
+
+    it('should not call register with short password and show error instead of crashing', async () => {
+      renderRegisterPage()
+      fireEvent.change(screen.getByTestId('register-username'), { target: { value: 'newuser' } })
+      fireEvent.change(screen.getByTestId('register-email'), { target: { value: 'new@test.com' } })
+      fireEvent.change(screen.getByTestId('register-password'), { target: { value: 'abc' } })
+      fireEvent.click(screen.getByTestId('register-submit'))
+
+      await waitFor(() => {
+        expect(mockStore.setError).toHaveBeenCalledWith(
+          'Password must be between 6 and 100 characters'
+        )
+      })
+      expect(mockStore.register).not.toHaveBeenCalled()
+      // 页面未被卸载（白屏回归防线）
+      expect(screen.getByTestId('register-page')).toBeInTheDocument()
+    })
+
+    it('should not call register with too-short username', async () => {
+      renderRegisterPage()
+      fireEvent.change(screen.getByTestId('register-username'), { target: { value: 'ab' } })
+      fireEvent.change(screen.getByTestId('register-email'), { target: { value: 'a@b.com' } })
+      fireEvent.change(screen.getByTestId('register-password'), { target: { value: 'pass123' } })
+      fireEvent.click(screen.getByTestId('register-submit'))
+
+      await waitFor(() => {
+        expect(mockStore.setError).toHaveBeenCalledWith(
+          'Username must be between 3 and 50 characters'
+        )
+      })
+      expect(mockStore.register).not.toHaveBeenCalled()
+      expect(screen.getByTestId('register-page')).toBeInTheDocument()
     })
   })
 

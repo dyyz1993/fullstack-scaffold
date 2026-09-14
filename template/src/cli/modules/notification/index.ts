@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerNotificationCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('notifications')
+  mod.command('list', {
     description: 'List all notifications',
     parameters: z.object({
       'unread-only': z.boolean().default(false).describe('Show only unread'),
@@ -25,7 +27,7 @@ export function registerNotificationCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create', {
+  mod.command('create', {
     description: 'Create a new notification',
     parameters: z.object({
       title: z.string().min(1).describe('Notification title'),
@@ -49,7 +51,7 @@ export function registerNotificationCommands(site: SiteInstance) {
     },
   })
 
-  site.command('unread-count', {
+  mod.command('unread-count', {
     description: 'Get unread notification count',
     parameters: z.object({}),
     handler: async () => {
@@ -64,7 +66,7 @@ export function registerNotificationCommands(site: SiteInstance) {
     },
   })
 
-  site.command('mark-read', {
+  mod.command('mark-read', {
     description: 'Mark a notification as read',
     parameters: z.object({
       id: z.string().describe('Notification ID'),
@@ -82,7 +84,7 @@ export function registerNotificationCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete', {
+  mod.command('delete', {
     description: 'Delete a notification',
     parameters: z.object({
       id: z.string().describe('Notification ID'),

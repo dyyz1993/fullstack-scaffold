@@ -4,7 +4,11 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerTodoCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间：此前各模块都在同一 site 上注册扁平命令名（list/get/create/...），
+  // 后注册者静默覆盖先注册者，导致 `todos list` 实际路由到 ticket 等模块。
+  const mod = site.group('todos')
+
+  mod.command('list', {
     description: 'List all todos',
     parameters: z.object({
       limit: z.coerce.number().default(20).describe('Limit results'),
@@ -21,7 +25,7 @@ export function registerTodoCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get', {
+  mod.command('get', {
     description: 'Get a todo by ID',
     parameters: z.object({
       id: z.string().describe('Todo ID'),
@@ -39,7 +43,7 @@ export function registerTodoCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create', {
+  mod.command('create', {
     description: 'Create a new todo',
     parameters: z.object({
       title: z.string().min(1).describe('Todo title'),
@@ -58,7 +62,7 @@ export function registerTodoCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update', {
+  mod.command('update', {
     description: 'Update a todo',
     parameters: z.object({
       id: z.string().describe('Todo ID'),
@@ -88,7 +92,7 @@ export function registerTodoCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete', {
+  mod.command('delete', {
     description: 'Delete a todo',
     parameters: z.object({
       id: z.string().describe('Todo ID'),

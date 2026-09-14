@@ -157,10 +157,13 @@ export const UpdateMemberRoleSchema = z.object({
 export type UpdateMemberRoleInput = z.infer<typeof UpdateMemberRoleSchema>
 
 // ============ 租户邀请 ============
+/** RFC 5321 转发/事务路径邮箱上限（255 字符历史缺陷：前后端均放行超长邮箱落库） */
+export const EMAIL_MAX_LENGTH = 254
+
 export const TenantInvitationSchema = z.object({
   id: z.string(),
   tenantId: z.number().int().positive(),
-  email: z.string().email(),
+  email: z.string().email().max(EMAIL_MAX_LENGTH),
   roleId: z.string(),
   inviterId: z.string(),
   token: z.string(),
@@ -173,7 +176,7 @@ export const TenantInvitationSchema = z.object({
 export type TenantInvitation = z.infer<typeof TenantInvitationSchema>
 
 export const InviteMemberSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().max(EMAIL_MAX_LENGTH),
   roleId: z.string().min(1),
 })
 
@@ -183,7 +186,7 @@ export type InviteMemberInput = z.infer<typeof InviteMemberSchema>
 export const PublicInvitationSchema = z.object({
   tenantName: z.string(),
   tenantSlug: z.string(),
-  email: z.string().email(),
+  email: z.string().email().max(EMAIL_MAX_LENGTH),
   roleLabel: z.string(),
   status: z.enum(['pending', 'accepted', 'declined', 'expired', 'cancelled']),
   expiresAt: z.string().datetime(),

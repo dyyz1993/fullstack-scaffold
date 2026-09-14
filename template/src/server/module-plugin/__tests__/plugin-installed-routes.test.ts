@@ -120,6 +120,22 @@ describe('Plugin installed routes', () => {
     }
   })
 
+  it('POST install with an invalid token is rejected 401 and writes nothing (no install row, no counter bump)', async () => {
+    // P2 回归：携带无效/伪造 token 不得静默降级为游客落库——
+    // optionalAuthMiddleware 必须走强制鉴权语义（401），且不产生任何写入
+    await insertApprovedPlugin('forged', 'Forged')
+
+    const forged = createTestClient(undefined, {
+      headers: { Authorization: 'Bearer fake-token' },
+    })
+    const res = await forged.api.plugins[':slug'].install.$post({ param: { slug: 'forged' } })
+    expect(res.status).toBe(401)
+
+    // 既不落安装行，也不累加下载计数
+    expect(await countInstalls('forged', 'fake-token')).toBe(0)
+    expect(await downloadCountOf('forged')).toBe(0)
+  })
+
   it('DELETE /plugins/installed/{slug} uninstalls and 404s unknown slugs', async () => {
     await insertApprovedPlugin('removable', 'Removable')
     const authed = createTestClient(undefined, { headers: AUTH })

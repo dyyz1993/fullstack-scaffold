@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { getClient } from '@cli/utils/api'
 
 export function registerOrderCommands(site: SiteInstance) {
-  site.command('list', {
+  // 命名空间注册：避免各模块扁平命令名（list/get/...）互相覆盖
+  const mod = site.group('orders')
+  mod.command('list', {
     description: 'List all orders',
     parameters: z.object({
       limit: z.coerce.number().default(20).describe('Limit results'),
@@ -36,7 +38,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('get', {
+  mod.command('get', {
     description: 'Get order by ID',
     parameters: z.object({
       id: z.string().describe('Order ID'),
@@ -54,7 +56,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('create', {
+  mod.command('create', {
     description: 'Create a new order',
     parameters: z.object({
       'customer-name': z.string().min(1).describe('Customer name'),
@@ -87,7 +89,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('update', {
+  mod.command('update', {
     description: 'Update order status',
     parameters: z.object({
       id: z.string().describe('Order ID'),
@@ -112,7 +114,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('delete', {
+  mod.command('delete', {
     description: 'Delete an order',
     parameters: z.object({
       id: z.string().describe('Order ID'),
@@ -130,7 +132,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('process', {
+  mod.command('process', {
     description: 'Process an order',
     parameters: z.object({
       id: z.string().describe('Order ID'),
@@ -148,7 +150,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('cancel', {
+  mod.command('cancel', {
     description: 'Cancel an order',
     parameters: z.object({
       id: z.string().describe('Order ID'),
@@ -166,7 +168,7 @@ export function registerOrderCommands(site: SiteInstance) {
     },
   })
 
-  site.command('cart', {
+  mod.command('cart', {
     description: 'Get current cart',
     parameters: z.object({}),
     handler: async () => {
