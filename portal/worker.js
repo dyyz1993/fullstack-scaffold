@@ -87,6 +87,27 @@ function render(){
     var steps='';for(var si=0;si<j.steps.length;si++){var s=j.steps[si];steps+='<div class="step"><img loading="lazy" src="'+RAW+'/'+s.img+'.png" alt="'+s.t+'" onerror="this.parentElement.classList.add(\\'noimg\\');this.remove()"><div class="cap"><b>步骤 '+(si+1)+' · '+s.t+'</b><span>'+s.d+'</span></div></div>'}
     js+='<section class="journey"><h3><span class="role">'+j.role+'</span><span class="dir '+(j.dir==='正向'?'pos':'neg')+'">'+j.dir+'</span></h3><div class="steps">'+steps+'</div></section>'
   }
+  // 该形态全部身份 × 全部操作链路（数据同 #playbook，来自 playbook-data.js）——
+  // 旅程故事板只是精选速览，此处渲染完整链路明细（用户验收要求：每个身份能干什么一目了然）
+  var pb='';
+  var pbTotal=0;
+  for(var pi=0;pi<PLAYBOOKS.length;pi++){
+    var e=PLAYBOOKS[pi];
+    if(e.portalId!==c.id)continue;
+    pbTotal+=e.cases.length;
+    pb+='<div class="pb-ident"><h3>'+esc(e.identity)+'<span class="pb-pos">'+e.pos+' 正向</span><span class="pb-neg">'+e.neg+' 逆向</span></h3>';
+    for(var ci=0;ci<e.cases.length;ci++){
+      var cc=e.cases[ci];
+      var psteps='';
+      for(var si=0;si<cc.s.length;si++){psteps+='<li>'+esc(cc.s[si])+'</li>'}
+      var pimg=cc.shot?'<img loading="lazy" src="https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/'+cc.shot+'" alt="" onerror="this.remove()">':'';
+      pb+='<div class="pb-case"><div class="pb-head"><span class="pb-badge '+(cc.neg?'neg':'pos')+'">'+(cc.neg?'逆向':'正向')+'</span><b>'+esc(cc.t)+'</b></div><ol class="pb-steps">'+psteps+'</ol><div class="pb-verify">✓ 预期：'+esc(cc.v)+'</div>'+pimg+'</div>';
+    }
+    pb+='</div>';
+  }
+  if(pb){
+    js+='<section class="journey" id="all-chains"><h3>📋 全部操作链路 <span class="role">'+pbTotal+' 条</span>（每身份可执行的全部 case）</h3><div class="pb-wrap" style="margin-top:4px">'+pb+'</div></section>';
+  }
   document.getElementById('app').innerHTML=
     '<nav>'+chips+'</nav>'+
     '<div class="hero"><h2>'+c.name+'<span>'+c.zh+'</span></h2><p>'+c.desc+'</p>'+
