@@ -37,7 +37,7 @@ jobs:
           - preset: minimal
             short: minimal
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy, portal]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # 等证书/传播稳定后跑全量 36 项验证（含 60s 存活复检）
       - name: Wait for propagation
         run: sleep 90
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
