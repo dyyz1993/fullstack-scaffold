@@ -41,6 +41,8 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .links{margin-top:34px;display:flex;gap:16px;flex-wrap:wrap;border-top:1px solid #1e293b;padding-top:16px}
 .links a{color:#38bdf8;text-decoration:none;font-size:13px}
 
+#app>nav,#app>div,#app>section{max-width:1180px;margin-left:auto;margin-right:auto;padding-left:20px;padding-right:20px}
+#app>nav{padding-left:0;padding-right:0}
 .pb-wrap{margin-top:18px}
 .pb-preset{font-size:19px;color:#38bdf8;margin:26px 0 10px;border-bottom:1px solid #1e293b;padding-bottom:8px}
 .pb-preset span{color:#94a3b8;font-size:13px;font-weight:400;margin-left:8px}
@@ -49,7 +51,10 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .pb-pos,.pb-neg{border-radius:6px;padding:2px 8px;font-size:11px}
 .pb-pos{background:#064e3b;color:#6ee7b7}
 .pb-neg{background:#7f1d1d;color:#fca5a5}
-.pb-case{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:8px 0}
+.pb-case{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:8px 0;display:grid;grid-template-columns:minmax(0,1fr) clamp(280px,38%,520px);gap:12px;align-items:start}
+.pb-case .pb-body{min-width:0}
+.pb-case:not(:has(.pb-shot)){grid-template-columns:minmax(0,1fr)}
+.pb-shot{background:#0b1220;border:1px solid #334155;border-radius:8px;overflow:hidden;align-self:start}
 .pb-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .pb-badge{border-radius:6px;padding:2px 8px;font-size:11px;flex:0 0 auto}
 .pb-badge.pos{background:#064e3b;color:#6ee7b7}
@@ -57,7 +62,8 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .pb-head b{font-size:13px;color:#e2e8f0}
 .pb-steps{color:#cbd5e1;font-size:12px;margin:8px 0 6px 20px;line-height:1.6}
 .pb-verify{color:#6ee7b7;font-size:12px}
-.pb-case img{max-width:640px;width:100%;border-radius:8px;margin-top:8px;border:1px solid #334155}
+.pb-shot img{width:100%;display:block;border-radius:8px}
+@media(max-width:900px){.pb-case{grid-template-columns:minmax(0,1fr)}}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -101,7 +107,7 @@ function render(){
       var psteps='';
       for(var si=0;si<cc.s.length;si++){psteps+='<li>'+esc(cc.s[si])+'</li>'}
       var pimg=cc.shot?'<img loading="lazy" src="https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/'+cc.shot+'" alt="" onerror="this.remove()">':'';
-      pb+='<div class="pb-case"><div class="pb-head"><span class="pb-badge '+(cc.neg?'neg':'pos')+'">'+(cc.neg?'逆向':'正向')+'</span><b>'+esc(cc.t)+'</b></div><ol class="pb-steps">'+psteps+'</ol><div class="pb-verify">✓ 预期：'+esc(cc.v)+'</div>'+pimg+'</div>';
+      pb+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(cc.neg?'neg':'pos')+'">'+(cc.neg?'逆向':'正向')+'</span><b>'+esc(cc.t)+'</b></div><ol class="pb-steps">'+psteps+'</ol><div class="pb-verify">✓ 预期：'+esc(cc.v)+'</div></div>'+(pimg?'<div class="pb-shot">'+pimg+'</div>':'')+'</div>';
     }
     pb+='</div>';
   }
@@ -131,7 +137,7 @@ function renderPlaybook(){
       var steps='';
       for(var si=0;si<c.s.length;si++){steps+='<li>'+esc(c.s[si])+'</li>'}
       var img=c.shot?'<img loading="lazy" src="https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/'+c.shot+'" alt="" onerror="this.remove()">':'';
-      groups+='<div class="pb-case"><div class="pb-head"><span class="pb-badge '+(c.neg?'neg':'pos')+'">'+(c.neg?'逆向':'正向')+'</span><b>'+esc(c.t)+'</b></div><ol class="pb-steps">'+steps+'</ol><div class="pb-verify">✓ 预期：'+esc(c.v)+'</div>'+img+'</div>';
+      groups+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(c.neg?'neg':'pos')+'">'+(c.neg?'逆向':'正向')+'</span><b>'+esc(c.t)+'</b></div><ol class="pb-steps">'+steps+'</ol><div class="pb-verify">✓ 预期：'+esc(c.v)+'</div></div>'+(img?'<div class="pb-shot">'+img+'</div>':'')+'</div>';
     }
     groups+='</div>';
   }
