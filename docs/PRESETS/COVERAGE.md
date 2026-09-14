@@ -268,6 +268,16 @@ minimal：输入态按钮可用性/新增置顶/完成态/删除/移动端 5 案
 
 **至此：缺陷清零、功能缺口清零、mock 链清零、正逆向矩阵翻倍达标。**
 
+### 第十轮：v0.7.0 发版（2026-09-14）
+
+| 项             | 结果                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 双盲冷启动验证 | 39/40（4 preset × 脚手架/install/tsc/test/dev/build/start/cli 十步）；唯一 BLOCKER（UserFormModal 全量跑时序脆弱）修复后 market 全量 1702/1702                                  |
+| npm 发布       | create-fullstack-scaffold@0.7.0（62 个提交：market 审核下架/我的安装、forum 评论/Topics/Popular、shop 下单闭环、saas 平台页/RBAC 收敛、白屏兜底、CLI 命名空间、时间戳秒语义等） |
+| Shanbox 部署   | 首两次 npm registry 同步延迟致 notarget，第三次成功——7 preset 全部部署                                                                                                          |
+| 线上拉包抽验   | npx create-fullstack-scaffold@0.7.0 脚手架 minimal + install + tsc 全过                                                                                                         |
+| CHANGELOG      | 0.7.0 完整条目（Added 10 / Changed 3 / Fixed 11）                                                                                                                               |
+
 _(以下为历史轮次记录)_
 
 **至此全部已知缺陷、功能缺口、mock 链清零。**
