@@ -33,7 +33,7 @@ export const PluginReviewPage: React.FC = () => {
     setLoading(true)
     try {
       const result = await api(
-        apiClient.api.plugins.$get({ query: { status: 'pending', limit: 50, page: 1 } })
+        apiClient.api.plugins.admin.pending.$get({ query: { limit: 50, page: 1 } })
       )
         .withLoading()
         .json()

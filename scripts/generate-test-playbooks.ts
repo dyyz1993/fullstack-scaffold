@@ -7,6 +7,7 @@
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs'
 import { join } from 'path'
+import { EXTRA_CHAINS } from './playbook-chains-forum-market'
 
 const ROOT = join(import.meta.dirname ?? process.cwd(), '..')
 const KB = join(ROOT, '.ui-tester', 'knowledge')
@@ -161,6 +162,96 @@ const PRESETS: Array<{
             steps: ['不带 Authorization 请求 /api/admin/stats'],
             verify: '返回 401，不泄露任何统计',
           },
+          {
+            title: '内容编辑后改回原样（正向链）',
+            steps: [
+              '内容管理 → 内容列表，点击行内"编辑"按钮',
+              '修改标题后点击 OK 保存',
+              '再次编辑同一行，改回原标题后 OK 保存',
+            ],
+            verify: '表格标题先更新后恢复原值，状态保持已发布，无多余行',
+            shot: 'matrix/fullstack/super-admin/fa-admin-content.png',
+            selectors: {
+              编辑按钮: "find text '编辑' --action click",
+              弹窗确认: "find text 'OK' --action click",
+            },
+          },
+          {
+            title: '系统设置修改后还原（正向链）',
+            steps: [
+              '系统管理 → 系统设置，修改站点名称为 QA-Temp-Name',
+              '点击"保存更改"',
+              '改回原值 Biomimic Admin 再次保存',
+            ],
+            verify: '两次均出现"设置保存成功!" toast，GET /api/admin/settings 回读 siteName 为原值',
+            shot: 'matrix/fullstack/super-admin/fa-admin-settings.png',
+            selectors: {
+              站点名称输入框: ".ant-layout-content input[placeholder='请输入站点名称']",
+              保存按钮: "find text '保存更改' --action click",
+            },
+          },
+          {
+            title: '仪表盘刷新后统计保持（正向）',
+            steps: ['登录到达 /admin/dashboard 记录统计卡数值', '按 F5 硬刷新'],
+            verify: '刷新后统计卡与刷新前一致（GET /api/admin/stats 200），无清零',
+            shot: 'verify/verify-admin-dashboard.png',
+          },
+          {
+            title: '订单/工单/纠纷空数据页巡检（正向边界）',
+            steps: ['依次访问 /admin/orders、/admin/tickets、/admin/disputes'],
+            verify: '三页壳与表格头渲染正常，统计卡全 0 + No data（线上无 mock 数据），无报错',
+            shot: 'matrix/fullstack/super-admin/fa-admin-orders.png',
+          },
+          {
+            title: '分类管理与权限页深链（边界实勘）',
+            steps: ['直接打开 /admin/categories', '再直接打开 /admin/permissions'],
+            verify:
+              '实勘：categories 超管侧渲染情况未采样（API /api/categories 200 有数据）；permissions 深链 200 但内容区空白（已知缺陷）——逐页记录',
+            shot: 'matrix/fullstack/super-admin/fa-admin-categories.png',
+          },
+          {
+            title: 'emoji/中英混合标题正常创建（正向）',
+            steps: [
+              '内容列表点击"创建内容"',
+              '标题输入 🎉 Release Notes 发布v2 中英混合，填写其余必填项提交',
+              '确认后删除该条清理',
+            ],
+            verify: '列表正常渲染该条无乱码无报错，清理后列表恢复基线',
+          },
+          {
+            title: '连续创建 3 条内容（正向批量链）',
+            steps: ['连续点击"创建内容"新建 3 条不同标题的内容并逐一提交', '记录列表新增数量'],
+            verify: '3 条均出现在列表，随后全部删除清理，列表回到基线',
+          },
+          {
+            title: '超长标题提交（逆向）',
+            steps: ['点击"创建内容"', '标题粘贴 256+ 字符长串，提交'],
+            verify: '实勘：被长度校验拒绝则提示报错；若接受则正常入库显示——记录行为，前端不崩溃',
+          },
+          {
+            title: '纯空格标题提交被拒（逆向）',
+            steps: ['点击"创建内容"', '标题只输入多个空格，提交'],
+            verify: '校验拦截（trim 后按必填处理），不产生空标题脏数据',
+          },
+          {
+            title: 'XSS 注入标题转义验证（逆向）',
+            steps: [
+              '点击"创建内容"',
+              '标题输入 <script>alert(1)</script>，提交',
+              '回到列表查看该条渲染',
+            ],
+            verify: '标题按纯文本渲染不执行（无弹窗），列表与详情均无脚本注入效果',
+          },
+          {
+            title: '伪造 Bearer token 调管理 API（逆向）',
+            steps: ['curl -H "Authorization: Bearer fake-token123" 请求 /api/admin/stats'],
+            verify: '返回 401，伪造 token 不被接受（仅预置 mock token 可用）',
+          },
+          {
+            title: '双击创建内容提交防重（逆向）',
+            steps: ['填写完整创建表单后快速双击 OK 提交按钮'],
+            verify: '实勘：仅创建 1 条（若出现重复行记录为缺陷），随后清理',
+          },
         ],
       },
       {
@@ -194,6 +285,31 @@ const PRESETS: Array<{
             verify: '2 篇文章可见，无编辑/删除按钮，无新建按钮',
             shot: 'matrix/fullstack/cs-02-notification-center-empty.png',
           },
+          {
+            title: '客服登出（正向链）',
+            steps: ['登录后点击 header 头像下拉', '点击"退出登录"'],
+            verify: '跳回 /admin/login，重新进入后台需再次登录（customer-service-token 登出）',
+          },
+          {
+            title: '客服刷新后只读权限保持（正向）',
+            steps: ['进入 /admin/content 后按 F5 硬刷新'],
+            verify: '刷新后仍无"创建内容"按钮、行内无编辑按钮（只读态持久）',
+            shot: 'matrix/fullstack/cs-full/cs-full-02-content-readonly-with-data.png',
+          },
+          {
+            title: '客服伪造角色提权（逆向）',
+            steps: [
+              'localStorage 把 admin-storage 的 user.role 改为 super_admin',
+              '刷新后请求 /api/admin/users',
+            ],
+            verify: '后端按 token 鉴权仍 403 Permission denied，前端角色字段篡改不提权',
+          },
+          {
+            title: '客服保存系统设置被拦截（逆向）',
+            steps: ['进入系统设置（表单空，GET 403）', '点击"保存更改"'],
+            verify: '保存被拦截（验证码/403），无任何配置变更落库',
+            shot: 'matrix/fullstack/cs-05-settings-save-blocked-by-captcha.png',
+          },
         ],
       },
       {
@@ -219,6 +335,25 @@ const PRESETS: Array<{
             verify: '表头完整但 No data',
             shot: 'matrix/fullstack/user-03-users-page-denied-empty.png',
           },
+          {
+            title: '普通用户登出（正向链）',
+            steps: ['登录后打开头像下拉', '点击"退出登录"'],
+            verify: '跳回 /admin/login，user-token 登出',
+          },
+          {
+            title: '普通用户 token 直调管理 API（逆向）',
+            steps: [
+              'curl -H "Authorization: Bearer user-token" 请求 /api/admin/stats 与 /api/admin/users',
+            ],
+            verify: '均 403 Permission denied，与 UI 空数据一致（token 合法但无权限）',
+          },
+          {
+            title: '角色切换下拉提权链（逆向·已知缺陷复现）',
+            steps: ['登录后点击 header 角色切换下拉', '选择"超级管理员"'],
+            verify:
+              '⚠ 已知缺陷：admin-storage 的 user+token 被整体替换为目标角色（提权链）；记录切换后可访问的页面与 API，不作为通过标准',
+            shot: 'matrix/fullstack/user-05-role-switcher-dropdown.png',
+          },
         ],
       },
       {
@@ -240,6 +375,23 @@ const PRESETS: Array<{
             title: '访问 /admin 被重定向',
             steps: ['直接打开 https://fullstack.lpm1.top/admin'],
             verify: '302 → /admin/login 登录页',
+            shot: 'verify/verify-admin-login.png',
+          },
+          {
+            title: '游客刷新 /todos 后 SSR 数据保持（正向）',
+            steps: ['打开 /todos 记录渲染内容', '按 F5 硬刷新'],
+            verify: '刷新后 Todo List 与 SSR 数据仍完整渲染（window.__SSR_DATA__.todos），无空白',
+            shot: 'verify/verify-todos.png',
+          },
+          {
+            title: '伪造 token 调 todos 写接口（逆向）',
+            steps: ['curl -X POST -H "Authorization: Bearer fake-token123" 请求 /api/todos'],
+            verify: '返回 401，不产生任何待办数据',
+          },
+          {
+            title: '游客深链 /admin/users 被拦（逆向）',
+            steps: ['未登录直接打开 https://fullstack.lpm1.top/admin/users'],
+            verify: '302 重定向到 /admin/login，不渲染任何用户数据',
             shot: 'verify/verify-admin-login.png',
           },
         ],
@@ -347,6 +499,109 @@ const PRESETS: Array<{
             steps: ['Invite member 填入非法格式邮箱提交'],
             verify: '表单/后端校验拦截，提示格式错误，不产生邀请',
           },
+          {
+            title: '租户设置修改后还原（正向链）',
+            steps: [
+              'Settings 页把 Tenant Name 改为 QA-Temp-Name',
+              '点击 Save Settings',
+              '改回 Saas Demo 再次保存',
+            ],
+            verify: '两次均 toast "Settings updated successfully"，回读 #name 为 Saas Demo',
+            shot: 'matrix/saas/tadmin/a-05-settings.png',
+            selectors: { 租户名输入框: '#name', 保存按钮: 'button.ant-btn' },
+          },
+          {
+            title: '仪表盘刷新后统计保持（正向）',
+            steps: ['登录后记录 /tenant/dashboard 四统计卡数值', '按 F5 硬刷新'],
+            verify: '刷新后四统计卡与刷新前一致（已知口径矛盾另案），无清零',
+            shot: 'journeys/saas-j2-dashboard.png',
+          },
+          {
+            title: '平台租户列表渲染与分页探测（正向实勘）',
+            steps: ['侧栏点击"平台租户"进入 /tenant/tenants', '检查表格行数、排序与分页控件'],
+            verify: '实勘：9 个租户渲染（ID 1..11），分页/排序能力以实勘为准——操作后表格无崩溃',
+            shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
+            selectors: { 平台租户侧栏链接: "a[href='/tenant/tenants']" },
+          },
+          {
+            title: '审计日志列表与排序探测（正向实勘）',
+            steps: ['侧栏点击"审计日志"进入 /tenant/audit', '检查 20 行渲染与操作 tag'],
+            verify: '实勘：表格 20 行 + create tag 渲染；排序/分页能力记录，操作后无崩溃',
+            shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
+            selectors: { 审计日志侧栏链接: "a[href='/tenant/audit']" },
+          },
+          {
+            title: '邀请角色选普通成员（正向链）',
+            steps: [
+              'Users 页点击 Invite member',
+              '填入 invite-member-qa@demo.io',
+              '角色下拉选"普通成员"',
+              '点击 Send invitation',
+            ],
+            verify: '绿色 toast "Invitation created"，角色为 tr_saas_member',
+            shot: 'matrix/saas/tadmin/a-03a-invite-modal-role-dropdown.png',
+            selectors: {
+              邮箱输入框: '.ant-modal input.ant-input',
+              角色下拉: '.ant-modal .ant-select-selector',
+              角色选项: ".ant-select-item-option[title='普通成员']",
+              发送按钮: '.ant-modal .ant-btn-primary',
+            },
+          },
+          {
+            title: 'Todo 连续创建 3 条（正向批量链）',
+            steps: ['进入 /tenant/todos', '连续 + Add Todo 创建 3 条不同标题（OK 提交）'],
+            verify: '3 条均出现在管理员列表（管理员可见全部创建者行），随后逐条删除清理',
+            shot: 'matrix/saas/tadmin/a-06-todos.png',
+            selectors: {
+              新增按钮: 'button.ant-btn-primary',
+              标题输入框: '#title',
+              提交按钮: '.ant-modal .ant-btn-primary',
+            },
+          },
+          {
+            title: 'Todo 创建后删除闭环（正向）',
+            steps: [
+              '+ Add Todo 创建一条 qa-delete-me',
+              '行内点击删除按钮',
+              'Confirm Delete 弹窗点击 Yes',
+            ],
+            verify: '确认后该行移除，列表计数回落',
+            shot: 'matrix/saas/tadmin/a-06-todos.png',
+            selectors: { 删除确认按钮: '.ant-modal-confirm-btns button.ant-btn-primary' },
+          },
+          {
+            title: '超管登出重登（正向链）',
+            steps: ['header 用户图标 → Logout', '重新 superadmin/admin123 登录'],
+            verify:
+              '登出跳 /tenant/login 且 tenant-token/current-tenant-slug 双清空，重登后 dashboard 正常',
+            shot: 'journeys/saas-j1-login.png',
+          },
+          {
+            title: '邀请超长邮箱被拒（逆向）',
+            steps: ['Invite member 邮箱填入 256+ 字符非法长串', '点击 Send invitation'],
+            verify: '表单/后端校验拦截（格式或长度），不产生邀请记录',
+          },
+          {
+            title: '邀请纯空格邮箱被拒（逆向）',
+            steps: ['Invite member 邮箱只输入空格', '点击 Send invitation'],
+            verify: '校验拦截提示格式错误，不产生邀请',
+          },
+          {
+            title: 'Todo 标题 XSS 注入转义验证（逆向）',
+            steps: ['+ Add Todo 标题输入 <script>alert(1)</script>', 'OK 提交后查看列表'],
+            verify: '标题纯文本渲染不执行（无弹窗），随后删除清理',
+            selectors: { 标题输入框: '#title', 提交按钮: '.ant-modal .ant-btn-primary' },
+          },
+          {
+            title: '伪造 Bearer token 调平台 API（逆向）',
+            steps: ['curl -H "Authorization: Bearer fake-token123" 请求 GET /api/tenants'],
+            verify: '返回 401，不泄露租户清单',
+          },
+          {
+            title: '双击 Send invitation 防重（逆向）',
+            steps: ['填写邀请表单后快速双击 Send invitation'],
+            verify: '实勘：仅 1 次 toast/1 条邀请（若重复创建记录为缺陷），随后清理',
+          },
         ],
       },
       {
@@ -408,6 +663,46 @@ const PRESETS: Array<{
             steps: ['成员 token 直接请求 GET /api/tenants 与 /api/audit-logs'],
             verify: '均返回 403，不泄露平台级数据',
           },
+          {
+            title: '成员新增 Todo（正向）',
+            steps: ['成员登录进入 /tenant/todos', '+ Add Todo 填写标题提交'],
+            verify: 'todo 创建成功且仅自己可见（成员视角 data:create 权限）',
+            shot: 'matrix/saas/member/m-05-todos.png',
+            selectors: {
+              新增按钮: 'button.ant-btn-primary',
+              标题输入框: '#title',
+              提交按钮: '.ant-modal .ant-btn-primary',
+            },
+          },
+          {
+            title: '成员删除自己 Todo（正向闭环）',
+            steps: ['在刚创建的 todo 行点击删除', '确认弹窗点击 Yes'],
+            verify: '该行移除回到基线，成员数据隔离不波及他人',
+            selectors: { 删除确认按钮: '.ant-modal-confirm-btns button.ant-btn-primary' },
+          },
+          {
+            title: '成员登出重登状态保持（正向链）',
+            steps: ['header 用户图标 → Logout', '重新以 member-matrix 登录'],
+            verify: '重登后仍落地 /tenant/dashboard，数据隔离（A Todos=0）与角色不变',
+            shot: 'matrix/saas/member/m-01-dashboard.png',
+          },
+          {
+            title: '成员访问平台租户页（逆向·已知缺陷复现）',
+            steps: ['成员身份硬加载 /tenant/tenants'],
+            verify:
+              '⚠ 已知缺陷：成员亦渲染全量平台租户表（super_admin 鉴权前后端两层均缺）；记录复现，不作为通过标准',
+          },
+          {
+            title: '成员 Todo 超长标题（逆向）',
+            steps: ['+ Add Todo 标题粘贴 256+ 字符', 'OK 提交'],
+            verify: '实勘：被 zod 长度校验拒绝则提示；接受则正常入列——记录行为，无崩溃',
+            selectors: { 标题输入框: '#title', 提交按钮: '.ant-modal .ant-btn-primary' },
+          },
+          {
+            title: '缺 roleId 的邀请 API 被拒（逆向·API 级）',
+            steps: ['以成员 JWT POST /api/tenants/5/members/invite，body 只含 email 不含 roleId'],
+            verify: '返回 400 ZodError（缺 roleId），不产生邀请；越权邀请 403 另案',
+          },
         ],
       },
       {
@@ -459,6 +754,58 @@ const PRESETS: Array<{
             title: '未登录访问平台 API（逆向）',
             steps: ['无 token 请求 GET /api/tenants'],
             verify: '返回 401，不泄露租户清单',
+          },
+          {
+            title: '错误密码登录被拒（逆向）',
+            steps: ['/tenant/login 输入 superadmin / wrongpass', '点击 Sign in'],
+            verify: '登录失败提示错误，不进入 dashboard，不签发有效 token',
+            selectors: {
+              账号输入框: '#account',
+              密码输入框: '#password',
+              登录按钮: 'button.ant-btn',
+            },
+          },
+          {
+            title: '纯空格账号登录被拒（逆向）',
+            steps: ['账号输入空格，密码输入任意值', '点击 Sign in'],
+            verify: '校验或后端拒绝，停留登录页不进入控制台',
+          },
+          {
+            title: 'XSS 注入登录账号（逆向）',
+            steps: ['账号输入 <script>alert(1)</script>，密码任意', '点击 Sign in'],
+            verify: '错误提示按文本渲染不执行脚本（无弹窗），登录失败',
+          },
+          {
+            title: '双击登录按钮防重（逆向）',
+            steps: ['填入有效凭据后快速双击 Sign in'],
+            verify: '仅一次登录跳转，不产生双 token/双跳转',
+          },
+          {
+            title: '注册必填项逐个缺失（逆向）',
+            steps: ['打开 /register', '分别只填两项留一项提交（username/email/password 三轮）'],
+            verify: '每轮均被校验拦截并提示对应必填项，不产生半注册账号',
+            shot: 'matrix/saas/guest/g-05-register.png',
+          },
+          {
+            title: '注册密码短于 6 位被拒（逆向）',
+            steps: ['/register 填写合法用户名/邮箱，密码输入 abc1', '提交'],
+            verify: 'min 6 校验拦截并提示，注册不成功',
+          },
+          {
+            title: '注册含 emoji 用户名（正向实勘）',
+            steps: ['/register 用户名输入 🚀qa_emoji 类含 emoji 用户名提交'],
+            verify: '实勘：注册成功或被校验拒绝均记录（参考 todo 站中文名可用先例），无 500',
+          },
+          {
+            title: '访客直访租户子页批量拦截（逆向）',
+            steps: ['未登录依次直接打开 /tenant/users、/tenant/todos、/tenant/settings'],
+            verify: '三个路由均被 TenantGuard 拦回 /tenant/login，不泄露任何数据',
+            shot: 'matrix/saas/guest/g-04-console-redirect.png',
+          },
+          {
+            title: '伪造 token 调 /api/auth/me（逆向）',
+            steps: ['curl -H "Authorization: Bearer fake-token123" 请求 GET /api/auth/me'],
+            verify: '返回 401，不返回任何身份信息',
           },
         ],
       },
@@ -515,6 +862,59 @@ const PRESETS: Array<{
             steps: ['打开 /websocket', '不点 Connect 直接在输入框发送'],
             verify: '提示未连接或消息不发出，无假成功',
           },
+          {
+            title: '连续添加 3 条 todo（正向批量链）',
+            steps: ['打开 /todos', '连续 3 次输入不同标题并点击 Add Todo'],
+            verify: 'Total +3，三条按提交顺序置顶，输入框逐次清空',
+            shot: 'journeys/todo-j2-add.png',
+            selectors: {
+              标题输入框: "[data-testid='todo-title-input']",
+              添加按钮: "[data-testid='add-todo-button']",
+            },
+          },
+          {
+            title: '筛选切换组合（正向）',
+            steps: ['/todos 依次点击 filter-pending → filter-completed → filter-all'],
+            verify: '每个过滤下卡片状态与计数一致，切回 all 恢复全量',
+            shot: 'matrix/todo/todo-02-filter-pending.png',
+            selectors: {
+              全部过滤: "[data-testid='filter-all']",
+              待办过滤: "[data-testid='filter-pending']",
+              完成过滤: "[data-testid='filter-completed']",
+            },
+          },
+          {
+            title: '刷新后 todo 状态保持（正向）',
+            steps: ['将一条 todo 状态改为 completed', '按 F5 硬刷新'],
+            verify: '刷新后该条仍为 completed（服务端持久），Total 不变',
+            shot: 'journeys/todo-j3-done.png',
+            selectors: { 状态下拉: 'div.p-5.rounded-xl.border select' },
+          },
+          {
+            title: '登出重登后数据保持（正向链）',
+            steps: ['点击 Sign Out 登出', '/login 重新登录 demo 账号', '回到 /todos'],
+            verify: '重登后列表与服务端一致（增删改结果保留），不丢数据',
+            shot: 'matrix/todo/todo-11-login-success.png',
+            selectors: {
+              登出按钮: 'button.text-xs.text-gray-400',
+              登录提交: "[data-testid='login-submit']",
+            },
+          },
+          {
+            title: 'XSS 注入 todo 标题（逆向）',
+            steps: ['标题输入 <script>alert(1)</script>，点击 Add Todo', '查看卡片渲染'],
+            verify: '标题按纯文本渲染不执行（无弹窗），随后删除清理',
+          },
+          {
+            title: '超长标题提交（逆向）',
+            steps: ['标题粘贴 256+ 字符长串', '点击 Add Todo'],
+            verify: '实勘：接受则卡片正常换行不溢出且 Total +1；拒绝则提示校验——记录行为，无崩溃',
+          },
+          {
+            title: '双击 Add Todo 防重（逆向）',
+            steps: ['输入标题后快速双击 Add Todo'],
+            verify: '仅创建 1 条（若重复记录为缺陷），随后清理',
+          },
         ],
       },
       {
@@ -531,6 +931,12 @@ const PRESETS: Array<{
             title: '登出态访问受保护接口（逆向）',
             steps: ['清空 localStorage 后无 token 请求 /api/todos 写接口'],
             verify: '返回 401，REST 层要求认证（页面自动登录为 demo 特性，接口层不放松）',
+          },
+          {
+            title: '硬刷新后自动登录态保持（正向）',
+            steps: ['直接打开 /todos', '按 F5 硬刷新后再新增一条'],
+            verify: '刷新后仍处于自动登录态（可增删改），新条目 Total +1 成功',
+            shot: 'matrix/todo/01-home.png',
           },
         ],
       },
@@ -1218,6 +1624,125 @@ const PRESETS: Array<{
             steps: ['清空购物车后尝试 Checkout'],
             verify: '无 Checkout 入口或点击无效果，不产生空订单',
           },
+          {
+            title: '详情页返回列表（正向）',
+            steps: ['打开 ISR 教程详情 /content/content-2', '点击"← 返回内容列表"'],
+            verify: '回到内容中心，列表与筛选状态不丢',
+            shot: 'matrix/shop/shop-04.png',
+            selectors: { 返回链接: "find text '← 返回内容列表'" },
+          },
+          {
+            title: '搜索 + 分类筛选组合（正向）',
+            steps: ['点击"教程"分类 tab', '在搜索框输入 ISR 并搜索'],
+            verify: '组合条件下仅命中 ISR 教程卡，无跨类结果',
+            shot: 'matrix/shop/shop-13.png',
+            selectors: { 搜索输入框: 'input.px-4', 搜索按钮: 'form > button' },
+          },
+          {
+            title: '分类连续切换（正向）',
+            steps: ['依次点击 文章 → 教程 → 全部 tab'],
+            verify: '每次切换列表即时刷新且 tab 高亮正确，切回全部恢复 2 卡',
+            shot: 'matrix/shop/shop-02.png',
+          },
+          {
+            title: '刷新后购物车状态保持（正向）',
+            steps: ['进入 Cart 记录行数与 Total', '按 F5 硬刷新'],
+            verify: '刷新后仍 3 行 4 件、Total $188.96（mock 态持久），布局不乱',
+            shot: 'matrix/shop/shop-15.png',
+          },
+          {
+            title: '购物车 qty 步进器加减（正向深化）',
+            steps: ['在 Cart 对任一行点击 qty +1', '观察小计与 Total', '再点击 qty -1 恢复'],
+            verify: '数量/小计/Total 随步进正确增减后复原',
+            shot: 'matrix/shop/shop-15.png',
+          },
+          {
+            title: 'Products 导航同源验证（正向边界）',
+            steps: ['点击导航 Products'],
+            verify: '/products 渲染同一内容中心且 Products 高亮（与首页同源）',
+            shot: 'matrix/shop/shop-07-products-nav.png',
+            selectors: { 导航Products: "[data-testid='nav-products-button']" },
+          },
+          {
+            title: '订单状态筛选切换（正向）',
+            steps: ['Orders 页依次点击 Shipped → Delivered → All 筛选 chip'],
+            verify: '每个筛选下订单集合正确（5 张 mock 单分布合理），All 恢复全量',
+            shot: 'matrix/shop/shop-17.png',
+          },
+          {
+            title: '订单 Reorder 按钮探测（正向实勘）',
+            steps: ['在 Delivered 订单上点击 Reorder'],
+            verify: '实勘：记录跳转/反馈行为（不 500 不白屏），作为基线记录',
+            shot: 'matrix/shop/shop-17.png',
+          },
+          {
+            title: '移动端搜索结果页（正向边界）',
+            steps: ['切 375x667 视口，搜索 ISR'],
+            verify: '结果单卡纵向堆叠正常无横向溢出',
+          },
+          {
+            title: '购物车 qty=-1（逆向）',
+            steps: ['在 Cart 将某行 qty 连续点 - 至最小值', '尝试注入 -1（若输入框可编辑）'],
+            verify: '数量不为负（min 1 或步进禁用），Total 永不为负',
+            shot: 'matrix/shop/shop-15.png',
+          },
+          {
+            title: '购物车 qty=9999 超大数量（逆向）',
+            steps: ['将某行 qty 调至 9999（步进连点或输入）'],
+            verify: '实勘：接受则 Total 大数正常显示不溢出；有上限则被钳制——记录行为',
+          },
+          {
+            title: '搜索框 XSS 注入（逆向）',
+            steps: ['搜索框输入 <script>alert(1)</script> 并搜索'],
+            verify: '关键词按文本处理不执行（无弹窗），呈现空结果态',
+            shot: 'matrix/shop/shop-20.png',
+            selectors: { 搜索输入框: 'input.px-4', 搜索按钮: 'form > button' },
+          },
+          {
+            title: '搜索纯空格关键词（逆向）',
+            steps: ['搜索框输入多个空格并提交'],
+            verify: '不触发假搜索或显示空态，列表不闪空，无报错',
+          },
+          {
+            title: '搜索超长关键词（逆向）',
+            steps: ['粘贴 256+ 字符长串搜索'],
+            verify: '输入框/结果区不撑破布局，空态正常',
+          },
+          {
+            title: '详情 URL 不存在 id（逆向·IDOR 面）',
+            steps: ['直接访问 /content/content-999'],
+            verify: '空态/404 文案渲染，HTTP 状态记录（soft-404 已知），不暴露他人资源',
+            shot: 'matrix/shop/shop-18.png',
+          },
+          {
+            title: 'Account 死链导航（逆向·已知缺陷）',
+            steps: ['点击导航 Account'],
+            verify: '⚠ 已知缺陷：Account 为死链，渲染 404 - Page not found',
+            shot: 'matrix/shop/shop-08-account-404.png',
+            selectors: { 导航Account: "[data-testid='nav-account-button']" },
+          },
+          {
+            title: '双击 Checkout 重复下单（逆向）',
+            steps: ['在 Cart 快速双击 Checkout'],
+            verify: '实勘：仅生成 1 笔订单（若重复记录为缺陷），购物车状态一致',
+          },
+          {
+            title: 'Checkout 后空购物车刷新保持（正向闭环深化）',
+            steps: ['完成 Checkout 进入 Cart', '按 F5 硬刷新'],
+            verify: '实勘：清空态保持不回填 mock 商品（若回填记录为缺陷）',
+          },
+          {
+            title: '伪造 token 调订单写接口（逆向·API 级）',
+            steps: [
+              'curl -X POST -H "Authorization: Bearer fake-token123" https://shop.lpm1.top/api/orders',
+            ],
+            verify: '实勘：此形态无鉴权模块（公开站为预期）——记录写接口是否开放，若开放记录为风险',
+          },
+          {
+            title: '分类 tab 快速连点（逆向·竞态）',
+            steps: ['快速连续点击多个分类 tab（文章/教程/公告连点）'],
+            verify: '最终停在最后点击的分类，列表与高亮一致，无竞态错乱',
+          },
         ],
       },
     ],
@@ -1283,6 +1808,54 @@ const PRESETS: Array<{
             steps: ['不输入任何内容直接点击 Add'],
             verify: '按钮禁用或提交无效果，不产生空标题条目',
           },
+          {
+            title: '状态切换后改回 pending（正向链）',
+            steps: ['下拉选择 completed', '再改回 pending'],
+            verify: '先变绿+划线，改回后恢复普通样式，无残留样式',
+            shot: 'matrix/minimal/minimal-08-completed.png',
+            selectors: { 状态下拉: 'div.p-5.rounded-xl.border select' },
+          },
+          {
+            title: '刷新后列表与状态保持（正向）',
+            steps: ['记录当前列表与某条状态', '按 F5 硬刷新'],
+            verify: '刷新后列表条目与状态和刷新前一致，Total 计数不变',
+            shot: 'matrix/minimal/01-home.png',
+          },
+          {
+            title: '连续添加 3 条（正向批量链）',
+            steps: ['连续 3 次输入不同标题并点击 Add'],
+            verify: 'Total +3，三条按序置顶，测试后逐条删除清理（与 todo 站共享后端）',
+            shot: 'matrix/minimal/02-add-new.png',
+            selectors: {
+              输入框: "[data-testid='todo-title-input']",
+              添加按钮: "[data-testid='add-todo-button']",
+            },
+          },
+          {
+            title: 'emoji/中英混合标题正常提交（正向）',
+            steps: ['输入 🚀 上线 Release Notes 中英混合 标题', '点击 Add', '确认后删除清理'],
+            verify: '条目正常显示无乱码无报错，清理后恢复基线',
+          },
+          {
+            title: '纯空格标题提交（逆向）',
+            steps: ['输入框只输入多个空格', '观察 Add 按钮状态并尝试提交'],
+            verify: 'Add 保持 disabled 或提交无效果（trim 守卫），不产生空标题条目',
+          },
+          {
+            title: '超长标题提交（逆向）',
+            steps: ['粘贴 256+ 字符长串标题', '点击 Add'],
+            verify: '实勘：接受则卡片换行不撑破布局且 Total +1；拒绝则校验提示——记录行为',
+          },
+          {
+            title: 'XSS 注入标题转义验证（逆向）',
+            steps: ['标题输入 <script>alert(1)</script>，点击 Add', '查看卡片渲染'],
+            verify: '纯文本渲染不执行（无弹窗），随后删除清理',
+          },
+          {
+            title: '双击 Add 防重（逆向）',
+            steps: ['输入标题后快速双击 Add 按钮'],
+            verify: '仅新增 1 条（若重复记录为缺陷），随后清理',
+          },
         ],
       },
     ],
@@ -1317,6 +1890,34 @@ const PRESETS: Array<{
             steps: ['curl http://localhost:3010/api/not-exist'],
             verify: '返回 404，不泄露堆栈',
           },
+          {
+            title: 'todos add→list→delete CLI 闭环（正向链）',
+            steps: [
+              'npm run cli -- todos add "qa-e2e-chain-item"',
+              'npm run cli -- todos list',
+              'npm run cli -- todos delete <id>',
+            ],
+            verify: 'list 输出包含新条目，删除后再 list 不再出现',
+          },
+          {
+            title: 'CLI help 探测（正向）',
+            steps: ['npm run cli -- --help', 'npm run cli -- todos --help'],
+            verify: '两级用法输出完整（命令列表与子命令说明），退出码 0',
+          },
+          {
+            title: '伪造 Bearer token 调写接口（逆向）',
+            steps: [
+              'curl -X POST -H "Authorization: Bearer fake-token123" http://localhost:3010/api/todos',
+            ],
+            verify: '返回 401，不产生任何待办数据',
+          },
+          {
+            title: 'API 非法 payload 批量探测（逆向）',
+            steps: [
+              'POST /api/todos 依次提交三种 payload：空标题 {"title":""}、超长 256+ 字符标题、<script>alert(1)</script> 注入标题',
+            ],
+            verify: '每个 payload 均被 400/422 拒绝（或记录转义存储行为），绝不 500 不崩溃',
+          },
         ],
       },
     ],
@@ -1333,11 +1934,14 @@ function main() {
     md += `> 每个身份列出：操作步骤 → 验证 → 截图 → 选择器\n\n---\n\n`
 
     for (const identity of preset.identities) {
+      // 合并扩充案例链（scripts/playbook-chains-forum-market.ts）：生成正文与计数使用同一合并列表
+      const extra = EXTRA_CHAINS[`${preset.id}:${identity.name}`] ?? []
+      const allCases = [...identity.cases, ...extra]
       md += `## ${identity.name}\n\n`
       md += `**凭据**: \`${identity.cred}\`\n\n`
-      md += `**案例数**: ${identity.cases.length}\n\n`
+      md += `**案例数**: ${allCases.length}\n\n`
 
-      for (const c of identity.cases) {
+      for (const c of allCases) {
         md += `### ${c.title}\n\n`
         md += `**步骤**:\n${c.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\n`
         md += `**验证**: ${c.verify}\n\n`
@@ -1364,9 +1968,11 @@ function main() {
     }
 
     writeFileSync(join(OUT, `${preset.id}.md`), md)
-    console.log(
-      `✓ playbooks/${preset.id}.md（${preset.identities.length} 身份, ${preset.identities.reduce((s, i) => s + i.cases.length, 0)} 案例）`
+    const total = preset.identities.reduce(
+      (s, i) => s + i.cases.length + (EXTRA_CHAINS[`${preset.id}:${i.name}`]?.length ?? 0),
+      0
     )
+    console.log(`✓ playbooks/${preset.id}.md（${preset.identities.length} 身份, ${total} 案例）`)
   }
 }
 

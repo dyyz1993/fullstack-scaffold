@@ -1,6 +1,8 @@
 import { createRoute, z } from '@hono/zod-openapi'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { AuthUser } from '@server/middleware/auth'
+import { authMiddleware } from '@server/middleware/auth'
+import { Role } from '@shared/modules/permission'
 import * as adminPluginService from '../services/admin-plugin-service'
 import * as adminCategoryService from '../services/admin-category-service'
 import * as adminStatsService from '../services/admin-stats-service'
@@ -28,6 +30,8 @@ const getDashboardStatsRoute = createRoute({
   method: 'get',
   path: '/stats/dashboard',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(AdminDashboardStatsSchema, 'Dashboard stats'),
   },
@@ -35,8 +39,12 @@ const getDashboardStatsRoute = createRoute({
 
 const listPendingRoute = createRoute({
   method: 'get',
-  path: '/plugins/pending',
+  // 挂载于 /api，若用 /plugins/pending 会被 client 侧 GET /plugins/{slug}
+  // （先注册）遮蔽成 slug='pending' 的详情查询，故收进 /plugins/admin/ 命名空间
+  path: '/plugins/admin/pending',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     query: AdminListQuerySchema,
   },
@@ -47,8 +55,12 @@ const listPendingRoute = createRoute({
 
 const listAllPluginsRoute = createRoute({
   method: 'get',
-  path: '/plugins',
+  // 同上：GET /plugins 会命中 client 公开列表（仅 approved），管理端全量列表
+  // 需要独立路径才能覆盖 pending/rejected
+  path: '/plugins/admin/list',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     query: AdminListAllQuerySchema,
   },
@@ -61,6 +73,8 @@ const approvePluginRoute = createRoute({
   method: 'put',
   path: '/plugins/{slug}/approve',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: { params: PluginSlugSchema },
   responses: {
     200: successResponse(PluginSchema, 'Plugin approved'),
@@ -72,6 +86,8 @@ const rejectPluginRoute = createRoute({
   method: 'put',
   path: '/plugins/{slug}/reject',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: PluginSlugSchema,
     body: { content: { 'application/json': { schema: RejectPluginBodySchema } } },
@@ -86,6 +102,8 @@ const toggleFeaturedRoute = createRoute({
   method: 'put',
   path: '/plugins/{slug}/feature',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: { params: PluginSlugSchema },
   responses: {
     200: successResponse(PluginSchema, 'Featured toggled'),
@@ -95,8 +113,12 @@ const toggleFeaturedRoute = createRoute({
 
 const removePluginRoute = createRoute({
   method: 'delete',
-  path: '/plugins/{slug}',
+  // DELETE /plugins/{slug} 与 client 作者删除路由同形（client 先注册会被遮蔽
+  // 且无超管门槛），管理端删除收进 /plugins/admin/{slug}
+  path: '/plugins/admin/{slug}',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: { params: PluginSlugSchema },
   responses: {
     200: successResponse(PluginDeleteResponseSchema, 'Plugin removed'),
@@ -108,6 +130,8 @@ const bulkApproveRoute = createRoute({
   method: 'post',
   path: '/plugins/bulk-approve',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     body: { content: { 'application/json': { schema: BulkApproveBodySchema } } },
   },
@@ -120,6 +144,8 @@ const bulkRejectRoute = createRoute({
   method: 'post',
   path: '/plugins/bulk-reject',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     body: {
       content: {
@@ -136,8 +162,11 @@ const bulkRejectRoute = createRoute({
 
 const listCategoriesRoute = createRoute({
   method: 'get',
-  path: '/categories',
+  // GET /categories 与 client 公开分类列表同形被遮蔽，管理端列表独立路径
+  path: '/categories/admin',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   responses: {
     200: successResponse(z.array(CategorySchema), 'List categories'),
   },
@@ -147,6 +176,8 @@ const createCategoryRoute = createRoute({
   method: 'post',
   path: '/categories',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     body: {
       content: {
@@ -166,6 +197,8 @@ const updateCategoryRoute = createRoute({
   method: 'put',
   path: '/categories/{id}',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: {
     params: CategoryIdParamsSchema,
     body: {
@@ -186,6 +219,8 @@ const deleteCategoryRoute = createRoute({
   method: 'delete',
   path: '/categories/{id}',
   tags: ['admin-plugins'],
+  // 管理端点仅超管可用；unknown-role 已在 authMiddleware 内按最低权限处理
+  middleware: [authMiddleware({ requiredRole: Role.SUPER_ADMIN })],
   request: { params: CategoryIdParamsSchema },
   responses: {
     200: successResponse(CategoryIdResponseSchema, 'Category deleted'),

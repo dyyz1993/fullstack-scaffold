@@ -140,6 +140,8 @@ export {
   type AdminPlugin,
   type AdminDashboardStats,
   type PluginListQuery,
+  InstalledPluginSchema,
+  type InstalledPlugin,
 } from '../modules/plugins'
 export {
   DashboardStatSchema,

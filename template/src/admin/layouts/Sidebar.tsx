@@ -5,6 +5,7 @@ import {
   TeamOutlined,
   SettingOutlined,
   RocketOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useLanguage } from '../i18n/useLanguage'
@@ -33,8 +34,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           key: 'content-list',
           label: <NavLink to="/content">{t('sidebar.contentList')}</NavLink>,
         },
+      ],
+    },
+    {
+      key: 'plugins',
+      icon: <AppstoreOutlined />,
+      label: t('sidebar.plugins'),
+      children: [
         {
-          key: 'categories',
+          key: 'plugins-list',
+          label: <NavLink to="/plugins">{t('sidebar.pluginsList')}</NavLink>,
+        },
+        {
+          key: 'plugins-review',
+          label: <NavLink to="/plugins/review">{t('sidebar.pluginsReview')}</NavLink>,
+        },
+        {
+          key: 'plugins-dashboard',
+          label: <NavLink to="/plugins/dashboard">{t('sidebar.pluginsDashboard')}</NavLink>,
+        },
+        {
+          key: 'plugins-categories',
           label: <NavLink to="/categories">{t('sidebar.categories')}</NavLink>,
         },
       ],
@@ -87,7 +107,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
     const path = location.pathname
     if (path === '/dashboard') return 'dashboard'
     if (path.startsWith('/content')) return 'content-list'
-    if (path.startsWith('/categories')) return 'categories'
+    if (path.startsWith('/plugins/review')) return 'plugins-review'
+    if (path.startsWith('/plugins/dashboard')) return 'plugins-dashboard'
+    if (path.startsWith('/plugins')) return 'plugins-list'
+    if (path.startsWith('/categories')) return 'plugins-categories'
     if (path.startsWith('/users')) return 'users'
     if (path.startsWith('/orders')) return 'orders'
     if (path.startsWith('/tickets')) return 'tickets'
@@ -128,7 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       <Menu
         mode="inline"
         selectedKeys={[getSelectedKey()]}
-        defaultOpenKeys={['content', 'users-orders', 'system']}
+        defaultOpenKeys={['content', 'plugins', 'users-orders', 'system']}
         inlineCollapsed={false}
         items={MENU_ITEMS}
         className="!border-r-0 !bg-transparent mt-2"

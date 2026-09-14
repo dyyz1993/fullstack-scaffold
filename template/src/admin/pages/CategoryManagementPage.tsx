@@ -32,7 +32,9 @@ export const CategoryManagementPage: React.FC = () => {
   const fetchCategories = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await api(apiClient.api.categories.$get()).withLoading('加载分类...').json()
+      const data = await api(apiClient.api.categories.admin.$get())
+        .withLoading('加载分类...')
+        .json()
       if (Array.isArray(data)) {
         setCategories(data)
       }

@@ -34,6 +34,8 @@ export const PluginManagementPage: React.FC = () => {
   const [rejectModalVisible, setRejectModalVisible] = useState(false)
   const [rejectTarget, setRejectTarget] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  // reject 模式：'reject' 拒绝（pending），'unpublish' 下架（approved）
+  const [rejectMode, setRejectMode] = useState<'reject' | 'unpublish'>('reject')
 
   const fetchPlugins = useCallback(async () => {
     setLoading(true)
@@ -42,7 +44,9 @@ export const PluginManagementPage: React.FC = () => {
       if (statusFilter && STATUS_VALUES.includes(statusFilter as PluginStatus)) {
         query.status = statusFilter
       }
-      const result = await api(apiClient.api.plugins.$get({ query })).withLoading().json()
+      const result = await api(apiClient.api.plugins.admin.list.$get({ query }))
+        .withLoading()
+        .json()
       setPlugins(result.plugins)
       setTotal(result.total)
     } catch {
@@ -84,9 +88,10 @@ export const PluginManagementPage: React.FC = () => {
     }
   }
 
-  const openRejectModal = (slug: string) => {
+  const openRejectModal = (slug: string, mode: 'reject' | 'unpublish' = 'reject') => {
     setRejectTarget(slug)
     setRejectReason('')
+    setRejectMode(mode)
     setRejectModalVisible(true)
   }
 
@@ -102,9 +107,9 @@ export const PluginManagementPage: React.FC = () => {
           json: { reason: rejectReason },
         })
       )
-        .withLoading('拒绝中...')
+        .withLoading(rejectMode === 'unpublish' ? '下架中...' : '拒绝中...')
         .json()
-      message.success('插件已拒绝')
+      message.success(rejectMode === 'unpublish' ? '插件已下架' : '插件已拒绝')
       setRejectModalVisible(false)
       setRejectTarget(null)
       setRejectReason('')
@@ -128,7 +133,7 @@ export const PluginManagementPage: React.FC = () => {
 
   const handleRemove = async (slug: string) => {
     try {
-      await api(apiClient.api.plugins[':slug'].$delete({ param: { slug } }))
+      await api(apiClient.api.plugins.admin[':slug'].$delete({ param: { slug } }))
         .withLoading('删除中...')
         .json()
       message.success('插件已删除')
@@ -226,11 +231,40 @@ export const PluginManagementPage: React.FC = () => {
                   通过
                 </Button>
               </Popconfirm>
-              <Button type="link" size="small" danger onClick={() => openRejectModal(record.slug)}>
+              <Button
+                type="link"
+                size="small"
+                danger
+                onClick={() => openRejectModal(record.slug, 'reject')}
+              >
                 <XCircle className="w-3.5 h-3.5 mr-1 inline" />
                 拒绝
               </Button>
             </>
+          )}
+          {record.status === 'approved' && (
+            <Button
+              type="link"
+              size="small"
+              danger
+              onClick={() => openRejectModal(record.slug, 'unpublish')}
+            >
+              <XCircle className="w-3.5 h-3.5 mr-1 inline" />
+              下架
+            </Button>
+          )}
+          {record.status === 'rejected' && (
+            <Popconfirm
+              title="确定重新上架此插件？"
+              onConfirm={() => handleApprove(record.slug)}
+              okText="上架"
+              cancelText="取消"
+            >
+              <Button type="link" size="small" className="text-green-600">
+                <CheckCircle className="w-3.5 h-3.5 mr-1 inline" />
+                上架
+              </Button>
+            </Popconfirm>
           )}
           <Button
             type="link"
@@ -313,7 +347,7 @@ export const PluginManagementPage: React.FC = () => {
       </Card>
 
       <Modal
-        title="拒绝插件"
+        title={rejectMode === 'unpublish' ? '下架插件' : '拒绝插件'}
         open={rejectModalVisible}
         onOk={handleReject}
         onCancel={() => {
@@ -321,12 +355,14 @@ export const PluginManagementPage: React.FC = () => {
           setRejectTarget(null)
           setRejectReason('')
         }}
-        okText="确认拒绝"
+        okText={rejectMode === 'unpublish' ? '确认下架' : '确认拒绝'}
         cancelText="取消"
         okButtonProps={{ danger: true }}
       >
         <div className="mb-4">
-          <p className="text-sm text-gray-500 mb-2">请填写拒绝原因：</p>
+          <p className="text-sm text-gray-500 mb-2">
+            {rejectMode === 'unpublish' ? '请填写下架原因：' : '请填写拒绝原因：'}
+          </p>
           <Input.TextArea
             rows={4}
             value={rejectReason}

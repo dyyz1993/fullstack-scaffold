@@ -114,7 +114,7 @@ describe('Plugin installed routes', () => {
     expect(list.status).toBe(200)
     const listData = await list.json()
     if (!listData.success) throw new Error('expected success response')
-    expect(listData.data.map(p => p.slug).sort()).toEqual(['alpha', 'beta'])
+    expect(listData.data.map((p: { slug: string }) => p.slug).sort()).toEqual(['alpha', 'beta'])
     for (const item of listData.data) {
       expect(item.installedAt).toBeGreaterThan(0)
     }

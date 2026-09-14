@@ -13,6 +13,10 @@ import { OrdersPage } from './pages/OrdersPage'
 import { TicketsPage } from './pages/TicketsPage'
 import { DisputesPage } from './pages/DisputesPage'
 import { ContentPage } from './pages/ContentPage'
+import { PluginManagementPage } from './pages/PluginManagementPage'
+import { PluginReviewPage } from './pages/PluginReviewPage'
+import { PluginDashboardPage } from './pages/PluginDashboardPage'
+import { CategoryManagementPage } from './pages/CategoryManagementPage'
 import { ProtectedRoute, CaptchaModal } from './components'
 import { useThemeStore } from './stores/themeStore'
 import { useLanguage } from './i18n/useLanguage'
@@ -78,6 +82,10 @@ export const App: React.FC<{ basePath?: string }> = ({ basePath = '/admin' }) =>
                     <Route path="/tickets" element={<TicketsPage />} />
                     <Route path="/disputes" element={<DisputesPage />} />
                     <Route path="/content" element={<ContentPage />} />
+                    <Route path="/plugins" element={<PluginManagementPage />} />
+                    <Route path="/plugins/review" element={<PluginReviewPage />} />
+                    <Route path="/plugins/dashboard" element={<PluginDashboardPage />} />
+                    <Route path="/categories" element={<CategoryManagementPage />} />
                     <Route path="/system/settings" element={<SettingsPage />} />
                     <Route path="/system/logs" element={<SystemLogsPage />} />
                     <Route
