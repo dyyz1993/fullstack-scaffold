@@ -35,6 +35,7 @@ const CLIENT_DEV_PACKAGES = [
   '@testing-library/react',
   '@testing-library/jest-dom',
   '@testing-library/dom',
+  '@testing-library/user-event',
   'vite',
   'jsdom',
   'tailwindcss',
@@ -114,9 +115,6 @@ export function filterPackageJson(
   // Filter devDependencies — remove admin-only test packages
   if (result.devDependencies && typeof result.devDependencies === 'object') {
     const devDeps = { ...(result.devDependencies as Record<string, string>) }
-    if (!resolved.modules.has('admin')) {
-      delete devDeps['@testing-library/user-event']
-    }
     if (!resolved.hasClient) {
       for (const pkg of CLIENT_DEV_PACKAGES) {
         delete devDeps[pkg]

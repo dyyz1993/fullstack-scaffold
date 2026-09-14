@@ -345,6 +345,7 @@ const MODULE_EXPORTS: Record<string, { namedExports: string[] }> = {
       'TenantRoleArrayResponseSchema',
       'TenantMemberArrayResponseSchema',
       'TenantStatsResponseSchema',
+      'EMAIL_MAX_LENGTH',
       'TenantMyMembershipSchema',
       'TenantPermission',
       'TENANT_PERMISSION_VALUES',

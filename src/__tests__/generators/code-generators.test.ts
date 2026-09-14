@@ -288,12 +288,14 @@ describe('code generators', () => {
       expect(deps).not.toHaveProperty('commander')
     })
 
-    it('removes @testing-library/user-event for non-admin presets', () => {
+    it('keeps @testing-library/user-event for non-admin client presets', () => {
+      // user-event 是 CartPage.test（MobileAuthBar 所在 client 全量安装）的依赖，
+      // 移动端登录条上线后所有 client preset 统一保留
       const resolved = getPreset('minimal', allManifests, presets)
       const result = filterPackageJson(basePkg, resolved)
       const devDeps = result.devDependencies as Record<string, string>
 
-      expect(devDeps).not.toHaveProperty('@testing-library/user-event')
+      expect(devDeps).toHaveProperty('@testing-library/user-event')
     })
 
     it('keeps @testing-library/user-event for fullstack preset', () => {
