@@ -1,0 +1,17 @@
+=== Case: 访问不存在 API (逆向) ===
+date: 2026-09-16 07:34:45
+
+$ curl -s -i https://todo.lpm1.top/api/not-exist
+HTTP/2 404 
+date: Tue, 15 Sep 2026 23:34:46 GMT
+content-type: text/plain; charset=UTF-8
+content-length: 13
+vary: Origin
+access-control-allow-credentials: true
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=mTBv25%2FQlcYakZy3stCeuFXVI7nz3dskzHqsAjluXHnELErP2FfzKROWWRQLbjlIXcypZp8%2FLvmV4EbgWDMK6JmTXYGesfUoEGKtF4CFbaT25jmkpw41NHuIsQ8eJjbe"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a3bb71a8c91cb1bd-AMS
+alt-svc: h3=":443"; ma=86400
+
+404 Not Found

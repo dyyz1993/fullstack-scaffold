@@ -1,0 +1,123 @@
+=== Case: 未知命令报错 (逆向) ===
+date: 2026-09-16 07:34:26
+
+$ npm run cli -- not-a-real-command
+npm warn config ignoring workspace config at /Users/xuyingzhou/Project/create-biomimic-app/template/.npmrc
+
+> biomimic-todo-app@0.6.6 cli
+> node dist/cli/index.js not-a-real-command
+
+Unknown command: not-a-real-command
+
+biomimic v0.1.0
+Biomimic CLI - RPC service & code generation tools
+
+USAGE
+  biomimic <command> [options]
+
+COMMANDS
+  todos.list          List all todos
+  todos.get           Get a todo by ID
+  todos.create        Create a new todo
+  todos.update        Update a todo
+  todos.delete        Delete a todo
+  notifications.list  List all notifications
+  notifications.createCreate a new notification
+  notifications.unread-countGet unread notification count
+  notifications.mark-readMark a notification as read
+  notifications.deleteDelete a notification
+  config-get          Show current configuration
+  config-set          Set configuration value
+  config-url          Show or set server URL
+  config-status       Check server connection status
+  config-reset        Reset configuration to defaults
+  config-path         Show config file path
+  plugins.list        List all plugins
+  plugins.search      Search plugins
+  plugins.get         Get plugin details
+  plugins.install     Track plugin install
+  plugins.categories  List plugin categories
+  plugins.stats       Show marketplace statistics
+  auth.register       Register a new developer account
+  auth.login          Login to get API key
+  auth.verify         Verify API key
+  admin.dashboard     Get dashboard statistics
+  admin.stats         Get system statistics
+  admin.health        Check system health
+  admin.list-users    List all users
+  admin.get-user      Get a user by ID
+  admin.create-user   Create a new user
+  admin.update-user   Update a user
+  admin.delete-user   Delete a user
+  admin.activity      Get recent activity
+  admin.clear-todos   Clear all todos (dangerous)
+  captcha.get         Get a new captcha
+  captcha.verify      Verify a captcha code
+  chat.status         Get WebSocket connection status
+  content.list        List all contents
+  content.get         Get content by ID
+  content.create      Create new content
+  content.update      Update content
+  content.delete      Delete content
+  content.publish     Publish content
+  content.archive     Archive content
+  disputes.list       List all disputes
+  disputes.get        Get dispute by ID
+  disputes.create     Create a new dispute
+  disputes.update     Update a dispute status
+  disputes.delete     Delete a dispute
+  disputes.resolve    Resolve a dispute
+  file.generate-url   Generate a file URL
+  file.info           Check if a public file exists
+  orders.list         List all orders
+  orders.get          Get order by ID
+  orders.create       Create a new order
+  orders.update       Update order status
+  orders.delete       Delete an order
+  orders.process      Process an order
+  orders.cancel       Cancel an order
+  orders.cart         Get current cart
+  permission.roles    List all roles
+  permission.get-role Get role details by ID
+  permission.create-roleCreate a new role
+  permission.update-roleUpdate a role
+  permission.delete-roleDelete a role
+  permission.permissionsList all permissions
+  permission.categoriesList permission categories
+  permission.menu-configGet menu configuration
+  permission.audit-logsList audit logs
+  permission.update-role-permissionsUpdate permissions for a role
+  tenants.list        List all tenants
+  tenants.get         Get tenant by ID
+  tenants.get-by-slug Get tenant by slug
+  tenants.create      Create a new tenant
+  tenants.update      Update a tenant
+  tenants.delete      Delete a tenant
+  tenants.members     List members of a tenant
+  tenants.roles       List roles of a tenant
+  tenants.invite      Invite a member to a tenant (returns a 7-day invitation link)
+  tenants.invitation  Show invitation detail by token (public)
+  tickets.list        List all tickets
+  tickets.get         Get ticket by ID
+  tickets.create      Create a new ticket
+  tickets.update      Update ticket status
+  tickets.delete      Delete a ticket
+  tickets.reply       Reply to a ticket
+  tickets.close       Close a ticket
+  merchant.login      Login as merchant
+  merchant.me         Get current merchant profile
+  merchant.stats      Get merchant statistics
+  merchant.list-productsList merchant products
+  merchant.create-productCreate a new product
+
+OPTIONS
+  --version, -v        Print version
+  --help, -h           Print help
+npm error Lifecycle script `cli` failed with error:
+npm error code 1
+npm error path /Users/xuyingzhou/Project/create-biomimic-app/template
+npm error workspace biomimic-todo-app@0.6.6
+npm error location /Users/xuyingzhou/Project/create-biomimic-app/template
+npm error command failed
+npm error command sh -c node dist/cli/index.js not-a-real-command
+exit=1

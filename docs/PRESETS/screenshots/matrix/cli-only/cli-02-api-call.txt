@@ -1,0 +1,8 @@
+=== Case: API 调用 ===
+date: 2026-09-16 07:34:43
+
+$ curl -s -o /dev/null -w "%{http_code} %{content_type}" https://todo.lpm1.top/api/todos
+200 application/json
+
+$ curl -s https://todo.lpm1.top/api/todos | head -c 600
+{"success":true,"data":{"todos":[{"id":10,"tenantId":1,"title":"编写集成测试","description":"Vitest 覆盖核心链路","status":"completed","createdAt":"2026-09-10T15:28:51.000Z","updatedAt":"2026-09-11T15:28:51.000Z"},{"id":5,"tenantId":1,"title":"编写集成测试","description":"Vitest 覆盖核心链路","status":"completed","createdAt":"2026-09-10T15:28:18.000Z","updatedAt":"2026-09-11T15:28:18.000Z"},{"id":9,"tenantId":1,"title":"探索 WebSocket 聊天","description":"双向实时通信","status":"pending","createdAt":"2026-09-09T15:28:51.000Z","updatedAt":"2026-09-11T15:28:51.0

@@ -1,0 +1,21 @@
+=== Case: 伪造 Bearer token 调写接口 (逆向) ===
+date: 2026-09-16 07:36:16
+
+# 线上 todo.lpm1.top
+$ curl -s -i -X POST -H "Authorization: Bearer fake-token123" -H "Content-Type: application/json" -d "{\"title\":\"x\"}" https://todo.lpm1.top/api/todos
+HTTP/2 401 
+date: Tue, 15 Sep 2026 23:36:17 GMT
+content-type: application/json
+content-length: 65
+vary: Origin
+access-control-allow-credentials: true
+server: cloudflare
+
+{"success":false,"error":"Invalid or expired token","status":401}
+
+# 本地 (无 token)
+$ curl -s -o /dev/null -w "%{http_code}" -X POST -d "{\"title\":\"x\"}" http://localhost:8011/api/todos
+401
+
+# 线上验证无数据产生: total 仍为 10
+live total: 10

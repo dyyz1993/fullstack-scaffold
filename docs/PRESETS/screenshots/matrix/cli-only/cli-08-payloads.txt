@@ -1,0 +1,22 @@
+=== Case: API 非法 payload 批量探测 (逆向) ===
+date: 2026-09-16 07:36:34
+
+# A. 本地 :8011 + dev token (验证真实校验行为)
+
+--- payload[empty] {"title":""}
+
+HTTP 400  {"success":false,"error":{"name":"ZodError","message":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"inclusive\": true,\n    \"path\": [\n      \"title\
+
+--- payload[long] {"title":"LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+HTTP 400  {"success":false,"error":{"name":"ZodError","message":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"too_big\",\n    \"maximum\": 200,\n    \"inclusive\": true,\n    \"path\": [\n      \"title\
+
+--- payload[xss] {"title":"<script>alert(1)</script>"}
+
+HTTP 201  {"success":true,"data":{"id":29,"tenantId":null,"title":"<script>alert(1)</script>","status":"pending","createdAt":"2026-09-15T23:36:34.000Z","updatedAt":"2026-09-15T23:36:34.000Z"},"timestamp":"2026-
+
+# B. 线上 (无有效 token, 记录 auth-first 行为)
+--- payload[empty] live:
+HTTP 401  {"success":false,"error":"Authentication required","status":401}
+
+# C. 线上 XSS 后续确认: total 仍为 10, 无注入条目
+live total: 10 | has script title: False
