@@ -99,15 +99,15 @@
 
 **截图**: ![超管工作台全景（2026-09-12 补拍）](../screenshots/matrix/saas/tadmin/t-11-dashboard.png)
 
-### 租户列表页（逆向：UI 缺失）
+### 平台租户列表页（已补建·正向复验）
 
 **步骤**:
 
-1. 探测 /tenant/tenants 与 /admin
+1. 超管登录后访问 /tenant/tenants
 
-**验证**: ⚠ P2：无租户列表页（回退控制台壳），但 GET /api/tenants 200 数据在
+**验证**: ✅ 已补建（第三轮）：租户表格渲染全部租户（名称/套餐/状态 Tag），终验 9 行 PASS
 
-**截图**: ![租户列表页（逆向：UI 缺失）](../screenshots/matrix/saas/tadmin/t-12-tenants-list-missing.png)
+**截图**: ![平台租户列表页（已补建·正向复验）](../screenshots/matrix/saas/tadmin/t-12-tenants-list-missing.png)
 
 ### 成员管理表（超管视角）
 
@@ -119,15 +119,15 @@
 
 **截图**: ![成员管理表（超管视角）](../screenshots/matrix/saas/tadmin/t-13-tenant-members.png)
 
-### 审计日志页（逆向：无 UI 无租户维度）
+### 审计日志页（已补建·全局维度）
 
 **步骤**:
 
-1. 探测 /tenant/audit /tenant/audit-logs /tenant/logs
+1. 超管登录后访问 /tenant/audit
 
-**验证**: ⚠ P2：三路由全回退壳无内容；API 仅全局 /api/audit-logs 可达
+**验证**: ✅ 已补建（第三轮）：审计表格渲染（时间/用户/操作/资源/IP），终验 20 行 PASS；租户维度过滤仍为待定项
 
-**截图**: ![审计日志页（逆向：无 UI 无租户维度）](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
+**截图**: ![审计日志页（已补建·全局维度）](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
 
 ### 平台租户列表查看
 
@@ -560,7 +560,7 @@
 
 **截图**: ![注册页表单](../screenshots/matrix/saas/guest/g-05-register.png)
 
-### 忘记密码入口探测（逆向：全线缺失）
+### 忘记密码入口探测（逆向·产品待定项）
 
 **步骤**:
 

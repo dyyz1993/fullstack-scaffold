@@ -364,8 +364,8 @@ export const PLAYBOOKS = [
     name: 'SaaS Multi-Tenant',
     site: 'https://saas.lpm1.top',
     identity: '租户管理员',
-    pos: 17,
-    neg: 8,
+    pos: 19,
+    neg: 6,
     cases: [
       {
         t: '登录租户控制台',
@@ -419,11 +419,11 @@ export const PLAYBOOKS = [
         neg: false,
       },
       {
-        t: '租户列表页（逆向：UI 缺失）',
-        s: ['探测 /tenant/tenants 与 /admin'],
-        v: '⚠ P2：无租户列表页（回退控制台壳），但 GET /api/tenants 200 数据在',
+        t: '平台租户列表页（已补建·正向复验）',
+        s: ['超管登录后访问 /tenant/tenants'],
+        v: '✅ 已补建（第三轮）：租户表格渲染全部租户（名称/套餐/状态 Tag），终验 9 行 PASS',
         shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
-        neg: true,
+        neg: false,
       },
       {
         t: '成员管理表（超管视角）',
@@ -433,11 +433,11 @@ export const PLAYBOOKS = [
         neg: false,
       },
       {
-        t: '审计日志页（逆向：无 UI 无租户维度）',
-        s: ['探测 /tenant/audit /tenant/audit-logs /tenant/logs'],
-        v: '⚠ P2：三路由全回退壳无内容；API 仅全局 /api/audit-logs 可达',
+        t: '审计日志页（已补建·全局维度）',
+        s: ['超管登录后访问 /tenant/audit'],
+        v: '✅ 已补建（第三轮）：审计表格渲染（时间/用户/操作/资源/IP），终验 20 行 PASS；租户维度过滤仍为待定项',
         shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
-        neg: true,
+        neg: false,
       },
       {
         t: '平台租户列表查看',
@@ -721,7 +721,7 @@ export const PLAYBOOKS = [
         neg: false,
       },
       {
-        t: '忘记密码入口探测（逆向：全线缺失）',
+        t: '忘记密码入口探测（逆向·产品待定项）',
         s: ['/login /register /tenant/login 三页文本探测 forgot/help/reset'],
         v: '⚠ 缺口：全站无忘记密码/帮助入口（SKIP 记录）',
         shot: null,
@@ -945,8 +945,8 @@ export const PLAYBOOKS = [
     name: 'XBrowser Marketplace',
     site: 'https://market.lpm1.top',
     identity: '平台管理员',
-    pos: 14,
-    neg: 6,
+    pos: 15,
+    neg: 5,
     cases: [
       {
         t: '登录管理后台',
@@ -991,14 +991,14 @@ export const PLAYBOOKS = [
         neg: false,
       },
       {
-        t: '插件下架入口缺失（逆向·功能缺口实勘）',
+        t: '插件下架/上架管理（已补建·正向复验）',
         s: [
-          'superadmin 登录 /admin 遍历菜单找插件下架入口',
-          'API 级 DELETE /api/plugins/not-exist-slug',
+          'superadmin 登录 /admin → 侧栏"插件管理"→ 插件列表',
+          '对 approved 插件执行下架（填原因），rejected 执行上架',
         ],
-        v: '实勘：管理端无插件下架 UI（菜单仅仪表盘/内容/用户订单/系统，软回退 200）——记录为功能缺口；API 层对不存在 slug 返回 404 不产生副作用',
+        v: '✅ 已补建（第九轮）：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用',
         shot: null,
-        neg: true,
+        neg: false,
       },
       {
         t: '缺名称的插件表单被拒（逆向）',
@@ -1043,9 +1043,9 @@ export const PLAYBOOKS = [
         s: [
           '在 /admin/content 探测新建内容入口（v8 记录行操作仅 编辑/删除）',
           '若可新建：创建 [T-DEL] 内容→列表出现→删除→消失',
-          '若入口缺失：记录为功能缺口',
+          '验证入口存在（第九轮已补建插件管理组）',
         ],
-        v: '实勘：删除后列表行移除且前台不受污染；新建入口缺失则记 SKIP+缺口（与 v8 结论对照）',
+        v: '删除后列表行移除且前台不受污染；插件管理四页（列表/审核/看板/分类）已补建可达',
         shot: null,
         neg: false,
       },
@@ -1270,8 +1270,8 @@ export const PLAYBOOKS = [
     name: 'XBrowser Marketplace',
     site: 'https://market.lpm1.top',
     identity: '用户/浏览器用户',
-    pos: 12,
-    neg: 13,
+    pos: 13,
+    neg: 12,
     cases: [
       {
         t: '浏览插件市场',
@@ -1337,11 +1337,11 @@ export const PLAYBOOKS = [
         neg: true,
       },
       {
-        t: '个人中心（逆向：硬编码 + 入口缺失）',
-        s: ['访问 /profile', '探测 /account /me /installed /my-plugins'],
-        v: '⚠ P2：profile 硬编码 Jane Doe；全站无"我的安装"页',
+        t: '个人中心（已修·显示登录身份）',
+        s: ['登录后访问 /profile', '访问"我的安装"/installed'],
+        v: '✅ 已修：profile 显示登录用户名（非 Jane Doe）；"我的安装"页已建（第六轮），列表/卸载/重装终验 PASS',
         shot: 'matrix/market/market-19-profile-janedoe-hardcoded.png',
-        neg: true,
+        neg: false,
       },
       {
         t: '我的安装页列表',
@@ -2301,8 +2301,8 @@ export const PLAYBOOKS = [
     name: 'Ecommerce',
     site: 'https://shop.lpm1.top',
     identity: '游客/消费者（唯一身份）',
-    pos: 29,
-    neg: 15,
+    pos: 30,
+    neg: 14,
     cases: [
       {
         t: '浏览内容中心',
@@ -2382,11 +2382,11 @@ export const PLAYBOOKS = [
         neg: false,
       },
       {
-        t: '加入购物车（逆向：入口缺失）',
-        s: ['在购物车页与详情页全量扫描加购/购买按钮'],
-        v: '⚠ BUG：全站无任何加购/购买入口，电商闭环断裂',
+        t: '加入购物车（已补建·正向复验）',
+        s: ['打开内容详情', '点击购买条"加入购物车"'],
+        v: '✅ 已补建（第四轮）：详情页购买条（价格+加购按钮）→ 按钮变绿"已加入购物车" → Cart 页出现真实条目',
         shot: 'matrix/shop/shop-15.png',
-        neg: true,
+        neg: false,
       },
       {
         t: '订单页实况（数据漂移：非空态）',

@@ -465,9 +465,10 @@ const PRESETS: Array<{
             shot: 'matrix/saas/tadmin/t-11-dashboard.png',
           },
           {
-            title: '租户列表页（逆向：UI 缺失）',
-            steps: ['探测 /tenant/tenants 与 /admin'],
-            verify: '⚠ P2：无租户列表页（回退控制台壳），但 GET /api/tenants 200 数据在',
+            title: '平台租户列表页（已补建·正向复验）',
+            steps: ['超管登录后访问 /tenant/tenants'],
+            verify:
+              '✅ 已补建（第三轮）：租户表格渲染全部租户（名称/套餐/状态 Tag），终验 9 行 PASS',
             shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
           },
           {
@@ -477,9 +478,10 @@ const PRESETS: Array<{
             shot: 'matrix/saas/tadmin/t-13-tenant-members.png',
           },
           {
-            title: '审计日志页（逆向：无 UI 无租户维度）',
-            steps: ['探测 /tenant/audit /tenant/audit-logs /tenant/logs'],
-            verify: '⚠ P2：三路由全回退壳无内容；API 仅全局 /api/audit-logs 可达',
+            title: '审计日志页（已补建·全局维度）',
+            steps: ['超管登录后访问 /tenant/audit'],
+            verify:
+              '✅ 已补建（第三轮）：审计表格渲染（时间/用户/操作/资源/IP），终验 20 行 PASS；租户维度过滤仍为待定项',
             shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
           },
           {
@@ -740,7 +742,7 @@ const PRESETS: Array<{
             shot: 'matrix/saas/guest/g-05-register.png',
           },
           {
-            title: '忘记密码入口探测（逆向：全线缺失）',
+            title: '忘记密码入口探测（逆向·产品待定项）',
             steps: ['/login /register /tenant/login 三页文本探测 forgot/help/reset'],
             verify: '⚠ 缺口：全站无忘记密码/帮助入口（SKIP 记录）',
           },
@@ -986,13 +988,13 @@ const PRESETS: Array<{
             shot: 'matrix/market/market-21c-admin-content-list.png',
           },
           {
-            title: '插件下架入口缺失（逆向·功能缺口实勘）',
+            title: '插件下架/上架管理（已补建·正向复验）',
             steps: [
-              'superadmin 登录 /admin 遍历菜单找插件下架入口',
-              'API 级 DELETE /api/plugins/not-exist-slug',
+              'superadmin 登录 /admin → 侧栏"插件管理"→ 插件列表',
+              '对 approved 插件执行下架（填原因），rejected 执行上架',
             ],
             verify:
-              '实勘：管理端无插件下架 UI（菜单仅仪表盘/内容/用户订单/系统，软回退 200）——记录为功能缺口；API 层对不存在 slug 返回 404 不产生副作用',
+              '✅ 已补建（第九轮）：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用',
           },
           {
             title: '缺名称的插件表单被拒（逆向）',
@@ -1105,9 +1107,10 @@ const PRESETS: Array<{
             shot: 'matrix/market/market-18b-review-after-reload.png',
           },
           {
-            title: '个人中心（逆向：硬编码 + 入口缺失）',
-            steps: ['访问 /profile', '探测 /account /me /installed /my-plugins'],
-            verify: '⚠ P2：profile 硬编码 Jane Doe；全站无"我的安装"页',
+            title: '个人中心（已修·显示登录身份）',
+            steps: ['登录后访问 /profile', '访问"我的安装"/installed'],
+            verify:
+              '✅ 已修：profile 显示登录用户名（非 Jane Doe）；"我的安装"页已建（第六轮），列表/卸载/重装终验 PASS',
             shot: 'matrix/market/market-19-profile-janedoe-hardcoded.png',
           },
           {
@@ -1547,9 +1550,10 @@ const PRESETS: Array<{
             shot: 'matrix/shop/shop-15.png',
           },
           {
-            title: '加入购物车（逆向：入口缺失）',
-            steps: ['在购物车页与详情页全量扫描加购/购买按钮'],
-            verify: '⚠ BUG：全站无任何加购/购买入口，电商闭环断裂',
+            title: '加入购物车（已补建·正向复验）',
+            steps: ['打开内容详情', '点击购买条"加入购物车"'],
+            verify:
+              '✅ 已补建（第四轮）：详情页购买条（价格+加购按钮）→ 按钮变绿"已加入购物车" → Cart 页出现真实条目',
             shot: 'matrix/shop/shop-15.png',
           },
           {

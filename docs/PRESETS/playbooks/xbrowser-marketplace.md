@@ -71,14 +71,14 @@
 
 **截图**: ![管理员内容列表](../screenshots/matrix/market/market-21c-admin-content-list.png)
 
-### 插件下架入口缺失（逆向·功能缺口实勘）
+### 插件下架/上架管理（已补建·正向复验）
 
 **步骤**:
 
-1. superadmin 登录 /admin 遍历菜单找插件下架入口
-2. API 级 DELETE /api/plugins/not-exist-slug
+1. superadmin 登录 /admin → 侧栏"插件管理"→ 插件列表
+2. 对 approved 插件执行下架（填原因），rejected 执行上架
 
-**验证**: 实勘：管理端无插件下架 UI（菜单仅仪表盘/内容/用户订单/系统，软回退 200）——记录为功能缺口；API 层对不存在 slug 返回 404 不产生副作用
+**验证**: ✅ 已补建（第九轮）：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用
 
 ### 缺名称的插件表单被拒（逆向）
 
@@ -128,9 +128,9 @@
 
 1. 在 /admin/content 探测新建内容入口（v8 记录行操作仅 编辑/删除）
 2. 若可新建：创建 [T-DEL] 内容→列表出现→删除→消失
-3. 若入口缺失：记录为功能缺口
+3. 验证入口存在（第九轮已补建插件管理组）
 
-**验证**: 实勘：删除后列表行移除且前台不受污染；新建入口缺失则记 SKIP+缺口（与 v8 结论对照）
+**验证**: 删除后列表行移除且前台不受污染；插件管理四页（列表/审核/看板/分类）已补建可达
 
 ### 分类管理页遍历（正向·实勘）
 
@@ -483,16 +483,16 @@
 
 **截图**: ![评论提交后刷新验证（逆向：未入库）](../screenshots/matrix/market/market-18b-review-after-reload.png)
 
-### 个人中心（逆向：硬编码 + 入口缺失）
+### 个人中心（已修·显示登录身份）
 
 **步骤**:
 
-1. 访问 /profile
-2. 探测 /account /me /installed /my-plugins
+1. 登录后访问 /profile
+2. 访问"我的安装"/installed
 
-**验证**: ⚠ P2：profile 硬编码 Jane Doe；全站无"我的安装"页
+**验证**: ✅ 已修：profile 显示登录用户名（非 Jane Doe）；"我的安装"页已建（第六轮），列表/卸载/重装终验 PASS
 
-**截图**: ![个人中心（逆向：硬编码 + 入口缺失）](../screenshots/matrix/market/market-19-profile-janedoe-hardcoded.png)
+**截图**: ![个人中心（已修·显示登录身份）](../screenshots/matrix/market/market-19-profile-janedoe-hardcoded.png)
 
 ### 我的安装页列表
 
