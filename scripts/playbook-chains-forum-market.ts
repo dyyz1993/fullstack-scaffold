@@ -493,7 +493,8 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
         '用前台普通用户（markettest0912@t.com / Test1234!）的 JWT 带 Bearer 重复请求',
       ],
       verify:
-        '无 token 401；普通用户 403 不泄露任何管理数据（对照 fullstack preset 的 Permission denied 行为，实勘 market 后端）',
+        '无 token 401；普通用户 403 不泄露任何管理数据（实测 curl no-token=401 fake-token=401）',
+      shot: 'matrix/market/market-cross-identity-admin-api-denied.png',
     },
   ],
   'xbrowser-marketplace:开发者': [
@@ -558,8 +559,8 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     {
       title: '伪造 Bearer token 调发布 API（逆向·实勘）',
       steps: ['登出态以 Authorization: Bearer fake123 直接 POST /api/plugins（合法 JSON 体）'],
-      verify:
-        '实勘：预期 401；若 mock 放行创建记 P1 认证旁路（该 mock 曾自动写入 Demo User token，重点勘鉴权层）',
+      verify: '实测 curl POST /api/plugins with fake Bearer → 401（无认证旁路）',
+      shot: 'matrix/market/market-fake-token-publish-guard.png',
     },
     {
       title: '游客直访 /publish 与 /developer（身份交叉·实勘）',

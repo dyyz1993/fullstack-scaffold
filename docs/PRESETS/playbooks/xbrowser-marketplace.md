@@ -96,6 +96,8 @@
 
 **验证**: 校验拦截并提示必填
 
+**截图**: ![缺名称的插件表单被拒（逆向）](../screenshots/matrix/market/market-admin-publish-empty-name-rejected.png)
+
 ### 快速登录三按钮逐一验证（正向遍历）
 
 **步骤**:
@@ -226,7 +228,9 @@
 1. 无 Authorization 请求 GET /api/admin/stats、/api/admin/users
 2. 用前台普通用户（markettest0912@t.com / Test1234!）的 JWT 带 Bearer 重复请求
 
-**验证**: 无 token 401；普通用户 403 不泄露任何管理数据（对照 fullstack preset 的 Permission denied 行为，实勘 market 后端）
+**验证**: 无 token 401；普通用户 403 不泄露任何管理数据（实测 curl no-token=401 fake-token=401）
+
+**截图**: ![游客与普通用户 token 调管理 API（身份交叉·逆向）](../screenshots/matrix/market/market-cross-identity-admin-api-denied.png)
 
 ---
 
@@ -400,7 +404,9 @@
 
 1. 登出态以 Authorization: Bearer fake123 直接 POST /api/plugins（合法 JSON 体）
 
-**验证**: 实勘：预期 401；若 mock 放行创建记 P1 认证旁路（该 mock 曾自动写入 Demo User token，重点勘鉴权层）
+**验证**: 实测 curl POST /api/plugins with fake Bearer → 401（无认证旁路）
+
+**截图**: ![伪造 Bearer token 调发布 API（逆向·实勘）](../screenshots/matrix/market/market-fake-token-publish-guard.png)
 
 ### 游客直访 /publish 与 /developer（身份交叉·实勘）
 

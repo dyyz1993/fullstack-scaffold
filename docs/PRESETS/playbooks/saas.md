@@ -590,7 +590,9 @@
 
 1. /login /register /tenant/login 三页文本探测 forgot/help/reset
 
-**验证**: ⚠ 缺口：全站无忘记密码/帮助入口（SKIP 记录）
+**验证**: 三页文本探测 forgot/help/reset 全 false——确认全线无此入口
+
+**截图**: ![忘记密码入口探测（逆向·产品待定项）](../screenshots/matrix/saas/guest/g-06-forgot-password-probe.png)
 
 ### 游客首页移动版（375px）
 

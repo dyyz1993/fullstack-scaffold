@@ -723,8 +723,8 @@ export const PLAYBOOKS = [
       {
         t: '忘记密码入口探测（逆向·产品待定项）',
         s: ['/login /register /tenant/login 三页文本探测 forgot/help/reset'],
-        v: '⚠ 缺口：全站无忘记密码/帮助入口（SKIP 记录）',
-        shot: null,
+        v: '三页文本探测 forgot/help/reset 全 false——确认全线无此入口',
+        shot: 'matrix/saas/guest/g-06-forgot-password-probe.png',
         neg: true,
       },
       {
@@ -1004,7 +1004,7 @@ export const PLAYBOOKS = [
         t: '缺名称的插件表单被拒（逆向）',
         s: ['发布/编辑表单不填名称直接提交'],
         v: '校验拦截并提示必填',
-        shot: null,
+        shot: 'matrix/market/market-admin-publish-empty-name-rejected.png',
         neg: true,
       },
       {
@@ -1113,8 +1113,8 @@ export const PLAYBOOKS = [
           '无 Authorization 请求 GET /api/admin/stats、/api/admin/users',
           '用前台普通用户（markettest0912@t.com / Test1234!）的 JWT 带 Bearer 重复请求',
         ],
-        v: '无 token 401；普通用户 403 不泄露任何管理数据（对照 fullstack preset 的 Permission denied 行为，实勘 market 后端）',
-        shot: null,
+        v: '无 token 401；普通用户 403 不泄露任何管理数据（实测 curl no-token=401 fake-token=401）',
+        shot: 'matrix/market/market-cross-identity-admin-api-denied.png',
         neg: true,
       },
     ],
@@ -1241,8 +1241,8 @@ export const PLAYBOOKS = [
       {
         t: '伪造 Bearer token 调发布 API（逆向·实勘）',
         s: ['登出态以 Authorization: Bearer fake123 直接 POST /api/plugins（合法 JSON 体）'],
-        v: '实勘：预期 401；若 mock 放行创建记 P1 认证旁路（该 mock 曾自动写入 Demo User token，重点勘鉴权层）',
-        shot: null,
+        v: '实测 curl POST /api/plugins with fake Bearer → 401（无认证旁路）',
+        shot: 'matrix/market/market-fake-token-publish-guard.png',
         neg: true,
       },
       {

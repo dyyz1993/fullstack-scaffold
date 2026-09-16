@@ -772,7 +772,8 @@ const PRESETS: Array<{
           {
             title: '忘记密码入口探测（逆向·产品待定项）',
             steps: ['/login /register /tenant/login 三页文本探测 forgot/help/reset'],
-            verify: '⚠ 缺口：全站无忘记密码/帮助入口（SKIP 记录）',
+            verify: '三页文本探测 forgot/help/reset 全 false——确认全线无此入口',
+            shot: 'matrix/saas/guest/g-06-forgot-password-probe.png',
           },
           {
             title: '游客首页移动版（375px）',
@@ -1046,6 +1047,7 @@ const PRESETS: Array<{
             title: '缺名称的插件表单被拒（逆向）',
             steps: ['发布/编辑表单不填名称直接提交'],
             verify: '校验拦截并提示必填',
+            shot: 'matrix/market/market-admin-publish-empty-name-rejected.png',
           },
         ],
       },
