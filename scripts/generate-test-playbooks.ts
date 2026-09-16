@@ -1034,7 +1034,7 @@ const PRESETS: Array<{
           },
           {
             title: '插件下架/上架管理（已补建·正向复验）',
-            shot: 'matrix/market/a02-plugins-board-blank.png',
+            shot: 'matrix/market/market-admin-plugins-working.png',
             steps: [
               'superadmin 登录 /admin → 侧栏"插件管理"→ 插件列表',
               '对 approved 插件执行下架（填原因），rejected 执行上架',

@@ -86,7 +86,7 @@
 
 **验证**: ✅ 已补建（第九轮）：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用
 
-**截图**: ![插件下架/上架管理（已补建·正向复验）](../screenshots/matrix/market/a02-plugins-board-blank.png)
+**截图**: ![插件下架/上架管理（已补建·正向复验）](../screenshots/matrix/market/market-admin-plugins-working.png)
 
 ### 缺名称的插件表单被拒（逆向）
 
