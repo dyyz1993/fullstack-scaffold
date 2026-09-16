@@ -2,7 +2,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import { Breadcrumb, Select, Avatar, Dropdown, Layout as AntLayout, theme } from 'antd'
 import type { MenuProps } from 'antd'
 import { User, LogOut, Settings } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAdminStore } from '../stores/adminStore'
 import { useAdminNotifications } from '../hooks/useAdminNotifications'
 import { NotificationDrawer, NotificationBell } from '../components/NotificationDrawer'
@@ -68,6 +68,37 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
     },
   ]
 
+  // 面包屑随路由：[组名, 页面名]（与 Sidebar 菜单结构对应）
+  const location = useLocation()
+  const breadcrumbItems = useMemo(() => {
+    const pageMap: Array<[RegExp, string, string]> = [
+      [/^\/dashboard/, '', t('sidebar.dashboard')],
+      [/^\/content/, t('sidebar.content'), t('sidebar.contentList')],
+      [/^\/plugins\/review/, t('sidebar.plugins'), t('sidebar.pluginsReview')],
+      [/^\/plugins\/dashboard/, t('sidebar.plugins'), t('sidebar.pluginsDashboard')],
+      [/^\/plugins/, t('sidebar.plugins'), t('sidebar.pluginsList')],
+      [/^\/categories/, t('sidebar.plugins'), t('sidebar.categories')],
+      [/^\/users/, t('sidebar.usersOrders'), t('sidebar.users')],
+      [/^\/orders/, t('sidebar.usersOrders'), t('sidebar.orders')],
+      [/^\/tickets/, t('sidebar.usersOrders'), t('sidebar.tickets')],
+      [/^\/disputes/, t('sidebar.usersOrders'), t('sidebar.disputes')],
+      [/^\/system\/roles/, t('sidebar.system'), t('sidebar.roles')],
+      [/^\/system\/settings/, t('sidebar.system'), t('sidebar.settings')],
+      [/^\/system\/logs/, t('sidebar.system'), t('sidebar.logs')],
+      [/^\/system\/permissions/, t('sidebar.system'), t('sidebar.permissions')],
+      [/^\/settings/, '', t('sidebar.settings')],
+    ]
+    const match = pageMap.find(([re]) => re.test(location.pathname))
+    const items = [{ title: t('header.home') }]
+    if (match) {
+      if (match[1]) items.push({ title: match[1] })
+      items.push({ title: match[2] })
+    } else {
+      items.push({ title: t('header.dashboard') })
+    }
+    return items
+  }, [location.pathname, t])
+
   return (
     <>
       <AntLayout.Header
@@ -97,10 +128,7 @@ export const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </button>
 
-          <Breadcrumb
-            items={[{ title: t('header.home') }, { title: t('header.dashboard') }]}
-            style={{ fontSize: 14 }}
-          />
+          <Breadcrumb items={breadcrumbItems} style={{ fontSize: 14 }} />
         </div>
 
         <div className="flex items-center gap-3">
