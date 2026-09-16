@@ -264,6 +264,8 @@
 
 **验证**: 生成 ORD-2026-xxxxxx 新订单（Processing 状态），购物车清空，旧 ORD-2024 mock 全部下线
 
+**截图**: ![加购→下单→订单生成（正向闭环）](../screenshots/matrix/shop/shop-27-checkout-loop-orders.png)
+
 ### 订单状态筛选
 
 **步骤**:
@@ -272,6 +274,8 @@
 
 **验证**: 新订单在 Processing 下可见，Delivered 筛选下隐藏并显示空态
 
+**截图**: ![订单状态筛选](../screenshots/matrix/shop/shop-28-order-filter-processing.png)
+
 ### 空购物车 Checkout 无效（逆向）
 
 **步骤**:
@@ -279,6 +283,8 @@
 1. 清空购物车后尝试 Checkout
 
 **验证**: 无 Checkout 入口或点击无效果，不产生空订单
+
+**截图**: ![空购物车 Checkout 无效（逆向）](../screenshots/matrix/shop/shop-30-empty-cart-no-checkout.png)
 
 ### 详情页返回列表（正向）
 
@@ -389,6 +395,8 @@
 
 **验证**: 结果单卡纵向堆叠正常无横向溢出
 
+**截图**: ![移动端搜索结果页（正向边界）](../screenshots/matrix/shop/shop-37-mobile-search-isr.png)
+
 ### 购物车 qty=-1（逆向）
 
 **步骤**:
@@ -407,6 +415,8 @@
 1. 将某行 qty 调至 9999（步进连点或输入）
 
 **验证**: 实勘：接受则 Total 大数正常显示不溢出；有上限则被钳制——记录行为
+
+**截图**: ![购物车 qty=9999 超大数量（逆向）](../screenshots/matrix/shop/shop-33-qty9999-cart.png)
 
 ### 搜索框 XSS 注入（逆向）
 
@@ -432,6 +442,8 @@
 
 **验证**: 不触发假搜索或显示空态，列表不闪空，无报错
 
+**截图**: ![搜索纯空格关键词（逆向）](../screenshots/matrix/shop/shop-34-search-spaces-empty.png)
+
 ### 搜索超长关键词（逆向）
 
 **步骤**:
@@ -439,6 +451,8 @@
 1. 粘贴 256+ 字符长串搜索
 
 **验证**: 输入框/结果区不撑破布局，空态正常
+
+**截图**: ![搜索超长关键词（逆向）](../screenshots/matrix/shop/shop-35-search-long-error.png)
 
 ### 详情 URL 不存在 id（逆向·IDOR 面）
 
@@ -473,6 +487,8 @@
 
 **验证**: 实勘：仅生成 1 笔订单（若重复记录为缺陷），购物车状态一致
 
+**截图**: ![双击 Checkout 重复下单（逆向）](../screenshots/matrix/shop/shop-31-dblclick-checkout-orders.png)
+
 ### Checkout 后空购物车刷新保持（正向闭环深化）
 
 **步骤**:
@@ -482,6 +498,8 @@
 
 **验证**: 实勘：清空态保持不回填 mock 商品（若回填记录为缺陷）
 
+**截图**: ![Checkout 后空购物车刷新保持（正向闭环深化）](../screenshots/matrix/shop/shop-32-postcheckout-refresh-empty.png)
+
 ### 伪造 token 调订单写接口（逆向·API 级）
 
 **步骤**:
@@ -490,6 +508,8 @@
 
 **验证**: 实勘：此形态无鉴权模块（公开站为预期）——记录写接口是否开放，若开放记录为风险
 
+**截图**: ![伪造 token 调订单写接口（逆向·API 级）](../screenshots/matrix/shop/shop-38-api-fake-token.txt)
+
 ### 分类 tab 快速连点（逆向·竞态）
 
 **步骤**:
@@ -497,5 +517,7 @@
 1. 快速连续点击多个分类 tab（文章/教程/公告连点）
 
 **验证**: 最终停在最后点击的分类，列表与高亮一致，无竞态错乱
+
+**截图**: ![分类 tab 快速连点（逆向·竞态）](../screenshots/matrix/shop/shop-36-tab-rapid-click-all.png)
 
 ---

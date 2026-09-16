@@ -22,6 +22,8 @@
 
 **验证**: 内容状态变为 published
 
+**截图**: ![内容新建/编辑/发布](../screenshots/matrix/forum/a01-create-publish.png)
+
 ### 用户管理
 
 **步骤**:
@@ -30,6 +32,8 @@
 
 **验证**: 用户列表正常渲染
 
+**截图**: ![用户管理](../screenshots/matrix/forum/a02-users.png)
+
 ### 系统设置
 
 **步骤**:
@@ -37,6 +41,8 @@
 1. 进入系统设置页
 
 **验证**: 表单带出真实配置值
+
+**截图**: ![系统设置](../screenshots/matrix/forum/a03-system-settings.png)
 
 ### 空标题内容创建被拒（逆向）
 
@@ -47,6 +53,8 @@
 
 **验证**: 校验拦截并提示必填，不产生脏数据
 
+**截图**: ![空标题内容创建被拒（逆向）](../screenshots/matrix/forum/a04-empty-title-rejected.png)
+
 ### 未登录访问管理 API（逆向）
 
 **步骤**:
@@ -54,6 +62,8 @@
 1. 不带 Authorization 请求管理端接口
 
 **验证**: 返回 401
+
+**截图**: ![未登录访问管理 API（逆向）](../screenshots/matrix/forum/a05-no-token-401.png)
 
 ### 编辑内容后还原（正向链）
 
@@ -66,6 +76,8 @@
 
 **验证**: 前台标题两阶段变化并可完整还原；还原后前台与后台列表均无测试残留（断言以变化前后对照为准，content-1 标题含历史测试残留 {fa-super} 勿锚定纯文本）
 
+**截图**: ![编辑内容后还原（正向链）](../screenshots/matrix/forum/a06-2-front-reverted.png)
+
 ### 草稿→发布状态切换（正向）
 
 **步骤**:
@@ -77,6 +89,8 @@
 
 **验证**: 实勘：前台列表只显示 published 内容、草稿不可见；发布后可见（若前台无草稿过滤则记录为缺陷）
 
+**截图**: ![草稿→发布状态切换（正向）](../screenshots/matrix/forum/a07-2-published-visible.png)
+
 ### 新建内容→删除回收链（正向）
 
 **步骤**:
@@ -86,6 +100,8 @@
 3. 前台首页列表与 /content/<id> 直访复查
 
 **验证**: 删除后首页列表不再出现，直访返回 404 兜底页；种子内容 content-1/content-2 不受影响
+
+**截图**: ![新建内容→删除回收链（正向）](../screenshots/matrix/forum/a08-2-deleted-404fallback.png)
 
 ### 分类管理新建分类（正向·实勘）
 
@@ -98,6 +114,8 @@
 
 **验证**: 实勘：分类列表渲染正常；前台筛选胶囊当前固定 6 个（全部/文章/公告/教程/新闻/政策），新分类是否映射到前台胶囊待勘（不映射则记录前后端不同步）
 
+**截图**: ![分类管理新建分类（正向·实勘）](../screenshots/matrix/forum/a09-categories.png)
+
 ### 用户管理搜索过滤（正向）
 
 **步骤**:
@@ -107,6 +125,8 @@
 3. 清空搜索恢复全表
 
 **验证**: 搜索后表格仅剩 superadmin 行；清空后恢复完整列表且行数与初始一致
+
+**截图**: ![用户管理搜索过滤（正向）](../screenshots/matrix/forum/a10-user-search-readonly.png)
 
 ### 管理后台硬刷新会话保持（正向）
 
@@ -118,6 +138,8 @@
 
 **验证**: 刷新后仍停留 dashboard 不回登录页；子路由直访正常渲染（实勘 token 存储位置与有效期）
 
+**截图**: ![管理后台硬刷新会话保持（正向）](../screenshots/matrix/forum/a11-2-after-refresh.png)
+
 ### 同一内容连续两次编辑（连续操作）
 
 **步骤**:
@@ -128,6 +150,8 @@
 
 **验证**: 前台显示两次编辑叠加后的最终内容，无中间态丢失或字段回滚
 
+**截图**: ![同一内容连续两次编辑（连续操作）](../screenshots/matrix/forum/a12-consecutive-edits.png)
+
 ### 错误密码登录管理后台（逆向）
 
 **步骤**:
@@ -136,6 +160,8 @@
 2. 点击登录
 
 **验证**: 提示凭据错误并停留登录页；地址栏不进入 /admin/dashboard，无任何管理数据渲染
+
+**截图**: ![错误密码登录管理后台（逆向）](../screenshots/matrix/forum/a13-wrong-password-login.png)
 
 ### 超长+HTML 注入内容标题（逆向）
 
@@ -147,6 +173,8 @@
 
 **验证**: 超长被校验拒绝或安全截断；脚本串以纯文本转义显示、无 alert 执行；首页列表布局不破版
 
+**截图**: ![超长+HTML 注入内容标题（逆向）](../screenshots/matrix/forum/a14-detail-escaped.png)
+
 ### 无 token / 普通用户 token 调管理 API（逆向·身份交叉）
 
 **步骤**:
@@ -155,6 +183,8 @@
 2. 用前台注册用户（round2verify@t.com / Test1234!）登录取 JWT 后带 Bearer 重复请求
 
 **验证**: 无 token 一律 401；普通用户 token 403（实勘 forum 后端角色校验，若放行记 P1 越权）
+
+**截图**: ![无 token / 普通用户 token 调管理 API（逆向·身份交叉）](../screenshots/matrix/forum/a15-member-token-403.png)
 
 ---
 
@@ -304,6 +334,8 @@
 
 **验证**: 评论移除、计数 -1，他人评论不受影响
 
+**截图**: ![删除自己的评论](../screenshots/matrix/forum/m01-2-after-delete.png)
+
 ### 删除他人评论被拒（逆向）
 
 **步骤**:
@@ -311,6 +343,8 @@
 1. 尝试删除他人评论（UI 无按钮；API 层 DELETE 他人评论）
 
 **验证**: UI 无入口；API 层 403，仅作者与 super_admin 可删
+
+**截图**: ![删除他人评论被拒（逆向）](../screenshots/matrix/forum/m02-others-comment-no-delete.png)
 
 ### 三入口到达同一内容详情（入口交叉）
 
@@ -321,6 +355,8 @@
 3. 再从 Popular 页点击同一内容
 
 **验证**: 三个入口均渲染完整详情页（标题/正文/评论区一致）；Topics 的 /topics/content-N 路由不 404（v9 起该路由渲染完整详情）
+
+**截图**: ![三入口到达同一内容详情（入口交叉）](../screenshots/matrix/forum/m03-2b-entry2-detail.png)
 
 ### 搜索+分类组合查询（正向深化）
 
@@ -355,6 +391,8 @@
 
 **验证**: 登录成功落地 /topics（h1 Topics 聚合视图）；历史缺陷"跳 /todos 404"与"停留 /"均不复现
 
+**截图**: ![登录落地页 /topics 断言（v8 复验）](../screenshots/matrix/forum/m04-login-landing-topics.png)
+
 ### emoji/中英混合评论提交（正向）
 
 **步骤**:
@@ -376,6 +414,8 @@
 
 **验证**: 1999 字符可发布且完整显示；超限输入被计数器/禁用态拦截或截断（实勘 2000 上限的具体截断行为）
 
+**截图**: ![接近 2000 字长评论边界（正向边界）](../screenshots/matrix/forum/m05-1999char-posted.png)
+
 ### 连续发 3 删 2 计数链（连续操作）
 
 **步骤**:
@@ -386,6 +426,8 @@
 
 **验证**: 计数 N→N+3→N+1 逐步正确；剩余 A 位置顺序保持；刷新后与服务端一致
 
+**截图**: ![连续发 3 删 2 计数链（连续操作）](../screenshots/matrix/forum/m06-3post-2delete.png)
+
 ### 双击重复提交评论（逆向）
 
 **步骤**:
@@ -394,6 +436,8 @@
 2. 快速双击发布按钮
 
 **验证**: 仅产生 1 条评论（计数 +1），无重复条目（若 +2 记录缺陷，后端幂等性实勘）
+
+**截图**: ![双击重复提交评论（逆向）](../screenshots/matrix/forum/m07-double-click-single.png)
 
 ### 纯空格评论被拒（逆向）
 
@@ -404,6 +448,8 @@
 
 **验证**: 按钮呈 disabled 禁用态或提交被拦截；计数不变、不产生空白评论
 
+**截图**: ![纯空格评论被拒（逆向）](../screenshots/matrix/forum/m08-spaces-disabled.png)
+
 ### HTML/script 注入评论（逆向）
 
 **步骤**:
@@ -412,6 +458,8 @@
 2. 再提交 "<img src=x onerror=alert(2)>"
 
 **验证**: 无任何 alert 执行；评论区以转义纯文本渲染；控制台无意外报错
+
+**截图**: ![HTML/script 注入评论（逆向）](../screenshots/matrix/forum/m09-injection-escaped.png)
 
 ### 注册密码 5 位被拒（逆向）
 
@@ -432,6 +480,8 @@
 2. 提交
 
 **验证**: 服务端报错（实勘具体文案），停留注册/登录页且不产生重复账号；r7other 原账号仍可正常登录
+
+**截图**: ![注册已存在邮箱被拒（逆向）](../screenshots/matrix/forum/m10-duplicate-email.png)
 
 ### 错误密码登录（逆向）
 
@@ -454,6 +504,8 @@
 
 **验证**: UI 无越权入口（删除按钮按作者渲染，v10 双向实测）；API 层 403、他人评论仍存在；作者本人与 super_admin 可删为已知白名单
 
+**截图**: ![删除他人评论 API 403（IDOR·身份交叉）](../screenshots/matrix/forum/m11-idor-403.png)
+
 ### 伪造 Bearer token 调发布评论 API（逆向·实勘）
 
 **步骤**:
@@ -463,6 +515,8 @@
 
 **验证**: 实勘：mock 后端历史上曾接受任意 user-token 自动登录——若 fake123 被放行记 P1（mock 认证旁路），若 401 则记录通过
 
+**截图**: ![伪造 Bearer token 调发布评论 API（逆向·实勘）](../screenshots/matrix/forum/m12-fake-bearer-401.png)
+
 ### Profile 渲染真实登录身份（v8 复验·正向）
 
 **步骤**:
@@ -471,6 +525,8 @@
 2. 对照 localStorage 中 user.username
 
 **验证**: 头像为用户名首字母、h1 为 round2verify；无 Jane Doe 硬编码残留（历史 P2 已修，复验防回归）
+
+**截图**: ![Profile 渲染真实登录身份（v8 复验·正向）](../screenshots/matrix/forum/m13-profile-real-identity.png)
 
 ---
 
@@ -497,6 +553,8 @@
 1. 尝试发帖或评论（需登录）
 
 **验证**: 被要求登录
+
+**截图**: ![发帖/评论被拒](../screenshots/matrix/forum/g01-guest-comment-login-required.png)
 
 ### 首页全景（2026-09-12 补拍）
 
@@ -668,6 +726,8 @@
 
 **验证**: 可见评论列表但无任何删除按钮，显示"登录后参与讨论"引导
 
+**截图**: ![游客态无评论管理按钮（逆向）](../screenshots/matrix/forum/g02-no-manage-buttons.png)
+
 ### 真游客态工艺链（前置·自动登录怪癖）
 
 **步骤**:
@@ -678,6 +738,8 @@
 
 **验证**: navbar 稳定显示 Login（键存在则不再自动登录，v9 实测工艺）；详情页评论区出现游客灰条——本用例为后续游客逆向用例的统一前置
 
+**截图**: ![真游客态工艺链（前置·自动登录怪癖）](../screenshots/matrix/forum/g03-1-guest-home.png)
+
 ### 游客评论区只读态（v9 复验扩展）
 
 **步骤**:
@@ -687,6 +749,8 @@
 3. 点击灰条内的登录按钮
 
 **验证**: 无输入框无发布按钮；灰条"登录后参与讨论，分享你的想法"+登录按钮，点击跳转 /login；评论条目可见但 0 个删除按钮
+
+**截图**: ![游客评论区只读态（v9 复验扩展）](../screenshots/matrix/forum/g04-guest-login-redirect.png)
 
 ### 分类胶囊 6 连切遍历（正向遍历）
 
@@ -721,6 +785,8 @@
 
 **验证**: 实勘组合语义：切公告后是否空态、切回全部是否保留 ISR 关键词结果（已知 v4 观察"搜索不重置分类"，若行为相反记回归）；全程无 500/白屏
 
+**截图**: ![搜索后切换分类（组合语义边界）](../screenshots/matrix/forum/g05-2-search-then-gonggao.png)
+
 ### 空搜索直接提交（逆向边界）
 
 **步骤**:
@@ -730,6 +796,8 @@
 
 **验证**: 实勘：无提交动作或回退全列表；不出现 500/白屏，列表状态可恢复正常操作
 
+**截图**: ![空搜索直接提交（逆向边界）](../screenshots/matrix/forum/g06-empty-search.png)
+
 ### 超长搜索词 256+（逆向）
 
 **步骤**:
@@ -737,6 +805,8 @@
 1. 在搜索框粘贴 300 字符无意义字符串并提交
 
 **验证**: 不崩溃：显示空态或 0 结果；输入框无异常行为；提交后页面可继续正常搜索与筛选
+
+**截图**: ![超长搜索词 256+（逆向）](../screenshots/matrix/forum/g07-long-search-300.png)
 
 ### 搜索 XSS/SQL 注入串（逆向）
 
@@ -747,6 +817,8 @@
 
 **验证**: 关键词在空态文案中转义显示、无脚本执行；服务端不 500（防注入）；清空后列表恢复正常
 
+**截图**: ![搜索 XSS/SQL 注入串（逆向）](../screenshots/matrix/forum/g08-1-xss-search.png)
+
 ### 游客直访 /topics 与 /popular（入口正向）
 
 **步骤**:
@@ -755,6 +827,8 @@
 2. 再直接打开 /popular
 
 **验证**: Topics 渲染独立聚合视图（h1 Topics、组头 "# 分类名"+绿色计数徽章）；Popular 渲染排行列表（排名徽章+🔥热度+热度条，热度 0 时条宽 0%）——v9 改版后两者均非首页复刻
+
+**截图**: ![游客直访 /topics 与 /popular（入口正向）](../screenshots/matrix/forum/g09-1-topics-direct.png)
 
 ### 登录页假报错冷验回归（逆向·v7 修复防回归）
 
@@ -797,5 +871,7 @@
 1. 真游客态（auth-token 置 null）直接 POST /api/contents 与评论发布接口（不带 Authorization）
 
 **验证**: 实勘：预期 401（写操作需登录/管理员）；若 mock 放行记 P1——该 mock 后端存在任意 token 放行的历史怪癖
+
+**截图**: ![游客伪造 token 调写 API（身份交叉·实勘）](../screenshots/matrix/forum/g10-guest-write-401.png)
 
 ---

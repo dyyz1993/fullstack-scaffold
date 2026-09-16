@@ -98,6 +98,8 @@
 
 **验证**: 按钮禁用或提交无效果，不产生空标题条目
 
+**截图**: ![空标题提交无效（逆向）](../screenshots/matrix/minimal/minimal-11-empty-title-disabled.png)
+
 ### 状态切换后改回 pending（正向链）
 
 **步骤**:
@@ -151,6 +153,8 @@
 
 **验证**: 条目正常显示无乱码无报错，清理后恢复基线
 
+**截图**: ![emoji/中英混合标题正常提交（正向）](../screenshots/matrix/minimal/minimal-13-emoji-mixed-title.png)
+
 ### 纯空格标题提交（逆向）
 
 **步骤**:
@@ -159,6 +163,8 @@
 2. 观察 Add 按钮状态并尝试提交
 
 **验证**: Add 保持 disabled 或提交无效果（trim 守卫），不产生空标题条目
+
+**截图**: ![纯空格标题提交（逆向）](../screenshots/matrix/minimal/minimal-12-spaces-title-disabled.png)
 
 ### 超长标题提交（逆向）
 
@@ -169,6 +175,8 @@
 
 **验证**: 实勘：接受则卡片换行不撑破布局且 Total +1；拒绝则校验提示——记录行为
 
+**截图**: ![超长标题提交（逆向）](../screenshots/matrix/minimal/minimal-14-long-title-200-cap.png)
+
 ### XSS 注入标题转义验证（逆向）
 
 **步骤**:
@@ -178,6 +186,8 @@
 
 **验证**: 纯文本渲染不执行（无弹窗），随后删除清理
 
+**截图**: ![XSS 注入标题转义验证（逆向）](../screenshots/matrix/minimal/minimal-15-xss-escaped.png)
+
 ### 双击 Add 防重（逆向）
 
 **步骤**:
@@ -185,5 +195,7 @@
 1. 输入标题后快速双击 Add 按钮
 
 **验证**: 仅新增 1 条（若重复记录为缺陷），随后清理
+
+**截图**: ![双击 Add 防重（逆向）](../screenshots/matrix/minimal/minimal-16-dblclick-single-entry.png)
 
 ---

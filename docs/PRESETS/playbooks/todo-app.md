@@ -73,6 +73,8 @@
 
 **验证**: 提交被拦截，Total 计数不变
 
+**截图**: ![空标题提交无效（逆向）](../screenshots/matrix/todo/todo-user-01-empty-add-blocked.png)
+
 ### WebSocket 未连接发消息（逆向）
 
 **步骤**:
@@ -81,6 +83,8 @@
 2. 不点 Connect 直接在输入框发送
 
 **验证**: 提示未连接或消息不发出，无假成功
+
+**截图**: ![WebSocket 未连接发消息（逆向）](../screenshots/matrix/todo/todo-user-06-ws-send-disabled.png)
 
 ### 连续添加 3 条 todo（正向批量链）
 
@@ -159,6 +163,8 @@
 
 **验证**: 标题按纯文本渲染不执行（无弹窗），随后删除清理
 
+**截图**: ![XSS 注入 todo 标题（逆向）](../screenshots/matrix/todo/todo-user-02-xss-title-escaped.png)
+
 ### 超长标题提交（逆向）
 
 **步骤**:
@@ -168,6 +174,8 @@
 
 **验证**: 实勘：接受则卡片正常换行不溢出且 Total +1；拒绝则提示校验——记录行为，无崩溃
 
+**截图**: ![超长标题提交（逆向）](../screenshots/matrix/todo/todo-user-03-long-title-blocked.png)
+
 ### 双击 Add Todo 防重（逆向）
 
 **步骤**:
@@ -175,6 +183,8 @@
 1. 输入标题后快速双击 Add Todo
 
 **验证**: 仅创建 1 条（若重复记录为缺陷），随后清理
+
+**截图**: ![双击 Add Todo 防重（逆向）](../screenshots/matrix/todo/todo-user-05-dblclick-result.png)
 
 ---
 
@@ -201,6 +211,8 @@
 1. 清空 localStorage 后无 token 请求 /api/todos 写接口
 
 **验证**: 返回 401，REST 层要求认证（页面自动登录为 demo 特性，接口层不放松）
+
+**截图**: ![登出态访问受保护接口（逆向）](../screenshots/matrix/todo/todo-guest-01-api-401.png)
 
 ### 硬刷新后自动登录态保持（正向）
 

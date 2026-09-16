@@ -139,6 +139,9 @@ export function getExcludePatterns(
   }
 
   excludes.push('src/client/preset-ui-config.ts')
+  // admin 侧栏可用路由表同样按 preset 生成（generateAdminSidebarRoutes）：
+  // 模板全量版必须排除，否则生成的 preset 版本不会落盘、Sidebar 按全量渲染
+  excludes.push('src/admin/layouts/sidebar-availability.ts')
 
   // Exclude standalone shared modules (cart, community, dashboard) that are not needed
   // by the current preset. These have no server module manifest of their own, but are
@@ -243,6 +246,7 @@ export function getGeneratedFiles(resolved: ResolvedPreset): string[] {
     files.push('src/admin/App.tsx')
     files.push('src/admin/components/index.ts')
     files.push('src/admin/services/apiClient.ts')
+    files.push('src/admin/layouts/sidebar-availability.ts')
   }
 
   if (resolved.hasClient && !resolved.modules.has('admin')) {

@@ -25,15 +25,16 @@ export const ContentSchema = z.object({
 })
 
 export const CreateContentSchema = z.object({
-  title: z.string(),
-  content: z.string(),
+  // trim 后 min(1)：拒绝纯空格标题入库（P2：admin 内容管理实测缺陷）
+  title: z.string().trim().min(1),
+  content: z.string().min(1),
   category: ContentCategorySchema,
   tags: z.array(z.string()).nullish(),
 })
 
 export const UpdateContentSchema = z.object({
-  title: z.string().nullish(),
-  content: z.string().nullish(),
+  title: z.string().trim().min(1).nullish(),
+  content: z.string().min(1).nullish(),
   category: ContentCategorySchema.nullish(),
   tags: z.array(z.string()).nullish(),
   status: ContentStatusSchema.nullish(),

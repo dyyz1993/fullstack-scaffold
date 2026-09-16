@@ -3,7 +3,7 @@ import { loadManifests, loadPresets, resolvePreset } from '../../generators/temp
 import { generateRouteRegistry } from '../../generators/route-registry'
 import { generateClientApp } from '../../generators/client-app'
 import { generateClientNavigation } from '../../generators/client-navigation'
-import { generateAdminApp } from '../../generators/admin-app'
+import { generateAdminApp, generateAdminSidebarRoutes } from '../../generators/admin-app'
 import { generateDbSchemaBarrel } from '../../generators/db-schema-barrel'
 import { filterPackageJson } from '../../generators/package-json'
 import { generateViteConfig } from '../../generators/vite-config'
@@ -204,6 +204,40 @@ describe('code generators', () => {
 
       expect(content).toContain("import { ConfigProvider } from 'antd'")
       expect(content).toContain('colorPrimary')
+    })
+  })
+
+  describe('generateAdminSidebarRoutes', () => {
+    it('returns null when admin module is absent', () => {
+      const resolved = getPreset('minimal', allManifests, presets)
+      expect(generateAdminSidebarRoutes(resolved)).toBeNull()
+    })
+
+    it('includes categories route for fullstack-admin preset', () => {
+      const resolved = getPreset('fullstack-admin', allManifests, presets)
+      const content = generateAdminSidebarRoutes(resolved)!
+
+      expect(content).toContain('AVAILABLE_ADMIN_ROUTES')
+      // plugin 模块路由已归一化（去掉冗余 /admin 前缀）
+      expect(content).toContain("'/categories'")
+      expect(content).toContain("'/plugins'")
+      expect(content).not.toContain("'/admin/categories'")
+      // 基础管理页仍在
+      expect(content).toContain("'/dashboard'")
+      expect(content).toContain("'/users'")
+      expect(content).toContain("'/content'")
+    })
+
+    it('excludes plugin routes for forum preset (no plugin module)', () => {
+      // forum：content + auth + permission + admin + notifications，无 plugin
+      const resolved = getPreset('forum', allManifests, presets)
+      const content = generateAdminSidebarRoutes(resolved)!
+
+      expect(content).toContain("'/dashboard'")
+      expect(content).toContain("'/content'")
+      // Sidebar 据此隐藏 /categories 等入口（P2：forum /admin/categories 空白壳）
+      expect(content).not.toContain("'/categories'")
+      expect(content).not.toContain("'/plugins")
     })
   })
 

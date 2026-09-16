@@ -18,6 +18,8 @@ export const ContentPage: React.FC = () => {
   const [contents, setContents] = useState<Content[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
+  // 防重锁：弹窗 OK 双击只允许一次在途请求（P2 实测双击产生 2 条记录）
+  const [submitting, setSubmitting] = useState(false)
   const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [form] = Form.useForm<CreateContentInput>()
 
@@ -96,9 +98,20 @@ export const ContentPage: React.FC = () => {
   }
 
   const handleSubmit = async () => {
+    // 防重锁：submitting 期间忽略重复触发（双击 OK / 回车重复提交）
+    if (submitting) return
+    let values: CreateContentInput
     try {
-      const values = await form.validateFields()
-
+      values = await form.validateFields()
+    } catch {
+      // 校验失败：字段级错误已由 Form 内联展示，无需全局 toast
+      return
+    }
+    // 与 CreateContentSchema（title.trim().min(1)）对齐：提交前 trim，
+    // 纯空格标题在这里被拦截，不发请求
+    values = { ...values, title: values.title.trim() }
+    setSubmitting(true)
+    try {
       if (editingContent) {
         const response = await apiClient.api.contents[':id'].$put({
           param: { id: editingContent.id },
@@ -123,6 +136,8 @@ export const ContentPage: React.FC = () => {
       }
     } catch {
       message.error(t('common.error'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -224,13 +239,24 @@ export const ContentPage: React.FC = () => {
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
+        confirmLoading={submitting}
+        okButtonProps={{ disabled: submitting }}
         width={600}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="title"
             label={t('content.titleCol')}
-            rules={[{ required: true, message: t('content.titleRequired') }]}
+            rules={[
+              { required: true, message: t('content.titleRequired') },
+              // 纯空格标题与 required 等价：trim 后为空即拒绝（P2 实测缺陷）
+              {
+                validator: (_rule, value: string) =>
+                  value && value.trim().length === 0
+                    ? Promise.reject(new Error(t('content.titleRequired')))
+                    : Promise.resolve(),
+              },
+            ]}
           >
             <Input placeholder={t('content.titlePlaceholder')} />
           </Form.Item>

@@ -22,6 +22,7 @@ import {
   generateAdminApp,
   generateAdminComponentsIndex,
   generateAdminApiClient,
+  generateAdminSidebarRoutes,
 } from '../generators/admin-app'
 import { generateDbSchemaBarrel } from '../generators/db-schema-barrel'
 import { generateDbInit } from '../generators/db-init'
@@ -508,6 +509,16 @@ export async function createProject(
       if (adminApiClient) {
         await fs.ensureDir(path.join(targetDir, 'src/admin/services'))
         await fs.writeFile(path.join(targetDir, 'src/admin/services/apiClient.ts'), adminApiClient)
+      }
+      // Generate admin/layouts/sidebar-availability.ts：Sidebar 按可用路由过滤菜单入口
+      // （preset 未包含的模块如 forum 无 plugin → 隐藏 /categories 等，防空白内容区）
+      const adminSidebarRoutes = generateAdminSidebarRoutes(resolved)
+      if (adminSidebarRoutes) {
+        await fs.ensureDir(path.join(targetDir, 'src/admin/layouts'))
+        await fs.writeFile(
+          path.join(targetDir, 'src/admin/layouts/sidebar-availability.ts'),
+          adminSidebarRoutes
+        )
       }
     }
 

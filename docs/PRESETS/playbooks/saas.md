@@ -157,6 +157,8 @@
 
 **验证**: 表单/后端校验拦截，提示格式错误，不产生邀请
 
+**截图**: ![邀请无效邮箱被拒（逆向）](../screenshots/matrix/saas/tadmin-01-invite-invalid-email.png)
+
 ### 租户设置修改后还原（正向链）
 
 **步骤**:
@@ -294,6 +296,8 @@
 
 **验证**: 表单/后端校验拦截（格式或长度），不产生邀请记录
 
+**截图**: ![邀请超长邮箱被拒（逆向）](../screenshots/matrix/saas/tadmin-02-invite-long-email.png)
+
 ### 邀请纯空格邮箱被拒（逆向）
 
 **步骤**:
@@ -303,6 +307,8 @@
 
 **验证**: 校验拦截提示格式错误，不产生邀请
 
+**截图**: ![邀请纯空格邮箱被拒（逆向）](../screenshots/matrix/saas/tadmin-03-invite-space-email.png)
+
 ### Todo 标题 XSS 注入转义验证（逆向）
 
 **步骤**:
@@ -311,6 +317,8 @@
 2. OK 提交后查看列表
 
 **验证**: 标题纯文本渲染不执行（无弹窗），随后删除清理
+
+**截图**: ![Todo 标题 XSS 注入转义验证（逆向）](../screenshots/matrix/saas/tadmin-04-todo-xss.png)
 
 **选择器**:
 | 元素 | 选择器 |
@@ -326,6 +334,8 @@
 
 **验证**: 返回 401，不泄露租户清单
 
+**截图**: ![伪造 Bearer token 调平台 API（逆向）](../screenshots/matrix/saas/tadmin-05-fake-bearer-api.png)
+
 ### 双击 Send invitation 防重（逆向）
 
 **步骤**:
@@ -333,6 +343,8 @@
 1. 填写邀请表单后快速双击 Send invitation
 
 **验证**: 实勘：仅 1 次 toast/1 条邀请（若重复创建记录为缺陷），随后清理
+
+**截图**: ![双击 Send invitation 防重（逆向）](../screenshots/matrix/saas/tadmin-06-invite-dblclick.png)
 
 ---
 
@@ -420,6 +432,8 @@
 
 **验证**: 无 Invite member 按钮、成员行无 Role/Remove 操作控件，Role 仅只读徽章
 
+**截图**: ![成员视角无成员管理按钮（RBAC 收敛验证）](../screenshots/matrix/saas/member-01-users-rbac.png)
+
 ### 成员越权访问平台 API（逆向）
 
 **步骤**:
@@ -427,6 +441,8 @@
 1. 成员 token 直接请求 GET /api/tenants 与 /api/audit-logs
 
 **验证**: 均返回 403，不泄露平台级数据
+
+**截图**: ![成员越权访问平台 API（逆向）](../screenshots/matrix/saas/member-02-platform-api-403.png)
 
 ### 成员新增 Todo（正向）
 
@@ -455,6 +471,8 @@
 
 **验证**: 该行移除回到基线，成员数据隔离不波及他人
 
+**截图**: ![成员删除自己 Todo（正向闭环）](../screenshots/matrix/saas/member-03b-member-deleted-todo.png)
+
 **选择器**:
 | 元素 | 选择器 |
 |---|---|
@@ -479,6 +497,8 @@
 
 **验证**: ⚠ 已知缺陷：成员亦渲染全量平台租户表（super_admin 鉴权前后端两层均缺）；记录复现，不作为通过标准
 
+**截图**: ![成员访问平台租户页（逆向·已知缺陷复现）](../screenshots/matrix/saas/member-04-tenants-alert.png)
+
 ### 成员 Todo 超长标题（逆向）
 
 **步骤**:
@@ -487,6 +507,8 @@
 2. OK 提交
 
 **验证**: 实勘：被 zod 长度校验拒绝则提示；接受则正常入列——记录行为，无崩溃
+
+**截图**: ![成员 Todo 超长标题（逆向）](../screenshots/matrix/saas/member-05-todo-long-title.png)
 
 **选择器**:
 | 元素 | 选择器 |
@@ -501,6 +523,8 @@
 1. 以成员 JWT POST /api/tenants/5/members/invite，body 只含 email 不含 roleId
 
 **验证**: 返回 400 ZodError（缺 roleId），不产生邀请；越权邀请 403 另案
+
+**截图**: ![缺 roleId 的邀请 API 被拒（逆向·API 级）](../screenshots/matrix/saas/member-06-invite-noroleid-400.png)
 
 ---
 
@@ -586,6 +610,8 @@
 
 **验证**: 返回 401，不泄露租户清单
 
+**截图**: ![未登录访问平台 API（逆向）](../screenshots/matrix/saas/guest-03-api-noauth-401.png)
+
 ### 错误密码登录被拒（逆向）
 
 **步骤**:
@@ -594,6 +620,8 @@
 2. 点击 Sign in
 
 **验证**: 登录失败提示错误，不进入 dashboard，不签发有效 token
+
+**截图**: ![错误密码登录被拒（逆向）](../screenshots/matrix/saas/guest-04-wrong-password.png)
 
 **选择器**:
 | 元素 | 选择器 |
@@ -611,6 +639,8 @@
 
 **验证**: 校验或后端拒绝，停留登录页不进入控制台
 
+**截图**: ![纯空格账号登录被拒（逆向）](../screenshots/matrix/saas/guest-05-space-account.png)
+
 ### XSS 注入登录账号（逆向）
 
 **步骤**:
@@ -620,6 +650,8 @@
 
 **验证**: 错误提示按文本渲染不执行脚本（无弹窗），登录失败
 
+**截图**: ![XSS 注入登录账号（逆向）](../screenshots/matrix/saas/guest-06-xss-account.png)
+
 ### 双击登录按钮防重（逆向）
 
 **步骤**:
@@ -627,6 +659,8 @@
 1. 填入有效凭据后快速双击 Sign in
 
 **验证**: 仅一次登录跳转，不产生双 token/双跳转
+
+**截图**: ![双击登录按钮防重（逆向）](../screenshots/matrix/saas/guest-07-login-dblclick.png)
 
 ### 注册必填项逐个缺失（逆向）
 
@@ -648,6 +682,8 @@
 
 **验证**: min 6 校验拦截并提示，注册不成功
 
+**截图**: ![注册密码短于 6 位被拒（逆向）](../screenshots/matrix/saas/guest-08-short-password.png)
+
 ### 注册含 emoji 用户名（正向实勘）
 
 **步骤**:
@@ -655,6 +691,8 @@
 1. /register 用户名输入 🚀qa_emoji 类含 emoji 用户名提交
 
 **验证**: 实勘：注册成功或被校验拒绝均记录（参考 todo 站中文名可用先例），无 500
+
+**截图**: ![注册含 emoji 用户名（正向实勘）](../screenshots/matrix/saas/guest-09b-emoji-register-ok.png)
 
 ### 访客直访租户子页批量拦截（逆向）
 
@@ -673,5 +711,7 @@
 1. curl -H "Authorization: Bearer fake-token123" 请求 GET /api/auth/me
 
 **验证**: 返回 401，不返回任何身份信息
+
+**截图**: ![伪造 token 调 /api/auth/me（逆向）](../screenshots/matrix/saas/guest-10-fake-token-me-401.png)
 
 ---

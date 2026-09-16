@@ -30,6 +30,24 @@ vi.mock('@client/stores/pluginStore', () => ({
   }),
 }))
 
+interface MockAuthStore {
+  isAuthenticated: boolean
+}
+
+const mockAuthStore: MockAuthStore = {
+  // 默认已登录：既有表单用例假设游客守卫通过
+  isAuthenticated: true,
+}
+
+vi.mock('@client/stores/authStore', () => ({
+  useAuthStore: vi.fn((selector?: (state: MockAuthStore) => unknown) => {
+    if (selector) {
+      return selector(mockAuthStore)
+    }
+    return mockAuthStore
+  }),
+}))
+
 const renderPublishPage = () =>
   render(
     <MemoryRouter>
@@ -49,6 +67,30 @@ describe('PublishPage', () => {
     mockStore.loading = false
     mockStore.error = null
     mockStore.createPlugin.mockResolvedValue('my-plugin')
+    mockAuthStore.isAuthenticated = true
+  })
+
+  describe('Auth Guard (P2: 游客可打开发布表单回归)', () => {
+    it('should show sign-in guide card instead of the form for guests', () => {
+      mockAuthStore.isAuthenticated = false
+      renderPublishPage()
+
+      expect(screen.getByTestId('publish-page')).toBeInTheDocument()
+      // 引导卡可见
+      expect(screen.getByTestId('publish-auth-guard')).toBeInTheDocument()
+      expect(screen.getByTestId('publish-signin-link')).toHaveAttribute('href', '/login')
+      // 发布表单不可见
+      expect(screen.queryByTestId('publish-name')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('publish-submit')).not.toBeInTheDocument()
+    })
+
+    it('should render the publish form for authenticated users', () => {
+      renderPublishPage()
+
+      expect(screen.queryByTestId('publish-auth-guard')).not.toBeInTheDocument()
+      expect(screen.getByTestId('publish-name')).toBeInTheDocument()
+      expect(screen.getByTestId('publish-submit')).toBeInTheDocument()
+    })
   })
 
   describe('Initial Render', () => {

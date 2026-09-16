@@ -149,16 +149,19 @@ const PRESETS: Array<{
           },
           {
             title: '验证码限流触发（逆向防御验证）',
+            shot: 'matrix/fullstack/superadmin-01-captcha-modal.png',
             steps: ['打开 /admin/test/captcha 验证码测试页', '点击"连续请求 20 次"'],
             verify: '真实弹出验证码 Modal；输入正确码提交后弹窗关闭（响应链闭环）',
           },
           {
             title: '空标题内容创建被拒（逆向）',
+            shot: 'matrix/fullstack/superadmin-02-empty-title-rejected.png',
             steps: ['内容管理 → 新建内容', '不填标题直接提交'],
             verify: '表单/zod 校验拦截并提示必填，不产生脏数据',
           },
           {
             title: '未登录访问管理 API（逆向）',
+            shot: 'matrix/fullstack/superadmin-09-api-unauth-fake-token-401.png',
             steps: ['不带 Authorization 请求 /api/admin/stats'],
             verify: '返回 401，不泄露任何统计',
           },
@@ -211,6 +214,7 @@ const PRESETS: Array<{
           },
           {
             title: 'emoji/中英混合标题正常创建（正向）',
+            shot: 'matrix/fullstack/superadmin-03-emoji-title-created.png',
             steps: [
               '内容列表点击"创建内容"',
               '标题输入 🎉 Release Notes 发布v2 中英混合，填写其余必填项提交',
@@ -220,21 +224,25 @@ const PRESETS: Array<{
           },
           {
             title: '连续创建 3 条内容（正向批量链）',
+            shot: 'matrix/fullstack/superadmin-04-batch3-created.png',
             steps: ['连续点击"创建内容"新建 3 条不同标题的内容并逐一提交', '记录列表新增数量'],
             verify: '3 条均出现在列表，随后全部删除清理，列表回到基线',
           },
           {
             title: '超长标题提交（逆向）',
+            shot: 'matrix/fullstack/superadmin-05-long-title-accepted.png',
             steps: ['点击"创建内容"', '标题粘贴 256+ 字符长串，提交'],
             verify: '实勘：被长度校验拒绝则提示报错；若接受则正常入库显示——记录行为，前端不崩溃',
           },
           {
             title: '纯空格标题提交被拒（逆向）',
+            shot: 'matrix/fullstack/superadmin-06-whitespace-title-BUG-accepted.png',
             steps: ['点击"创建内容"', '标题只输入多个空格，提交'],
             verify: '校验拦截（trim 后按必填处理），不产生空标题脏数据',
           },
           {
             title: 'XSS 注入标题转义验证（逆向）',
+            shot: 'matrix/fullstack/superadmin-07-xss-title-escaped.png',
             steps: [
               '点击"创建内容"',
               '标题输入 <script>alert(1)</script>，提交',
@@ -244,11 +252,13 @@ const PRESETS: Array<{
           },
           {
             title: '伪造 Bearer token 调管理 API（逆向）',
+            shot: 'matrix/fullstack/superadmin-09-api-unauth-fake-token-401.png',
             steps: ['curl -H "Authorization: Bearer fake-token123" 请求 /api/admin/stats'],
             verify: '返回 401，伪造 token 不被接受（仅预置 mock token 可用）',
           },
           {
             title: '双击创建内容提交防重（逆向）',
+            shot: 'matrix/fullstack/superadmin-08-dblclick-dup-BUG.png',
             steps: ['填写完整创建表单后快速双击 OK 提交按钮'],
             verify: '实勘：仅创建 1 条（若出现重复行记录为缺陷），随后清理',
           },
@@ -287,6 +297,7 @@ const PRESETS: Array<{
           },
           {
             title: '客服登出（正向链）',
+            shot: 'matrix/fullstack/cs-02-logout-back-to-login.png',
             steps: ['登录后点击 header 头像下拉', '点击"退出登录"'],
             verify: '跳回 /admin/login，重新进入后台需再次登录（customer-service-token 登出）',
           },
@@ -298,6 +309,7 @@ const PRESETS: Array<{
           },
           {
             title: '客服伪造角色提权（逆向）',
+            shot: 'matrix/fullstack/cs-01-forged-role-still-403.png',
             steps: [
               'localStorage 把 admin-storage 的 user.role 改为 super_admin',
               '刷新后请求 /api/admin/users',
@@ -337,11 +349,13 @@ const PRESETS: Array<{
           },
           {
             title: '普通用户登出（正向链）',
+            shot: 'matrix/fullstack/user-02-logout-back-to-login.png',
             steps: ['登录后打开头像下拉', '点击"退出登录"'],
             verify: '跳回 /admin/login，user-token 登出',
           },
           {
             title: '普通用户 token 直调管理 API（逆向）',
+            shot: 'matrix/fullstack/user-01-token-api-403.png',
             steps: [
               'curl -H "Authorization: Bearer user-token" 请求 /api/admin/stats 与 /api/admin/users',
             ],
@@ -368,6 +382,7 @@ const PRESETS: Array<{
           },
           {
             title: '写操作被拒（API 401）',
+            shot: 'matrix/fullstack/guest-01-todos-auto-login-write.png',
             steps: ['在 /todos 页尝试新增（需登录态）'],
             verify: '游客自动登录（dev token），无需手动认证',
           },
@@ -385,6 +400,7 @@ const PRESETS: Array<{
           },
           {
             title: '伪造 token 调 todos 写接口（逆向）',
+            shot: 'matrix/fullstack/guest-02-fake-token-post-401.png',
             steps: ['curl -X POST -H "Authorization: Bearer fake-token123" 请求 /api/todos'],
             verify: '返回 401，不产生任何待办数据',
           },
@@ -498,6 +514,7 @@ const PRESETS: Array<{
           },
           {
             title: '邀请无效邮箱被拒（逆向）',
+            shot: 'matrix/saas/tadmin-01-invite-invalid-email.png',
             steps: ['Invite member 填入非法格式邮箱提交'],
             verify: '表单/后端校验拦截，提示格式错误，不产生邀请',
           },
@@ -580,27 +597,32 @@ const PRESETS: Array<{
           },
           {
             title: '邀请超长邮箱被拒（逆向）',
+            shot: 'matrix/saas/tadmin-02-invite-long-email.png',
             steps: ['Invite member 邮箱填入 256+ 字符非法长串', '点击 Send invitation'],
             verify: '表单/后端校验拦截（格式或长度），不产生邀请记录',
           },
           {
             title: '邀请纯空格邮箱被拒（逆向）',
+            shot: 'matrix/saas/tadmin-03-invite-space-email.png',
             steps: ['Invite member 邮箱只输入空格', '点击 Send invitation'],
             verify: '校验拦截提示格式错误，不产生邀请',
           },
           {
             title: 'Todo 标题 XSS 注入转义验证（逆向）',
+            shot: 'matrix/saas/tadmin-04-todo-xss.png',
             steps: ['+ Add Todo 标题输入 <script>alert(1)</script>', 'OK 提交后查看列表'],
             verify: '标题纯文本渲染不执行（无弹窗），随后删除清理',
             selectors: { 标题输入框: '#title', 提交按钮: '.ant-modal .ant-btn-primary' },
           },
           {
             title: '伪造 Bearer token 调平台 API（逆向）',
+            shot: 'matrix/saas/tadmin-05-fake-bearer-api.png',
             steps: ['curl -H "Authorization: Bearer fake-token123" 请求 GET /api/tenants'],
             verify: '返回 401，不泄露租户清单',
           },
           {
             title: '双击 Send invitation 防重（逆向）',
+            shot: 'matrix/saas/tadmin-06-invite-dblclick.png',
             steps: ['填写邀请表单后快速双击 Send invitation'],
             verify: '实勘：仅 1 次 toast/1 条邀请（若重复创建记录为缺陷），随后清理',
           },
@@ -657,11 +679,13 @@ const PRESETS: Array<{
           },
           {
             title: '成员视角无成员管理按钮（RBAC 收敛验证）',
+            shot: 'matrix/saas/member-01-users-rbac.png',
             steps: ['成员身份进入 Users 页'],
             verify: '无 Invite member 按钮、成员行无 Role/Remove 操作控件，Role 仅只读徽章',
           },
           {
             title: '成员越权访问平台 API（逆向）',
+            shot: 'matrix/saas/member-02-platform-api-403.png',
             steps: ['成员 token 直接请求 GET /api/tenants 与 /api/audit-logs'],
             verify: '均返回 403，不泄露平台级数据',
           },
@@ -678,6 +702,7 @@ const PRESETS: Array<{
           },
           {
             title: '成员删除自己 Todo（正向闭环）',
+            shot: 'matrix/saas/member-03b-member-deleted-todo.png',
             steps: ['在刚创建的 todo 行点击删除', '确认弹窗点击 Yes'],
             verify: '该行移除回到基线，成员数据隔离不波及他人',
             selectors: { 删除确认按钮: '.ant-modal-confirm-btns button.ant-btn-primary' },
@@ -690,18 +715,21 @@ const PRESETS: Array<{
           },
           {
             title: '成员访问平台租户页（逆向·已知缺陷复现）',
+            shot: 'matrix/saas/member-04-tenants-alert.png',
             steps: ['成员身份硬加载 /tenant/tenants'],
             verify:
               '⚠ 已知缺陷：成员亦渲染全量平台租户表（super_admin 鉴权前后端两层均缺）；记录复现，不作为通过标准',
           },
           {
             title: '成员 Todo 超长标题（逆向）',
+            shot: 'matrix/saas/member-05-todo-long-title.png',
             steps: ['+ Add Todo 标题粘贴 256+ 字符', 'OK 提交'],
             verify: '实勘：被 zod 长度校验拒绝则提示；接受则正常入列——记录行为，无崩溃',
             selectors: { 标题输入框: '#title', 提交按钮: '.ant-modal .ant-btn-primary' },
           },
           {
             title: '缺 roleId 的邀请 API 被拒（逆向·API 级）',
+            shot: 'matrix/saas/member-06-invite-noroleid-400.png',
             steps: ['以成员 JWT POST /api/tenants/5/members/invite，body 只含 email 不含 roleId'],
             verify: '返回 400 ZodError（缺 roleId），不产生邀请；越权邀请 403 另案',
           },
@@ -754,11 +782,13 @@ const PRESETS: Array<{
           },
           {
             title: '未登录访问平台 API（逆向）',
+            shot: 'matrix/saas/guest-03-api-noauth-401.png',
             steps: ['无 token 请求 GET /api/tenants'],
             verify: '返回 401，不泄露租户清单',
           },
           {
             title: '错误密码登录被拒（逆向）',
+            shot: 'matrix/saas/guest-04-wrong-password.png',
             steps: ['/tenant/login 输入 superadmin / wrongpass', '点击 Sign in'],
             verify: '登录失败提示错误，不进入 dashboard，不签发有效 token',
             selectors: {
@@ -769,16 +799,19 @@ const PRESETS: Array<{
           },
           {
             title: '纯空格账号登录被拒（逆向）',
+            shot: 'matrix/saas/guest-05-space-account.png',
             steps: ['账号输入空格，密码输入任意值', '点击 Sign in'],
             verify: '校验或后端拒绝，停留登录页不进入控制台',
           },
           {
             title: 'XSS 注入登录账号（逆向）',
+            shot: 'matrix/saas/guest-06-xss-account.png',
             steps: ['账号输入 <script>alert(1)</script>，密码任意', '点击 Sign in'],
             verify: '错误提示按文本渲染不执行脚本（无弹窗），登录失败',
           },
           {
             title: '双击登录按钮防重（逆向）',
+            shot: 'matrix/saas/guest-07-login-dblclick.png',
             steps: ['填入有效凭据后快速双击 Sign in'],
             verify: '仅一次登录跳转，不产生双 token/双跳转',
           },
@@ -790,11 +823,13 @@ const PRESETS: Array<{
           },
           {
             title: '注册密码短于 6 位被拒（逆向）',
+            shot: 'matrix/saas/guest-08-short-password.png',
             steps: ['/register 填写合法用户名/邮箱，密码输入 abc1', '提交'],
             verify: 'min 6 校验拦截并提示，注册不成功',
           },
           {
             title: '注册含 emoji 用户名（正向实勘）',
+            shot: 'matrix/saas/guest-09b-emoji-register-ok.png',
             steps: ['/register 用户名输入 🚀qa_emoji 类含 emoji 用户名提交'],
             verify: '实勘：注册成功或被校验拒绝均记录（参考 todo 站中文名可用先例），无 500',
           },
@@ -806,6 +841,7 @@ const PRESETS: Array<{
           },
           {
             title: '伪造 token 调 /api/auth/me（逆向）',
+            shot: 'matrix/saas/guest-10-fake-token-me-401.png',
             steps: ['curl -H "Authorization: Bearer fake-token123" 请求 GET /api/auth/me'],
             verify: '返回 401，不返回任何身份信息',
           },
@@ -856,11 +892,13 @@ const PRESETS: Array<{
           },
           {
             title: '空标题提交无效（逆向）',
+            shot: 'matrix/todo/todo-user-01-empty-add-blocked.png',
             steps: ['打开 /todos', '不输入标题直接点击 Add Todo'],
             verify: '提交被拦截，Total 计数不变',
           },
           {
             title: 'WebSocket 未连接发消息（逆向）',
+            shot: 'matrix/todo/todo-user-06-ws-send-disabled.png',
             steps: ['打开 /websocket', '不点 Connect 直接在输入框发送'],
             verify: '提示未连接或消息不发出，无假成功',
           },
@@ -904,16 +942,19 @@ const PRESETS: Array<{
           },
           {
             title: 'XSS 注入 todo 标题（逆向）',
+            shot: 'matrix/todo/todo-user-02-xss-title-escaped.png',
             steps: ['标题输入 <script>alert(1)</script>，点击 Add Todo', '查看卡片渲染'],
             verify: '标题按纯文本渲染不执行（无弹窗），随后删除清理',
           },
           {
             title: '超长标题提交（逆向）',
+            shot: 'matrix/todo/todo-user-03-long-title-blocked.png',
             steps: ['标题粘贴 256+ 字符长串', '点击 Add Todo'],
             verify: '实勘：接受则卡片正常换行不溢出且 Total +1；拒绝则提示校验——记录行为，无崩溃',
           },
           {
             title: '双击 Add Todo 防重（逆向）',
+            shot: 'matrix/todo/todo-user-05-dblclick-result.png',
             steps: ['输入标题后快速双击 Add Todo'],
             verify: '仅创建 1 条（若重复记录为缺陷），随后清理',
           },
@@ -931,6 +972,7 @@ const PRESETS: Array<{
           },
           {
             title: '登出态访问受保护接口（逆向）',
+            shot: 'matrix/todo/todo-guest-01-api-401.png',
             steps: ['清空 localStorage 后无 token 请求 /api/todos 写接口'],
             verify: '返回 401，REST 层要求认证（页面自动登录为 demo 特性，接口层不放松）',
           },
@@ -956,16 +998,19 @@ const PRESETS: Array<{
         cases: [
           {
             title: '登录管理后台',
+            shot: 'matrix/market/a01-admin-dashboard.png',
             steps: ['打开 /admin', '输入 superadmin / 123456', '点击登录'],
             verify: '进入管理后台',
           },
           {
             title: '插件审核（approve/reject）',
+            shot: 'matrix/market/a02-plugins-review-blank.png',
             steps: ['进入插件管理页', '查看待审核列表', '点击 approve 或 reject'],
             verify: '插件状态变更',
           },
           {
             title: '插件上架/下架',
+            shot: 'matrix/market/a02-plugins-list-blank.png',
             steps: ['进入插件管理页', '操作上架/下架按钮'],
             verify: '插件可见性变更',
           },
@@ -989,6 +1034,7 @@ const PRESETS: Array<{
           },
           {
             title: '插件下架/上架管理（已补建·正向复验）',
+            shot: 'matrix/market/a02-plugins-board-blank.png',
             steps: [
               'superadmin 登录 /admin → 侧栏"插件管理"→ 插件列表',
               '对 approved 插件执行下架（填原因），rejected 执行上架',
@@ -1009,16 +1055,19 @@ const PRESETS: Array<{
         cases: [
           {
             title: '注册开发者账号',
+            shot: 'matrix/market/d1-register-filled.png',
             steps: ['打开注册页', '填写用户名/邮箱/密码', '提交'],
             verify: '注册成功跳转登录',
           },
           {
             title: '提交插件',
+            shot: 'matrix/market/d2-plugin-detail-pending.png',
             steps: ['登录后点击 Publish', '填写插件信息（名称/描述/版本/仓库）', '提交'],
             verify: '插件进入 pending 审核状态',
           },
           {
             title: '查看审核状态',
+            shot: 'matrix/market/d3-developer-dashboard-pending.png',
             steps: ['进入 Developer 页面', '查看自己的插件列表'],
             verify: '显示各插件的 pending/approved/rejected 状态',
           },
@@ -1121,17 +1170,20 @@ const PRESETS: Array<{
           },
           {
             title: '卸载已安装插件',
+            shot: 'matrix/market/U1-after-uninstall-empty-list.png',
             steps: ['在 /installed 点击卸载', '回详情页重新 Install'],
             verify: '卸载后列表移除、重装恢复，installed 状态服务端驱动',
           },
           {
             title: '未登录访问我的安装（逆向）',
+            shot: 'matrix/market/U11-signedout-installed-guide-card.png',
             steps: ['登出后直接访问 /installed'],
             verify: '401 由 apiClient 统一跳转 /login，不泄露安装数据',
           },
 
           {
             title: '重复安装幂等（逆向）',
+            shot: 'matrix/market/U2U3-reinstalled-single-entry-1542.png',
             steps: ['同一插件连续点击 Install 两次'],
             verify: '安装记录唯一（UNIQUE 约束幂等），计数仅累加、不产生重复安装行',
           },
@@ -1155,6 +1207,7 @@ const PRESETS: Array<{
           },
           {
             title: '空结果态',
+            shot: 'matrix/market/G1-search-empty-zzzqqq.png',
             steps: ['搜索不存在的词 zzzqqq'],
             verify: '显示 No results for zzzqqq',
           },
@@ -1240,26 +1293,31 @@ const PRESETS: Array<{
         cases: [
           {
             title: '内容新建/编辑/发布',
+            shot: 'matrix/forum/a01-create-publish.png',
             steps: ['登录管理后台', '进入内容管理', '新建内容 → 填写 → 发布'],
             verify: '内容状态变为 published',
           },
           {
             title: '用户管理',
+            shot: 'matrix/forum/a02-users.png',
             steps: ['进入用户管理页'],
             verify: '用户列表正常渲染',
           },
           {
             title: '系统设置',
+            shot: 'matrix/forum/a03-system-settings.png',
             steps: ['进入系统设置页'],
             verify: '表单带出真实配置值',
           },
           {
             title: '空标题内容创建被拒（逆向）',
+            shot: 'matrix/forum/a04-empty-title-rejected.png',
             steps: ['登录管理后台内容管理', '新建内容不填标题直接提交'],
             verify: '校验拦截并提示必填，不产生脏数据',
           },
           {
             title: '未登录访问管理 API（逆向）',
+            shot: 'matrix/forum/a05-no-token-401.png',
             steps: ['不带 Authorization 请求管理端接口'],
             verify: '返回 401',
           },
@@ -1344,11 +1402,13 @@ const PRESETS: Array<{
           },
           {
             title: '删除自己的评论',
+            shot: 'matrix/forum/m01-2-after-delete.png',
             steps: ['在自己评论旁点击删除'],
             verify: '评论移除、计数 -1，他人评论不受影响',
           },
           {
             title: '删除他人评论被拒（逆向）',
+            shot: 'matrix/forum/m02-others-comment-no-delete.png',
             steps: ['尝试删除他人评论（UI 无按钮；API 层 DELETE 他人评论）'],
             verify: 'UI 无入口；API 层 403，仅作者与 super_admin 可删',
           },
@@ -1366,6 +1426,7 @@ const PRESETS: Array<{
           },
           {
             title: '发帖/评论被拒',
+            shot: 'matrix/forum/g01-guest-comment-login-required.png',
             steps: ['尝试发帖或评论（需登录）'],
             verify: '被要求登录',
           },
@@ -1463,6 +1524,7 @@ const PRESETS: Array<{
           },
           {
             title: '游客态无评论管理按钮（逆向）',
+            shot: 'matrix/forum/g02-no-manage-buttons.png',
             steps: ['登出后打开内容详情评论区'],
             verify: '可见评论列表但无任何删除按钮，显示"登录后参与讨论"引导',
           },
@@ -1614,17 +1676,20 @@ const PRESETS: Array<{
           },
           {
             title: '加购→下单→订单生成（正向闭环）',
+            shot: 'matrix/shop/shop-27-checkout-loop-orders.png',
             steps: ['详情页加入购物车', 'Cart 页点击 Checkout', '导航切换到 Orders'],
             verify:
               '生成 ORD-2026-xxxxxx 新订单（Processing 状态），购物车清空，旧 ORD-2024 mock 全部下线',
           },
           {
             title: '订单状态筛选',
+            shot: 'matrix/shop/shop-28-order-filter-processing.png',
             steps: ['Orders 页点击 Processing 筛选 chip'],
             verify: '新订单在 Processing 下可见，Delivered 筛选下隐藏并显示空态',
           },
           {
             title: '空购物车 Checkout 无效（逆向）',
+            shot: 'matrix/shop/shop-30-empty-cart-no-checkout.png',
             steps: ['清空购物车后尝试 Checkout'],
             verify: '无 Checkout 入口或点击无效果，不产生空订单',
           },
@@ -1681,6 +1746,7 @@ const PRESETS: Array<{
           },
           {
             title: '移动端搜索结果页（正向边界）',
+            shot: 'matrix/shop/shop-37-mobile-search-isr.png',
             steps: ['切 375x667 视口，搜索 ISR'],
             verify: '结果单卡纵向堆叠正常无横向溢出',
           },
@@ -1692,6 +1758,7 @@ const PRESETS: Array<{
           },
           {
             title: '购物车 qty=9999 超大数量（逆向）',
+            shot: 'matrix/shop/shop-33-qty9999-cart.png',
             steps: ['将某行 qty 调至 9999（步进连点或输入）'],
             verify: '实勘：接受则 Total 大数正常显示不溢出；有上限则被钳制——记录行为',
           },
@@ -1704,11 +1771,13 @@ const PRESETS: Array<{
           },
           {
             title: '搜索纯空格关键词（逆向）',
+            shot: 'matrix/shop/shop-34-search-spaces-empty.png',
             steps: ['搜索框输入多个空格并提交'],
             verify: '不触发假搜索或显示空态，列表不闪空，无报错',
           },
           {
             title: '搜索超长关键词（逆向）',
+            shot: 'matrix/shop/shop-35-search-long-error.png',
             steps: ['粘贴 256+ 字符长串搜索'],
             verify: '输入框/结果区不撑破布局，空态正常',
           },
@@ -1727,16 +1796,19 @@ const PRESETS: Array<{
           },
           {
             title: '双击 Checkout 重复下单（逆向）',
+            shot: 'matrix/shop/shop-31-dblclick-checkout-orders.png',
             steps: ['在 Cart 快速双击 Checkout'],
             verify: '实勘：仅生成 1 笔订单（若重复记录为缺陷），购物车状态一致',
           },
           {
             title: 'Checkout 后空购物车刷新保持（正向闭环深化）',
+            shot: 'matrix/shop/shop-32-postcheckout-refresh-empty.png',
             steps: ['完成 Checkout 进入 Cart', '按 F5 硬刷新'],
             verify: '实勘：清空态保持不回填 mock 商品（若回填记录为缺陷）',
           },
           {
             title: '伪造 token 调订单写接口（逆向·API 级）',
+            shot: 'matrix/shop/shop-38-api-fake-token.txt',
             steps: [
               'curl -X POST -H "Authorization: Bearer fake-token123" https://shop.lpm1.top/api/orders',
             ],
@@ -1744,6 +1816,7 @@ const PRESETS: Array<{
           },
           {
             title: '分类 tab 快速连点（逆向·竞态）',
+            shot: 'matrix/shop/shop-36-tab-rapid-click-all.png',
             steps: ['快速连续点击多个分类 tab（文章/教程/公告连点）'],
             verify: '最终停在最后点击的分类，列表与高亮一致，无竞态错乱',
           },
@@ -1809,6 +1882,7 @@ const PRESETS: Array<{
           },
           {
             title: '空标题提交无效（逆向）',
+            shot: 'matrix/minimal/minimal-11-empty-title-disabled.png',
             steps: ['不输入任何内容直接点击 Add'],
             verify: '按钮禁用或提交无效果，不产生空标题条目',
           },
@@ -1837,26 +1911,31 @@ const PRESETS: Array<{
           },
           {
             title: 'emoji/中英混合标题正常提交（正向）',
+            shot: 'matrix/minimal/minimal-13-emoji-mixed-title.png',
             steps: ['输入 🚀 上线 Release Notes 中英混合 标题', '点击 Add', '确认后删除清理'],
             verify: '条目正常显示无乱码无报错，清理后恢复基线',
           },
           {
             title: '纯空格标题提交（逆向）',
+            shot: 'matrix/minimal/minimal-12-spaces-title-disabled.png',
             steps: ['输入框只输入多个空格', '观察 Add 按钮状态并尝试提交'],
             verify: 'Add 保持 disabled 或提交无效果（trim 守卫），不产生空标题条目',
           },
           {
             title: '超长标题提交（逆向）',
+            shot: 'matrix/minimal/minimal-14-long-title-200-cap.png',
             steps: ['粘贴 256+ 字符长串标题', '点击 Add'],
             verify: '实勘：接受则卡片换行不撑破布局且 Total +1；拒绝则校验提示——记录行为',
           },
           {
             title: 'XSS 注入标题转义验证（逆向）',
+            shot: 'matrix/minimal/minimal-15-xss-escaped.png',
             steps: ['标题输入 <script>alert(1)</script>，点击 Add', '查看卡片渲染'],
             verify: '纯文本渲染不执行（无弹窗），随后删除清理',
           },
           {
             title: '双击 Add 防重（逆向）',
+            shot: 'matrix/minimal/minimal-16-dblclick-single-entry.png',
             steps: ['输入标题后快速双击 Add 按钮'],
             verify: '仅新增 1 条（若重复记录为缺陷），随后清理',
           },
@@ -1876,26 +1955,31 @@ const PRESETS: Array<{
         cases: [
           {
             title: 'CLI 命令',
+            shot: 'matrix/cli-only/cli-01-commands.txt',
             steps: ['npm run cli -- --help', '运行 todos list 等命令'],
             verify: '命令输出正常',
           },
           {
             title: 'API 调用',
+            shot: 'matrix/cli-only/cli-02-api-call.txt',
             steps: ['curl http://localhost:3010/api/todos'],
             verify: 'API 返回 JSON 数据',
           },
           {
             title: '未知命令报错（逆向）',
+            shot: 'matrix/cli-only/cli-03-unknown-command.txt',
             steps: ['npm run cli -- not-a-real-command'],
             verify: '输出未知命令错误与用法提示，非静默成功',
           },
           {
             title: '访问不存在 API（逆向）',
+            shot: 'matrix/cli-only/cli-04-api-not-exist.txt',
             steps: ['curl http://localhost:3010/api/not-exist'],
             verify: '返回 404，不泄露堆栈',
           },
           {
             title: 'todos add→list→delete CLI 闭环（正向链）',
+            shot: 'matrix/cli-only/cli-05-loop.txt',
             steps: [
               'npm run cli -- todos add "qa-e2e-chain-item"',
               'npm run cli -- todos list',
@@ -1905,11 +1989,13 @@ const PRESETS: Array<{
           },
           {
             title: 'CLI help 探测（正向）',
+            shot: 'matrix/cli-only/cli-06-help-probe.txt',
             steps: ['npm run cli -- --help', 'npm run cli -- todos --help'],
             verify: '两级用法输出完整（命令列表与子命令说明），退出码 0',
           },
           {
             title: '伪造 Bearer token 调写接口（逆向）',
+            shot: 'matrix/cli-only/cli-07-fake-token.txt',
             steps: [
               'curl -X POST -H "Authorization: Bearer fake-token123" http://localhost:3010/api/todos',
             ],
@@ -1917,6 +2003,7 @@ const PRESETS: Array<{
           },
           {
             title: 'API 非法 payload 批量探测（逆向）',
+            shot: 'matrix/cli-only/cli-08-payloads.txt',
             steps: [
               'POST /api/todos 依次提交三种 payload：空标题 {"title":""}、超长 256+ 字符标题、<script>alert(1)</script> 注入标题',
             ],

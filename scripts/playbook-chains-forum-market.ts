@@ -28,6 +28,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
   'forum:管理员': [
     {
       title: '编辑内容后还原（正向链）',
+      shot: 'matrix/forum/a06-2-front-reverted.png',
       steps: [
         '打开 https://forum.lpm1.top/admin 登录 superadmin / 123456，进入内容管理',
         '编辑 content-1，标题末尾追加 [T-EDIT] 保存',
@@ -39,6 +40,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '草稿→发布状态切换（正向）',
+      shot: 'matrix/forum/a07-2-published-visible.png',
       steps: [
         '管理后台内容管理新建内容（标题含 [T-DRAFT] 标记，存为草稿/draft）',
         '打开前台首页确认该内容不出现在列表',
@@ -50,6 +52,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '新建内容→删除回收链（正向）',
+      shot: 'matrix/forum/a08-2-deleted-404fallback.png',
       steps: [
         '新建内容 [T-DEL-回收测试] 并发布',
         '前台确认可见后，管理端删除该内容',
@@ -59,6 +62,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '分类管理新建分类（正向·实勘）',
+      shot: 'matrix/forum/a09-categories.png',
       steps: [
         '管理后台进入 内容管理→分类管理',
         '查看现有分类列表',
@@ -70,6 +74,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '用户管理搜索过滤（正向）',
+      shot: 'matrix/forum/a10-user-search-readonly.png',
       steps: [
         '管理后台进入用户管理（/admin/users）',
         '在搜索框输入 superadmin',
@@ -79,6 +84,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '管理后台硬刷新会话保持（正向）',
+      shot: 'matrix/forum/a11-2-after-refresh.png',
       steps: [
         '登录管理后台到达 /admin/dashboard',
         '按 F5 硬刷新',
@@ -89,6 +95,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '同一内容连续两次编辑（连续操作）',
+      shot: 'matrix/forum/a12-consecutive-edits.png',
       steps: [
         '编辑 content-2 摘要追加 A → 保存',
         '立即再次编辑追加 B → 保存',
@@ -98,11 +105,13 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '错误密码登录管理后台（逆向）',
+      shot: 'matrix/forum/a13-wrong-password-login.png',
       steps: ['/admin 登录页输入 superadmin / wrong-pass-123', '点击登录'],
       verify: '提示凭据错误并停留登录页；地址栏不进入 /admin/dashboard，无任何管理数据渲染',
     },
     {
       title: '超长+HTML 注入内容标题（逆向）',
+      shot: 'matrix/forum/a14-detail-escaped.png',
       steps: [
         '新建内容，标题填 256+ 字符并在末尾拼 <script>alert(1)</script>',
         '提交保存',
@@ -112,6 +121,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '无 token / 普通用户 token 调管理 API（逆向·身份交叉）',
+      shot: 'matrix/forum/a15-member-token-403.png',
       steps: [
         '无 Authorization 请求 GET /api/admin/users 与 /api/admin/stats',
         '用前台注册用户（round2verify@t.com / Test1234!）登录取 JWT 后带 Bearer 重复请求',
@@ -122,6 +132,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
   'forum:注册用户': [
     {
       title: '三入口到达同一内容详情（入口交叉）',
+      shot: 'matrix/forum/m03-2b-entry2-detail.png',
       steps: [
         '登录后首页点击 ISR 教程卡（a[href="/content/content-2"]）进详情',
         '返回后从导航 Topics（[data-testid="nav-topics-button"]）点击同一内容链接（/topics/content-2 风格）',
@@ -154,6 +165,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '登录落地页 /topics 断言（v8 复验）',
+      shot: 'matrix/forum/m04-login-landing-topics.png',
       steps: [
         '/login 使用 round2verify@t.com / Test1234! 点 [data-testid="login-submit"]',
         '观察跳转目标（0s / 2s 双帧）',
@@ -174,6 +186,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '接近 2000 字长评论边界（正向边界）',
+      shot: 'matrix/forum/m05-1999char-posted.png',
       steps: [
         '评论区输入 1999 字符中英混合长文本',
         '发布成功后再输入超限文本，观察计数器与提交按钮状态',
@@ -183,6 +196,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '连续发 3 删 2 计数链（连续操作）',
+      shot: 'matrix/forum/m06-3post-2delete.png',
       steps: [
         '连续发布评论 A、B、C 三条',
         '删除 B、C（仅自己评论渲染 [data-testid="comment-delete"]，无确认弹窗）',
@@ -192,16 +206,19 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '双击重复提交评论（逆向）',
+      shot: 'matrix/forum/m07-double-click-single.png',
       steps: ['输入一条正常评论', '快速双击发布按钮'],
       verify: '仅产生 1 条评论（计数 +1），无重复条目（若 +2 记录缺陷，后端幂等性实勘）',
     },
     {
       title: '纯空格评论被拒（逆向）',
+      shot: 'matrix/forum/m08-spaces-disabled.png',
       steps: ['评论框只输入空格（如 5 个空格）', '观察提交按钮状态并尝试提交'],
       verify: '按钮呈 disabled 禁用态或提交被拦截；计数不变、不产生空白评论',
     },
     {
       title: 'HTML/script 注入评论（逆向）',
+      shot: 'matrix/forum/m09-injection-escaped.png',
       steps: ['提交评论 "<script>alert(1)</script>"', '再提交 "<img src=x onerror=alert(2)>"'],
       verify: '无任何 alert 执行；评论区以转义纯文本渲染；控制台无意外报错',
     },
@@ -217,6 +234,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '注册已存在邮箱被拒（逆向）',
+      shot: 'matrix/forum/m10-duplicate-email.png',
       steps: ['/register 使用已存在邮箱 r7other@t.com 与新用户名注册', '提交'],
       verify:
         '服务端报错（实勘具体文案），停留注册/登录页且不产生重复账号；r7other 原账号仍可正常登录',
@@ -230,6 +248,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '删除他人评论 API 403（IDOR·身份交叉）',
+      shot: 'matrix/forum/m11-idor-403.png',
       steps: [
         'demo（demo@biomimic.app/demo123）与 r7other（r7other@t.com / Test1234!）分别登录各发一条评论，记下双方评论 id',
         '以 demo 身份在 UI 确认他人评论无删除按钮',
@@ -240,6 +259,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '伪造 Bearer token 调发布评论 API（逆向·实勘）',
+      shot: 'matrix/forum/m12-fake-bearer-401.png',
       steps: [
         '构造无签名 token（Authorization: Bearer fake123）POST 评论发布接口',
         '对照：带真实 JWT 请求同一接口',
@@ -249,6 +269,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: 'Profile 渲染真实登录身份（v8 复验·正向）',
+      shot: 'matrix/forum/m13-profile-real-identity.png',
       steps: ['登录 round2verify 后访问 /profile', '对照 localStorage 中 user.username'],
       verify:
         '头像为用户名首字母、h1 为 round2verify；无 Jane Doe 硬编码残留（历史 P2 已修，复验防回归）',
@@ -257,6 +278,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
   'forum:游客（未登录）': [
     {
       title: '真游客态工艺链（前置·自动登录怪癖）',
+      shot: 'matrix/forum/g03-1-guest-home.png',
       steps: [
         '全新会话打开首页（mock 后端会自动写入 auth-token/Demo User）',
         'eval 写入 localStorage.setItem("auth-token", JSON.stringify({state:{token:null,isAuthenticated:false,user:null},version:0})) 后 reload',
@@ -267,6 +289,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '游客评论区只读态（v9 复验扩展）',
+      shot: 'matrix/forum/g04-guest-login-redirect.png',
       steps: [
         '真游客态打开 /content/content-1',
         '滚动到 [data-testid="comment-section"]',
@@ -291,6 +314,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '搜索后切换分类（组合语义边界）',
+      shot: 'matrix/forum/g05-2-search-then-gonggao.png',
       steps: [
         '搜索 ISR 得到 1 卡',
         '点击"公告"胶囊观察结果',
@@ -302,21 +326,25 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '空搜索直接提交（逆向边界）',
+      shot: 'matrix/forum/g06-empty-search.png',
       steps: ['不输入任何内容直接点击搜索按钮', '输入后再清空，再次提交'],
       verify: '实勘：无提交动作或回退全列表；不出现 500/白屏，列表状态可恢复正常操作',
     },
     {
       title: '超长搜索词 256+（逆向）',
+      shot: 'matrix/forum/g07-long-search-300.png',
       steps: ['在搜索框粘贴 300 字符无意义字符串并提交'],
       verify: '不崩溃：显示空态或 0 结果；输入框无异常行为；提交后页面可继续正常搜索与筛选',
     },
     {
       title: '搜索 XSS/SQL 注入串（逆向）',
+      shot: 'matrix/forum/g08-1-xss-search.png',
       steps: ['搜索 <script>alert(1)</script> 并提交', "再搜索 ' OR 1=1 -- 并提交"],
       verify: '关键词在空态文案中转义显示、无脚本执行；服务端不 500（防注入）；清空后列表恢复正常',
     },
     {
       title: '游客直访 /topics 与 /popular（入口正向）',
+      shot: 'matrix/forum/g09-1-topics-direct.png',
       steps: ['地址栏直接打开 /topics', '再直接打开 /popular'],
       verify:
         'Topics 渲染独立聚合视图（h1 Topics、组头 "# 分类名"+绿色计数徽章）；Popular 渲染排行列表（排名徽章+🔥热度+热度条，热度 0 时条宽 0%）——v9 改版后两者均非首页复刻',
@@ -351,6 +379,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '游客伪造 token 调写 API（身份交叉·实勘）',
+      shot: 'matrix/forum/g10-guest-write-401.png',
       steps: [
         '真游客态（auth-token 置 null）直接 POST /api/contents 与评论发布接口（不带 Authorization）',
       ],
@@ -395,6 +424,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '内容新建→删除回收链（正向·实勘新建入口）',
+      shot: 'matrix/market/a12-list-after-delete.png',
       steps: [
         '在 /admin/content 探测新建内容入口（v8 记录行操作仅 编辑/删除）',
         '若可新建：创建 [T-DEL] 内容→列表出现→删除→消失',
@@ -404,22 +434,26 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '分类管理页遍历（正向·实勘）',
+      shot: 'matrix/market/a13-categories-blank.png',
       steps: ['进入 内容管理→分类管理', '查看列表与增删改能力'],
       verify:
         '实勘：页面真实渲染（非软回退仪表盘壳）；记录当前 CRUD 能力边界；操作后回前台确认无异常',
     },
     {
       title: '用户与订单四子页遍历（正向）',
+      shot: 'matrix/market/a14a15-users.png',
       steps: ['依次进入 用户与订单→ 用户/订单/工单/纠纷 四个子页'],
       verify: '四页均真实渲染（表格或空态），无一软回退到仪表盘壳；记录各页数据非空性',
     },
     {
       title: '系统管理三子页遍历（正向）',
+      shot: 'matrix/market/a14a15-roles.png',
       steps: ['依次进入 系统管理→ 角色权限/系统设置/系统日志'],
       verify: '角色权限矩阵完整、系统设置表单带真实值、系统日志有记录行；无软回退壳',
     },
     {
       title: '插件管理页审核链 approve/reject/下架（正向·新功能实勘）',
+      shot: 'matrix/market/a02-plugins-review-blank.png',
       steps: [
         'superadmin 登录后进入插件管理页（该 UI 正由开发补建）',
         '查看待审核列表',
@@ -431,17 +465,20 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '未知 /admin/* 路由软回退（逆向边界）',
+      shot: 'matrix/market/a17-not-exist-blank.png',
       steps: ['直访 /admin/plugins', '再直访 /admin/not-exist-xyz'],
       verify:
         '实勘（v8 已记录）：HTTP 200 回退仪表盘壳、无 404 页——复核该行为是否仍存在；无崩溃无数据泄露，维持 soft-404 缺口记录',
     },
     {
       title: '错误密码登录管理后台（逆向）',
+      shot: 'matrix/market/a18-wrong-pass-captcha.png',
       steps: ['/admin/login 输入 superadmin / wrong-pass 提交'],
       verify: '报错停留登录页，不进入 dashboard；无半渲染的管理数据泄露',
     },
     {
       title: '客服人员越权探测（身份交叉·实勘）',
+      shot: 'matrix/market/a19-cs-content-masked.png',
       steps: [
         '以客服人员快速登录',
         '尝试直访系统管理子页与（新建的）插件管理页',
@@ -481,22 +518,26 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: 'Slug 非法字符（逆向·实勘）',
+      shot: 'matrix/market/d4d5-slug-slugified-conflict-409.png',
       steps: ['/publish Slug 分别填 "Auth Guard!!"（空格+叹号）与纯中文，其余字段合法提交'],
       verify:
         '实勘：预期被校验拒绝或自动 slugify 规范化；若入库产生含空格/中文 slug 记缺陷（后续 /plugins/<slug> URL 不可达）',
     },
     {
       title: 'Slug 与现有插件冲突（逆向）',
+      shot: 'matrix/market/d4d5-slug-slugified-conflict-409.png',
       steps: ['/publish 正常填表但 Slug 填 auth-guard 提交'],
       verify: '实勘：预期 409/唯一约束报错且表单保留；若成功创建重复 slug 记 P1（前台路由冲突）',
     },
     {
       title: '超长 256+ 名称与描述（逆向）',
+      shot: 'matrix/market/d6-long-values-silent-reject.png',
       steps: ['Plugin Name 填 256+ 字符、Description 填 2000+ 字符提交'],
       verify: '被校验拒绝或安全截断；提交后 /publish 与前台列表均不破版、无 500',
     },
     {
       title: 'HTML 注入插件名（逆向）',
+      shot: 'matrix/market/d7-xss-title-escaped.png',
       steps: ['Plugin Name 填 <script>alert(1)</script>，其余字段合法，提交'],
       verify:
         '无 alert 执行；实勘是否创建成功——若成功，确认卡片/列表转义显示并记录脏数据；若拒绝，确认提示明确',
@@ -510,6 +551,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '双击重复提交发布（逆向）',
+      shot: 'matrix/market/d8-developer-no-duplicates.png',
       steps: ['/publish 填全合法表单后快速双击 Publish Plugin'],
       verify: '仅创建 1 条插件记录（实勘 API 幂等性），无重复 slug/重复行',
     },
@@ -521,6 +563,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '游客直访 /publish 与 /developer（身份交叉·实勘）',
+      shot: 'matrix/market/d10-guest-publish-form.png',
       steps: ['真登出态（清 localStorage 后）分别直访 /publish 与 /developer'],
       verify:
         '实勘：预期均引导/弹回登录（/developer 已知静默弹 /login 且无提示）；记录 /publish 游客态实际行为（v8 时点未勘），无表单提交成功',
@@ -551,6 +594,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '安装→卸载→重装下载量单调链（正向闭环）',
+      shot: 'matrix/market/U2U3-reinstalled-single-entry-1542.png',
       steps: [
         '安装 auth-guard 后打开 /installed（导航 我的安装）确认条目',
         '点 [data-testid="uninstall-auth-guard"] 卸载',
@@ -561,6 +605,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '我的安装空态 Browse CTA（正向边界）',
+      shot: 'matrix/market/U4a-installed-empty-cta.png',
       steps: ['卸载全部已装插件后打开 /installed', '点击空态页 Browse Plugins CTA'],
       verify: '显示 No installs yet + Browse Plugins CTA；点击 CTA 可跳回插件列表（实勘链接目标）',
     },
@@ -576,12 +621,14 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '评论无星级提交被拒（逆向·实勘）',
+      shot: 'matrix/market/U5-no-star-review-accepted-as-5.png',
       steps: ['只填标题与正文、不点任何星级，提交'],
       verify:
         '实勘：预期 rating 必填校验（前端禁用/后端 400）；若以 0 星入库或 500 静默，记录实际行为与缺陷级别',
     },
     {
       title: '评论超长文本边界（逆向·实勘）',
+      shot: 'matrix/market/U6-overlong-review-4000rejected-no-crash.png',
       steps: ['评论正文输入 2000+ 字符提交'],
       verify:
         '实勘：被截断/校验拒绝，或因服务端 500 走失败红框分支；无论何分支不得 XSS/破版，表单行为与失败反馈用例一致',
@@ -599,24 +646,28 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '分类筛选工具→0→All 往返（v6 行为复核）',
+      shot: 'matrix/market/U7a-category-tools-0cards-empty.png',
       steps: ['首页侧栏点 wrench工具 分类', '观察列表与空态', '点回 All Plugins'],
       verify:
         '工具分类 2→0 卡 + active 高亮 + No plugins found 空态；All 恢复 2 卡（v6 已验 PASS；AI 分类同 0 为已知 payload 无 category 字段）',
     },
     {
       title: '不存在插件 slug 直访（逆向·实勘）',
+      shot: 'matrix/market/U8-nonexistent-slug-404.png',
       steps: ['地址栏直接打开 /plugins/not-exist-slug-xyz'],
       verify:
         '实勘：预期 404/空态兜底而非白屏；对照 POST /api/plugins/not-exist-slug 的 404 行为，记录 UI 层实际形态',
     },
     {
       title: '删除他人评论 API 越权（IDOR·身份交叉·实勘）',
+      shot: 'matrix/market/U910-userjwt-admin403-idor404.png',
       steps: ['以自己 JWT DELETE /api/plugins/auth-guard/reviews/<伪造id>，再以他人资源 id 重试'],
       verify:
         '实勘：预期 403/404 且无副作用（评论区服务端写入当前 500，可能无可操作真实 id——记录 API 鉴权层实际响应码）',
     },
     {
       title: '普通用户 token 调管理 API（身份交叉·逆向）',
+      shot: 'matrix/market/U910-userjwt-admin403-idor404.png',
       steps: [
         '以普通用户 JWT 请求 GET /api/admin/stats、/api/admin/users',
         'UI 侧确认前台导航无任何管理入口',
@@ -635,6 +686,7 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '游客访问 /installed 引导卡（v8 确认）',
+      shot: 'matrix/market/G2-guest-installed-guide-card.png',
       steps: ['真游客态直访 /installed'],
       verify:
         '不跳转 /login：页内渲染引导卡 Sign in to see your installed plugins + "Your install history is tied to your account." + Sign In 紫钮；导航身份为 Login（旧断言"401 跳登录"已被该行为取代）',
@@ -658,29 +710,34 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
     },
     {
       title: '游客直访 /publish 与 /developer（身份交叉）',
+      shot: 'matrix/market/G3a-guest-publish-form-open.png',
       steps: ['真游客态分别直访 /publish、/developer'],
       verify:
         '均引导/弹回登录（/developer 已知静默弹 /login 为 P2 无提示——游客态复验同一行为；/publish 游客行为实勘）；无插件表单提交成功',
     },
     {
       title: '游客调管理 API（身份交叉·逆向）',
+      shot: 'matrix/market/G456-api-reverse-tests-overlay.png',
       steps: ['无 Authorization 请求 GET /api/admin/stats'],
       verify: '401，响应体无任何统计/用户数据（管理端为独立登录体系）',
     },
     {
       title: '伪造 Bearer token 调安装 API（逆向·实勘）',
+      shot: 'matrix/market/G456-api-reverse-tests-overlay.png',
       steps: ['Authorization: Bearer fake123 直接 POST /api/plugins/auth-guard/install'],
       verify:
         '实勘：预期 401/403；若 mock 放行记 P1 认证旁路并核对安装记录归属（mock 自动登录 token 为已知风险面）',
     },
     {
       title: '分页参数越界（逆向·实勘）',
+      shot: 'matrix/market/G456-api-reverse-tests-overlay.png',
       steps: ['GET /api/plugins?page=999', 'GET /api/plugins?page=-1 与 page=abc 两组对照'],
       verify:
         '实勘：预期空数组 200 或 400 校验错，不 500 不崩；当前无分页 UI 则记录 API 层结论即可',
     },
     {
       title: '搜索注入串（逆向）',
+      shot: 'matrix/market/G7a-search-injection-sql.png',
       steps: ["搜索框输入 ' OR 1=1 -- 提交", '再输入 <script>alert(1)</script> 提交'],
       verify:
         '显示 No results for "<原文>" 转义空态（或实勘意外命中并记录），无脚本执行、服务端不 500；搜索框内容可清空恢复',

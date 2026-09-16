@@ -135,6 +135,8 @@
 
 **验证**: 真实弹出验证码 Modal；输入正确码提交后弹窗关闭（响应链闭环）
 
+**截图**: ![验证码限流触发（逆向防御验证）](../screenshots/matrix/fullstack/superadmin-01-captcha-modal.png)
+
 ### 空标题内容创建被拒（逆向）
 
 **步骤**:
@@ -144,6 +146,8 @@
 
 **验证**: 表单/zod 校验拦截并提示必填，不产生脏数据
 
+**截图**: ![空标题内容创建被拒（逆向）](../screenshots/matrix/fullstack/superadmin-02-empty-title-rejected.png)
+
 ### 未登录访问管理 API（逆向）
 
 **步骤**:
@@ -151,6 +155,8 @@
 1. 不带 Authorization 请求 /api/admin/stats
 
 **验证**: 返回 401，不泄露任何统计
+
+**截图**: ![未登录访问管理 API（逆向）](../screenshots/matrix/fullstack/superadmin-09-api-unauth-fake-token-401.png)
 
 ### 内容编辑后改回原样（正向链）
 
@@ -230,6 +236,8 @@
 
 **验证**: 列表正常渲染该条无乱码无报错，清理后列表恢复基线
 
+**截图**: ![emoji/中英混合标题正常创建（正向）](../screenshots/matrix/fullstack/superadmin-03-emoji-title-created.png)
+
 ### 连续创建 3 条内容（正向批量链）
 
 **步骤**:
@@ -238,6 +246,8 @@
 2. 记录列表新增数量
 
 **验证**: 3 条均出现在列表，随后全部删除清理，列表回到基线
+
+**截图**: ![连续创建 3 条内容（正向批量链）](../screenshots/matrix/fullstack/superadmin-04-batch3-created.png)
 
 ### 超长标题提交（逆向）
 
@@ -248,6 +258,8 @@
 
 **验证**: 实勘：被长度校验拒绝则提示报错；若接受则正常入库显示——记录行为，前端不崩溃
 
+**截图**: ![超长标题提交（逆向）](../screenshots/matrix/fullstack/superadmin-05-long-title-accepted.png)
+
 ### 纯空格标题提交被拒（逆向）
 
 **步骤**:
@@ -256,6 +268,8 @@
 2. 标题只输入多个空格，提交
 
 **验证**: 校验拦截（trim 后按必填处理），不产生空标题脏数据
+
+**截图**: ![纯空格标题提交被拒（逆向）](../screenshots/matrix/fullstack/superadmin-06-whitespace-title-BUG-accepted.png)
 
 ### XSS 注入标题转义验证（逆向）
 
@@ -267,6 +281,8 @@
 
 **验证**: 标题按纯文本渲染不执行（无弹窗），列表与详情均无脚本注入效果
 
+**截图**: ![XSS 注入标题转义验证（逆向）](../screenshots/matrix/fullstack/superadmin-07-xss-title-escaped.png)
+
 ### 伪造 Bearer token 调管理 API（逆向）
 
 **步骤**:
@@ -275,6 +291,8 @@
 
 **验证**: 返回 401，伪造 token 不被接受（仅预置 mock token 可用）
 
+**截图**: ![伪造 Bearer token 调管理 API（逆向）](../screenshots/matrix/fullstack/superadmin-09-api-unauth-fake-token-401.png)
+
 ### 双击创建内容提交防重（逆向）
 
 **步骤**:
@@ -282,6 +300,8 @@
 1. 填写完整创建表单后快速双击 OK 提交按钮
 
 **验证**: 实勘：仅创建 1 条（若出现重复行记录为缺陷），随后清理
+
+**截图**: ![双击创建内容提交防重（逆向）](../screenshots/matrix/fullstack/superadmin-08-dblclick-dup-BUG.png)
 
 ---
 
@@ -356,6 +376,8 @@
 
 **验证**: 跳回 /admin/login，重新进入后台需再次登录（customer-service-token 登出）
 
+**截图**: ![客服登出（正向链）](../screenshots/matrix/fullstack/cs-02-logout-back-to-login.png)
+
 ### 客服刷新后只读权限保持（正向）
 
 **步骤**:
@@ -374,6 +396,8 @@
 2. 刷新后请求 /api/admin/users
 
 **验证**: 后端按 token 鉴权仍 403 Permission denied，前端角色字段篡改不提权
+
+**截图**: ![客服伪造角色提权（逆向）](../screenshots/matrix/fullstack/cs-01-forged-role-still-403.png)
 
 ### 客服保存系统设置被拦截（逆向）
 
@@ -439,6 +463,8 @@
 
 **验证**: 跳回 /admin/login，user-token 登出
 
+**截图**: ![普通用户登出（正向链）](../screenshots/matrix/fullstack/user-02-logout-back-to-login.png)
+
 ### 普通用户 token 直调管理 API（逆向）
 
 **步骤**:
@@ -446,6 +472,8 @@
 1. curl -H "Authorization: Bearer user-token" 请求 /api/admin/stats 与 /api/admin/users
 
 **验证**: 均 403 Permission denied，与 UI 空数据一致（token 合法但无权限）
+
+**截图**: ![普通用户 token 直调管理 API（逆向）](../screenshots/matrix/fullstack/user-01-token-api-403.png)
 
 ### 角色切换下拉提权链（逆向·已知缺陷复现）
 
@@ -484,6 +512,8 @@
 
 **验证**: 游客自动登录（dev token），无需手动认证
 
+**截图**: ![写操作被拒（API 401）](../screenshots/matrix/fullstack/guest-01-todos-auto-login-write.png)
+
 ### 访问 /admin 被重定向
 
 **步骤**:
@@ -512,6 +542,8 @@
 1. curl -X POST -H "Authorization: Bearer fake-token123" 请求 /api/todos
 
 **验证**: 返回 401，不产生任何待办数据
+
+**截图**: ![伪造 token 调 todos 写接口（逆向）](../screenshots/matrix/fullstack/guest-02-fake-token-post-401.png)
 
 ### 游客深链 /admin/users 被拦（逆向）
 

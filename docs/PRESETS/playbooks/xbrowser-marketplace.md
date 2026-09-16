@@ -22,6 +22,8 @@
 
 **验证**: 进入管理后台
 
+**截图**: ![登录管理后台](../screenshots/matrix/market/a01-admin-dashboard.png)
+
 ### 插件审核（approve/reject）
 
 **步骤**:
@@ -32,6 +34,8 @@
 
 **验证**: 插件状态变更
 
+**截图**: ![插件审核（approve/reject）](../screenshots/matrix/market/a02-plugins-review-blank.png)
+
 ### 插件上架/下架
 
 **步骤**:
@@ -40,6 +44,8 @@
 2. 操作上架/下架按钮
 
 **验证**: 插件可见性变更
+
+**截图**: ![插件上架/下架](../screenshots/matrix/market/a02-plugins-list-blank.png)
 
 ### 管理后台登录页（快速登录三按钮）
 
@@ -79,6 +85,8 @@
 2. 对 approved 插件执行下架（填原因），rejected 执行上架
 
 **验证**: ✅ 已补建（第九轮）：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用
+
+**截图**: ![插件下架/上架管理（已补建·正向复验）](../screenshots/matrix/market/a02-plugins-board-blank.png)
 
 ### 缺名称的插件表单被拒（逆向）
 
@@ -132,6 +140,8 @@
 
 **验证**: 删除后列表行移除且前台不受污染；插件管理四页（列表/审核/看板/分类）已补建可达
 
+**截图**: ![内容新建→删除回收链（正向·实勘新建入口）](../screenshots/matrix/market/a12-list-after-delete.png)
+
 ### 分类管理页遍历（正向·实勘）
 
 **步骤**:
@@ -141,6 +151,8 @@
 
 **验证**: 实勘：页面真实渲染（非软回退仪表盘壳）；记录当前 CRUD 能力边界；操作后回前台确认无异常
 
+**截图**: ![分类管理页遍历（正向·实勘）](../screenshots/matrix/market/a13-categories-blank.png)
+
 ### 用户与订单四子页遍历（正向）
 
 **步骤**:
@@ -149,6 +161,8 @@
 
 **验证**: 四页均真实渲染（表格或空态），无一软回退到仪表盘壳；记录各页数据非空性
 
+**截图**: ![用户与订单四子页遍历（正向）](../screenshots/matrix/market/a14a15-users.png)
+
 ### 系统管理三子页遍历（正向）
 
 **步骤**:
@@ -156,6 +170,8 @@
 1. 依次进入 系统管理→ 角色权限/系统设置/系统日志
 
 **验证**: 角色权限矩阵完整、系统设置表单带真实值、系统日志有记录行；无软回退壳
+
+**截图**: ![系统管理三子页遍历（正向）](../screenshots/matrix/market/a14a15-roles.png)
 
 ### 插件管理页审核链 approve/reject/下架（正向·新功能实勘）
 
@@ -168,6 +184,8 @@
 
 **验证**: 实勘：状态流转 pending→approved/rejected 正确且 /developer 视角可见；下架后前台插件列表不再显示该插件（v8 时点管理端无插件菜单，若本次仍无 UI 则维持缺口记录）
 
+**截图**: ![插件管理页审核链 approve/reject/下架（正向·新功能实勘）](../screenshots/matrix/market/a02-plugins-review-blank.png)
+
 ### 未知 /admin/\* 路由软回退（逆向边界）
 
 **步骤**:
@@ -177,6 +195,8 @@
 
 **验证**: 实勘（v8 已记录）：HTTP 200 回退仪表盘壳、无 404 页——复核该行为是否仍存在；无崩溃无数据泄露，维持 soft-404 缺口记录
 
+**截图**: ![未知 /admin/* 路由软回退（逆向边界）](../screenshots/matrix/market/a17-not-exist-blank.png)
+
 ### 错误密码登录管理后台（逆向）
 
 **步骤**:
@@ -184,6 +204,8 @@
 1. /admin/login 输入 superadmin / wrong-pass 提交
 
 **验证**: 报错停留登录页，不进入 dashboard；无半渲染的管理数据泄露
+
+**截图**: ![错误密码登录管理后台（逆向）](../screenshots/matrix/market/a18-wrong-pass-captcha.png)
 
 ### 客服人员越权探测（身份交叉·实勘）
 
@@ -194,6 +216,8 @@
 3. 尝试执行编辑/删除写操作
 
 **验证**: 实勘：客服应仅只读/受限——无权限处应 403 或按钮隐藏；若可执行管理写操作记越权缺陷
+
+**截图**: ![客服人员越权探测（身份交叉·实勘）](../screenshots/matrix/market/a19-cs-content-masked.png)
 
 ### 游客与普通用户 token 调管理 API（身份交叉·逆向）
 
@@ -222,6 +246,8 @@
 
 **验证**: 注册成功跳转登录
 
+**截图**: ![注册开发者账号](../screenshots/matrix/market/d1-register-filled.png)
+
 ### 提交插件
 
 **步骤**:
@@ -232,6 +258,8 @@
 
 **验证**: 插件进入 pending 审核状态
 
+**截图**: ![提交插件](../screenshots/matrix/market/d2-plugin-detail-pending.png)
+
 ### 查看审核状态
 
 **步骤**:
@@ -240,6 +268,8 @@
 2. 查看自己的插件列表
 
 **验证**: 显示各插件的 pending/approved/rejected 状态
+
+**截图**: ![查看审核状态](../screenshots/matrix/market/d3-developer-dashboard-pending.png)
 
 ### 开发者控制台角色守卫（逆向）
 
@@ -312,6 +342,8 @@
 
 **验证**: 实勘：预期被校验拒绝或自动 slugify 规范化；若入库产生含空格/中文 slug 记缺陷（后续 /plugins/<slug> URL 不可达）
 
+**截图**: ![Slug 非法字符（逆向·实勘）](../screenshots/matrix/market/d4d5-slug-slugified-conflict-409.png)
+
 ### Slug 与现有插件冲突（逆向）
 
 **步骤**:
@@ -319,6 +351,8 @@
 1. /publish 正常填表但 Slug 填 auth-guard 提交
 
 **验证**: 实勘：预期 409/唯一约束报错且表单保留；若成功创建重复 slug 记 P1（前台路由冲突）
+
+**截图**: ![Slug 与现有插件冲突（逆向）](../screenshots/matrix/market/d4d5-slug-slugified-conflict-409.png)
 
 ### 超长 256+ 名称与描述（逆向）
 
@@ -328,6 +362,8 @@
 
 **验证**: 被校验拒绝或安全截断；提交后 /publish 与前台列表均不破版、无 500
 
+**截图**: ![超长 256+ 名称与描述（逆向）](../screenshots/matrix/market/d6-long-values-silent-reject.png)
+
 ### HTML 注入插件名（逆向）
 
 **步骤**:
@@ -335,6 +371,8 @@
 1. Plugin Name 填 <script>alert(1)</script>，其余字段合法，提交
 
 **验证**: 无 alert 执行；实勘是否创建成功——若成功，确认卡片/列表转义显示并记录脏数据；若拒绝，确认提示明确
+
+**截图**: ![HTML 注入插件名（逆向）](../screenshots/matrix/market/d7-xss-title-escaped.png)
 
 ### /developer 我的插件列表状态（正向·角色实勘）
 
@@ -354,6 +392,8 @@
 
 **验证**: 仅创建 1 条插件记录（实勘 API 幂等性），无重复 slug/重复行
 
+**截图**: ![双击重复提交发布（逆向）](../screenshots/matrix/market/d8-developer-no-duplicates.png)
+
 ### 伪造 Bearer token 调发布 API（逆向·实勘）
 
 **步骤**:
@@ -369,6 +409,8 @@
 1. 真登出态（清 localStorage 后）分别直访 /publish 与 /developer
 
 **验证**: 实勘：预期均引导/弹回登录（/developer 已知静默弹 /login 且无提示）；记录 /publish 游客态实际行为（v8 时点未勘），无表单提交成功
+
+**截图**: ![游客直访 /publish 与 /developer（身份交叉·实勘）](../screenshots/matrix/market/d10-guest-publish-form.png)
 
 ### demo 预填凭据正向重登（v7 修复复验）
 
@@ -513,6 +555,8 @@
 
 **验证**: 卸载后列表移除、重装恢复，installed 状态服务端驱动
 
+**截图**: ![卸载已安装插件](../screenshots/matrix/market/U1-after-uninstall-empty-list.png)
+
 ### 未登录访问我的安装（逆向）
 
 **步骤**:
@@ -521,6 +565,8 @@
 
 **验证**: 401 由 apiClient 统一跳转 /login，不泄露安装数据
 
+**截图**: ![未登录访问我的安装（逆向）](../screenshots/matrix/market/U11-signedout-installed-guide-card.png)
+
 ### 重复安装幂等（逆向）
 
 **步骤**:
@@ -528,6 +574,8 @@
 1. 同一插件连续点击 Install 两次
 
 **验证**: 安装记录唯一（UNIQUE 约束幂等），计数仅累加、不产生重复安装行
+
+**截图**: ![重复安装幂等（逆向）](../screenshots/matrix/market/U2U3-reinstalled-single-entry-1542.png)
 
 ### 安装→刷新按钮复位→下载量持久链（v6 复验深化）
 
@@ -552,6 +600,8 @@
 
 **验证**: 卸载后条目立即消失且 downloads 不回退；重装后条目复现（0→1）、downloads 净 +2——安装计数只增不减为断言核心
 
+**截图**: ![安装→卸载→重装下载量单调链（正向闭环）](../screenshots/matrix/market/U2U3-reinstalled-single-entry-1542.png)
+
 ### 我的安装空态 Browse CTA（正向边界）
 
 **步骤**:
@@ -560,6 +610,8 @@
 2. 点击空态页 Browse Plugins CTA
 
 **验证**: 显示 No installs yet + Browse Plugins CTA；点击 CTA 可跳回插件列表（实勘链接目标）
+
+**截图**: ![我的安装空态 Browse CTA（正向边界）](../screenshots/matrix/market/U4a-installed-empty-cta.png)
 
 ### 评论提交失败真实反馈（v6 复验·已知服务端 500）
 
@@ -580,6 +632,8 @@
 
 **验证**: 实勘：预期 rating 必填校验（前端禁用/后端 400）；若以 0 星入库或 500 静默，记录实际行为与缺陷级别
 
+**截图**: ![评论无星级提交被拒（逆向·实勘）](../screenshots/matrix/market/U5-no-star-review-accepted-as-5.png)
+
 ### 评论超长文本边界（逆向·实勘）
 
 **步骤**:
@@ -587,6 +641,8 @@
 1. 评论正文输入 2000+ 字符提交
 
 **验证**: 实勘：被截断/校验拒绝，或因服务端 500 走失败红框分支；无论何分支不得 XSS/破版，表单行为与失败反馈用例一致
+
+**截图**: ![评论超长文本边界（逆向·实勘）](../screenshots/matrix/market/U6-overlong-review-4000rejected-no-crash.png)
 
 ### 搜索+分类 chip 组合语义（正向深化·实勘）
 
@@ -610,6 +666,8 @@
 
 **验证**: 工具分类 2→0 卡 + active 高亮 + No plugins found 空态；All 恢复 2 卡（v6 已验 PASS；AI 分类同 0 为已知 payload 无 category 字段）
 
+**截图**: ![分类筛选工具→0→All 往返（v6 行为复核）](../screenshots/matrix/market/U7a-category-tools-0cards-empty.png)
+
 ### 不存在插件 slug 直访（逆向·实勘）
 
 **步骤**:
@@ -617,6 +675,8 @@
 1. 地址栏直接打开 /plugins/not-exist-slug-xyz
 
 **验证**: 实勘：预期 404/空态兜底而非白屏；对照 POST /api/plugins/not-exist-slug 的 404 行为，记录 UI 层实际形态
+
+**截图**: ![不存在插件 slug 直访（逆向·实勘）](../screenshots/matrix/market/U8-nonexistent-slug-404.png)
 
 ### 删除他人评论 API 越权（IDOR·身份交叉·实勘）
 
@@ -626,6 +686,8 @@
 
 **验证**: 实勘：预期 403/404 且无副作用（评论区服务端写入当前 500，可能无可操作真实 id——记录 API 鉴权层实际响应码）
 
+**截图**: ![删除他人评论 API 越权（IDOR·身份交叉·实勘）](../screenshots/matrix/market/U910-userjwt-admin403-idor404.png)
+
 ### 普通用户 token 调管理 API（身份交叉·逆向）
 
 **步骤**:
@@ -634,6 +696,8 @@
 2. UI 侧确认前台导航无任何管理入口
 
 **验证**: API 403 不泄露数据；UI 无 /admin 入口（管理端为独立登录体系，普通用户 token 不可复用为管理员身份——实勘确认）
+
+**截图**: ![普通用户 token 调管理 API（身份交叉·逆向）](../screenshots/matrix/market/U910-userjwt-admin403-idor404.png)
 
 ---
 
@@ -672,6 +736,8 @@
 1. 搜索不存在的词 zzzqqq
 
 **验证**: 显示 No results for zzzqqq
+
+**截图**: ![空结果态](../screenshots/matrix/market/G1-search-empty-zzzqqq.png)
 
 ### 首页完整卡片墙（真实游客态，2026-09-12 补拍）
 
@@ -801,6 +867,8 @@
 
 **验证**: 不跳转 /login：页内渲染引导卡 Sign in to see your installed plugins + "Your install history is tied to your account." + Sign In 紫钮；导航身份为 Login（旧断言"401 跳登录"已被该行为取代）
 
+**截图**: ![游客访问 /installed 引导卡（v8 确认）](../screenshots/matrix/market/G2-guest-installed-guide-card.png)
+
 ### 游客点 Install（实勘·v6 后行为）
 
 **步骤**:
@@ -830,6 +898,8 @@
 
 **验证**: 均引导/弹回登录（/developer 已知静默弹 /login 为 P2 无提示——游客态复验同一行为；/publish 游客行为实勘）；无插件表单提交成功
 
+**截图**: ![游客直访 /publish 与 /developer（身份交叉）](../screenshots/matrix/market/G3a-guest-publish-form-open.png)
+
 ### 游客调管理 API（身份交叉·逆向）
 
 **步骤**:
@@ -838,6 +908,8 @@
 
 **验证**: 401，响应体无任何统计/用户数据（管理端为独立登录体系）
 
+**截图**: ![游客调管理 API（身份交叉·逆向）](../screenshots/matrix/market/G456-api-reverse-tests-overlay.png)
+
 ### 伪造 Bearer token 调安装 API（逆向·实勘）
 
 **步骤**:
@@ -845,6 +917,8 @@
 1. Authorization: Bearer fake123 直接 POST /api/plugins/auth-guard/install
 
 **验证**: 实勘：预期 401/403；若 mock 放行记 P1 认证旁路并核对安装记录归属（mock 自动登录 token 为已知风险面）
+
+**截图**: ![伪造 Bearer token 调安装 API（逆向·实勘）](../screenshots/matrix/market/G456-api-reverse-tests-overlay.png)
 
 ### 分页参数越界（逆向·实勘）
 
@@ -855,6 +929,8 @@
 
 **验证**: 实勘：预期空数组 200 或 400 校验错，不 500 不崩；当前无分页 UI 则记录 API 层结论即可
 
+**截图**: ![分页参数越界（逆向·实勘）](../screenshots/matrix/market/G456-api-reverse-tests-overlay.png)
+
 ### 搜索注入串（逆向）
 
 **步骤**:
@@ -863,6 +939,8 @@
 2. 再输入 <script>alert(1)</script> 提交
 
 **验证**: 显示 No results for "<原文>" 转义空态（或实勘意外命中并记录），无脚本执行、服务端不 500；搜索框内容可清空恢复
+
+**截图**: ![搜索注入串（逆向）](../screenshots/matrix/market/G7a-search-injection-sql.png)
 
 ### 移动端底部 tab 全遍历（375px·正向）
 

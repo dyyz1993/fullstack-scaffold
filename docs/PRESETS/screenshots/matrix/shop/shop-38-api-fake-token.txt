@@ -1,0 +1,30 @@
+=== Case: 伪造 token 调订单写接口 (逆向·API 级) ===
+date: 2026-09-16 07:23:09
+$ curl -s -i -X POST -H "Authorization: Bearer fake-token123" https://shop.lpm1.top/api/orders
+HTTP/2 401 
+date: Tue, 15 Sep 2026 23:23:10 GMT
+content-type: application/json
+content-length: 54
+vary: Origin
+access-control-allow-credentials: true
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=GpOU2jDd3pWttLNEMVE6BKzBQ%2B8XV4rRTRSxKhY%2FwId9f8m%2BzcYFUcLjZsK7UBUdiFNMom5np%2Fgm0EXUuzhg%2FyqTvR44Tg6qEKkCRLaQ6moEfZLjndDTgzpfgOOWxZ9h"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a3bb60ae188a3c32-AMS
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"error":"Invalid token","status":401}
+$ curl -s -i -X POST https://shop.lpm1.top/api/orders (无 token)
+HTTP/2 401 
+date: Tue, 15 Sep 2026 23:23:11 GMT
+content-type: application/json
+content-length: 73
+vary: Origin
+access-control-allow-credentials: true
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=oYzGw%2BoTVU%2BsK4u6Auy68ZdBIQw6hsZr1rh%2Bjyy%2BfU9F%2BDmfJjSm65KbdGY1nMp6fkCBK1X9MvhEhSW7THIx%2BvGiTkb%2FRwH3AChq4Jgze%2BJkGIvT%2F%2FK7x2xmyO%2F3miDv"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a3bb60b3d845be9d-AMS
+alt-svc: h3=":443"; ma=86400
+
+{"success":false,"error":"Authentication token is required","status":401}

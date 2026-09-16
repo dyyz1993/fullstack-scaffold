@@ -152,6 +152,112 @@ describe('ContentPage', () => {
     })
   })
 
+  describe('Whitespace Title Guard (P2: 纯空格标题入库回归)', () => {
+    const openModal = async (user: ReturnType<typeof userEvent.setup>) => {
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /创建内容/ })).toBeInTheDocument()
+      })
+      await user.click(screen.getByRole('button', { name: /创建内容/ }))
+      await waitFor(() => {
+        expect(screen.getByLabelText('标题')).toBeInTheDocument()
+      })
+      await user.click(screen.getByLabelText('分类'))
+      await waitFor(() => {
+        expect(screen.getAllByText('文章').length).toBeGreaterThan(0)
+      })
+      await user.click(screen.getAllByText('文章').pop()!)
+      await user.type(screen.getByLabelText('内容'), 'Body')
+    }
+
+    const clickOk = async (user: ReturnType<typeof userEvent.setup>) => {
+      const modalFooter = document.querySelector('.ant-modal-footer')
+      const okBtn = modalFooter?.querySelector('.ant-btn-primary')
+      expect(okBtn).toBeTruthy()
+      await user.click(okBtn!)
+    }
+
+    it('rejects whitespace-only title without calling the API', async () => {
+      const user = userEvent.setup()
+      render(<ContentPage />)
+      await openModal(user)
+
+      await user.type(screen.getByLabelText('标题'), '   ')
+      await clickOk(user)
+
+      // 字段级错误展示，且未发出创建请求
+      await waitFor(() => {
+        expect(screen.getByText('请输入标题')).toBeInTheDocument()
+      })
+      expect(mockContentPost).not.toHaveBeenCalled()
+    })
+
+    it('trims surrounding whitespace from title before submitting', async () => {
+      const user = userEvent.setup()
+      render(<ContentPage />)
+      await openModal(user)
+
+      await user.type(screen.getByLabelText('标题'), '  Padded Title  ')
+      await clickOk(user)
+
+      await waitFor(() => {
+        expect(mockContentPost).toHaveBeenCalled()
+      })
+      const payload = mockContentPost.mock.calls[0][0] as { json: { title: string } }
+      expect(payload.json.title).toBe('Padded Title')
+    })
+  })
+
+  describe('Double Submit Guard (P2: 双击 OK 重复创建回归)', () => {
+    it('sends only one POST when OK is clicked twice during an in-flight request', async () => {
+      const user = userEvent.setup()
+      // 用未 resolve 的 deferred 控制在途窗口
+      let resolvePost: (value: {
+        json: () => Promise<{ success: boolean; data: unknown }>
+      }) => void = () => {}
+      mockContentPost.mockImplementation(
+        () =>
+          new Promise(resolve => {
+            resolvePost = resolve
+          })
+      )
+
+      render(<ContentPage />)
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /创建内容/ })).toBeInTheDocument()
+      })
+      await user.click(screen.getByRole('button', { name: /创建内容/ }))
+      await waitFor(() => {
+        expect(screen.getByLabelText('标题')).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByLabelText('标题'), 'Once Only')
+      await user.click(screen.getByLabelText('分类'))
+      await waitFor(() => {
+        expect(screen.getAllByText('文章').length).toBeGreaterThan(0)
+      })
+      await user.click(screen.getAllByText('文章').pop()!)
+      await user.type(screen.getByLabelText('内容'), 'Body')
+
+      const modalFooter = document.querySelector('.ant-modal-footer')
+      const okBtn = modalFooter?.querySelector('.ant-btn-primary') as HTMLButtonElement
+      expect(okBtn).toBeTruthy()
+
+      // 双击 OK：第一次发出请求，第二次被防重锁忽略
+      await user.click(okBtn)
+      await user.click(okBtn)
+
+      expect(mockContentPost).toHaveBeenCalledTimes(1)
+      // 在途期间 OK 按钮被禁用（confirmLoading + okButtonProps.disabled）
+      expect(okBtn).toBeDisabled()
+
+      resolvePost({ json: () => Promise.resolve({ success: true, data: { id: '3' } }) })
+      await waitFor(() => {
+        expect(mockContentPost).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
   it('edit content opens pre-filled modal', async () => {
     const user = userEvent.setup()
     render(<ContentPage />)
