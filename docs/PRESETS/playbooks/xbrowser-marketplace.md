@@ -84,7 +84,7 @@
 1. superadmin 登录 /admin → 侧栏"插件管理"→ 插件列表
 2. 对 approved 插件执行下架（填原因），rejected 执行上架
 
-**验证**: ✅ 已补建（第九轮）：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用
+**验证**: ✅ 已补建（第九轮）+ 路由归一化修复后线上实拍：列表/审核队列/看板/分类四页 + 下架/上架/推荐/删除全操作；对不存在 slug 404 不产生副作用
 
 **截图**: ![插件下架/上架管理（已补建·正向复验）](../screenshots/matrix/market/market-admin-plugins-working.png)
 
@@ -144,16 +144,16 @@
 
 **截图**: ![内容新建→删除回收链（正向·实勘新建入口）](../screenshots/matrix/market/a12-list-after-delete.png)
 
-### 分类管理页遍历（正向·实勘）
+### 分类管理页遍历（正向·路由修复后实拍）
 
 **步骤**:
 
 1. 进入 内容管理→分类管理
 2. 查看列表与增删改能力
 
-**验证**: 实勘：页面真实渲染（非软回退仪表盘壳）；记录当前 CRUD 能力边界；操作后回前台确认无异常
+**验证**: ✅ 实拍（历史缺陷已修：生成器未归一化 manifest /admin 前缀致路由不匹配空白，已修）：分类表格渲染（工具/AI 两分类）+ 编辑/删除操作；记录 CRUD 能力边界
 
-**截图**: ![分类管理页遍历（正向·实勘）](../screenshots/matrix/market/a13-categories-blank.png)
+**截图**: ![分类管理页遍历（正向·路由修复后实拍）](../screenshots/matrix/market/a13-categories-blank.png)
 
 ### 用户与订单四子页遍历（正向）
 
@@ -184,20 +184,20 @@
 3. 对 [T] 测试插件执行 approve、对另一条执行 reject
 4. 对已上架插件执行下架并回前台对照
 
-**验证**: 实勘：状态流转 pending→approved/rejected 正确且 /developer 视角可见；下架后前台插件列表不再显示该插件（v8 时点管理端无插件菜单，若本次仍无 UI 则维持缺口记录）
+**验证**: ✅ 实拍（路由归一化修复后可达）：待审核队列渲染 + 状态流转 pending→approved/rejected；下架后前台插件列表不再显示该插件
 
 **截图**: ![插件管理页审核链 approve/reject/下架（正向·新功能实勘）](../screenshots/matrix/market/a02-plugins-review-blank.png)
 
-### 未知 /admin/\* 路由软回退（逆向边界）
+### 未知 /admin/\* 路由（逆向边界·已补 catch-all 404）
 
 **步骤**:
 
 1. 直访 /admin/plugins
 2. 再直访 /admin/not-exist-xyz
 
-**验证**: 实勘（v8 已记录）：HTTP 200 回退仪表盘壳、无 404 页——复核该行为是否仍存在；无崩溃无数据泄露，维持 soft-404 缺口记录
+**验证**: ✅ 已修复（历史 soft-404 空白缺口关闭）：/admin/plugins 渲染插件列表；未知路径渲染居中 404 Page not found 页（catch-all），无静默空白无崩溃
 
-**截图**: ![未知 /admin/* 路由软回退（逆向边界）](../screenshots/matrix/market/a17-not-exist-blank.png)
+**截图**: ![未知 /admin/* 路由（逆向边界·已补 catch-all 404）](../screenshots/matrix/market/a17-not-exist-blank.png)
 
 ### 错误密码登录管理后台（逆向）
 

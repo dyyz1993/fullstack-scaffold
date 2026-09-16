@@ -61,16 +61,14 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
       verify: '删除后首页列表不再出现，直访返回 404 兜底页；种子内容 content-1/content-2 不受影响',
     },
     {
-      title: '分类管理新建分类（正向·实勘）',
+      title: '分类管理深链（边界实勘·入口已按 preset 裁剪）',
       shot: 'matrix/forum/a09-categories.png',
       steps: [
-        '管理后台进入 内容管理→分类管理',
-        '查看现有分类列表',
-        '新建分类 [T-分类] 保存',
-        '打开前台首页观察筛选胶囊区',
+        '查看管理后台侧栏——内容管理组下仅内容列表，无分类管理入口',
+        '直接深链访问 /admin/categories',
       ],
       verify:
-        '实勘：分类列表渲染正常；前台筛选胶囊当前固定 6 个（全部/文章/公告/教程/新闻/政策），新分类是否映射到前台胶囊待勘（不映射则记录前后端不同步）',
+        '实勘（路由归一化修复后复验）：forum preset 不含插件模块，分类管理入口已被侧栏可用性裁剪隐藏；深链渲染 catch-all 404 页（不再静默空白）',
     },
     {
       title: '用户管理搜索过滤（正向）',
@@ -433,11 +431,11 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
       verify: '删除后列表行移除且前台不受污染；插件管理四页（列表/审核/看板/分类）已补建可达',
     },
     {
-      title: '分类管理页遍历（正向·实勘）',
+      title: '分类管理页遍历（正向·路由修复后实拍）',
       shot: 'matrix/market/a13-categories-blank.png',
       steps: ['进入 内容管理→分类管理', '查看列表与增删改能力'],
       verify:
-        '实勘：页面真实渲染（非软回退仪表盘壳）；记录当前 CRUD 能力边界；操作后回前台确认无异常',
+        '✅ 实拍（历史缺陷已修：生成器未归一化 manifest /admin 前缀致路由不匹配空白，已修）：分类表格渲染（工具/AI 两分类）+ 编辑/删除操作；记录 CRUD 能力边界',
     },
     {
       title: '用户与订单四子页遍历（正向）',
@@ -461,14 +459,14 @@ export const EXTRA_CHAINS: Record<string, ExtraCase[]> = {
         '对已上架插件执行下架并回前台对照',
       ],
       verify:
-        '实勘：状态流转 pending→approved/rejected 正确且 /developer 视角可见；下架后前台插件列表不再显示该插件（v8 时点管理端无插件菜单，若本次仍无 UI 则维持缺口记录）',
+        '✅ 实拍（路由归一化修复后可达）：待审核队列渲染 + 状态流转 pending→approved/rejected；下架后前台插件列表不再显示该插件',
     },
     {
-      title: '未知 /admin/* 路由软回退（逆向边界）',
+      title: '未知 /admin/* 路由（逆向边界·已补 catch-all 404）',
       shot: 'matrix/market/a17-not-exist-blank.png',
       steps: ['直访 /admin/plugins', '再直访 /admin/not-exist-xyz'],
       verify:
-        '实勘（v8 已记录）：HTTP 200 回退仪表盘壳、无 404 页——复核该行为是否仍存在；无崩溃无数据泄露，维持 soft-404 缺口记录',
+        '✅ 已修复（历史 soft-404 空白缺口关闭）：/admin/plugins 渲染插件列表；未知路径渲染居中 404 Page not found 页（catch-all），无静默空白无崩溃',
     },
     {
       title: '错误密码登录管理后台（逆向）',
