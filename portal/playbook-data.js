@@ -121,9 +121,13 @@ export const PLAYBOOKS = [
         neg: false,
       },
       {
-        t: '分类管理与权限页深链（边界实勘）',
-        s: ['直接打开 /admin/categories', '再直接打开 /admin/permissions'],
-        v: '实勘：categories 超管侧渲染情况未采样（API /api/categories 200 有数据）；permissions 深链 200 但内容区空白（已知缺陷）——逐页记录',
+        t: '分类管理与权限页深链（边界实勘·已修复）',
+        s: [
+          '直接打开 /admin/categories',
+          '再直接打开 /admin/system/permissions',
+          '最后打开不存在的 /admin/no-such-page',
+        ],
+        v: 'categories 渲染分类管理表格（历史缺陷：生成器未归一化 manifest /admin 前缀致路由双重前缀不匹配→内容区空白，已修）；permissions 渲染权限矩阵（真实路径带 /system 前缀）；未知深链渲染 404 页不再空白（catch-all）',
         shot: 'matrix/fullstack/super-admin/fa-admin-categories.png',
         neg: false,
       },

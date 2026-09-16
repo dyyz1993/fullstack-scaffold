@@ -215,16 +215,17 @@
 
 **截图**: ![订单/工单/纠纷空数据页巡检（正向边界）](../screenshots/matrix/fullstack/super-admin/fa-admin-orders.png)
 
-### 分类管理与权限页深链（边界实勘）
+### 分类管理与权限页深链（边界实勘·已修复）
 
 **步骤**:
 
 1. 直接打开 /admin/categories
-2. 再直接打开 /admin/permissions
+2. 再直接打开 /admin/system/permissions
+3. 最后打开不存在的 /admin/no-such-page
 
-**验证**: 实勘：categories 超管侧渲染情况未采样（API /api/categories 200 有数据）；permissions 深链 200 但内容区空白（已知缺陷）——逐页记录
+**验证**: categories 渲染分类管理表格（历史缺陷：生成器未归一化 manifest /admin 前缀致路由双重前缀不匹配→内容区空白，已修）；permissions 渲染权限矩阵（真实路径带 /system 前缀）；未知深链渲染 404 页不再空白（catch-all）
 
-**截图**: ![分类管理与权限页深链（边界实勘）](../screenshots/matrix/fullstack/super-admin/fa-admin-categories.png)
+**截图**: ![分类管理与权限页深链（边界实勘·已修复）](../screenshots/matrix/fullstack/super-admin/fa-admin-categories.png)
 
 ### emoji/中英混合标题正常创建（正向）
 
