@@ -69,18 +69,24 @@ export function generateAdminApp(resolved: ResolvedPreset): string | null {
   const captchaImport = resolved.hasCaptcha ? ', CaptchaModal' : ''
   imports.push(`import { ProtectedRoute${captchaImport} } from './components'`)
 
-  // Build protected route elements
-  const protectedRouteElements = protectedPages.map(
-    p => `                    <Route path="${p.route}" element={<${p.name} />} />`
-  )
+  // Route paths must use the basename-relative form: manifest routes may carry
+  // a redundant /admin prefix while Sidebar NavLinks use the unprefixed form —
+  // emitting the prefixed path made those routes unreachable (blank content
+  // area on 分类管理/插件列表/插件审核/插件看板, P2 实测缺陷).
+  const protectedRouteElements = protectedPages.map(p => {
+    const route = normalizeAdminRoute(p.route)
+    return `                    <Route path="${route}" element={<${p.name} />} />`
+  })
 
-  const defaultProtectedRoute = protectedPages.length > 0 ? protectedPages[0].route : '/'
+  const defaultProtectedRoute =
+    protectedPages.length > 0 ? normalizeAdminRoute(protectedPages[0].route) : '/'
 
   const captchaElement = resolved.hasCaptcha ? `\n        <CaptchaModal />` : ''
 
-  const publicRouteLines = publicPages.map(
-    p => `          <Route path="${p.route}" element={<${p.name} />} />`
-  )
+  const publicRouteLines = publicPages.map(p => {
+    const route = normalizeAdminRoute(p.route)
+    return `          <Route path="${route}" element={<${p.name} />} />`
+  })
 
   return `${imports.join('\n')}
 
@@ -105,6 +111,7 @@ ${publicRouteLines.join('\n')}
                     <Route path="/" element={<Navigate to="${defaultProtectedRoute}" replace />} />
 ${protectedRouteElements.join('\n')}
                     <Route path="/system/monitor" element={<div className="p-6"><h2 className="text-xl font-semibold">System Monitor</h2><p className="text-gray-500 mt-2">Coming soon...</p></div>} />
+                    <Route path="*" element={<div className="flex items-center justify-center h-full min-h-[400px]"><div className="text-center"><h2 className="text-3xl font-semibold mb-2">404</h2><p className="text-gray-500 mt-2">Page not found</p></div></div>} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

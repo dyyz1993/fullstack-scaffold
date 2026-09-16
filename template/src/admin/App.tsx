@@ -94,6 +94,17 @@ export const App: React.FC<{ basePath?: string }> = ({ basePath = '/admin' }) =>
                     />
                     <Route path="/system/permissions" element={<PermissionsPage />} />
                     <Route path="/system/roles" element={<RolesPage />} />
+                    <Route
+                      path="*"
+                      element={
+                        <div className="flex items-center justify-center h-full min-h-[400px]">
+                          <div className="text-center">
+                            <h2 className="text-3xl font-semibold mb-2">404</h2>
+                            <p className="text-gray-400">Page not found</p>
+                          </div>
+                        </div>
+                      }
+                    />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
