@@ -485,7 +485,7 @@ const PRESETS: Array<{
             steps: ['超管登录后访问 /tenant/tenants'],
             verify:
               '✅ 已补建（第三轮）：租户表格渲染全部租户（名称/套餐/状态 Tag），终验 9 行 PASS',
-            shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
+            shot: 'matrix/saas/tadmin/t-12-tenants-list.png',
           },
           {
             title: '成员管理表（超管视角）',
@@ -498,19 +498,19 @@ const PRESETS: Array<{
             steps: ['超管登录后访问 /tenant/audit'],
             verify:
               '✅ 已补建（第三轮）：审计表格渲染（时间/用户/操作/资源/IP），终验 20 行 PASS；租户维度过滤仍为待定项',
-            shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
+            shot: 'matrix/saas/tadmin/t-14-audit-logs.png',
           },
           {
             title: '平台租户列表查看',
             steps: ['超管登录后侧栏点击"平台租户"（/tenant/tenants）'],
             verify: '租户表格渲染全部租户（名称/套餐/状态 Tag）',
-            shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
+            shot: 'matrix/saas/tadmin/t-12-tenants-list.png',
           },
           {
             title: '平台审计日志查看',
             steps: ['侧栏点击"审计日志"（/tenant/audit）'],
             verify: '审计表格渲染（时间/用户/操作/资源/IP），分页可用',
-            shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
+            shot: 'matrix/saas/tadmin/t-14-audit-logs.png',
           },
           {
             title: '邀请无效邮箱被拒（逆向）',
@@ -539,14 +539,14 @@ const PRESETS: Array<{
             title: '平台租户列表渲染与分页探测（正向实勘）',
             steps: ['侧栏点击"平台租户"进入 /tenant/tenants', '检查表格行数、排序与分页控件'],
             verify: '实勘：9 个租户渲染（ID 1..11），分页/排序能力以实勘为准——操作后表格无崩溃',
-            shot: 'matrix/saas/tadmin/t-12-tenants-list-missing.png',
+            shot: 'matrix/saas/tadmin/t-12-tenants-list.png',
             selectors: { 平台租户侧栏链接: "a[href='/tenant/tenants']" },
           },
           {
             title: '审计日志列表与排序探测（正向实勘）',
             steps: ['侧栏点击"审计日志"进入 /tenant/audit', '检查 20 行渲染与操作 tag'],
             verify: '实勘：表格 20 行 + create tag 渲染；排序/分页能力记录，操作后无崩溃',
-            shot: 'matrix/saas/tadmin/t-14-audit-logs-missing.png',
+            shot: 'matrix/saas/tadmin/t-14-audit-logs.png',
             selectors: { 审计日志侧栏链接: "a[href='/tenant/audit']" },
           },
           {

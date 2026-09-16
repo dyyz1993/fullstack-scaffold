@@ -107,7 +107,7 @@
 
 **验证**: ✅ 已补建（第三轮）：租户表格渲染全部租户（名称/套餐/状态 Tag），终验 9 行 PASS
 
-**截图**: ![平台租户列表页（已补建·正向复验）](../screenshots/matrix/saas/tadmin/t-12-tenants-list-missing.png)
+**截图**: ![平台租户列表页（已补建·正向复验）](../screenshots/matrix/saas/tadmin/t-12-tenants-list.png)
 
 ### 成员管理表（超管视角）
 
@@ -127,7 +127,7 @@
 
 **验证**: ✅ 已补建（第三轮）：审计表格渲染（时间/用户/操作/资源/IP），终验 20 行 PASS；租户维度过滤仍为待定项
 
-**截图**: ![审计日志页（已补建·全局维度）](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
+**截图**: ![审计日志页（已补建·全局维度）](../screenshots/matrix/saas/tadmin/t-14-audit-logs.png)
 
 ### 平台租户列表查看
 
@@ -137,7 +137,7 @@
 
 **验证**: 租户表格渲染全部租户（名称/套餐/状态 Tag）
 
-**截图**: ![平台租户列表查看](../screenshots/matrix/saas/tadmin/t-12-tenants-list-missing.png)
+**截图**: ![平台租户列表查看](../screenshots/matrix/saas/tadmin/t-12-tenants-list.png)
 
 ### 平台审计日志查看
 
@@ -147,7 +147,7 @@
 
 **验证**: 审计表格渲染（时间/用户/操作/资源/IP），分页可用
 
-**截图**: ![平台审计日志查看](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
+**截图**: ![平台审计日志查看](../screenshots/matrix/saas/tadmin/t-14-audit-logs.png)
 
 ### 邀请无效邮箱被拒（逆向）
 
@@ -197,7 +197,7 @@
 
 **验证**: 实勘：9 个租户渲染（ID 1..11），分页/排序能力以实勘为准——操作后表格无崩溃
 
-**截图**: ![平台租户列表渲染与分页探测（正向实勘）](../screenshots/matrix/saas/tadmin/t-12-tenants-list-missing.png)
+**截图**: ![平台租户列表渲染与分页探测（正向实勘）](../screenshots/matrix/saas/tadmin/t-12-tenants-list.png)
 
 **选择器**:
 | 元素 | 选择器 |
@@ -213,7 +213,7 @@
 
 **验证**: 实勘：表格 20 行 + create tag 渲染；排序/分页能力记录，操作后无崩溃
 
-**截图**: ![审计日志列表与排序探测（正向实勘）](../screenshots/matrix/saas/tadmin/t-14-audit-logs-missing.png)
+**截图**: ![审计日志列表与排序探测（正向实勘）](../screenshots/matrix/saas/tadmin/t-14-audit-logs.png)
 
 **选择器**:
 | 元素 | 选择器 |
