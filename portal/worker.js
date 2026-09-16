@@ -74,6 +74,7 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 <script>
 var PLAYBOOKS=${JSON.stringify(PLAYBOOKS).replace(/<\//g, '<\\/')};
 var RAW='/img/journeys';
+var IMGV='v20260916b';
 var DOC='https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS';
 var PRESETS=[
 {id:'saas',name:'SaaS Multi-Tenant',zh:'多租户 SaaS',sub:'saas',desc:'租户开通事务、成员邀请（7 天 token）、租户内角色、套餐配额、子域隔离、租户控制台。',modules:['todos 待办','notifications 通知/SSE','file 文件','captcha 验证码','auth 认证','tenant 多租户','content 内容','permission RBAC'],journeys:[{role:'租户管理员',dir:'正向',steps:[{img:'saas-j1-login',t:'登录控制台',d:'平台账号认证 + 自动选定所属租户'},{img:'saas-j2-dashboard',t:'仪表盘',d:'成员数 / 活跃待办 / 内容统计'},{img:'saas-j3-members',t:'成员管理',d:'成员列表与角色徽章'},{img:'saas-j4-invite',t:'发起邀请',d:'邮箱 + 角色选择（配额在服务端校验）'},{img:'saas-j5-invite-done',t:'邀请完成',d:'生成 7 天有效邀请链接'}]},{role:'受邀成员',dir:'正向',steps:[{img:'saas-j6-invite-landing',t:'邀请落地页',d:'公开脱敏详情：租户名 + 角色名'},{img:'saas-j7-accept',t:'接受入组',d:'一键 Accept → 进入租户控制台'}]},{role:'异常路径',dir:'逆向',steps:[{img:'saas-r1-badtoken',t:'无效邀请',d:'伪造 token → 明确的 Invitation not found'},{img:'saas-r2-loggedout',t:'未登录守卫',d:'直访受保护页 → 拦回登录页'}]}]},
@@ -96,7 +97,7 @@ function render(){
   var js='';
   for(var ji=0;ji<c.journeys.length;ji++){
     var j=c.journeys[ji];
-    var steps='';for(var si=0;si<j.steps.length;si++){var s=j.steps[si];steps+='<div class="step"><img loading="lazy" src="'+RAW+'/'+s.img+'.png" alt="'+s.t+'" onerror="this.parentElement.classList.add(\\'noimg\\');this.remove()"><div class="cap"><b>步骤 '+(si+1)+' · '+s.t+'</b><span>'+s.d+'</span></div></div>'}
+    var steps='';for(var si=0;si<j.steps.length;si++){var s=j.steps[si];steps+='<div class="step"><img loading="lazy" src="'+RAW+'/'+s.img+'.png?v='+IMGV+'" alt="'+s.t+'" onerror="this.parentElement.classList.add(\\'noimg\\');this.remove()"><div class="cap"><b>步骤 '+(si+1)+' · '+s.t+'</b><span>'+s.d+'</span></div></div>'}
     js+='<section class="journey"><h3><span class="role">'+j.role+'</span><span class="dir '+(j.dir==='正向'?'pos':'neg')+'">'+j.dir+'</span></h3><div class="steps">'+steps+'</div></section>'
   }
   // 该形态全部身份 × 全部操作链路（数据同 #playbook，来自 playbook-data.js）——
@@ -112,7 +113,7 @@ function render(){
       var cc=e.cases[ci];
       var psteps='';
       for(var si=0;si<cc.s.length;si++){psteps+='<li>'+esc(cc.s[si])+'</li>'}
-      var pimg=cc.shot?(cc.shot.endsWith('.txt')?'<div class="pb-shot"><a href="/img/'+cc.shot+'" target="_blank" style="display:flex;align-items:center;justify-content:center;min-height:60px;color:#7dd3fc;font-size:13px;text-decoration:none">📄 查看文本证据</a></div>':'<div class="pb-shot"><img data-src="/img/'+cc.shot+'" alt="截图"></div>'):'';
+      var pimg=cc.shot?(cc.shot.endsWith('.txt')?'<div class="pb-shot"><a href="/img/'+cc.shot+'?v='+IMGV+'" target="_blank" style="display:flex;align-items:center;justify-content:center;min-height:60px;color:#7dd3fc;font-size:13px;text-decoration:none">📄 查看文本证据</a></div>':'<div class="pb-shot"><img data-src="/img/'+cc.shot+'?v='+IMGV+'" alt="截图"></div>'):'';
       pb+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(cc.neg?'neg':'pos')+'">'+(cc.neg?'逆向':'正向')+'</span><b>'+esc(cc.t)+'</b></div><ol class="pb-steps">'+psteps+'</ol><div class="pb-verify">✓ 预期：'+esc(cc.v)+'</div></div>'+(pimg?'<div class="pb-shot">'+pimg+'</div>':'')+'</div>';
     }
     pb+='</div>';
@@ -143,7 +144,7 @@ function renderPlaybook(){
       var c=e.cases[ci];
       var steps='';
       for(var si=0;si<c.s.length;si++){steps+='<li>'+esc(c.s[si])+'</li>'}
-      var img=c.shot?(c.shot.endsWith('.txt')?'<div class="pb-shot"><a href="/img/'+c.shot+'" target="_blank" style="display:flex;align-items:center;justify-content:center;min-height:60px;color:#7dd3fc;font-size:13px;text-decoration:none">📄 查看文本证据</a></div>':'<div class="pb-shot"><img data-src="/img/'+c.shot+'" alt="截图"></div>'):'';
+      var img=c.shot?(c.shot.endsWith('.txt')?'<div class="pb-shot"><a href="/img/'+c.shot+'?v='+IMGV+'" target="_blank" style="display:flex;align-items:center;justify-content:center;min-height:60px;color:#7dd3fc;font-size:13px;text-decoration:none">📄 查看文本证据</a></div>':'<div class="pb-shot"><img data-src="/img/'+c.shot+'?v='+IMGV+'" alt="截图"></div>'):'';
       groups+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(c.neg?'neg':'pos')+'">'+(c.neg?'逆向':'正向')+'</span><b>'+esc(c.t)+'</b></div><ol class="pb-steps">'+steps+'</ol><div class="pb-verify">✓ 预期：'+esc(c.v)+'</div></div>'+(img?'<div class="pb-shot">'+img+'</div>':'')+'</div>';
     }
     groups+='</div>';
@@ -184,7 +185,7 @@ export default {
         return new Response(imgCache.get(path).body, {
           headers: {
             'content-type': imgCache.get(path).type,
-            'cache-control': 'public, max-age=86400',
+            'cache-control': 'public, max-age=300',
           },
         })
       }
@@ -197,7 +198,7 @@ export default {
         const type = upstream.headers.get('content-type') || 'image/png'
         if (imgCache.size < 50) imgCache.set(path, { body, type })
         return new Response(body, {
-          headers: { 'content-type': type, 'cache-control': 'public, max-age=86400' },
+          headers: { 'content-type': type, 'cache-control': 'public, max-age=300' },
         })
       }
       return new Response('Not Found', { status: 404 })
