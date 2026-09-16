@@ -54,7 +54,10 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .pb-case{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:8px 0;display:grid;grid-template-columns:minmax(0,1fr) clamp(280px,38%,520px);gap:12px;align-items:start}
 .pb-case .pb-body{min-width:0}
 .pb-case:not(:has(.pb-shot)){grid-template-columns:minmax(0,1fr)}
-.pb-shot{background:#1a2332;border:1px solid #334155;border-radius:8px;overflow:hidden;min-height:60px}
+.pb-shot{background:#1a2332;border:1px solid #334155;border-radius:8px;overflow:hidden;min-height:60px;position:relative}
+.pb-shot::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#1a2332 25%,#2a3444 50%,#1a2332 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+.pb-shot:has(img[src]:not([data-loading]))::before{display:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .pb-shot img{width:100%;display:block;border-radius:8px;min-height:60px}
 .pb-shot img:not([src]),.pb-shot img[data-loading]{background:#1a2332 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='20'%3E%3Ctext x='50%25' y='50%25' fill='%23475569' font-size='11' text-anchor='middle' dominant-baseline='middle'%3E%E5%8A%A0%E8%BD%BD%E4%B8%AD%E2%80%A6%3C/text%3E%3C/svg%3E") center center no-repeat}
 .pb-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -152,7 +155,9 @@ function renderPlaybook(){
 // 懒加载：IntersectionObserver + 并发限流（max 4 同时加载）
 var IMG_QUEUE=[],IMG_LOADING=0,IMG_MAX=12;
 function imgLoadNext(){while(IMG_LOADING<IMG_MAX&&IMG_QUEUE.length>0){var im=IMG_QUEUE.shift();if(im&&!im.src){IMG_LOADING++;im.onload=im.onerror=function(){IMG_LOADING--;imgLoadNext()};im.src=im.dataset.src}}}
-var IMG_OBS=new IntersectionObserver(function(ents){for(var i=0;i<ents.length;i++){if(ents[i].isIntersecting){IMG_QUEUE.push(ents[i].target);IMG_OBS.unobserve(ents[i].target);imgLoadNext()}}},{rootMargin:'800px'});
+var IMG_OBS=new IntersectionObserver(function(ents){for(var i=0;i<ents.length;i++){if(ents[i].isIntersecting){var im=ents[i].target;IMG_OBS.unobserve(im);
+// 视口内的图片直接加载（跳过队列），确保用户看到的内容优先渲染
+var rect=im.getBoundingClientRect();if(rect.top<window.innerHeight+200&&rect.bottom>-200){if(!im.src){im.src=im.dataset.src}}else{IMG_QUEUE.push(im)}imgLoadNext()}}},{rootMargin:'800px'});
 function initLazyShots(){var imgs=document.querySelectorAll('.pb-shot img[data-src]');for(var i=0;i<imgs.length;i++)IMG_OBS.observe(imgs[i])}
 
 window.addEventListener('hashchange',render);
