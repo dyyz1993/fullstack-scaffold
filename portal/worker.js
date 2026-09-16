@@ -54,11 +54,9 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .pb-case{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:8px 0;display:grid;grid-template-columns:minmax(0,1fr) clamp(280px,38%,520px);gap:12px;align-items:start}
 .pb-case .pb-body{min-width:0}
 .pb-case:not(:has(.pb-shot)){grid-template-columns:minmax(0,1fr)}
-.pb-shot-toggle{background:#334155;border:1px solid #475569;border-radius:6px;padding:4px 12px;font-size:12px;color:#7dd3fc;cursor:pointer;flex:0 0 auto;white-space:nowrap}
-.pb-shot-toggle:hover{background:#475569}
-.pb-shot-view{margin-top:8px;display:none}
-.pb-shot-view.open{display:block}
-.pb-shot-view img{max-width:100%;border-radius:8px;border:1px solid #334155}
+.pb-shot{background:#1a2332;border:1px solid #334155;border-radius:8px;overflow:hidden;min-height:60px}
+.pb-shot img{width:100%;display:block;border-radius:8px;min-height:60px}
+.pb-shot img:not([src]),.pb-shot img[data-loading]{background:#1a2332 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='20'%3E%3Ctext x='50%25' y='50%25' fill='%23475569' font-size='11' text-anchor='middle' dominant-baseline='middle'%3E%E5%8A%A0%E8%BD%BD%E4%B8%AD%E2%80%A6%3C/text%3E%3C/svg%3E") center center no-repeat}
 .pb-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .pb-badge{border-radius:6px;padding:2px 8px;font-size:11px;flex:0 0 auto}
 .pb-badge.pos{background:#064e3b;color:#6ee7b7}
@@ -72,7 +70,7 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 <div id="app"></div>
 <script>
 var PLAYBOOKS=${JSON.stringify(PLAYBOOKS).replace(/<\//g, '<\\/')};
-var RAW='https://cdn.jsdelivr.net/gh/dyyz1993/fullstack-scaffold@master/docs/PRESETS/screenshots/journeys';
+var RAW='/img/journeys';
 var DOC='https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS';
 var PRESETS=[
 {id:'saas',name:'SaaS Multi-Tenant',zh:'多租户 SaaS',sub:'saas',desc:'租户开通事务、成员邀请（7 天 token）、租户内角色、套餐配额、子域隔离、租户控制台。',modules:['todos 待办','notifications 通知/SSE','file 文件','captcha 验证码','auth 认证','tenant 多租户','content 内容','permission RBAC'],journeys:[{role:'租户管理员',dir:'正向',steps:[{img:'saas-j1-login',t:'登录控制台',d:'平台账号认证 + 自动选定所属租户'},{img:'saas-j2-dashboard',t:'仪表盘',d:'成员数 / 活跃待办 / 内容统计'},{img:'saas-j3-members',t:'成员管理',d:'成员列表与角色徽章'},{img:'saas-j4-invite',t:'发起邀请',d:'邮箱 + 角色选择（配额在服务端校验）'},{img:'saas-j5-invite-done',t:'邀请完成',d:'生成 7 天有效邀请链接'}]},{role:'受邀成员',dir:'正向',steps:[{img:'saas-j6-invite-landing',t:'邀请落地页',d:'公开脱敏详情：租户名 + 角色名'},{img:'saas-j7-accept',t:'接受入组',d:'一键 Accept → 进入租户控制台'}]},{role:'异常路径',dir:'逆向',steps:[{img:'saas-r1-badtoken',t:'无效邀请',d:'伪造 token → 明确的 Invitation not found'},{img:'saas-r2-loggedout',t:'未登录守卫',d:'直访受保护页 → 拦回登录页'}]}]},
@@ -111,7 +109,7 @@ function render(){
       var cc=e.cases[ci];
       var psteps='';
       for(var si=0;si<cc.s.length;si++){psteps+='<li>'+esc(cc.s[si])+'</li>'}
-      var pimg=cc.shot?('<button class="pb-shot-toggle" data-shot="'+cc.shot+'">📷 查看截图</button><div class="pb-shot-view"><img alt="截图"></div>'):'';
+      var pimg=cc.shot?(cc.shot.endsWith('.txt')?'<div class="pb-shot"><a href="/img/'+cc.shot+'" target="_blank" style="display:flex;align-items:center;justify-content:center;min-height:60px;color:#7dd3fc;font-size:13px;text-decoration:none">📄 查看文本证据</a></div>':'<div class="pb-shot"><img data-src="/img/'+cc.shot+'" alt="截图"></div>'):'';
       pb+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(cc.neg?'neg':'pos')+'">'+(cc.neg?'逆向':'正向')+'</span><b>'+esc(cc.t)+'</b></div><ol class="pb-steps">'+psteps+'</ol><div class="pb-verify">✓ 预期：'+esc(cc.v)+'</div></div>'+(pimg?'<div class="pb-shot">'+pimg+'</div>':'')+'</div>';
     }
     pb+='</div>';
@@ -125,6 +123,7 @@ function render(){
     '<div class="btns"><a class="btn" href="https://'+c.sub+'.lpm1.top" target="_blank" rel="noopener">进入在线站点 →</a>'+
     '<a class="btn ghost" href="'+DOC+'/'+(c.id==='fullstack'?'fullstack-admin':c.id)+'.md" target="_blank" rel="noopener">形态文档（含验证清单）</a></div>'+
     '<div class="mods">'+mods+'</div></div>'+js
+  initLazyShots();
 }
 function esc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function renderPlaybook(){
@@ -141,15 +140,20 @@ function renderPlaybook(){
       var c=e.cases[ci];
       var steps='';
       for(var si=0;si<c.s.length;si++){steps+='<li>'+esc(c.s[si])+'</li>'}
-      var img=c.shot?('<button class="pb-shot-toggle" data-shot="'+c.shot+'">📷 查看截图</button><div class="pb-shot-view"><img alt="截图"></div>'):'';
+      var img=c.shot?(c.shot.endsWith('.txt')?'<div class="pb-shot"><a href="/img/'+c.shot+'" target="_blank" style="display:flex;align-items:center;justify-content:center;min-height:60px;color:#7dd3fc;font-size:13px;text-decoration:none">📄 查看文本证据</a></div>':'<div class="pb-shot"><img data-src="/img/'+c.shot+'" alt="截图"></div>'):'';
       groups+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(c.neg?'neg':'pos')+'">'+(c.neg?'逆向':'正向')+'</span><b>'+esc(c.t)+'</b></div><ol class="pb-steps">'+steps+'</ol><div class="pb-verify">✓ 预期：'+esc(c.v)+'</div></div>'+(img?'<div class="pb-shot">'+img+'</div>':'')+'</div>';
     }
     groups+='</div>';
   }
   document.getElementById('app').innerHTML='<nav>'+chips+'</nav><div class="hero"><h2>测试矩阵 <span>'+tot+' 条链路 · '+PLAYBOOKS.length+' 身份 · 8 形态</span></h2><p class="sub">每条链路 = 功能说明（标题）+ 操作步骤 + 预期结果 + 实拍截图。正向=正常操作链，逆向=异常/越权/边界防御链。</p></div><div class="pb-wrap"><div class="pb-ident"><span class="pb-pos">'+pos+' 正向</span> <span class="pb-neg">'+neg+' 逆向</span> <span style="color:#94a3b8;font-size:12px">共 '+tot+' 条</span></div>'+groups+'</div>';
+  initLazyShots();
 }
 
-document.addEventListener('click',function(ev){var b=ev.target.closest('.pb-shot-toggle');if(!b)return;var v=b.parentElement.querySelector('.pb-shot-view');if(!v)return;v.classList.toggle('open');var img=v.querySelector('img');if(v.classList.contains('open')&&!img.src){img.src='https://cdn.jsdelivr.net/gh/dyyz1993/fullstack-scaffold@master/docs/PRESETS/screenshots/'+b.dataset.shot}});
+// 懒加载：IntersectionObserver + 并发限流（max 4 同时加载）
+var IMG_QUEUE=[],IMG_LOADING=0,IMG_MAX=12;
+function imgLoadNext(){while(IMG_LOADING<IMG_MAX&&IMG_QUEUE.length>0){var im=IMG_QUEUE.shift();if(im&&!im.src){IMG_LOADING++;im.onload=im.onerror=function(){IMG_LOADING--;imgLoadNext()};im.src=im.dataset.src}}}
+var IMG_OBS=new IntersectionObserver(function(ents){for(var i=0;i<ents.length;i++){if(ents[i].isIntersecting){IMG_QUEUE.push(ents[i].target);IMG_OBS.unobserve(ents[i].target);imgLoadNext()}}},{rootMargin:'800px'});
+function initLazyShots(){var imgs=document.querySelectorAll('.pb-shot img[data-src]');for(var i=0;i<imgs.length;i++)IMG_OBS.observe(imgs[i])}
 
 window.addEventListener('hashchange',render);
 render();
@@ -164,13 +168,40 @@ render();
 </div>
 </body></html>`
 
+const imgCache = new Map()
 export default {
-  async fetch() {
+  async fetch(request) {
+    const url = new URL(request.url)
+    // 图片代理：/img/<path> → raw.githubusercontent.com（走 CF 全球网络）
+    if (url.pathname.startsWith('/img/')) {
+      const path = url.pathname.slice(5)
+      if (imgCache.has(path)) {
+        return new Response(imgCache.get(path).body, {
+          headers: {
+            'content-type': imgCache.get(path).type,
+            'cache-control': 'public, max-age=86400',
+          },
+        })
+      }
+      const upstream = await fetch(
+        'https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/' +
+          path
+      )
+      if (upstream.ok) {
+        const body = await upstream.arrayBuffer()
+        const type = upstream.headers.get('content-type') || 'image/png'
+        if (imgCache.size < 50) imgCache.set(path, { body, type })
+        return new Response(body, {
+          headers: { 'content-type': type, 'cache-control': 'public, max-age=86400' },
+        })
+      }
+      return new Response('Not Found', { status: 404 })
+    }
     return new Response(HTML, {
       headers: {
         'content-type': 'text/html;charset=utf-8',
         'cache-control': 'no-store',
-        'x-portal-version': 'playbook-v2',
+        'x-portal-version': 'playbook-v3-imgproxy',
       },
     })
   },
