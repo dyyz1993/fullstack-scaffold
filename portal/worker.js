@@ -54,7 +54,11 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 .pb-case{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px 14px;margin:8px 0;display:grid;grid-template-columns:minmax(0,1fr) clamp(280px,38%,520px);gap:12px;align-items:start}
 .pb-case .pb-body{min-width:0}
 .pb-case:not(:has(.pb-shot)){grid-template-columns:minmax(0,1fr)}
-.pb-shot{background:#0b1220;border:1px solid #334155;border-radius:8px;overflow:hidden;align-self:start}
+.pb-shot-toggle{background:#334155;border:1px solid #475569;border-radius:6px;padding:4px 12px;font-size:12px;color:#7dd3fc;cursor:pointer;flex:0 0 auto;white-space:nowrap}
+.pb-shot-toggle:hover{background:#475569}
+.pb-shot-view{margin-top:8px;display:none}
+.pb-shot-view.open{display:block}
+.pb-shot-view img{max-width:100%;border-radius:8px;border:1px solid #334155}
 .pb-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .pb-badge{border-radius:6px;padding:2px 8px;font-size:11px;flex:0 0 auto}
 .pb-badge.pos{background:#064e3b;color:#6ee7b7}
@@ -68,7 +72,7 @@ nav{position:sticky;top:0;background:#0f172acc;backdrop-filter:blur(6px);display
 <div id="app"></div>
 <script>
 var PLAYBOOKS=${JSON.stringify(PLAYBOOKS).replace(/<\//g, '<\\/')};
-var RAW='https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/journeys';
+var RAW='https://cdn.jsdelivr.net/gh/dyyz1993/fullstack-scaffold@master/docs/PRESETS/screenshots/journeys';
 var DOC='https://github.com/dyyz1993/fullstack-scaffold/blob/master/docs/PRESETS';
 var PRESETS=[
 {id:'saas',name:'SaaS Multi-Tenant',zh:'多租户 SaaS',sub:'saas',desc:'租户开通事务、成员邀请（7 天 token）、租户内角色、套餐配额、子域隔离、租户控制台。',modules:['todos 待办','notifications 通知/SSE','file 文件','captcha 验证码','auth 认证','tenant 多租户','content 内容','permission RBAC'],journeys:[{role:'租户管理员',dir:'正向',steps:[{img:'saas-j1-login',t:'登录控制台',d:'平台账号认证 + 自动选定所属租户'},{img:'saas-j2-dashboard',t:'仪表盘',d:'成员数 / 活跃待办 / 内容统计'},{img:'saas-j3-members',t:'成员管理',d:'成员列表与角色徽章'},{img:'saas-j4-invite',t:'发起邀请',d:'邮箱 + 角色选择（配额在服务端校验）'},{img:'saas-j5-invite-done',t:'邀请完成',d:'生成 7 天有效邀请链接'}]},{role:'受邀成员',dir:'正向',steps:[{img:'saas-j6-invite-landing',t:'邀请落地页',d:'公开脱敏详情：租户名 + 角色名'},{img:'saas-j7-accept',t:'接受入组',d:'一键 Accept → 进入租户控制台'}]},{role:'异常路径',dir:'逆向',steps:[{img:'saas-r1-badtoken',t:'无效邀请',d:'伪造 token → 明确的 Invitation not found'},{img:'saas-r2-loggedout',t:'未登录守卫',d:'直访受保护页 → 拦回登录页'}]}]},
@@ -107,7 +111,7 @@ function render(){
       var cc=e.cases[ci];
       var psteps='';
       for(var si=0;si<cc.s.length;si++){psteps+='<li>'+esc(cc.s[si])+'</li>'}
-      var pimg=cc.shot?'<img loading="lazy" src="https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/'+cc.shot+'" alt="" onerror="this.remove()">':'';
+      var pimg=cc.shot?('<button class="pb-shot-toggle" data-shot="'+cc.shot+'">📷 查看截图</button><div class="pb-shot-view"><img alt="截图"></div>'):'';
       pb+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(cc.neg?'neg':'pos')+'">'+(cc.neg?'逆向':'正向')+'</span><b>'+esc(cc.t)+'</b></div><ol class="pb-steps">'+psteps+'</ol><div class="pb-verify">✓ 预期：'+esc(cc.v)+'</div></div>'+(pimg?'<div class="pb-shot">'+pimg+'</div>':'')+'</div>';
     }
     pb+='</div>';
@@ -137,13 +141,16 @@ function renderPlaybook(){
       var c=e.cases[ci];
       var steps='';
       for(var si=0;si<c.s.length;si++){steps+='<li>'+esc(c.s[si])+'</li>'}
-      var img=c.shot?'<img loading="lazy" src="https://raw.githubusercontent.com/dyyz1993/fullstack-scaffold/master/docs/PRESETS/screenshots/'+c.shot+'" alt="" onerror="this.remove()">':'';
+      var img=c.shot?('<button class="pb-shot-toggle" data-shot="'+c.shot+'">📷 查看截图</button><div class="pb-shot-view"><img alt="截图"></div>'):'';
       groups+='<div class="pb-case"><div class="pb-body"><div class="pb-head"><span class="pb-badge '+(c.neg?'neg':'pos')+'">'+(c.neg?'逆向':'正向')+'</span><b>'+esc(c.t)+'</b></div><ol class="pb-steps">'+steps+'</ol><div class="pb-verify">✓ 预期：'+esc(c.v)+'</div></div>'+(img?'<div class="pb-shot">'+img+'</div>':'')+'</div>';
     }
     groups+='</div>';
   }
   document.getElementById('app').innerHTML='<nav>'+chips+'</nav><div class="hero"><h2>测试矩阵 <span>'+tot+' 条链路 · '+PLAYBOOKS.length+' 身份 · 8 形态</span></h2><p class="sub">每条链路 = 功能说明（标题）+ 操作步骤 + 预期结果 + 实拍截图。正向=正常操作链，逆向=异常/越权/边界防御链。</p></div><div class="pb-wrap"><div class="pb-ident"><span class="pb-pos">'+pos+' 正向</span> <span class="pb-neg">'+neg+' 逆向</span> <span style="color:#94a3b8;font-size:12px">共 '+tot+' 条</span></div>'+groups+'</div>';
 }
+
+document.addEventListener('click',function(ev){var b=ev.target.closest('.pb-shot-toggle');if(!b)return;var v=b.parentElement.querySelector('.pb-shot-view');if(!v)return;v.classList.toggle('open');var img=v.querySelector('img');if(v.classList.contains('open')&&!img.src){img.src='https://cdn.jsdelivr.net/gh/dyyz1993/fullstack-scaffold@master/docs/PRESETS/screenshots/'+b.dataset.shot}});
+
 window.addEventListener('hashchange',render);
 render();
 </script>
