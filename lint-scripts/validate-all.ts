@@ -38,6 +38,10 @@ import {
 } from './validators/module-public-api.validator.js'
 import { validateConfigSync, formatConfigSyncErrors } from './validators/config-sync.validator.js'
 import { validateNoTsPatch, formatNoTsPatchErrors } from './validators/no-ts-patch.validator.js'
+import {
+  validateDualCopySync,
+  formatDualCopySyncErrors,
+} from './validators/dual-copy-sync.validator.js'
 import { validateAgentHooks, formatAgentHooksErrors } from './validators/agent-hooks.validator.js'
 import projectConfig from './config/project.config.js'
 
@@ -270,7 +274,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 16. TypeScript 编译器补丁禁止验证
-  console.log('🔍 [16/17] Checking for TypeScript compiler patches...')
+  console.log('🔍 [16/18] Checking for TypeScript compiler patches...')
   const noTsPatchErrors = validateNoTsPatch(rootPath)
   results.push({
     name: 'No TS Patch',
@@ -284,7 +288,7 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
   }
 
   // 17. Agent hooks 同步验证
-  console.log('🔍 [17/17] Checking agent hooks sync...')
+  console.log('🔍 [17/18] Checking agent hooks sync...')
   const agentHooksErrors = validateAgentHooks(rootPath)
   results.push({
     name: 'Agent Hooks Sync',
@@ -295,6 +299,20 @@ async function runAllValidators(): Promise<ValidatorResult[]> {
     console.error(formatAgentHooksErrors(agentHooksErrors))
   } else {
     console.log('  ✅ Agent hooks mirror in sync\n')
+  }
+
+  // 18. 根/模板双份文件同步验证（eslint-rules、create-template.ts、sync-agent-hooks.mjs）
+  console.log('🔍 [18/18] Checking root/template dual-copy sync...')
+  const dualCopyErrors = validateDualCopySync(rootPath)
+  results.push({
+    name: 'Dual Copy Sync',
+    passed: dualCopyErrors.length === 0,
+    errors: dualCopyErrors.length,
+  })
+  if (dualCopyErrors.length > 0) {
+    console.error(formatDualCopySyncErrors(dualCopyErrors))
+  } else {
+    console.log('  ✅ Root/template dual-copy files in sync\n')
   }
 
   return results
