@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-10
+
+### Security
+
+- 模板脱敏：`template/wrangler.toml` 真实 D1 `database_id` 置空占位（随包分发的旧个人库 id 移除）、生产默认 `ENABLE_DEV_TOKENS=false`、`vite.config.ts` 去硬编码个人域名（外部主机改经 `VITE_ALLOWED_HOSTS` 注入）
+
+### Fixed
+
+- CLI 生成 app 时 wrangler.toml 替换常量过期（`biomimic-todo-*` → `demo-app-*`），项目名/库名改写从未生效，生成的 app 残留模板默认名
+- admin 生成器路由归一化：manifest `/admin` 前缀直接作 Route path 致分类管理/插件三页内容区空白（P2）；面包屑随路由（原硬编码恒显"仪表盘"）
+- 门户白屏截图治理：内容区像素级重扫清零 23 张真空白证据、图片代理缓存 24h→5min + URL 版本参数强刷（用户浏览器缓存旧白屏截图的根因）、shimmer 占位 + 视口优先加载、344/344 case 全有截图证据
+- 门户截图直接渲染：同域图片代理 + IntersectionObserver 懒加载 + 并发限流 12，CLI 文本证据改链接
+
+### Changed
+
+- 移除遗留双 CLI 打包路径（`tsup.config.ts` 旧 entry 会覆盖 `dist/cli`）及 `src/cli/` v0.1.1 遗留目录、失效 `bin/` 符号链接
+- CF 部署流水线 sed 注入加固（匹配任意当前值，杜绝静默跳过）
+
 ## [0.7.0] - 2026-09-14
 
 ### Added
