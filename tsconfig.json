@@ -18,6 +18,12 @@
     },
     "baseUrl": "."
   },
-  "include": ["src/index.ts", "src/commands/**/*.ts", "src/generators/**/*.ts", "src/cli/**/*.ts", "src/__tests__/**/*.ts", "vitest.config.ts"],
+  "include": [
+    "src/index.ts",
+    "src/commands/**/*.ts",
+    "src/generators/**/*.ts",
+    "src/__tests__/**/*.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["node_modules", "dist", "template"]
 }

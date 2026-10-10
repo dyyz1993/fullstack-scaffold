@@ -42,8 +42,8 @@ import { generateClientMain } from '../generators/client-main'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const TEMPLATE_PROJECT_NAME = 'biomimic-todo-app'
-const TEMPLATE_DB_NAME = 'biomimic-todo-db'
+const TEMPLATE_PROJECT_NAME = 'demo-app'
+const TEMPLATE_DB_NAME = 'demo-app-db'
 
 export class ScaffoldError extends Error {
   constructor(message: string) {
