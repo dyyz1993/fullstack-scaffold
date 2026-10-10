@@ -49,10 +49,14 @@ jobs:
       - name: Scaffold
         working-directory: /tmp
         run: node ${{ github.workspace }}/dist/cli/index.js app-${{ matrix.short }} --preset ${{ matrix.preset }}
-      - name: Configure shared D1
+      - name: Configure shared D1 + demo env
         working-directory: /tmp/app-${{ matrix.short }}
-        # 匹配任意当前值（空/占位符/残留 id），确保注入必定生效
-        run: sed -i 's/^database_id = ".*"$/database_id = "${{ env.POOL_DB_ID }}"/' wrangler.toml
+        # 匹配任意当前值（空/占位符/残留 id），确保注入必定生效；
+        # 演示站是公开测试场——e2e 邀请链（Bearer test-user-N）依赖 dev token，
+        # 故显式开启（npm 模板默认 false，保护生成用户的生产安全）
+        run: |
+          sed -i -e 's/^database_id = ".*"$/database_id = "${{ env.POOL_DB_ID }}"/' \
+                 -e 's/^ENABLE_DEV_TOKENS = ".*"$/ENABLE_DEV_TOKENS = "true"/' wrangler.toml
       - name: Install dependencies
         working-directory: /tmp/app-${{ matrix.short }}
         run: npm install --legacy-peer-deps
