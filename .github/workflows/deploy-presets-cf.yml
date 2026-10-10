@@ -10,9 +10,10 @@ on:
       - 'package.json'
   workflow_dispatch:
 
-# 所有 preset 共用 preset-pool-db（一个 D1，表并集，同名同构零冲突）
+# 所有 preset 共用 demo-app-db（一个 D1，表并集，同名同构零冲突）
+# 注意：须与线上 7 个 preset Worker 当前绑定的库保持一致，切换前先迁移数据
 env:
-  POOL_DB_ID: a45a10de-fee4-43d8-bc62-73a80f8b066e
+  POOL_DB_ID: c77a8486-8aa0-45c0-a19a-8a0da73408b9
 
 jobs:
   deploy:
@@ -50,7 +51,8 @@ jobs:
         run: node ${{ github.workspace }}/dist/cli/index.js app-${{ matrix.short }} --preset ${{ matrix.preset }}
       - name: Configure shared D1
         working-directory: /tmp/app-${{ matrix.short }}
-        run: sed -i 's/database_id = "".*$/database_id = "${{ env.POOL_DB_ID }}"/' wrangler.toml
+        # 匹配任意当前值（空/占位符/残留 id），确保注入必定生效
+        run: sed -i 's/^database_id = ".*"$/database_id = "${{ env.POOL_DB_ID }}"/' wrangler.toml
       - name: Install dependencies
         working-directory: /tmp/app-${{ matrix.short }}
         run: npm install --legacy-peer-deps

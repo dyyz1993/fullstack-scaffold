@@ -5,12 +5,14 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
-ENABLE_DEV_TOKENS = "true"
+# 开发令牌（无密码快速登录，仅限本地调试）——生产默认关闭
+ENABLE_DEV_TOKENS = "false"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "demo-app-db"
-database_id = "c77a8486-8aa0-45c0-a19a-8a0da73408b9"
+# 部署前填入你自己的 D1 实例：npx wrangler d1 create demo-app-db
+database_id = ""
 
 [[durable_objects.bindings]]
 name = "REALTIME_DO"

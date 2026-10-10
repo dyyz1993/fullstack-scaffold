@@ -30,7 +30,14 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
-    allowedHosts: ['.shanbox.19930810.xyz', 'localhost'],
+    // 外部主机经 VITE_ALLOWED_HOSTS 环境变量按需注入（逗号分隔），模板不内置任何个人域名
+    allowedHosts: [
+      'localhost',
+      ...(process.env.VITE_ALLOWED_HOSTS ?? '')
+        .split(',')
+        .map(h => h.trim())
+        .filter(Boolean),
+    ],
   },
   plugins: [
     devServer({
